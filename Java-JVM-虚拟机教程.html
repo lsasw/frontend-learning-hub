@@ -1064,7 +1064,7 @@ java -XX:+PrintCompilation -XX:+UnlockDiagnosticVMOptions \
   <h3><span class="ic ic-gc">🔬</span>Heap Dump 分析：MAT / JProfiler / VisualVM</h3>
   <p>将 <code>jmap</code> 或 <code>-XX:+HeapDumpOnOutOfMemoryError</code> 生成的 .hprof 文件进行离线分析，定位内存泄漏、大对象、重复对象。</p>
 
-  <div class="tabs">
+  <div class="tabs" id="toolTabs">
     <button class="tab-btn active" onclick="switchTool(0)">MAT (Eclipse)</button>
     <button class="tab-btn" onclick="switchTool(1)">JProfiler</button>
     <button class="tab-btn" onclick="switchTool(2)">VisualVM</button>
@@ -1299,8 +1299,8 @@ function switchGcTab(idx) {
 
 // ===== S10 Tool Tabs (MAT/JProfiler/VisualVM) =====
 function switchTool(idx) {
-  document.querySelectorAll('#s10 .tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-  document.querySelectorAll('#s10 .tab-panel').forEach((p, i) => {
+  document.querySelectorAll('#toolTabs .tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll('.tab-panel').forEach((p, i) => {
     if (p.id.startsWith('toolPanel')) p.classList.toggle('active', p.id === 'toolPanel' + idx);
   });
 }
