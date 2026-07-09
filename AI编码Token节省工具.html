@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 编程 Token 拯救计划 - 开发者工具精选</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .drawer-block {
+            display: none;
+            animation: slideDown 0.3s ease-out forwards;
+        }
+
+        .drawer-block.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 针对卡片挂载的过渡动画优化 */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Hero Section -->
+    <header class="relative overflow-hidden pt-24 pb-16 px-4 sm:px-6 lg:px-8 text-center bg-gradient-to-b from-slate-900 to-slate-850 border-b border-slate-800">
+        <div class="absolute inset-0 z-0 opacity-20">
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+        </div>
+        <div class="relative z-10 max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                拯救上下文窗口<br>拒绝高昂 Token 账单
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-8">
+                在使用 AI 编程助手（Claude Code, Cursor 等）时，巨量文件读取和长日志往往会撑爆上下文。这 28 款专为 AI Agent 打造的极客工具与扩展插件，能帮你大幅降低成本，提升推理效率并阻止失控账单。
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#tools" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                    <i data-lucide="compass" class="w-5 h-5"></i> 核心工具
+                </a>
+                <a href="#skills" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                    <i data-lucide="puzzle" class="w-5 h-5"></i> 扩展技能
+                </a>
+                <a href="#comparison" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium border border-slate-700 transition-colors duration-200 flex items-center gap-2">
+                    <i data-lucide="list" class="w-5 h-5"></i> 场景对比
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Core Tools Grid Section -->
+    <main id="tools" class="flex-grow pt-16 pb-8 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-7xl mx-auto mb-8 flex flex-col gap-4 bg-slate-900/50 p-5 rounded-2xl border border-slate-800 shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2 whitespace-nowrap">
+                    <i data-lucide="layers" class="w-5 h-5 text-blue-400"></i> 核心工具大盘
+                </h2>
+                <div class="flex flex-wrap items-center gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                    <button id="sort-btn-default" onclick="sortTools('default')" class="sort-btn bg-blue-600 text-white border-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)] border">默认排序</button>
+                    <button id="sort-btn-stars" onclick="sortTools('stars')" class="sort-btn bg-transparent text-slate-400 px-4 py-2 rounded-lg text-sm font-medium hover:text-white transition-all border border-transparent">Star 霸榜</button>
+                    <button id="sort-btn-category" onclick="sortTools('category')" class="sort-btn bg-transparent text-slate-400 px-4 py-2 rounded-lg text-sm font-medium hover:text-white transition-all border border-transparent">分类聚合</button>
+                </div>
+            </div>
+            
+            <!-- 胶囊筛选器 -->
+            <div class="flex flex-wrap items-center gap-2 pt-4 border-t border-slate-800/60 mt-1">
+                <span class="text-sm text-slate-400 font-medium mr-2 flex items-center gap-1.5"><i data-lucide="filter" class="w-4 h-4"></i> 快速筛选:</span>
+                <button id="filter-btn-all" onclick="filterTools('all')" class="filter-btn bg-slate-700 text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-slate-600 hover:bg-slate-600 shadow-[0_0_10px_rgba(255,255,255,0.1)]">全部核心</button>
+                <button id="filter-btn-1-framework" onclick="filterTools('1-framework')" class="filter-btn bg-slate-800 text-slate-400 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-slate-700 hover:text-slate-200 hover:bg-slate-700">底座框架</button>
+                <button id="filter-btn-2-data" onclick="filterTools('2-data')" class="filter-btn bg-slate-800 text-slate-400 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-slate-700 hover:text-slate-200 hover:bg-slate-700">数据提取与清洗</button>
+                <button id="filter-btn-3-proxy" onclick="filterTools('3-proxy')" class="filter-btn bg-slate-800 text-slate-400 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-slate-700 hover:text-slate-200 hover:bg-slate-700">路由与代理</button>
+                <button id="filter-btn-4-navigation" onclick="filterTools('4-navigation')" class="filter-btn bg-slate-800 text-slate-400 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-slate-700 hover:text-slate-200 hover:bg-slate-700">代码导航分析</button>
+                <button id="filter-btn-5-workflow" onclick="filterTools('5-workflow')" class="filter-btn bg-slate-800 text-slate-400 px-3 py-1.5 rounded-full text-xs font-medium transition-all border border-slate-700 hover:text-slate-200 hover:bg-slate-700">自动化工作流</button>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto">
+            <!-- 核心网格容器 (分页驱动) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="tools-grid">
+                <!-- 由 JavaScript 动态注入 -->
+            </div>
+
+            <!-- 分页控件 -->
+            <div id="pagination-controls" class="mt-12 mb-8 flex items-center justify-center gap-4">
+                <button onclick="changePage(-1)" id="prev-btn" class="w-10 h-10 flex items-center justify-center bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(0,0,0,0.2)] border border-slate-700">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
+                <div id="page-numbers" class="flex flex-wrap justify-center gap-2">
+                    <!-- 动态生成页码 -->
+                </div>
+                <button onclick="changePage(1)" id="next-btn" class="w-10 h-10 flex items-center justify-center bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(0,0,0,0.2)] border border-slate-700">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Skills & Plugins Section (独立分区) -->
+    <section id="skills" class="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 border-t border-slate-800 shadow-inner relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-12 flex flex-col items-center text-center">
+                <div class="inline-flex items-center justify-center p-3 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl mb-4 text-indigo-400">
+                    <i data-lucide="puzzle" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-100 mb-4">专属扩展技能库 (Skills & Plugins)</h2>
+                <p class="text-slate-400 max-w-2xl text-sm leading-relaxed">
+                    这些轻量级插件可以作为外挂组件，直接通过 MCP 或特定命令注入到你的 Agent 中，提供极其精准的局部增强能力，就像为你的 AI 装上了各种特化功能的义体。
+                </p>
+            </div>
+            
+            <!-- 技能网格 (三列结构，不分页) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="skills-grid">
+                <!-- 由 JavaScript 动态注入 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section id="comparison" class="py-16 px-4 sm:px-6 lg:px-8 bg-slate-850 border-t border-slate-800">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-10 text-slate-100 flex items-center justify-center gap-3">
+                <i data-lucide="crosshair" class="w-8 h-8 text-blue-500"></i> 全局定位与场景对比
+            </h2>
+            
+            <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900 shadow-xl">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-800/50 text-slate-300 border-b border-slate-700">
+                        <tr>
+                            <th class="p-4 font-semibold w-1/4">痛点场景</th>
+                            <th class="p-4 font-semibold w-1/4">推荐工具</th>
+                            <th class="p-4 font-semibold w-1/2">为什么选它？</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-slate-400">
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">眼馋闭源天价 Agent</div>
+                                <span class="text-xs block mt-1">想用全能 Agent，但苦于没有激活码或付不起费用</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 font-medium">
+                                    <i data-lucide="rocket" class="w-3.5 h-3.5"></i> OpenManus
+                                </span>
+                            </td>
+                            <td class="p-4">霸榜 GitHub 的现象级标杆。完全开源的全能 Agent 底座，无需邀请码，自带沙盒、浏览器控制并兼容本地大模型。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">单一智能体胡乱操作</div>
+                                <span class="text-xs block mt-1">原生 Claude Code 经常发疯，瞎删代码导致业务崩溃</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-400 font-medium">
+                                    <i data-lucide="bot" class="w-3.5 h-3.5"></i> Oh-My-OpenAgent
+                                </span>
+                            </td>
+                            <td class="p-4">挂载极其强悍的多智能体编排（架构、开发、测试并行），且使用 Hash 行号定位进行外科手术级代码修改，0幻觉覆盖。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">长路径任务盲目试错</div>
+                                <span class="text-xs block mt-1">遇到复杂任务，Agent 一上来就乱改一气，狂烧 Token</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 font-medium">
+                                    <i data-lucide="git-branch" class="w-3.5 h-3.5"></i> DeepAgents
+                                </span>
+                            </td>
+                            <td class="p-4">LangChain 官方出品的强力底座，采用“规划优先 (Planning First)”原则，强制 Agent 写完 TODO list 才能行动。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">单一模型昂贵锁定</div>
+                                <span class="text-xs block mt-1">连读个背景文件都强制用 Claude 3.7，API 账单爆炸</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 font-medium">
+                                    <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> Claude Code Router
+                                </span>
+                            </td>
+                            <td class="p-4">本地 API 代理，让复杂逻辑走神坛模型，长文档走 Gemini，后台杂活走免费/便宜模型，用低成本模型包围大模型。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">网页抓取去噪</div>
+                                <span class="text-xs block mt-1">给 AI 喂 URL，结果几千行 HTML 标签直接塞满上下文</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
+                                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Jina Reader
+                                </span>
+                            </td>
+                            <td class="p-4">物理级脱水！在网址前加前缀，绕过反爬机制将冗长复杂的网页瞬间洗成极简的纯粹 Markdown。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">脏乱差的文档喂食</div>
+                                <span class="text-xs block mt-1">给大模型喂 PDF/Word，噪音标签导致废掉几万 Token</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> MarkItDown
+                                </span>
+                            </td>
+                            <td class="p-4">微软顶级开源清洗器，将花里胡哨的带图/带标签办公文档强行转译为极简纯净 Markdown。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">看大型项目源码</div>
+                                <span class="text-xs block mt-1">AI 频繁读取文件、找调用关系导致爆 Token</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 font-medium">
+                                    <i data-lucide="network" class="w-3.5 h-3.5"></i> Codegraph
+                                </span>
+                            </td>
+                            <td class="p-4">一次性建立本地关系图谱，AI 查询一次即可掌握全局架构，不再做无意义的文件扫描。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">局部重构与精细控制</div>
+                                <span class="text-xs block mt-1">只想改一行代码，不想上传整个 2000 行的文件</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 font-medium">
+                                    <i data-lucide="cat" class="w-3.5 h-3.5"></i> CatPaw
+                                </span>
+                            </td>
+                            <td class="p-4">化身“上下文手术刀”，仅提取选中的代码块作为上下文发给大模型，从物理层面掐断 Token 溢出风险。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">处理极长的脚本输出</div>
+                                <span class="text-xs block mt-1">AI 跑测试或者爬虫，产生几十 MB 垃圾数据</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
+                                    <i data-lucide="box" class="w-3.5 h-3.5"></i> Context-mode
+                                </span>
+                            </td>
+                            <td class="p-4">把原生输出关在沙盒里，在本地对巨量输出建索引，只把检索出来的精简结果喂给大模型。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">全面接管长数据</div>
+                                <span class="text-xs block mt-1">经常使用 RAG，不想写代码修改现有 Agent 逻辑</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 font-medium">
+                                    <i data-lucide="minimize-2" class="w-3.5 h-3.5"></i> Headroom
+                                </span>
+                            </td>
+                            <td class="p-4">作为全局代理启动，默默压缩所有过长的回答和日志，无痛降低账单，还提供数据省钱面板。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">全流程规范开发</div>
+                                <span class="text-xs block mt-1">单条复杂需求直接撑死 AI，且极易跑偏</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 font-medium">
+                                    <i data-lucide="users" class="w-3.5 h-3.5"></i> GStack
+                                </span>
+                            </td>
+                            <td class="p-4">利用分工机制（如构思、评优、编写、QA）将大块 Context 切碎，让 AI 变成专人办专事的敏捷团队。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">自动智能体死循环</div>
+                                <span class="text-xs block mt-1">AI 疯狂改 Bug 陷入死循环，一晚烧掉几十美金</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 font-medium">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> MartinLoop
+                                </span>
+                            </td>
+                            <td class="p-4">为全自动智能体挂载一个物理的硬性美元预算、Token 上限和强制测试验证器，一旦超标瞬间熔断。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">Agent 沙盒网络基建</div>
+                                <span class="text-xs block mt-1">沙盒环境中引入重型 Axios 请求库导致打包大、易报错</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">
+                                    <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i> Fetch Polyfill
+                                </span>
+                            </td>
+                            <td class="p-4">提供极简的、原生的 HTTP 请求实现，告别臃肿的第三方库，是轻量级智能体底层网络请求的最佳选择。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">跨会话的持续记忆</div>
+                                <span class="text-xs block mt-1">AI 像金鱼一样，每次新开对话都要重新交代背景</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">
+                                    <i data-lucide="brain" class="w-3.5 h-3.5"></i> MemOS
+                                </span>
+                            </td>
+                            <td class="p-4">给 AI 外挂了一个长期记忆海马体，将过去的踩坑经验结晶成技能，未来遇到同类任务直接调用。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">手工掌控终端输出</div>
+                                <span class="text-xs block mt-1">习惯手动敲命令行，想精简报错再喂给 AI</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 font-medium">
+                                    <i data-lucide="filter" class="w-3.5 h-3.5"></i> Distill
+                                </span>
+                            </td>
+                            <td class="p-4">纯粹的终端黑客工具，配合 <code>| distill</code> 管道符和本地小模型，万行报错化为一句精简摘要。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors border-t border-slate-800">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">可视化接手祖传代码</div>
+                                <span class="text-xs block mt-1">需要给人类看图谱，并附带业务逻辑说明</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 font-medium">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i> Understand-Anything
+                                </span>
+                            </td>
+                            <td class="p-4">不仅辅助 AI，更偏向于生成<b>给人看</b>的交互式图谱。点击代码节点能看到大白话的业务解释。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors border-t border-slate-800">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">自动化搞钱应用范例</div>
+                                <span class="text-xs block mt-1">学了这么多 Agent 技术，怎么利用工作流挣钱？</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-400 font-medium">
+                                    <i data-lucide="video" class="w-3.5 h-3.5"></i> MoneyPrinterTurbo
+                                </span>
+                            </td>
+                            <td class="p-4">这不是写代码工具，但它是 AI Agent 工业化流水线的开源标杆。利用大模型全自动化制作短视频。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors border-t border-slate-800">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">副业变现与流量黑客</div>
+                                <span class="text-xs block mt-1">反复试错提示词来搞流量，极度浪费时间和 Token</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 font-medium">
+                                    <i data-lucide="coins" class="w-3.5 h-3.5"></i> Cheat-on-Money
+                                </span>
+                            </td>
+                            <td class="p-4">提供高度优化的自动化副业蓝图（Prompt + DSL 工作流），告别冗余的低效试错，用最少的 Token 做最狠的流量。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors border-t border-slate-800">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">本地隐私极易泄露</div>
+                                <span class="text-xs block mt-1">云端 AI 容易把包含 API 密钥或客户隐私的代码吸走</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-500/10 text-zinc-400 font-medium">
+                                    <i data-lucide="command" class="w-3.5 h-3.5"></i> Osaurus
+                                </span>
+                            </td>
+                            <td class="p-4">纯粹为 Mac 开发的原生底座。在发往云端之前，先进行极其严格的正则与模式洗稿（脱敏替换），极大降低 Token 和敏感信息泄露风险。</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors border-t border-slate-800">
+                            <td class="p-4">
+                                <div class="font-medium text-slate-200">精准的自动化 Code Review</div>
+                                <span class="text-xs block mt-1">让 AI 审查 PR 时，把整个项目传给大模型极度烧钱</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 font-medium">
+                                    <i data-lucide="git-pull-request" class="w-3.5 h-3.5"></i> Open Code Review
+                                </span>
+                            </td>
+                            <td class="p-4">阿里开源的企业级审查工具，利用精准的 Diff 裁剪和 AST 关联，仅投喂相关上下文给大模型，防爆又省钱。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-8 p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-center text-slate-300 text-sm flex items-center justify-center gap-2">
+                <i data-lucide="lightbulb" class="w-5 h-5 text-yellow-400"></i>
+                <span><b>终极底座防护流：</b> 无论使用什么前端，都建议让 <b>Osaurus</b> 在 Mac 底层拦截敏感数据，让 <b>MartinLoop</b> 卡死预算上限！</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 text-center text-slate-500 text-sm border-t border-slate-800 bg-slate-900 mt-auto">
+        <p>构建更聪明的 AI 编程流。工具开源归各作者所有。</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // 核心工具库字典 (完整 28 款工具)
+        const allToolsDatabase = [
+            { id:'openmanus', order:1, category:'1-framework', stars:30000, color:'indigo', icon:'rocket', title:'OpenManus', sub:'开源全能 Agent 底座', repo:'FoundationAgents/OpenManus', desc:'霸榜 GitHub 的现象级标杆。完全开源的全能 Agent 底座，无需邀请码，自带沙盒、浏览器控制并兼容本地大模型。', tags:['全能底座','免邀请码','沙盒集成'], iHtml:'git clone https://github.com/FoundationAgents/OpenManus.git\nconda create -n open_manus python=3.12\npip install -r requirements.txt', fHtml:'需配置大模型 API Key（如 OpenAI 或 DeepSeek）于环境中方可运行。' },
+            { id:'ohmyopenagent', order:2, category:'1-framework', stars:500, color:'fuchsia', icon:'bot', title:'Oh-My-OpenAgent', sub:'多智能体防幻觉编排', repo:'code-yeongyu/oh-my-openagent', desc:'挂载极其强悍的多智能体编排（架构、开发、测试并行），且使用 Hash 行号定位进行外科手术级代码修改，0幻觉覆盖。', tags:['多智能体','0幻觉','精细修改'], iHtml:'npm install -g oh-my-openagent', fHtml:'需要 Node.js 18+ 环境。' },
+            { id:'deepagents', order:3, category:'1-framework', stars:1200, color:'blue', icon:'git-branch', title:'DeepAgents', sub:'规划优先执行底座', repo:'langchain-ai/deepagents', desc:'LangChain 官方出品的强力底座，采用“规划优先 (Planning First)”原则，强制 Agent 写完 TODO list 才能行动，避免盲目消耗。', tags:['LangChain','规划优先','逻辑严密'], iHtml:'pip install deepagents', fHtml:'深度绑定 LangChain 生态，适合 Python 开发者集成使用。' },
+            { id:'codegraph', order:4, category:'4-navigation', stars:46900, color:'blue', icon:'network', title:'Codegraph', sub:'项目架构向导 (全局视野)', repo:'colbymchenry/codegraph', desc:'静态扫描代码库建立 SQLite 关系图谱。AI 不再需要反复调用 grep 来回翻文件，只需一次查询即可获知完整调用链，省下 80% 盲目探索的 Token。', tags:['MCP 支持','大项目必备','全语言支持'], iHtml:'npx @colbymchenry/codegraph init -i', fHtml:'大项目初次静态分析极其缓慢？请务必在根目录创建 .codegraphignore 屏蔽 node_modules 等目录。' },
+            { id:'ccr', order:5, category:'3-proxy', stars:34900, color:'sky', icon:'shuffle', title:'Claude Code Router', sub:'多模型无缝路由', repo:'musistudio/claude-code-router', desc:'打破官方模型锁定！本地代理网关允许将不同复杂度的任务“智能分发”给最划算的模型（如 Claude 3.7 写代码、Gemini 读长文档、Ollama 跑杂活）。', tags:['打破大厂封锁','混合 API 降本','兼容 Ollama'], iHtml:'npm install -g @musistudio/claude-code-router\nccr ui', fHtml:'修改路由表后必须执行 ccr restart，并使用 ccr code 启动才能生效。' },
+            { id:'headroom', order:6, category:'3-proxy', stars:22000, color:'purple', icon:'minimize-2', title:'Headroom', sub:'全局海关代理 (拦截压缩)', repo:'chopratejas/headroom', desc:'采用 CCR (压缩-缓存-检索) 机制，自动拦截并压缩所有过长的数据请求。将超长文本折叠给 AI 的同时，保留随时提取原文的权力。', tags:['Proxy 网关','无痛接入','可视化面板'], iHtml:'pip install "headroom-ai[all]"\nheadroom proxy --port 8787', fHtml:'终端关闭后代理会失效，建议使用 PM2 挂在后台。' },
+            { id:'contextmode', order:7, category:'2-data', stars:17000, color:'emerald', icon:'box', title:'Context-mode', sub:'脏数据隔离沙盒 (本地检索)', repo:'mksglu/context-mode', desc:'拦截 AI 爬网、看日志等产生的海量输出，放入本地沙盒进行索引（FTS5），最终只把最相关的片段发给大模型，避免撑爆上下文。', tags:['MCP 支持','处理大日志','网络爬取压缩'], iHtml:'npm install -g context-mode', fHtml:'Windows 用户需提前安装 C++ 编译环境以免 SQLite 编译报错。' },
+            { id:'genericagent', order:8, category:'1-framework', stars:12800, color:'teal', icon:'bot', title:'GenericAgent', sub:'自我进化智能体', repo:'lsdefine/GenericAgent', desc:'仅需 3K 行代码的极简底层框架。精髓在于“自我进化”：成功解决任务后，自动将路径“结晶”成 SOP 技能。下次直接调捷径。', tags:['技能树生长','极低消耗','真实浏览器'], iHtml:'git clone https://github.com/lsdefine/GenericAgent.git', fHtml:'务必使用 Python 3.11/3.12，不要使用 3.14 避免底层冲突。' },
+            { id:'gstack', order:9, category:'1-framework', stars:100000, color:'orange', icon:'users', title:'GStack', sub:'虚拟工程团队', repo:'garrytan/gstack', desc:'由 YC 现任 CEO 亲自开源。通过 23 个角色斜杠指令，将 Claude 转化为多专家敏捷团队。利用分治法思维限制知识范围，终结 Token 黑洞。', tags:['敏捷工作流','自动化 QA','截断上下文'], iHtml:'/skill install github.com/garrytan/gstack', fHtml:'目前深度绑定 Anthropic 官方 CLI (Claude Code)。' },
+            { id:'martinloop', order:10, category:'1-framework', stars:2300, color:'rose', icon:'shield-check', title:'MartinLoop', sub:'Agent 治理控制面', repo:'Keesan12/martin-loop', desc:'当 AI 陷入无限重试死循环时强制踩刹车。设定明确的预算上限（USD、迭代次数），增加验证器（通过 npm test 才能继续），物理阻断失控账单。', tags:['硬性防破产','自动化验证','审计回滚'], iHtml:'npx martin-loop run "帮我重构" --budget-usd 2.00', fHtml:'被拦截后可通过控制台审计追踪一键回滚无效代码。' },
+            { id:'catpaw', order:11, category:'6-skill', stars:1500, color:'indigo', icon:'cat', title:'CatPaw', sub:'精准上下文手术刀', repo:'shiqkuangsan/catpaw', desc:'拒绝“修改一行代码上传整个文件”。精准选中目标代码块，原地呼出交互菜单进行重构，严格控制局部上下文发给大模型。', tags:['局部提取','原地重构','防文件泄漏'], iHtml:'git clone https://github.com/shiqkuangsan/catpaw.git', fHtml:'默认快捷键易与系统冲突，务必进入设置重新绑定快捷键。' },
+            { id:'memos', order:12, category:'1-framework', stars:8200, color:'cyan', icon:'brain', title:'MemOS', sub:'Agent 长记忆系统', repo:'MemTensor/MemOS', desc:'在后台通过 Reflect2Evolve 机制将交流过程提炼为“世界模型”与“技能结晶”。让 AI 拥有长效记忆，跨任务无缝复用经验。', tags:['长效记忆','技能自进化','MCP兼容'], iHtml:'git clone https://github.com/MemTensor/MemOS.git', fHtml:'后台进化也会消耗 Token，建议配置低成本小模型处理压缩。' },
+            { id:'owl', order:13, category:'1-framework', stars:2500, color:'sky', icon:'bird', title:'OWL', sub:'劳动力集群编排', repo:'camel-ai/owl', desc:'霸榜 GAIA。模拟人类公司将大任务拆分为多子任务，交给专用子智能体。每个子智能体只收到相关的极小块上下文，根治一镜到底。', tags:['集群编排','任务分治','GAIA榜首'], iHtml:'pip install camel-ai[all]', fHtml:'需预装无头浏览器内核以防 Playwright 崩溃。' },
+            { id:'understand', order:14, category:'4-navigation', stars:5100, color:'pink', icon:'eye', title:'Understand-Anything', sub:'交互大局观图谱', repo:'Egonex-AI/Understand-Anything', desc:'将代码库转换为交互式知识图谱。不仅解析调用关系，更能提取“业务领域逻辑”。非常适合接手毫无文档的祖传代码。', tags:['可视化看板','业务逻辑提取','接手旧项目'], iHtml:'/understand', fHtml:'初次分析极度烧钱，请先锁定核心业务目录再运行指令。' },
+            { id:'distill', order:15, category:'2-data', stars:590, color:'amber', icon:'filter', title:'Distill', sub:'终端噪音过滤器', repo:'samuelfaj/distill', desc:'通过 Linux 管道符拦截长篇大论的输出，利用本地轻量级 1.7B 模型，直接“蒸馏”成极简答案（如只返回失败的测试名）。', tags:['管道工具','本地小模型','需 8G 内存'], iHtml:'npm test 2>&1 | distill "只返回报错原因"', fHtml:'国内网络下载模型慢，建议先配置 HF_ENDPOINT 镜像源。' },
+            { id:'ecc', order:16, category:'1-framework', stars:800, color:'lime', icon:'cpu', title:'ECC (Everything Claude Code)', sub:'高级工程基座', repo:'affaan-m/ecc', desc:'提供包含技能库、直觉训练、深层记忆、安全拦截的一体化环境。面向“研究驱动开发”，能极大纠正 AI 偏离主线的无效输出。', tags:['性能挂载','直觉训练','研究驱动'], iHtml:'git clone https://github.com/affaan-m/ecc.git', fHtml:'需将其作为项目根目录的基础 Rules 让 Agent 深度学习。' },
+            { id:'jinareader', order:17, category:'2-data', stars:16500, color:'emerald', icon:'book-open', title:'Jina Reader', sub:'网页转 Markdown 神器', repo:'jina-ai/reader', desc:'绕过反爬机制，瞬间把网页脱水成最纯净的 Markdown，物理级过滤掉 HTML 标签、CSS 和 JS 脚本，防止垃圾信息引发幻觉。', tags:['网页清洗','LLM 爬虫','零部署'], iHtml:'curl https://r.jina.ai/https://example.com', fHtml:'读取需登录的页面可传入 Authorization Header。' },
+            { id:'markitdown', order:18, category:'2-data', stars:31400, color:'yellow', icon:'file-text', title:'MarkItDown', sub:'微软文档降噪机', repo:'microsoft/markitdown', desc:'微软官方开源。把 PDF, Word, Excel 等臃肿办公文档一键剥离清洗成纯净 Markdown。RAG 系统防爆必不可少的前置基建。', tags:['微软开源','RAG 清洗','多格式支持'], iHtml:'from markitdown import MarkItDown\nmd = MarkItDown().convert("test.pdf")', fHtml:'支持极其脏乱差的非结构化报告清洗。' },
+            { id:'odysseus', order:19, category:'4-navigation', stars:1100, color:'violet', icon:'ship', title:'Odysseus', sub:'AST 级上下文航海家', repo:'pewdiepie-archdaemon/odysseus', desc:'不依赖暴力全文 RAG，基于 AST 分析和图谱遍历，只将与当前需求绝对相关的代码片段（具体到方法级）喂给 AI，外科手术级节省。', tags:['AST 分析','动态上下文','语义跳转'], iHtml:'npm install -g odysseus-ai', fHtml:'完美支持 TS/JS/Python 等静态特征强语言。' },
+            { id:'agentreach', order:20, category:'1-framework', stars:26000, color:'fuchsia', icon:'satellite', title:'Agent-Reach', sub:'动态工具触达路由', repo:'Panniantong/Agent-Reach', desc:'动态“工具发现”机制，Agent 只有在需要外部能力时，才会动态拉取该工具的调用规范，避免开局 System Prompt 臃肿。', tags:['动态加载','按需拉取','API 路由'], iHtml:'pip install agent-reach', fHtml:'底层最完美适配 OpenAI Function Calling 规范。' },
+            { id:'context7', order:21, category:'6-skill', stars:1200, color:'stone', icon:'database', title:'Context7', sub:'云端极速跨服同步', repo:'upstash/context7', desc:'利用云端 Redis 强悍速度，将你所有的重要提示词、代码片段、指令瞬间同步，打造云原生的多 Agent / 多设备协作公共大脑。', tags:['云端同步','多端协作','Redis 驱动'], iHtml:'npm install -g @upstash/context7', fHtml:'相比本地 SQLite，侧重于打通不同协作者的机器壁垒。' },
+            { id:'fetchpolyfill', order:22, category:'4-navigation', stars:26500, color:'cyan', icon:'download-cloud', title:'Fetch Polyfill', sub:'极简网络底层基建', repo:'JakeChampion/fetch', desc:'为 JS 沙盒或低开销 Serverless 提供原生 HTTP 请求实现。避免引入重型 Axios 增加打包体积和引发安全隐患。', tags:['Agent 基建','极简依赖','沙盒兼容'], iHtml:'npm install whatwg-fetch', fHtml:'零外部依赖，最大程度降低内存溢出和渗透风险。' },
+            { id:'graphify', order:23, category:'2-data', stars:300, color:'fuchsia', icon:'git-merge', title:'Graphify', sub:'文本转知识图谱', repo:'safishamsi/graphify', desc:'将非结构化长文本提炼为“实体-关系”知识图谱。AI 检索只看紧密关联节点，信息密度指数级提升，告别长篇切块。', tags:['RAG 增强','知识图谱','高密压缩'], iHtml:'git clone https://github.com/safishamsi/graphify.git', fHtml:'预处理需消耗算力，适合用于构建高频访问的基础背景库。' },
+            { id:'opencode', order:24, category:'1-framework', stars:1800, color:'blue', icon:'git-pull-request', title:'Open Code Review', sub:'工业级 AI 审查员', repo:'alibaba/open-code-review', desc:'阿里通义团队开源。基于 AST 与变更点精准裁剪，只把影响核心逻辑的代码树送给大模型，防止无脑传全库导致天价账单。', tags:['AST 裁剪','企业级私有','CI/CD 集成'], iHtml:'docker run -v $(pwd):/app alibaba/open-code-review', fHtml:'支持配置 BASE_URL 接入 DeepSeek 或其他大模型。' },
+            { id:'moneyprinter', order:25, category:'5-workflow', stars:15500, color:'red', icon:'video', title:'MoneyPrinterTurbo', sub:'全自动视频印钞机', repo:'harry0703/MoneyPrinterTurbo', desc:'自动化 Agent 结合 API 的副业典范。输入主题自动调动 LLM 写文案、生成配音、抓素材并渲染高清视频，极客自动化标杆。', tags:['自动工作流','视频变现','极客范例'], iHtml:'docker-compose up -d', fHtml:'内置免费 TTS 与无版权素材，强烈建议用 Docker 部署避开环境坑。' },
+            { id:'cheatonmoney', order:26, category:'5-workflow', stars:1200, color:'amber', icon:'coins', title:'Cheat-on-Money', sub:'搞钱自动化蓝图', repo:'XBuilderLAB/cheat-on-money', desc:'经过极度优化的高信息密度 Prompt 与 Dify/n8n 工作流模板，用于自动化社媒运营变现，跳过昂贵的 Token 试错阶段。', tags:['Dify/n8n 流','高度优化','业务编排'], iHtml:'git clone https://github.com/XBuilderLAB/cheat-on-money.git', fHtml:'更偏向 Low-code 业务流程编排，无需深厚代码功底。' },
+            { id:'last30days', order:27, category:'6-skill', stars:26100, color:'green', icon:'calendar', title:'Last30Days-Skill', sub:'近期脉络提取', repo:'mvanhorn/last30days-skill', desc:'强制“时间截断”。只抽取最近 30 天的核心 PR、Issue 和 Commit 供 AI 摸清现状，防止 AI 接手老项目时翻全库撑死。', tags:['技能定制','时间截断','背景补全'], iHtml:'/skill install github.com/mvanhorn/last30days-skill', fHtml:'向 Claude 提问类似 "What happened in the last 30 days?" 即可触发。' },
+            { id:'osaurus', order:28, category:'1-framework', stars:5600, color:'zinc', icon:'command', title:'Osaurus', sub:'Mac 原生底座 (物理防漏)', repo:'osaurus-ai/osaurus', desc:'纯 Swift 打造的 macOS 极简 Agent 核心。发请求前进行极致 Scrubbing 洗稿，自动脱敏真实密钥/姓名，防泄漏更省 Token！', tags:['Swift 原生','脱敏洗稿','Mac 专属'], iHtml:'brew install --cask osaurus', fHtml:'深度绑定 Mac 原生 API，不支持 Windows/Linux 平台。' }
+        ];
+
+        // 隔离核心工具与专属扩展技能
+        const toolsDatabase = allToolsDatabase.filter(t => t.category !== '6-skill');
+        const skillsDatabase = allToolsDatabase.filter(t => t.category === '6-skill');
+
+        // 颜色映射字典
+        const themeColors = {
+            blue: 'bg-blue-500/20 text-blue-400 hover:shadow-[0_10px_40px_-15px_rgba(59,130,246,0.3)]',
+            purple: 'bg-purple-500/20 text-purple-400 hover:shadow-[0_10px_40px_-15px_rgba(168,85,247,0.3)]',
+            emerald: 'bg-emerald-500/20 text-emerald-400 hover:shadow-[0_10px_40px_-15px_rgba(16,185,129,0.3)]',
+            amber: 'bg-amber-500/20 text-amber-400 hover:shadow-[0_10px_40px_-15px_rgba(245,158,11,0.3)]',
+            pink: 'bg-pink-500/20 text-pink-400 hover:shadow-[0_10px_40px_-15px_rgba(236,72,153,0.3)]',
+            cyan: 'bg-cyan-500/20 text-cyan-400 hover:shadow-[0_10px_40px_-15px_rgba(6,182,212,0.3)]',
+            orange: 'bg-orange-500/20 text-orange-400 hover:shadow-[0_10px_40px_-15px_rgba(249,115,22,0.3)]',
+            indigo: 'bg-indigo-500/20 text-indigo-400 hover:shadow-[0_10px_40px_-15px_rgba(99,102,241,0.3)]',
+            rose: 'bg-rose-500/20 text-rose-400 hover:shadow-[0_10px_40px_-15px_rgba(244,63,94,0.3)]',
+            teal: 'bg-teal-500/20 text-teal-400 hover:shadow-[0_10px_40px_-15px_rgba(20,184,166,0.3)]',
+            sky: 'bg-sky-500/20 text-sky-400 hover:shadow-[0_10px_40px_-15px_rgba(56,189,248,0.3)]',
+            violet: 'bg-violet-500/20 text-violet-400 hover:shadow-[0_10px_40px_-15px_rgba(139,92,246,0.3)]',
+            lime: 'bg-lime-500/20 text-lime-400 hover:shadow-[0_10px_40px_-15px_rgba(132,204,22,0.3)]',
+            fuchsia: 'bg-fuchsia-500/20 text-fuchsia-400 hover:shadow-[0_10px_40px_-15px_rgba(217,70,239,0.3)]',
+            red: 'bg-red-500/20 text-red-400 hover:shadow-[0_10px_40px_-15px_rgba(239,68,68,0.3)]',
+            green: 'bg-green-500/20 text-green-400 hover:shadow-[0_10px_40px_-15px_rgba(34,197,94,0.3)]',
+            yellow: 'bg-yellow-500/20 text-yellow-400 hover:shadow-[0_10px_40px_-15px_rgba(234,179,8,0.3)]',
+            stone: 'bg-stone-500/20 text-stone-400 hover:shadow-[0_10px_40px_-15px_rgba(168,162,158,0.3)]',
+            zinc: 'bg-zinc-500/20 text-zinc-400 hover:shadow-[0_10px_40px_-15px_rgba(161,161,170,0.3)]'
+        };
+
+        // 核心网格状态
+        let currentData = [...toolsDatabase];
+        const itemsPerPage = 8;
+        let currentPage = 1;
+        let currentSort = 'default';
+        let currentFilter = 'all';
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTools();
+            renderSkills();
+        });
+
+        // 抽屉展开折叠
+        function toggleDrawer(openId, closeId) {
+            const openTarget = document.getElementById(openId);
+            const closeTarget = document.getElementById(closeId);
+            if (closeTarget) closeTarget.classList.remove('active');
+            if (openTarget) openTarget.classList.toggle('active');
+        }
+
+        // 卡片 HTML 生成工厂
+        function generateCardHtml(tool) {
+            const colorSettings = themeColors[tool.color].split(' ');
+            const iconBgClass = colorSettings[0];
+            const iconTextClass = colorSettings[1];
+            const hoverShadowClass = colorSettings[2];
+            const starsFormatted = tool.stars >= 1000 ? (tool.stars / 1000).toFixed(1) + 'k' : tool.stars + '+';
+            
+            const tagsHtml = tool.tags.map(tag => `<span class="px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">${tag}</span>`).join('');
+
+            return `
+                <div class="glass-card rounded-2xl p-6 transition-transform hover:-translate-y-1 ${hoverShadowClass} flex flex-col h-full fade-in w-full max-w-full">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 rounded-xl ${iconBgClass} ${iconTextClass}">
+                                <i data-lucide="${tool.icon}" class="w-8 h-8"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white flex items-center gap-2">${tool.title}</h3>
+                                <p class="text-sm font-medium ${iconTextClass}">${tool.sub}</p>
+                            </div>
+                        </div>
+                        <a href="https://github.com/${tool.repo}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg transition-all duration-200 border border-slate-600 hover:border-slate-400 flex items-center justify-center gap-2 group shrink-0" title="访问 GitHub 仓库">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+                                <path d="M9 18c-4.51 2-5-2-7-2"></path>
+                            </svg>
+                            <div class="flex items-center gap-1 border-l border-slate-600 pl-2">
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-yellow-500 group-hover:fill-yellow-500 transition-all"></i>
+                                <span class="text-xs font-bold font-mono">${starsFormatted}</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="text-slate-300 mb-4 flex-grow text-sm leading-relaxed">${tool.desc}</div>
+                    <div class="flex flex-wrap gap-2 mb-6">${tagsHtml}</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="toggleDrawer('${tool.id}-install', '${tool.id}-faq')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition flex justify-center items-center gap-2 border border-slate-700">
+                            <i data-lucide="terminal" class="w-4 h-4"></i> 部署方式
+                        </button>
+                        <button onclick="toggleDrawer('${tool.id}-faq', '${tool.id}-install')" class="py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium transition flex justify-center items-center gap-2 border border-amber-500/20">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i> 避坑指南
+                        </button>
+                    </div>
+                    <div id="${tool.id}-install" class="drawer-block mt-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <code class="code-font text-emerald-400 text-sm block whitespace-pre-line">${tool.iHtml}</code>
+                    </div>
+                    <div id="${tool.id}-faq" class="drawer-block mt-4 bg-slate-950/80 p-4 rounded-xl border border-amber-500/20 text-xs text-slate-300 space-y-3">
+                        <span class="font-bold text-amber-400">⚠️ 避坑提示：</span>
+                        <p class="mt-1 text-slate-400">${tool.fHtml}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 核心网格渲染引擎
+        function renderTools() {
+            const grid = document.getElementById('tools-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = currentData.slice(startIndex, endIndex);
+
+            pageData.forEach(tool => {
+                grid.insertAdjacentHTML('beforeend', generateCardHtml(tool));
+            });
+            
+            lucide.createIcons();
+            renderPaginationControls();
+        }
+
+        // 技能网格渲染引擎 (不参与分页，三列平铺)
+        function renderSkills() {
+            const grid = document.getElementById('skills-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            
+            skillsDatabase.forEach(tool => {
+                grid.insertAdjacentHTML('beforeend', generateCardHtml(tool));
+            });
+            
+            lucide.createIcons();
+        }
+
+        // 分页组件控制
+        function renderPaginationControls() {
+            const totalPages = Math.max(1, Math.ceil(currentData.length / itemsPerPage));
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            if (prevBtn) prevBtn.disabled = currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+            const container = document.getElementById('page-numbers');
+            if (container) {
+                container.innerHTML = '';
+                
+                if (currentData.length === 0) {
+                    const emptyMsg = document.createElement('span');
+                    emptyMsg.className = "text-slate-400 text-sm py-2";
+                    emptyMsg.innerText = "没有找到符合条件的工具。";
+                    container.appendChild(emptyMsg);
+                    if (prevBtn) prevBtn.style.display = 'none';
+                    if (nextBtn) nextBtn.style.display = 'none';
+                    return;
+                } else {
+                    if (prevBtn) prevBtn.style.display = 'flex';
+                    if (nextBtn) nextBtn.style.display = 'flex';
+                }
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.innerText = i;
+                    btn.onclick = () => goToPage(i);
+                    if (i === currentPage) {
+                        btn.className = 'w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 text-white font-bold transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)] border border-blue-500';
+                    } else {
+                        btn.className = 'w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)] border border-slate-700';
+                    }
+                    container.appendChild(btn);
+                }
+            }
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(currentData.length / itemsPerPage);
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                goToPage(newPage);
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTools();
+            const toolsSection = document.getElementById('tools');
+            if (toolsSection && window.scrollY > toolsSection.offsetTop) {
+                window.scrollTo({ top: toolsSection.offsetTop - 30, behavior: 'smooth' });
+            }
+        }
+
+        // 分类过滤
+        function filterTools(categoryId) {
+            currentFilter = categoryId;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-700', 'text-white', 'border-slate-600', 'shadow-[0_0_10px_rgba(255,255,255,0.1)]');
+                btn.classList.add('bg-slate-800', 'text-slate-400', 'border-slate-700');
+            });
+            const activeBtn = document.getElementById('filter-btn-' + categoryId);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'text-slate-400', 'border-slate-700');
+                activeBtn.classList.add('bg-slate-700', 'text-white', 'border-slate-600', 'shadow-[0_0_10px_rgba(255,255,255,0.1)]');
+            }
+            applyFiltersAndSort();
+        }
+
+        // 排序规则
+        function sortTools(criteria) {
+            currentSort = criteria;
+
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
+                btn.classList.add('bg-transparent', 'text-slate-400', 'border-transparent');
+            });
+            const activeBtn = document.getElementById('sort-btn-' + criteria);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-transparent', 'text-slate-400', 'border-transparent');
+                activeBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
+            }
+            applyFiltersAndSort();
+        }
+
+        function applyFiltersAndSort() {
+            if (currentFilter === 'all') {
+                currentData = [...toolsDatabase];
+            } else {
+                currentData = toolsDatabase.filter(tool => tool.category === currentFilter);
+            }
+
+            if (currentSort === 'stars') {
+                currentData.sort((a, b) => b.stars - a.stars);
+            } else if (currentSort === 'category') {
+                currentData.sort((a, b) => a.category.localeCompare(b.category));
+            } else {
+                currentData.sort((a, b) => a.order - b.order);
+            }
+
+            goToPage(1);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下一代 AI 前端工程化生态全景图</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Lucide 图标库 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 引入 Mermaid 用于渲染流程图 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <!-- 自定义 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        // 使用带蓝调的 slate 替代死板的 gray
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(222.2 84% 4.9%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
+                        primary: {
+                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96.1%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        }
+                    }
+                }
+            }
+        }
+        // 初始化 Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+    <style>
+        html { scroll-behavior: smooth; }
+        .bg-grid-pattern {
+            /* 使用带有靛蓝色调的网格线，而不是纯灰 */
+            background-image: radial-gradient(rgba(99, 102, 241, 0.15) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        /* 美化滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-200 selection:text-indigo-900 flex h-screen overflow-hidden">
+
+    <!-- 左侧侧边栏 (Sidebar) -->
+    <aside class="w-64 bg-white border-r border-slate-200/80 flex flex-col h-full flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center mr-3 shadow-md shadow-indigo-200">
+                <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-slate-800">AI Front Flow</span>
+        </div>
+        <nav class="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-2">主功能区</div>
+            <button onclick="switchView('guide')" id="nav-guide" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700 transition-all shadow-sm shadow-indigo-100/50 border border-indigo-100/50">
+                <i data-lucide="book-open" class="w-5 h-5"></i> 生态与指南
+            </button>
+            <button onclick="switchView('generator')" id="nav-generator" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all border border-transparent">
+                <i data-lucide="terminal-square" class="w-5 h-5"></i> Prompt 生成器
+            </button>
+            
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-2 mt-8">章节导航</div>
+            <a href="#ecosystem" onclick="switchView('guide')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">核心生态</a>
+            <a href="#workflow" onclick="switchView('guide')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">工作流 SOP</a>
+            <a href="#cases" onclick="switchView('guide')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">顶级案例剖析</a>
+            <a href="#resources" onclick="switchView('guide')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">资源指南</a>
+            <a href="#guide" onclick="switchView('guide')" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">小白设计法则</a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 shrink-0">
+            <a href="https://github.com" target="_blank" class="flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors py-2 px-4 rounded-lg hover:bg-slate-50">
+                <i data-lucide="github" class="w-4 h-4"></i> View Source
+            </a>
+        </div>
+    </aside>
+
+    <!-- 右侧主内容区 -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
+        
+        <!-- 移动端顶部栏 -->
+        <header class="md:hidden h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 shrink-0 z-10 shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-md">
+                    <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+                </div>
+                <span class="font-bold text-lg tracking-tight text-slate-800">Front Flow</span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="switchView('guide')" id="nav-guide-mobile" class="p-2 text-indigo-600 bg-indigo-50 rounded-lg transition-colors border border-indigo-100"><i data-lucide="book-open" class="w-5 h-5"></i></button>
+                <button onclick="switchView('generator')" id="nav-generator-mobile" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent"><i data-lucide="terminal-square" class="w-5 h-5"></i></button>
+            </div>
+        </header>
+
+        <!-- 滚动容器 -->
+        <div class="flex-1 overflow-y-auto scroll-smooth" id="main-scroll-area">
+            
+            <!-- ================= 视图 1：指南与生态 ================= -->
+            <div id="view-guide" class="block pb-16">
+                
+                <!-- 增强版英雄区域 -->
+                <header class="relative pt-16 pb-20 lg:pt-28 lg:pb-32 overflow-hidden bg-white border-b border-slate-200/60 shadow-sm">
+                    <!-- 炫彩渐变背景 -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/40 to-purple-50/50 pointer-events-none"></div>
+                    <div class="absolute inset-0 bg-grid-pattern opacity-60"></div>
+                    
+                    <div class="container mx-auto px-6 relative z-10 text-center max-w-4xl">
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-indigo-100/80 text-indigo-700 text-sm font-semibold mb-8 shadow-sm">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                            </span>
+                            从“手工业”迈向“AI 自动化车间”
+                        </div>
+                        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 text-slate-900 leading-[1.15]">
+                            下一代 AI 前端 <br class="hidden md:block"/>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500">工程化生态全景图</span>
+                        </h1>
+                        <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                            汇集当前全球最顶尖的开源项目，打通设计蓝图、代码骨架、AI 指令集到视觉自动化的完整软件生命周期链路。
+                        </p>
+                        <div class="flex flex-wrap items-center justify-center gap-4">
+                            <button onclick="switchView('generator')" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 gap-2 hover:-translate-y-0.5">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i> 使用 Prompt 生成器
+                            </button>
+                            <a href="#ecosystem" class="inline-flex items-center justify-center px-6 py-3 border border-slate-200 bg-white text-base font-medium rounded-xl text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm gap-2">
+                                探索工具链 <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <main id="ecosystem" class="container mx-auto px-6 py-16 max-w-6xl space-y-20">
+                    
+                    <!-- 1. 基础设施层 -->
+                    <div>
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-12 h-12 bg-blue-100/80 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm border border-blue-200/50">
+                                <i data-lucide="box" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900">1. 基础设施层</h3>
+                                <p class="text-slate-500 mt-1 text-sm">设计资产与代码底座</p>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- 卡片统一样式升级：更柔和的边框和淡淡的阴影 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                                <div class="flex justify-between mb-5"><div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="pen-tool" class="w-6 h-6"></i></div></div>
+                                <h4 class="text-xl font-bold mb-2 text-slate-800"><a href="https://github.com/penpot/penpot" target="_blank" class="hover:text-indigo-600 inline-flex items-center gap-1 transition-colors">Penpot <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">开源 Figma 替代品。原生支持 SVG 与 CSS Flex/Grid。设计师的布局即是真实的 DOM 结构。</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                                <div class="flex justify-between mb-5"><div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="pencil-ruler" class="w-6 h-6"></i></div></div>
+                                <h4 class="text-xl font-bold mb-2 text-slate-800"><a href="https://www.pencil.dev/" target="_blank" class="hover:text-indigo-600 inline-flex items-center gap-1 transition-colors">Pencil (pencil.dev) <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">商业级 AI 矢量画布。内置 MCP Server，设计文件以代码格式存在仓库中，在 IDE 内实现真正的双向同步。</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                                <div class="flex justify-between mb-5"><div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i data-lucide="bot" class="w-6 h-6"></i></div></div>
+                                <h4 class="text-xl font-bold mb-2 text-slate-800"><a href="https://github.com/ZSeven-W/openpencil" target="_blank" class="hover:text-indigo-600 inline-flex items-center gap-1 transition-colors">OpenPencil <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">开源 AI 原生设计工具。首创“并发 Agent 团队”协同绘制 UI，支持一键将自然语言转化为 React 代码。</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                                <div class="flex justify-between mb-5"><div class="p-3 bg-slate-100 text-slate-700 rounded-xl"><i data-lucide="component" class="w-6 h-6"></i></div></div>
+                                <h4 class="text-xl font-bold mb-2 text-slate-800"><a href="https://github.com/shadcn-ui/ui" target="_blank" class="hover:text-indigo-600 inline-flex items-center gap-1 transition-colors">shadcn/ui <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">“不是组件库的组件库”。源码级组件，零封装。配合 MCP 与 AI 工具拼装界面的最佳“乐高积木”。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 指挥与生成层 -->
+                    <div>
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-12 h-12 bg-indigo-100/80 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-200/50">
+                                <i data-lucide="cpu" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900">2. 指挥与生成层</h3>
+                                <p class="text-slate-500 mt-1 text-sm">系统规范与审美直觉</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="md:col-span-2 lg:col-span-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-8 rounded-2xl shadow-xl shadow-indigo-900/10 relative overflow-hidden text-white border border-slate-800">
+                                <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                                    <i data-lucide="layout-template" class="w-32 h-32 text-indigo-200"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <h4 class="text-2xl font-bold mb-3"><a href="https://github.com/nexu-io/open-design" target="_blank" class="hover:text-indigo-300 inline-flex items-center gap-2 transition-colors">Open Design (nexu-io/open-design) <i data-lucide="external-link" class="w-5 h-5 text-indigo-400"></i></a></h4>
+                                    <p class="text-indigo-100/80 max-w-2xl leading-relaxed">自带独立沙盒的 AI 自动化设计中枢（OS）。将底层编码助手（如 Claude Code）与顶级商业设计系统桥接，实现“选配置即生成”。</p>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-6 rounded-2xl border border-indigo-100/60 shadow-sm">
+                                <h4 class="text-lg font-bold mb-3 text-slate-800 flex items-center gap-2"><i data-lucide="gem" class="w-4 h-4 text-blue-500"></i> <a href="https://github.com/Leonxlnx/taste-skill" target="_blank" class="hover:text-blue-600 hover:underline inline-flex items-center gap-1 transition-colors">taste-skill <i data-lucide="external-link" class="w-3 h-3 text-blue-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">现象级“反平庸”架构。赋予 AI 顶级品味，拒绝大杂烩，内置可调的排版、动效与布局差异度等多维拨盘。</p>
+                            </div>
+                            <div class="bg-gradient-to-b from-purple-50/50 to-white p-6 rounded-2xl border border-purple-100/60 shadow-sm">
+                                <h4 class="text-lg font-bold mb-3 text-purple-900 flex items-center gap-2"><i data-lucide="paint-bucket" class="w-4 h-4"></i> <a href="https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design" target="_blank" class="hover:underline inline-flex items-center gap-1">anthropic/design <i data-lucide="external-link" class="w-3 h-3 text-purple-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">官方原生指令，主打“拒绝 AI 塑料感”。强制大模型摒弃千篇一律的字体与紫色渐变，要求极致的视觉方向。</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+                                <h4 class="text-lg font-bold mb-3 text-slate-800 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> <a href="https://github.com/nextlevelbuilder/ui-ux-pro-max-skill" target="_blank" class="hover:text-amber-600 hover:underline inline-flex items-center gap-1 transition-colors">ui-ux-pro-max <i data-lucide="external-link" class="w-3 h-3 text-amber-300"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">全能型商业级设计指令集。强制 AI 遵循现代排版缩放、暗黑模式、微交互与无障碍规范。</p>
+                            </div>
+                            <div class="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-md">
+                                <h4 class="text-lg font-bold mb-3 flex items-center gap-2"><i data-lucide="circle-dot" class="w-4 h-4 text-slate-400"></i> <a href="https://github.com/dominikmartn/nothing-design-skill" target="_blank" class="hover:text-slate-300 hover:underline inline-flex items-center gap-1 transition-colors">nothing-design <i data-lucide="external-link" class="w-3 h-3 text-slate-500"></i></a></h4>
+                                <p class="text-slate-400 text-sm leading-relaxed">极端风格化指令集。将极客黑白对比、点阵与等宽字体规则注入 AI，一键生成机械工业风界面。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 交互与动效层 -->
+                    <div>
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-12 h-12 bg-amber-100/80 text-amber-600 rounded-2xl flex items-center justify-center shadow-sm border border-amber-200/50">
+                                <i data-lucide="sparkles" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900">3. 交互与动效层</h3>
+                                <p class="text-slate-500 mt-1 text-sm">注入灵魂的视觉魔法</p>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-transform">
+                                <div class="flex justify-between mb-5"><div class="p-3 bg-orange-50 text-orange-600 rounded-xl"><i data-lucide="move" class="w-6 h-6"></i></div></div>
+                                <h4 class="text-xl font-bold mb-2 text-slate-800"><a href="https://motion.dev/" target="_blank" class="hover:text-orange-600 inline-flex items-center gap-1 transition-colors">Framer Motion <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">React 生态下最强大的动画库。通过极简的声明式 API，让 AI 轻松生成物理驱动微交互与丝滑转场。</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-transform">
+                                <div class="flex justify-between mb-5"><div class="p-3 bg-pink-50 text-pink-600 rounded-xl"><i data-lucide="mouse-pointer-click" class="w-6 h-6"></i></div></div>
+                                <h4 class="text-xl font-bold mb-2 text-slate-800"><a href="https://magicui.design/" target="_blank" class="hover:text-pink-600 inline-flex items-center gap-1 transition-colors">Magic UI / Aceternity <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">专为现代 Web 和 AI 产品打造的高颜值开源动效库。一键引入流光边框、跟随光标磁吸等顶级大厂特效。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 审查与验证层 -->
+                    <div>
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-12 h-12 bg-emerald-100/80 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm border border-emerald-200/50">
+                                <i data-lucide="shield-check" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900">4. 审查与验证层</h3>
+                                <p class="text-slate-500 mt-1 text-sm">像素警察与自动化测试</p>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-transform">
+                                <h4 class="text-xl font-bold mb-3 text-slate-800 flex items-center gap-2"><i data-lucide="wand-2" class="w-5 h-5 text-rose-500"></i> <a href="https://github.com/gnurio/refactoring-ui-plugin" target="_blank" class="hover:text-rose-600 hover:underline inline-flex items-center gap-1 transition-colors">refactoring-ui-plugin <i data-lucide="external-link" class="w-4 h-4 text-rose-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">将《Refactoring UI》的黄金法则化为审查插件，对杂乱代码进行自动化“视觉层级”与“留白”重构。</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:-translate-y-1 transition-transform">
+                                <h4 class="text-xl font-bold mb-3 text-slate-800 flex items-center gap-2"><i data-lucide="bot" class="w-5 h-5 text-teal-500"></i> <a href="https://github.com/web-infra-dev/midscene" target="_blank" class="hover:text-teal-600 hover:underline inline-flex items-center gap-1 transition-colors">Midscene.js <i data-lucide="external-link" class="w-4 h-4 text-teal-400"></i></a></h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">基于视觉大模型的 UI 自动化框架。抛弃 DOM 查询，让 AI 直接“看屏幕”执行点击和端到端测试。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= 第2部分：AI 极效工作流 SOP ================= -->
+                    <section id="workflow" class="scroll-mt-24 bg-white rounded-3xl p-8 md:p-12 border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                        <div class="text-center mb-10">
+                            <span class="px-4 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-full text-sm mb-5 inline-block border border-emerald-100/50">Best Practice</span>
+                            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">AI 极效前端工作流 SOP</h2>
+                            <p class="text-slate-500 max-w-2xl mx-auto">让 AI 充当“翻译官”和“组装工”，大幅节省 Token 消耗，避免幻觉。</p>
+                        </div>
+
+                        <!-- Mermaid 流程图展示 -->
+                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-12 overflow-x-auto">
+                            <div class="mermaid text-center">
+                                graph TD
+                                    classDef step fill:#ffffff,stroke:#94a3b8,stroke-width:2px,color:#0f172a,font-weight:bold,rx:8px,ry:8px;
+                                    classDef tools fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#1e3a8a,rx:4px,ry:4px;
+                                    classDef token fill:#f0fdf4,stroke:#86efac,stroke-width:1px,color:#166534,rx:4px,ry:4px,stroke-dasharray: 5 5;
+
+                                    A[1. 视觉约束: 工具绘制草图]:::step --> B[2. 上下文注入: 投喂开源源码]:::step
+                                    B --> C[3. 规则预设: 高精度 Prompt]:::step
+                                    C --> D((AI 生成与重构))
+                                    D --> E[4. 视觉迭代: 截图划红框]:::step
+                                    E -.->|精准定位缺陷| C
+
+                                    T1[Penpot / OpenPencil]:::tools -.-> A
+                                    T2[shadcn / Magic UI]:::tools -.-> B
+                                    T3[taste-skill / pro-max]:::tools -.-> C
+                                    T4[Midscene / VLM]:::tools -.-> E
+                            </div>
+                        </div>
+
+                        <!-- Token 节省速查表 -->
+                        <h4 class="text-lg font-bold text-slate-900 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500"></i> Token 节省与提效速查表
+                        </h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 text-sm">
+                                        <th class="p-4 border-b border-slate-200 font-bold rounded-tl-lg">你的痛点行为</th>
+                                        <th class="p-4 border-b border-slate-200 font-bold">Token 消耗</th>
+                                        <th class="p-4 border-b border-slate-200 font-bold text-emerald-700 rounded-tr-lg">极效解法 (推荐)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm text-slate-700">
+                                    <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
+                                        <td class="p-4 font-medium">“帮我写个炫酷的落地页”</td>
+                                        <td class="p-4 text-red-500 font-medium">灾难级</td>
+                                        <td class="p-4 font-bold text-slate-900">发一张 Penpot 草图 + 一套顶级 UI 参考图</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
+                                        <td class="p-4 font-medium">全选复制 2000 行 HTML 找 UI Bug</td>
+                                        <td class="p-4 text-red-500 font-medium">极高</td>
+                                        <td class="p-4 font-bold text-slate-900">使用“截图 + 红框”指出错位区域</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="p-4 font-medium">每次重复强调“按钮要好看点”</td>
+                                        <td class="p-4 text-amber-500 font-medium">中等累加</td>
+                                        <td class="p-4 font-bold text-slate-900">使用生成器固化 `ui-ux-pro-max` 规则</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- ================= 第2.5部分：顶级设计案例剖析 ================= -->
+                    <section id="cases" class="scroll-mt-24">
+                        <div class="text-center mb-12">
+                            <span class="px-4 py-1.5 bg-amber-50 text-amber-700 font-bold rounded-full text-sm mb-5 inline-block border border-amber-100/50">Case Studies</span>
+                            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">顶级 AI 产品的设计逆向拆解</h2>
+                            <p class="text-slate-500 max-w-2xl mx-auto">用前文提到的开源设计理念，来审视目前最火的 AI 生产力工具是如何做设计的。</p>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-8">
+                            <!-- Case 1: Claude Web -->
+                            <div class="bg-[#FDFBF7] p-8 rounded-2xl border border-[#E5E0D8] shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                                    <i data-lucide="message-square" class="w-24 h-24 text-orange-900"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex flex-wrap gap-2 mb-5">
+                                        <span class="px-2.5 py-1 bg-white border border-[#E5E0D8] text-[#4A453E] text-[10px] font-bold uppercase rounded-md shadow-sm">soft-skill</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-[#2C2925] mb-3">Claude Web 端</h3>
+                                    <p class="text-[#7A756D] text-sm leading-relaxed">
+                                        <strong>分析：</strong>极其微弱的暖麻色背景 (#FDFBF7)。抛弃了所有的生硬边框，依靠经典的衬线体排版来营造安静、克制、昂贵的“学术阅读”氛围。
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Case 2: Claude Code -->
+                            <div class="bg-[#09090B] p-8 rounded-2xl border border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-lg transition-shadow relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                                    <i data-lucide="terminal" class="w-24 h-24 text-white"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex flex-wrap gap-2 mb-5">
+                                        <span class="px-2.5 py-1 bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold uppercase rounded-md">nothing-design</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white mb-3">Claude Code 终端</h3>
+                                    <p class="text-slate-400 text-sm leading-relaxed">
+                                        <strong>分析：</strong>纯正黑底白字，强制等宽字体。去除渐变和圆角，依靠 ASCII 字符和鲜明的高亮色（终端绿/黄）区分层级，将工业极客美学推向极致。
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Case 3: Cursor / Codex IDE -->
+                            <div class="bg-[#18181B] p-8 rounded-2xl border border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-lg transition-shadow relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                                    <i data-lucide="code-2" class="w-24 h-24 text-blue-500"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex flex-wrap gap-2 mb-5">
+                                        <span class="px-2.5 py-1 bg-slate-900 text-blue-400 border border-slate-700 text-[10px] font-bold uppercase rounded-md">ui-ux-pro-max</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white mb-3">Cursor 桌面端</h3>
+                                    <p class="text-slate-400 text-sm leading-relaxed">
+                                        <strong>分析：</strong>高密信息降噪教科书。杜绝乱加边框，用极微小的背景色差划分区域。极其克制的主题色只在“语法高亮”和“生成按钮”上出现。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ================= 第3部分：2026 开源设计资源指南 ================= -->
+                    <section id="resources" class="scroll-mt-24">
+                        <div class="text-center mb-12">
+                            <span class="px-4 py-1.5 bg-purple-50 text-purple-700 font-bold rounded-full text-sm mb-5 inline-block border border-purple-100/50">Resources</span>
+                            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">2026 UI/UX 设计库与神级资源</h2>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <!-- 组件库卡片 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:border-blue-300 transition-colors">
+                                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="layers-3" class="w-5 h-5 text-blue-600"></i> 现代敏捷 UI 库</h3>
+                                <ul class="space-y-3 text-sm text-slate-600">
+                                    <li><a href="https://ui.shadcn.com/" target="_blank" class="text-slate-900 font-bold hover:text-blue-600 hover:underline">shadcn/ui:</a> 拥有代码完全所有权的顶级基建。</li>
+                                    <li><a href="https://magicui.design/" target="_blank" class="text-slate-900 font-bold hover:text-blue-600 hover:underline">Magic UI:</a> 一键引入现代 Web 炫酷特效。</li>
+                                    <li><a href="https://carbondesignsystem.com/" target="_blank" class="text-slate-900 font-bold hover:text-blue-600 hover:underline">Carbon:</a> IBM 出品，主打严谨与可访问性。</li>
+                                </ul>
+                            </div>
+
+                            <!-- 配色灵感 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:border-teal-300 transition-colors">
+                                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="pipette" class="w-5 h-5 text-teal-600"></i> 神级配色工具</h3>
+                                <ul class="space-y-3 text-sm text-slate-600">
+                                    <li><a href="https://realtimecolors.com/" target="_blank" class="text-slate-900 font-bold hover:text-teal-600 hover:underline">Realtime Colors:</a> 所见即所得，在真实页面中预览色板。</li>
+                                    <li><a href="https://coolors.co/" target="_blank" class="text-slate-900 font-bold hover:text-teal-600 hover:underline">Coolors:</a> 空格键无限生成极度解压的绝佳搭配。</li>
+                                    <li><a href="https://colorhunt.co/" target="_blank" class="text-slate-900 font-bold hover:text-teal-600 hover:underline">Color Hunt:</a> 设计师精选库，非常适合直接抄作业。</li>
+                                </ul>
+                            </div>
+
+                            <!-- 经典预设 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="swatch-book" class="w-5 h-5 text-indigo-500"></i> 安全配色预设</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-1">科技蓝调 (SaaS/后台)</div>
+                                        <div class="flex h-6 rounded overflow-hidden shadow-inner border border-slate-100">
+                                            <div class="w-1/4 bg-[#F8FAFC]"></div><div class="w-1/4 bg-[#FFFFFF]"></div><div class="w-1/4 bg-[#2563EB]"></div><div class="w-1/4 bg-[#0F172A]"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-1">极客暗黑 (IDE/AI)</div>
+                                        <div class="flex h-6 rounded overflow-hidden shadow-inner border border-slate-800">
+                                            <div class="w-1/4 bg-[#09090B]"></div><div class="w-1/4 bg-[#18181B]"></div><div class="w-1/4 bg-[#10B981]"></div><div class="w-1/4 bg-[#FAFAFA]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 附录：小白设计法则 -->
+                    <section id="guide" class="bg-white rounded-2xl p-8 md:p-12 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-200/80">
+                        <h2 class="text-2xl md:text-3xl font-bold mb-8 text-slate-900">💡 附录：小白 UI 极简设计法则</h2>
+                        <div class="grid md:grid-cols-2 gap-x-12 gap-y-8">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-slate-700 shrink-0 shadow-sm"><i data-lucide="layout" class="w-5 h-5"></i></div>
+                                <div><strong class="text-slate-900 text-base block mb-1">1. 黄金结构与留白</strong> 摒弃紧凑布局。卡片内部的 Padding 至少保持 16px-24px，让元素有充足的“呼吸感”。</div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-slate-700 shrink-0 shadow-sm"><i data-lucide="palette" class="w-5 h-5"></i></div>
+                                <div><strong class="text-slate-900 text-base block mb-1">2. 70-20-10 克制色彩原则</strong> 70% 浅色/深色背景大面铺底，20% 品牌色仅用于按钮和激活态，10% 辅助次级文本色。</div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-slate-700 shrink-0 shadow-sm"><i data-lucide="type" class="w-5 h-5"></i></div>
+                                <div><strong class="text-slate-900 text-base block mb-1">3. 严控字体层级</strong> 整个页面最多使用 3 种字号（如 24px 加粗主标、14px 常规正文、12px 弱化备注）。保持左对齐。</div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-slate-700 shrink-0 shadow-sm"><i data-lucide="bot" class="w-5 h-5"></i></div>
+                                <div><strong class="text-slate-900 text-base block mb-1">4. 请 AI 充当像素警察</strong> 骨架拼装完成后，必须给 AI 发送 `refactoring-ui` 指令，强制其检查并添加 hover 等微交互特效。</div>
+                            </div>
+                        </div>
+                    </section>
+
+                </main>
+
+                <!-- 页脚 -->
+                <footer class="bg-white border-t border-slate-200/80 mt-12 py-12">
+                    <div class="container mx-auto px-6 text-center max-w-6xl">
+                        <div class="flex items-center justify-center gap-2 mb-4 text-slate-300">
+                            <i data-lucide="code" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-500 text-sm font-medium">
+                            Built with HTML, Tailwind CSS (Slate Edition), Mermaid.js & AI. <br class="md:hidden" /> Empowering developers to automate the frontend.
+                        </p>
+                    </div>
+                </footer>
+            </div> <!-- 结束 view-guide -->
+
+            <!-- ================= 视图 2：Prompt 生成器 ================= -->
+            <div id="view-generator" class="hidden p-6 md:p-12 max-w-5xl mx-auto min-h-full">
+                <div class="mb-10">
+                    <span class="px-4 py-1.5 bg-indigo-50 text-indigo-700 font-bold rounded-full text-sm mb-5 inline-block border border-indigo-100">Prompt Generator</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">系统级 Prompt 生成器</h2>
+                    <p class="text-slate-500">选择你期望的组件基建与设计风格，一键生成可以直接投喂给 Claude/Cursor 等大模型的结构化提示词。</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- 左侧：表单配置 -->
+                    <div class="space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+                        <!-- 需求描述 -->
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">你要构建什么界面？(核心需求)</label>
+                            <input type="text" id="gen-task" placeholder="例如：一个 SaaS 产品的登录页面" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm bg-slate-50/50">
+                        </div>
+
+                        <!-- 风格预设 -->
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">选择视觉风格 (Design Skills)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="style" value="soft-skill" class="peer sr-only" checked>
+                                    <div class="p-3 rounded-xl border border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-900 hover:bg-slate-50 transition-all shadow-sm">
+                                        <div class="font-bold text-sm mb-1">柔和学术风</div>
+                                        <div class="text-[11px] text-slate-500">soft-skill, 留白, 衬线体</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="style" value="nothing-design" class="peer sr-only">
+                                    <div class="p-3 rounded-xl border border-slate-200 peer-checked:border-slate-800 peer-checked:bg-slate-900 peer-checked:text-white hover:bg-slate-50 transition-all shadow-sm">
+                                        <div class="font-bold text-sm mb-1">硬核极客风</div>
+                                        <div class="text-[11px] text-slate-500">nothing-design, 点阵, 黑白</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="style" value="pro-max" class="peer sr-only">
+                                    <div class="p-3 rounded-xl border border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-900 hover:bg-slate-50 transition-all shadow-sm">
+                                        <div class="font-bold text-sm mb-1">现代商业风</div>
+                                        <div class="text-[11px] text-slate-500">ui-ux-pro-max, 微交互</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="style" value="tech-blue" class="peer sr-only">
+                                    <div class="p-3 rounded-xl border border-slate-200 peer-checked:border-sky-500 peer-checked:bg-sky-50 peer-checked:text-sky-900 hover:bg-slate-50 transition-all shadow-sm">
+                                        <div class="font-bold text-sm mb-1">科技蓝调风</div>
+                                        <div class="text-[11px] text-slate-500">高效, 降噪, 金融后台</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 基础设施库 -->
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">底层框架与基建 (Framework)</label>
+                            <select id="gen-tech" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm bg-slate-50/50 appearance-none">
+                                <option value="react-tailwind-shadcn">React + Tailwind CSS + shadcn/ui</option>
+                                <option value="react-tailwind-magicui">React + Tailwind CSS + Magic UI</option>
+                                <option value="html-tailwind">原生 HTML + Tailwind CSS CDN</option>
+                                <option value="vue-tailwind">Vue 3 + Tailwind CSS</option>
+                            </select>
+                        </div>
+
+                        <button onclick="generatePrompt()" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 hover:-translate-y-0.5">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i> 组装 Prompt
+                        </button>
+                    </div>
+
+                    <!-- 右侧：输出结果 -->
+                    <div class="flex flex-col h-full relative">
+                        <div class="absolute top-4 right-4 flex gap-2 z-10">
+                            <button onclick="copyPrompt()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i> 一键复制
+                            </button>
+                        </div>
+                        <label class="block text-sm font-bold text-slate-900 mb-2 px-1">生成的结构化提示词：</label>
+                        <textarea id="gen-output" readonly class="flex-1 w-full p-5 bg-slate-900 text-emerald-400 font-mono text-sm leading-relaxed rounded-2xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] border border-slate-800 outline-none resize-none h-[400px] lg:h-auto focus:ring-2 focus:ring-emerald-500/50" placeholder="点击左侧「组装 Prompt」生成..."></textarea>
+                    </div>
+                </div>
+            </div> <!-- 结束 view-generator -->
+
+        </div> <!-- 结束滚动容器 -->
+    </div> <!-- 结束右侧主内容区 -->
+
+    <!-- 初始化 Lucide 图标与逻辑脚本 -->
+    <script>
+        lucide.createIcons();
+
+        function switchView(viewName) {
+            const guideView = document.getElementById('view-guide');
+            const genView = document.getElementById('view-generator');
+            const navGuide = document.getElementById('nav-guide');
+            const navGen = document.getElementById('nav-generator');
+            const navGuideMobile = document.getElementById('nav-guide-mobile');
+            const navGenMobile = document.getElementById('nav-generator-mobile');
+            const scrollArea = document.getElementById('main-scroll-area');
+
+            if (viewName === 'guide') {
+                guideView.classList.remove('hidden');
+                guideView.classList.add('block');
+                genView.classList.remove('block');
+                genView.classList.add('hidden');
+                
+                navGuide.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700 transition-all shadow-sm shadow-indigo-100/50 border border-indigo-100/50";
+                navGen.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all border border-transparent";
+                
+                navGuideMobile.className = "p-2 text-indigo-600 bg-indigo-50 rounded-lg transition-colors border border-indigo-100";
+                navGenMobile.className = "p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent";
+            } else {
+                guideView.classList.remove('block');
+                guideView.classList.add('hidden');
+                genView.classList.remove('hidden');
+                genView.classList.add('block');
+                
+                navGen.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700 transition-all shadow-sm shadow-indigo-100/50 border border-indigo-100/50";
+                navGuide.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all border border-transparent";
+                
+                navGenMobile.className = "p-2 text-indigo-600 bg-indigo-50 rounded-lg transition-colors border border-indigo-100";
+                navGuideMobile.className = "p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent";
+                
+                scrollArea.scrollTo(0, 0);
+            }
+        }
+
+        function generatePrompt() {
+            const task = document.getElementById('gen-task').value.trim() || '一个交互式组件或页面';
+            const style = document.querySelector('input[name="style"]:checked').value;
+            const tech = document.getElementById('gen-tech').value;
+            const output = document.getElementById('gen-output');
+
+            let stylePrompt = '';
+            if (style === 'soft-skill') {
+                stylePrompt = `【视觉规范：soft-skill 柔和高级风】\n1. 背景避免使用纯白，采用极其微弱的暖麻色/米色（如 #FDFBF7）。\n2. 消除所有生硬边框与强烈阴影，采用极其轻微的弥散阴影。\n3. 标题使用衬线字体（Serif），正文使用无衬线字体，依靠排版大小体现层级。\n4. 增加大量留白（Padding 至少 24px），营造安静、昂贵的阅读感。`;
+            } else if (style === 'nothing-design') {
+                stylePrompt = `【视觉规范：nothing-design 工业极客风】\n1. 强制采用暗黑模式，纯正的黑底白字（背景 #09090B）。\n2. 全局文本强制使用等宽字体（Monospace）。\n3. 彻底移除渐变色、圆角（使用直角）和弥散阴影。\n4. 使用 1px 硬边框（#27272A）或 ASCII 字符风格分割区域。\n5. 强调色极度克制，仅使用点阵风格的终端绿或亮黄。`;
+            } else if (style === 'pro-max') {
+                stylePrompt = `【视觉规范：ui-ux-pro-max 现代商业风】\n1. 采用高对比度现代排版，主标题加粗（24px+），次级文本弱化对比度。\n2. 强制补充微交互：可点击元素需包含丝滑的 hover 过渡效果（transition-all duration-200）。\n3. 使用柔和的大圆角（rounded-xl 或 2xl）和极其细腻的弥散阴影构建卡片。`;
+            } else if (style === 'tech-blue') {
+                stylePrompt = `【视觉规范：科技降噪风】\n1. 信息降噪：取消多余卡片边框，通过极微小的背景色差（如白底与 #F8FAFC 浅灰背景）区分区域。\n2. 克制主色：70%大面积留白，20%品牌科技蓝（仅限核心按钮/激活状态），10%深灰文字。\n3. 结构严谨：保持严格的左对齐，元素间距（Gap/Padding）使用 Tailwind 的 4 的倍数体系。`;
+            }
+
+            let techPrompt = '';
+            if (tech === 'react-tailwind-shadcn') {
+                techPrompt = `【技术栈约定】\n- 使用 React (函数式组件 + Hooks) 编写代码。\n- 使用 Tailwind CSS 进行样式定义。\n- 优先使用 shadcn/ui 的组件结构理念（如无障碍属性、Radix UI 基础语义）。`;
+            } else if (tech === 'react-tailwind-magicui') {
+                techPrompt = `【技术栈约定】\n- 使用 React 和 Tailwind CSS。\n- 请注重动效实现，可引入 Framer Motion 编写流光边框、视差滚动等高级炫酷效果。`;
+            } else if (tech === 'html-tailwind') {
+                techPrompt = `【技术栈约定】\n- 输出可直接运行的原生 HTML 代码。\n- 样式全部使用 Tailwind CSS 的工具类（假设已引入 CDN）。\n- 必要的交互使用原生 Vanilla JS 附在 <script> 标签中。`;
+            } else if (tech === 'vue-tailwind') {
+                techPrompt = `【技术栈约定】\n- 使用 Vue 3 (Composition API / <script setup>)。\n- 使用 Tailwind CSS 进行样式定义。\n- 保持模板结构清晰，逻辑与试图分离。`;
+            }
+
+            const finalPrompt = `请作为一个拥有顶级品味的资深 UI/UX 设计师与前端工程师，帮我生成【${task}】。
+
+${techPrompt}
+
+${stylePrompt}
+
+【输出要求】
+1. 代码必须完整且可运行，拒绝使用注释省略关键逻辑。
+2. 确保页面结构响应式适配（使用 md: 或 lg: 断点）。
+3. 请直接输出代码，不要多余的寒暄。`;
+
+            output.value = finalPrompt;
+            
+            output.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-800');
+            setTimeout(() => {
+                output.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-800');
+            }, 300);
+        }
+
+        function copyPrompt() {
+            const output = document.getElementById('gen-output');
+            if (!output.value) return;
+            
+            output.select();
+            output.setSelectionRange(0, 99999); 
+            document.execCommand("copy");
+            
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> 已复制`;
+            btn.classList.add('text-green-400');
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('text-green-400');
+                lucide.createIcons();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
