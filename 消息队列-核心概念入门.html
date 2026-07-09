@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消息队列核心概念 · 从零到一</title>
+<style>
+:root {
+  --mq: #f97316; --mq-dark: #c2410c; --mq-light: #fff7ed;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --pink: #db2777; --pink-light: #fce7f3;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--mq);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px}
+.nav .logo svg{width:24px;height:24px}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s}
+.nav a:hover,.nav a.active{background:var(--mq-light);color:var(--mq)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#f97316 0%,#c2410c 50%,#1a1a2e 100%);color:#fff;padding:70px 40px 56px;text-align:center}
+.hero h1{font-size:2.8rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2}
+.hero .sub{font-size:1.08rem;opacity:.88;margin-top:12px;max-width:640px;margin-inline:auto}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--mq);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--mq);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 30px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--mq-light);border-left:4px solid var(--mq)}
+.tip.warn{background:#fef3c7;border-left:4px solid #f59e0b}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+
+/* CODE */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.66rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.8rem;color:#cdd6f4;white-space:pre;line-height:1.7}
+.kw{color:#cba6f7}.str{color:#a6e3a1}.cmt{color:#6c7086;font-style:italic}
+.fn{color:#89b4fa}.num{color:#fab387}.typ{color:#f9e2af}
+.copy-btn{position:absolute;top:8px;right:46px;background:rgba(255,255,255,.1);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.7rem;font-family:var(--sans);transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:var(--mq-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--mq)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:#fffbeb}
+td code{background:var(--mq-light);color:var(--mq-dark);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.78rem}
+
+/* FLOW */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:16px;background:#f0f2f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.78rem;text-align:center}
+.flow-node.orange{border-color:var(--mq);background:var(--mq-light);color:var(--mq-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#064e3b}
+.flow-node.blue{border-color:var(--blue);background:var(--blue-light);color:#1e40af}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-arrow{color:var(--text3);font-size:1.1rem;font-weight:700}
+
+/* SVG */
+.svg-box{text-align:center;overflow-x:auto;padding:16px 0}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+@media(max-width:480px){.hero h1{font-size:1.8rem}.hero{padding:40px 20px 36px}}
+
+.concept-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:22px;transition:all .25s;text-align:center}
+.concept-card:hover{border-color:var(--mq);box-shadow:0 2px 12px rgba(249,115,22,.08)}
+.concept-card .icon{font-size:2.5rem;margin-bottom:10px}
+.concept-card h4{font-size:1rem;margin-bottom:6px;color:var(--mq-dark)}
+.concept-card p{font-size:.8rem;color:var(--text2);line-height:1.5}
+
+/* ACCORDION */
+.acc-header{cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 0;user-select:none;font-weight:700;font-size:.95rem;border-bottom:1px solid var(--border)}
+.acc-header .arr{transition:transform .25s;font-size:.75rem;color:var(--text3)}
+.acc-header.open .arr{transform:rotate(90deg)}
+.acc-body{display:none;padding:16px 0 8px 20px;animation:fadeIn .3s}
+.acc-body.open{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* SCENARIO BOX */
+.scene{background:var(--mq-light);border:2px dashed var(--mq);border-radius:var(--radius);padding:20px 24px;margin:16px 0}
+.scene h4{color:var(--mq-dark);margin-bottom:8px;font-size:.95rem}
+.scene p{font-size:.83rem;color:var(--text2)}
+
+/* ORDER ILLUSTRATION */
+.order-box{display:flex;gap:12px;overflow-x:auto;padding:10px 0}
+.order-msg{flex-shrink:0;width:80px;height:60px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
+.order-msg.m1{background:var(--mq)}.order-msg.m2{background:#ea580c}
+.order-msg.m3{background:#dc2626}.order-msg.m4{background:var(--purple)}
+.order-msg.wrong{background:#9ca3af;text-decoration:line-through}
+
+/* COMPARISON BAR */
+.compare-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0}
+.compare-bar .seg{transition:all .3s}
+
+/* ANIMATED DEMO */
+.demo-stage{background:var(--code-bg);border-radius:var(--radius);padding:20px;margin:16px 0;min-height:180px}
+.demo-stage .log-line{font-family:var(--mono);font-size:.78rem;color:#cdd6f4;padding:3px 0;white-space:pre-wrap;animation:slideIn .3s ease}
+.demo-stage .log-line .ts{color:#6c7086}.demo-stage .log-line .ev{color:#a6e3a1}
+.demo-stage .log-line .warn{color:#f9e2af}.demo-stage .log-line .err{color:#f38ba8}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.demo-ctrls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.demo-ctrls button{background:var(--mq);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.82rem;font-family:var(--sans);transition:.2s}
+.demo-ctrls button:hover{background:var(--mq-dark)}
+.demo-ctrls button.reset{background:var(--text3)}.demo-ctrls button.reset:hover{background:var(--text2)}
+
+/* TOGGLE SWITCH */
+.toggle-group{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.toggle-btn{padding:6px 16px;border:2px solid var(--border);border-radius:20px;background:var(--surface);cursor:pointer;font-size:.8rem;font-family:var(--sans);font-weight:500;color:var(--text2);transition:.2s}
+.toggle-btn:hover{border-color:var(--mq);color:var(--mq)}
+.toggle-btn.on{background:var(--mq);color:#fff;border-color:var(--mq)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#f97316" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4 2"/><circle cx="8" cy="8" r="1.5" fill="#f97316"/><circle cx="13" cy="8" r="1.5" fill="#f97316"/></svg>
+    消息队列概念
+  </div>
+  <a href="#overview">概述</a>
+  <a href="#concepts">核心概念</a>
+  <a href="#models">消息模型</a>
+  <a href="#reliability">可靠性</a>
+  <a href="#consume">消费模式</a>
+  <a href="#order">消息顺序</a>
+  <a href="#advanced">高级特性</a>
+  <a href="#pitfalls">常见问题</a>
+  <a href="#demo">动手演示</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>📨 消息队列核心概念</h1>
+  <p class="sub">从"什么是消息队列"到"如何保证可靠投递"——用最直观的方式理解 MQ 的每一个核心概念</p>
+  <div class="tags">
+    <span class="tag">解耦</span><span class="tag">异步</span><span class="tag">削峰</span>
+    <span class="tag">Producer</span><span class="tag">Consumer</span><span class="tag">Broker</span>
+    <span class="tag">ACK</span><span class="tag">死信队列</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════════ 1. 概述 ═══════════ -->
+<section class="sec" id="overview">
+  <div class="sec-title"><span class="n">1</span> 什么是消息队列？</div>
+
+  <div class="card">
+    <p>消息队列（Message Queue）是一种<strong>异步通信</strong>中间件。生产者把消息放进队列，消费者从队列取出处理——两者<strong>不需要同时在线</strong>，也不需要知道对方的存在。</p>
+
+    <div class="flow">
+      <div class="flow-node orange">Producer<br><small>生产者</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">Queue<br><small>消息队列</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">Consumer<br><small>消费者</small></div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:.8rem">图：消息队列的基本模型</p>
+  </div>
+
+  <div class="grid3">
+    <div class="concept-card">
+      <div class="icon">🔗</div><h4>解耦</h4>
+      <p>生产者和消费者独立演进，一方宕机不影响另一方</p>
+    </div>
+    <div class="concept-card">
+      <div class="icon">⚡</div><h4>异步</h4>
+      <p>耗时操作异步化，用户体验不阻塞：下订单后发短信、发邮件全扔给 MQ</p>
+    </div>
+    <div class="concept-card">
+      <div class="icon">🏔️</div><h4>削峰</h4>
+      <p>秒杀流量先入队列排队，后端按自己的节奏慢慢消费，数据库不会被冲垮</p>
+    </div>
+  </div>
+
+  <div class="scene">
+    <h4>📖 一个经典的场景</h4>
+    <p>用户下单后，系统需要：扣库存 → 创建订单 → <strong>发短信通知</strong> → <strong>发优惠券</strong> → <strong>写操作日志</strong>。</p>
+    <p>如果没有 MQ：每一步都串行等待，用户等 3 秒才看到"下单成功"。</p>
+    <p>有了 MQ：主流程只做「扣库存 + 创建订单」→ 把"发短信、发券、写日志"三条消息丢进队列 → 立即返回"下单成功"。后台慢慢消费即可。</p>
+  </div>
+</section>
+
+<!-- ═══════════ 2. 核心概念 ═══════════ -->
+<section class="sec" id="concepts">
+  <div class="sec-title"><span class="n">2</span> 核心概念</div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:16px">四位主角</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>概念</th><th>角色</th><th>类比</th></tr>
+        <tr><td><code>Producer</code></td><td>生产者，发送消息的一方</td><td>快递寄件人</td></tr>
+        <tr><td><code>Consumer</code></td><td>消费者，接收并处理消息的一方</td><td>快递收件人</td></tr>
+        <tr><td><code>Broker</code></td><td>消息代理，存储和转发消息的中间节点</td><td>快递中转站</td></tr>
+        <tr><td><code>Topic / Queue</code></td><td>消息的逻辑分类 / 存储通道</td><td>快递分类柜</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:16px">消息的生命周期</h3>
+    <div class="flow">
+      <div class="flow-node orange">1. 创建<br><small>Producer 组装消息</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">2. 发送<br><small>投递到 Broker</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">3. 存储<br><small>Broker 持久化</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">4. 投递<br><small>推送给 Consumer</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">5. 消费<br><small>Consumer 处理</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">6. 确认<br><small>ACK / Commit</small></div>
+    </div>
+  </div>
+
+  <div class="tip info"><span class="ti">💡</span> 消息一旦被确认（ACK），Broker 就可以安全删除它。如果消费者在处理中挂了，没有 ACK，消息会被重新投递给其他消费者。</div>
+</section>
+
+<!-- ═══════════ 3. 消息模型 ═══════════ -->
+<section class="sec" id="models">
+  <div class="sec-title"><span class="n">3</span> 消息模型</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="color:var(--blue);margin-bottom:12px">📥 点对点（P2P / Queue）</h3>
+      <div class="svg-box">
+        <svg viewBox="0 0 320 120" width="300" height="120">
+          <rect x="10" y="35" width="60" height="30" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <text x="40" y="55" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="600">Producer</text>
+          <line x1="70" y1="50" x2="110" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+          <rect x="115" y="30" width="80" height="40" rx="6" fill="#f0f2f8" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 2"/>
+          <text x="155" y="55" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">Queue</text>
+          <line x1="195" y1="50" x2="235" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+          <rect x="240" y="35" width="60" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+          <text x="270" y="55" text-anchor="middle" font-size="11" fill="#064e3b" font-weight="600">Consumer</text>
+          <text x="155" y="95" text-anchor="middle" font-size="10" fill="#94a3b8">一条消息只被一个消费者消费</text>
+          <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+        </svg>
+      </div>
+      <p style="font-size:.83rem;color:var(--text2)">每条消息只能被<strong>一个</strong>消费者处理。适合任务分发场景。</p>
+      <p style="font-size:.78rem;color:var(--text3)">代表：RabbitMQ Queue、RocketMQ 普通消息</p>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--purple);margin-bottom:12px">📢 发布/订阅（Pub/Sub / Topic）</h3>
+      <div class="svg-box">
+        <svg viewBox="0 0 320 120" width="300" height="120">
+          <rect x="10" y="35" width="60" height="30" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <text x="40" y="55" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="600">Publisher</text>
+          <line x1="70" y1="50" x2="110" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+          <rect x="115" y="30" width="70" height="40" rx="6" fill="#f0f2f8" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 2"/>
+          <text x="150" y="55" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">Topic</text>
+          <line x1="185" y1="40" x2="225" y2="25" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="185" y1="55" x2="225" y2="55" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="185" y1="70" x2="225" y2="85" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+          <rect x="230" y="15" width="70" height="20" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+          <text x="265" y="29" text-anchor="middle" font-size="8" fill="#9d174d">Sub-A</text>
+          <rect x="230" y="45" width="70" height="20" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+          <text x="265" y="59" text-anchor="middle" font-size="8" fill="#9d174d">Sub-B</text>
+          <rect x="230" y="75" width="70" height="20" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+          <text x="265" y="89" text-anchor="middle" font-size="8" fill="#9d174d">Sub-C</text>
+          <text x="150" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">一条消息被多个订阅者消费</text>
+        </svg>
+      </div>
+      <p style="font-size:.83rem;color:var(--text2)">每条消息可以被<strong>多个</strong>订阅者独立消费。适合广播场景。</p>
+      <p style="font-size:.78rem;color:var(--text3)">代表：Kafka Topic、RocketMQ 广播模式</p>
+    </div>
+  </div>
+
+  <div class="tip blue"><span class="ti">🧠</span> <strong>关键区别：</strong>P2P 是「一条消息一次消费」，Pub/Sub 是「一条消息多次消费」。Kafka 用 Consumer Group 把两者统一了——同组内 P2P，跨组 Pub/Sub。</div>
+</section>
+
+<!-- ═══════════ 4. 可靠性 ═══════════ -->
+<section class="sec" id="reliability">
+  <div class="sec-title"><span class="n">4</span> 消息可靠性：不丢、不重</div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:14px">消息可能在哪丢失？</h3>
+    <div class="flow">
+      <div class="flow-node orange">生产端<br><small>网络故障 / 异步刷盘</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">Broker<br><small>宕机 / 磁盘满</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">消费端<br><small>自动 ACK / 异常吞没</small></div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="concept-card">
+      <div class="icon">📤</div><h4>生产端可靠</h4>
+      <p>同步发送 + Broker 落盘确认（如 RocketMQ 的 SYNC_FLUSH），不用异步发送</p>
+    </div>
+    <div class="concept-card">
+      <div class="icon">💾</div><h4>Broker 持久化</h4>
+      <p>多副本（Replica）+ 同步刷盘 + ISR 机制，确保消息写入多数节点</p>
+    </div>
+    <div class="concept-card">
+      <div class="icon">✅</div><h4>消费端确认</h4>
+      <p>处理完成后手动 ACK，不自动提交 offset，避免"消费了但没处理完"</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:14px">三种投递语义</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>语义</th><th>含义</th><th>代价</th></tr>
+        <tr>
+          <td><code>At-most-once</code></td>
+          <td>最多一次，可能丢消息</td>
+          <td>最低，适合日志/metrics 等可丢失数据</td>
+        </tr>
+        <tr>
+          <td><code>At-least-once</code></td>
+          <td>至少一次，可能重复</td>
+          <td>中等，消费端需幂等处理，最常用</td>
+        </tr>
+        <tr>
+          <td><code>Exactly-once</code></td>
+          <td>精确一次，不丢不重</td>
+          <td>最高，需事务支持（如 Kafka 事务 / RocketMQ 事务消息）</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="tip warn"><span class="ti">⚠️</span> <strong>实战经验：</strong>绝大多数场景做到 <strong>At-least-once + 消费端幂等</strong> 就足够了。Exactly-once 代价极高，只在金额交易等严格场景使用。</div>
+</section>
+
+<!-- ═══════════ 5. 消费模式 ═══════════ -->
+<section class="sec" id="consume">
+  <div class="sec-title"><span class="n">5</span> 消费模式</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="color:var(--blue);margin-bottom:12px">Push 模式（推）</h3>
+      <p style="font-size:.83rem;color:var(--text2)">Broker 主动把消息推给 Consumer。</p>
+      <div class="tip good"><span class="ti">✅</span> 实时性好，延迟低</div>
+      <div class="tip warn"><span class="ti">❌</span> 消费慢时会积压在 Consumer 内存，OOM 风险</div>
+      <p style="font-size:.75rem;color:var(--text3);margin-top:6px">代表：RabbitMQ、RocketMQ 集群模式</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--purple);margin-bottom:12px">Pull 模式（拉）</h3>
+      <p style="font-size:.83rem;color:var(--text2)">Consumer 主动从 Broker 拉取消息。</p>
+      <div class="tip good"><span class="ti">✅</span> 消费端自主控速，不会被打垮</div>
+      <div class="tip warn"><span class="ti">❌</span> 轮询间隔造成延迟，短间隔浪费 CPU</div>
+      <p style="font-size:.75rem;color:var(--text3);margin-top:6px">代表：Kafka、RocketMQ 广播模式</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:14px">Consumer Group（消费者组）</h3>
+    <div class="svg-box">
+      <svg viewBox="0 0 500 140" width="480" height="140">
+        <rect x="10" y="10" width="100" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="60" y="35" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="600" font-family="sans-serif">Topic</text>
+        <text x="60" y="47" text-anchor="middle" font-size="8" fill="#2563eb" font-family="sans-serif">0  1  2  3  4  5</text>
+
+        <line x1="110" y1="20" x2="160" y2="5" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="110" y1="30" x2="160" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="110" y1="40" x2="160" y2="55" stroke="#94a3b8" stroke-width="1.5"/>
+
+        <rect x="155" y="0" width="75" height="20" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+        <text x="192" y="14" text-anchor="middle" font-size="8" fill="#064e3b" font-family="sans-serif">C1: 0,1</text>
+        <rect x="155" y="25" width="75" height="20" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+        <text x="192" y="39" text-anchor="middle" font-size="8" fill="#064e3b" font-family="sans-serif">C2: 2,3</text>
+        <rect x="155" y="50" width="75" height="20" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+        <text x="192" y="64" text-anchor="middle" font-size="8" fill="#064e3b" font-family="sans-serif">C3: 4,5</text>
+
+        <rect x="270" y="10" width="140" height="40" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="2" stroke-dasharray="6 2"/>
+        <text x="340" y="35" text-anchor="middle" font-size="10" fill="#c2410c" font-family="sans-serif">Consumer Group A</text>
+        <text x="340" y="47" text-anchor="middle" font-size="7" fill="#ea580c" font-family="sans-serif">组内负载均衡，分区独占</text>
+
+        <rect x="280" y="80" width="90" height="20" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+        <text x="325" y="94" text-anchor="middle" font-size="8" fill="#9d174d" font-family="sans-serif">Group B (广播)</text>
+        <text x="270" y="112" text-anchor="middle" font-size="7" fill="#94a3b8" font-family="sans-serif">同一条消息</text>
+        <text x="370" y="112" text-anchor="middle" font-size="7" fill="#94a3b8" font-family="sans-serif">多组各自消费</text>
+      </svg>
+    </div>
+    <p style="font-size:.83rem;color:var(--text2)"><strong>同组内：</strong>各 Consumer 分摊不同分区，一条消息只被组内一个 Consumer 消费。</p>
+    <p style="font-size:.83rem;color:var(--text2)"><strong>跨组间：</strong>不同 Consumer Group 之间互不影响，类似 Pub/Sub。</p>
+  </div>
+</section>
+
+<!-- ═══════════ 6. 消息顺序 ═══════════ -->
+<section class="sec" id="order">
+  <div class="sec-title"><span class="n">6</span> 消息顺序：谁先谁后？</div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:14px">为什么消息会乱序？</h3>
+    <div class="order-box" style="margin-bottom:12px">
+      <div class="order-msg m1">M1</div>
+      <span style="align-self:center;font-weight:700;color:var(--text3)">→</span>
+      <div class="order-msg m2">M2</div>
+      <span style="align-self:center;font-weight:700;color:var(--text3)">→</span>
+      <div class="order-msg m3">M3</div>
+      <span style="align-self:center;font-weight:700">发送顺序 ✓</span>
+    </div>
+    <div class="order-box">
+      <div class="order-msg m1 wrong">M1</div>
+      <span style="align-self:center;font-weight:700;color:var(--text3)">→</span>
+      <div class="order-msg m3 wrong">M3</div>
+      <span style="align-self:center;font-weight:700;color:var(--text3)">→</span>
+      <div class="order-msg m2 wrong">M2</div>
+      <span style="align-self:center;font-weight:700;color:#dc2626">消费乱序 ✗</span>
+    </div>
+    <p style="font-size:.83rem;color:var(--text2)">多分区并行消费 + 重试机制 = 全局消息天然乱序。</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h4 style="color:var(--green)">✅ 全局有序</h4>
+      <p style="font-size:.83rem;color:var(--text2)">只用一个分区，只有一个消费者。简单但吞吐量低。</p>
+      <div class="tip warn"><span class="ti">⚠️</span> 一般只在严格顺序场景使用（如 MySQL binlog 同步）</div>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--blue)">✅ 分区有序</h4>
+      <p style="font-size:.83rem;color:var(--text2)">相同 Key 的消息路由到同一分区，保证局部有序。</p>
+      <div class="tip good"><span class="ti">💡</span> 推荐做法：用 orderId 做 Key，同一订单的消息在同一个分区内有序</div>
+    </div>
+  </div>
+
+  <div class="code"><span class="lang">Java</span><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// RocketMQ：发送顺序消息</span>
+<span class="typ">Message</span> msg = <span class="kw">new</span> <span class="typ">Message</span>(<span class="str">"OrderTopic"</span>, <span class="str">"order:1001"</span>, body);
+<span class="cmt">// 相同 orderId → 同一 MessageQueue → 局部有序</span>
+<span class="fn">SendResult</span> result = producer.<span class="fn">send</span>(msg, <span class="kw">new</span> <span class="typ">MessageQueueSelector</span>() {
+    <span class="kw">public</span> <span class="typ">MessageQueue</span> <span class="fn">select</span>(...) {
+        <span class="kw">return</span> mqs[orderId.hashCode() % mqs.length];
+    }
+}, <span class="str">"order:1001"</span>);</pre></div>
+</section>
+
+<!-- ═══════════ 7. 高级特性 ═══════════ -->
+<section class="sec" id="advanced">
+  <div class="sec-title"><span class="n">7</span> 高级特性</div>
+
+  <div class="grid3">
+    <div class="concept-card">
+      <div class="icon">⏰</div><h4>延迟消息</h4>
+      <p>消息发出去后不立即投递，而是等指定时间后再推送给消费者。<br>场景：订单 30 分钟未支付自动取消</p>
+    </div>
+    <div class="concept-card">
+      <div class="icon">🔄</div><h4>事务消息</h4>
+      <p>先发半消息（half message），本地事务执行完后决定提交或回滚。<br>场景：下单 + 扣库存分布式事务</p>
+    </div>
+    <div class="concept-card">
+      <div class="icon">💀</div><h4>死信队列（DLQ）</h4>
+      <p>消息重试 N 次仍然失败后，进入死信队列等待人工处理。<br>场景：消息格式错误、下游服务长期不可用</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:var(--mq-dark);margin-bottom:14px">死信队列工作流程</h3>
+    <div class="flow">
+      <div class="flow-node orange">原始消息</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">消费失败<br><small>重试 1</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">消费失败<br><small>重试 2</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">消费失败<br><small>重试 N (max)</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node" style="border-color:#dc2626;background:#fee2e2;color:#b91c1c">死信队列<br><small>人工介入</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 8. 常见问题 ═══════════ -->
+<section class="sec" id="pitfalls">
+  <div class="sec-title"><span class="n">8</span> 常见问题 &amp; 解决方案</div>
+
+  <div class="card">
+    <div class="acc-header open" onclick="toggleAcc(this)"><span class="arr">▶</span> ❌ 消息丢失</div>
+    <div class="acc-body open">
+      <div class="tbl-wrap"><table>
+        <tr><th>丢失环节</th><th>原因</th><th>解法</th></tr>
+        <tr><td>生产端</td><td>异步发送失败无感知</td><td>同步发送 + 回调 / 事务消息</td></tr>
+        <tr><td>Broker</td><td>异步刷盘，宕机丢数据</td><td>同步刷盘 + 多副本</td></tr>
+        <tr><td>消费端</td><td>自动 ACK，处理前就确认了</td><td>手动 ACK，处理完再确认</td></tr>
+      </table></div>
+    </div>
+
+    <div class="acc-header" onclick="toggleAcc(this)"><span class="arr">▶</span> 🔄 消息重复消费</div>
+    <div class="acc-body">
+      <p style="font-size:.83rem;color:var(--text2);margin-bottom:10px">原因：At-least-once 语义下，消费成功但 ACK 超时，Broker 重复投递。</p>
+      <p style="font-size:.83rem;color:var(--text2)"><strong>解法：消费端幂等</strong></p>
+      <div class="code"><button class="copy-btn" onclick="copyCode(this)">复制</button><pre><span class="cmt">// 用唯一 ID 做幂等：数据库唯一键 / Redis SETNX</span>
+<span class="kw">if</span> (redis.<span class="fn">setnx</span>(<span class="str">"msg:"</span> + msgId, <span class="str">"1"</span>, <span class="num">3600</span>)) {
+    <span class="cmt">// 首次消费，执行业务</span>
+    processOrder(msg);
+} <span class="kw">else</span> {
+    <span class="cmt">// 重复消息，直接跳过</span>
+    <span class="kw">return</span> ACK;
+}</pre></div>
+    </div>
+
+    <div class="acc-header" onclick="toggleAcc(this)"><span class="arr">▶</span> 📊 消息堆积</div>
+    <div class="acc-body">
+      <p style="font-size:.83rem;color:var(--text2);margin-bottom:10px">原因：生产速度 &gt; 消费速度，队列越积越多。</p>
+      <p style="font-size:.83rem;color:var(--text2)"><strong>解法：</strong></p>
+      <ul style="font-size:.83rem;color:var(--text2);padding-left:20px">
+        <li>临时增加 Consumer 实例数（水平扩容）</li>
+        <li>消费者内部批量处理，减少 IO 开销</li>
+        <li>将不重要消息降级（直接写日志跳过）</li>
+        <li>长期方案：评估 Topic 分区数是否够用</li>
+      </ul>
+    </div>
+
+    <div class="acc-header" onclick="toggleAcc(this)"><span class="arr">▶</span> ⚡ 消息积压导致系统雪崩</div>
+    <div class="acc-body">
+      <p style="font-size:.83rem;color:var(--text2);margin-bottom:10px">消息堆积过多 → 消费者内存打满 → 消费者挂 → 堆积更多 → 死循环。</p>
+      <p style="font-size:.83rem;color:var(--text2)"><strong>解法：流控 &amp; 限流</strong></p>
+      <ul style="font-size:.83rem;color:var(--text2);padding-left:20px">
+        <li>消费端限流（如 RocketMQ <code>pullBatchSize</code>）</li>
+        <li>设置消息 TTL，过期自动丢弃</li>
+        <li>监控报警：堆积量超过阈值立刻通知</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 9. 动手演示 ═══════════ -->
+<section class="sec" id="demo">
+  <div class="sec-title"><span class="n">9</span> 动手演示 · 消息队列模拟器</div>
+  <p style="margin-bottom:14px;color:var(--text2)">这是一个简化的消息队列模拟器，帮你直观理解消息发送 → 存储 → 消费 → 确认的完整流程。</p>
+
+  <div class="card">
+    <div class="toggle-group" id="simMode">
+      <button class="toggle-btn on" data-mode="auto">🤖 自动模式</button>
+      <button class="toggle-btn" data-mode="manual">👆 手动模式</button>
+    </div>
+    <div class="demo-ctrls">
+      <button onclick="demoSend()">📤 发送消息</button>
+      <button onclick="demoConsume()">📥 消费消息</button>
+      <button onclick="demoFail()" id="btnFail">❌ 消费失败</button>
+      <button onclick="demoAck()" id="btnAck" disabled>✅ 确认 (ACK)</button>
+      <button class="reset" onclick="demoReset()">🔄 重置</button>
+    </div>
+    <div class="demo-stage" id="demoStage">
+      <div class="log-line"><span class="ts">[系统]</span> <span class="ev">消息队列模拟器已就绪。点击「发送消息」开始。</span></div>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:12px;flex-wrap:wrap">
+      <div><span style="font-size:.75rem;color:var(--text3);">队列中待消费：</span><strong id="queueCount" style="color:var(--mq);font-size:1.2rem">0</strong></div>
+      <div><span style="font-size:.75rem;color:var(--text3);">已消费：</span><strong id="consumedCount" style="color:var(--green);font-size:1.2rem">0</strong></div>
+      <div><span style="font-size:.75rem;color:var(--text3);">死信：</span><strong id="dlqCount" style="color:#dc2626;font-size:1.2rem">0</strong></div>
+      <div><span style="font-size:.75rem;color:var(--text3);">重试次数上限：</span><strong id="maxRetry" style="font-size:1.2rem">3</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 10. 主流 MQ 对比 ═══════════ -->
+<section class="sec" id="compare">
+  <div class="sec-title"><span class="n">10</span> 主流 MQ 一句话总结</div>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>MQ</th><th>定位</th><th>一句话</th></tr>
+      <tr><td><strong>Kafka</strong></td><td>大数据 / 流处理</td><td>超高吞吐 + 持久化，日志/埋点/实时计算首选</td></tr>
+      <tr><td><strong>RocketMQ</strong></td><td>金融 / 电商</td><td>阿里出品，事务消息 + 延迟消息开箱即用</td></tr>
+      <tr><td><strong>RabbitMQ</strong></td><td>企业集成</td><td>AMQP 标准，路由灵活，中小规模首选</td></tr>
+      <tr><td><strong>Pulsar</strong></td><td>云原生</td><td>存算分离，多租户，下一代消息系统</td></tr>
+    </table>
+  </div>
+  <p style="font-size:.78rem;color:var(--text3);text-align:center;margin-top:10px">详细对比见 → <a href="消息队列系统-综合演示平台.html" style="color:var(--mq)">消息队列系统综合演示平台</a></p>
+</section>
+
+</div><!-- /.wrap -->
+
+<script>
+/* ═══════════ NAV ACTIVE ═══════════ */
+(function(){
+  const nav = document.getElementById('nav');
+  const links = nav.querySelectorAll('a');
+  const sections = [...document.querySelectorAll('.sec')];
+  const observer = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        const id = e.target.id;
+        const link = nav.querySelector(`a[href="#${id}"]`);
+        if(link) link.classList.add('active');
+      }
+    });
+  },{rootMargin:'-80px 0px -60% 0px'});
+  sections.forEach(s=>observer.observe(s));
+})();
+
+/* ═══════════ COPY CODE ═══════════ */
+function copyCode(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='已复制✓';setTimeout(()=>btn.textContent='复制',1500);
+  });
+}
+
+/* ═══════════ ACCORDION ═══════════ */
+function toggleAcc(header){
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+/* ═══════════ MQ SIMULATOR ═══════════ */
+let simState = {
+  mode: 'auto',
+  queue: [],
+  consumed: 0,
+  dlq: 0,
+  retries: {},
+  maxRetry: 3,
+  currentMsg: null,
+  msgIdCounter: 0
+};
+
+const demoStage = document.getElementById('demoStage');
+const queueCount = document.getElementById('queueCount');
+const consumedCount = document.getElementById('consumedCount');
+const dlqCount = document.getElementById('dlqCount');
+const maxRetryEl = document.getElementById('maxRetry');
+const btnSend = demoStage.nextElementSibling.querySelectorAll('button')[0]; // hack refs
+const btnFail = document.getElementById('btnFail');
+const btnAck = document.getElementById('btnAck');
+
+function log(ts, cls, msg){
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.innerHTML = `<span class="ts">[${ts}]</span> <span class="${cls}">${msg}</span>`;
+  demoStage.appendChild(div);
+  demoStage.scrollTop = demoStage.scrollHeight;
+}
+
+function updateStats(){
+  queueCount.textContent = simState.queue.length;
+  consumedCount.textContent = simState.consumed;
+  dlqCount.textContent = simState.dlq;
+  maxRetryEl.textContent = simState.maxRetry;
+}
+
+function demoSend(){
+  simState.msgIdCounter++;
+  const id = `MSG-${String(simState.msgIdCounter).padStart(3,'0')}`;
+  const msg = { id, content: `订单 #${1000+simState.msgIdCounter} 已创建`, retry: 0 };
+  simState.queue.push(msg);
+  updateStats();
+  log('生产者', 'ev', `→ 发送: ${id} "${msg.content}"`);
+
+  if(simState.mode === 'auto'){
+    setTimeout(()=>autoConsume(), 600);
+  }
+}
+
+function autoConsume(){
+  if(simState.queue.length === 0) return;
+  const msg = simState.queue.shift();
+  simState.currentMsg = msg;
+  updateStats();
+  log('消费者', 'ev', `← 接收: ${msg.id}, 开始处理...`);
+
+  // 模拟处理（80% 成功）
+  setTimeout(()=>{
+    if(Math.random() < 0.8){
+      simState.consumed++;
+      simState.currentMsg = null;
+      updateStats();
+      log('消费者', 'ev', `✅ ${msg.id} 处理成功，已 ACK`);
+      btnAck.disabled = true;
+      btnFail.disabled = true;
+    } else {
+      simState.retries[msg.id] = (simState.retries[msg.id]||0)+1;
+      log('消费者', 'warn', `⚠️ ${msg.id} 处理失败，重试 ${simState.retries[msg.id]}/${simState.maxRetry}`);
+      if(simState.retries[msg.id] >= simState.maxRetry){
+        simState.dlq++;
+        simState.currentMsg = null;
+        simState.retries[msg.id] = 0;
+        updateStats();
+        log('系统', 'err', `💀 ${msg.id} 已达最大重试次数，进入死信队列`);
+        btnAck.disabled = true;
+        btnFail.disabled = true;
+      } else {
+        // 重新入队
+        msg.retry = simState.retries[msg.id];
+        simState.queue.push(msg);
+        simState.currentMsg = null;
+        updateStats();
+        btnAck.disabled = true;
+        btnFail.disabled = true;
+      }
+    }
+    // 继续自动消费
+    if(simState.queue.length > 0 && simState.mode === 'auto'){
+      setTimeout(()=>autoConsume(), 500);
+    }
+  }, 400);
+}
+
+let manualMsg = null;
+function demoConsume(){
+  if(simState.queue.length === 0){ log('系统','warn','⚠️ 队列为空，没有消息可消费');return; }
+  manualMsg = simState.queue.shift();
+  simState.currentMsg = manualMsg;
+  updateStats();
+  log('消费者', 'ev', `← 拉取: ${manualMsg.id}, 等待手动确认...`);
+  btnAck.disabled = false;
+  btnFail.disabled = false;
+  btnSend.disabled = true;
+}
+
+function demoAck(){
+  if(!simState.currentMsg){ log('系统','warn','⚠️ 没有待确认的消息');return; }
+  simState.consumed++;
+  const id = simState.currentMsg.id;
+  simState.currentMsg = null;
+  updateStats();
+  log('消费者', 'ev', `✅ ${id} 手动确认成功`);
+  btnAck.disabled = true;
+  btnFail.disabled = true;
+  btnSend.disabled = false;
+}
+
+function demoFail(){
+  if(!simState.currentMsg){ log('系统','warn','⚠️ 没有待处理的消息');return; }
+  const id = simState.currentMsg.id;
+  simState.retries[id] = (simState.retries[id]||0)+1;
+  log('消费者', 'warn', `⚠️ ${id} 处理失败，重试 ${simState.retries[id]}/${simState.maxRetry}`);
+  if(simState.retries[id] >= simState.maxRetry){
+    simState.dlq++;
+    simState.currentMsg = null;
+    simState.retries[id] = 0;
+    updateStats();
+    log('系统', 'err', `💀 ${id} 已达最大重试次数，进入死信队列`);
+  } else {
+    simState.currentMsg.retry = simState.retries[id];
+    simState.queue.push(simState.currentMsg);
+    simState.currentMsg = null;
+    updateStats();
+  }
+  btnAck.disabled = true;
+  btnFail.disabled = true;
+  btnSend.disabled = false;
+}
+
+function demoReset(){
+  simState = { mode: simState.mode, queue:[], consumed:0, dlq:0, retries:{}, maxRetry:3, currentMsg:null, msgIdCounter:0 };
+  updateStats();
+  demoStage.innerHTML = '<div class="log-line"><span class="ts">[系统]</span> <span class="ev">🔄 模拟器已重置。点击「发送消息」开始。</span></div>';
+  btnAck.disabled = true;
+  btnFail.disabled = true;
+  btnSend.disabled = false;
+}
+
+/* ═══════════ MODE TOGGLE ═══════════ */
+document.getElementById('simMode').addEventListener('click', e=>{
+  const btn = e.target.closest('.toggle-btn');
+  if(!btn) return;
+  document.querySelectorAll('#simMode .toggle-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  simState.mode = btn.dataset.mode;
+  log('系统', 'ev', `🔀 切换到 ${simState.mode==='auto'?'自动':'手动'} 模式`);
+  demoReset();
+});
+</script>
+</body>
+</html>
