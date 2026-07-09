@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分布式系统 · 交互式学习平台</title>
+<style>
+:root {
+  --ds: #7c3aed; --ds-dark: #5b21b6; --ds-light: #f5f3ff;
+  --cp: #dc2626; --ap: #2563eb; --pink: #db2777;
+  --bg: #f5f3ff; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --cyan: #0891b2; --cyan-light: #cffafe;
+  --code-bg: #1a1a2e; --radius: 14px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 6px 28px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.78}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 16px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.05rem;color:var(--ds);padding:14px 0;margin-right:10px;display:flex;align-items:center;gap:8px;flex-shrink:0;text-decoration:none}
+.nav a{text-decoration:none;color:var(--text2);font-size:.82rem;font-weight:500;padding:8px 12px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--ds-light);color:var(--ds-dark)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#5b21b6 0%,#7c3aed 35%,#2dd4bf 100%);color:#fff;padding:56px 32px 48px;text-align:center}
+.hero h1{font-size:2.6rem;font-weight:900;letter-spacing:-1px;line-height:1.2}
+.hero .sub{font-size:1.02rem;opacity:.92;margin-top:14px;max-width:700px;margin-inline:auto}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:44px}
+.sec-title{font-size:1.55rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--ds);display:flex;align-items:center;gap:14px}
+.sec-title .n{background:var(--ds);color:#fff;min-width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:.92rem;font-weight:700}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px;margin-bottom:16px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.05rem;margin-bottom:8px;color:var(--ds-dark)}
+.card p{font-size:.86rem;margin-bottom:8px;color:var(--text2)}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.1rem}
+.tip.info{background:var(--ds-light);border-left:4px solid var(--ds)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+
+/* CODE */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:16px 20px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.62rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.78rem;color:#cdd6f4;white-space:pre;line-height:1.72}
+.copy-btn{position:absolute;top:8px;right:48px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#a0a0b0;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:.66rem;transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{background:var(--ds-light);color:var(--ds-dark);font-weight:700;padding:11px 14px;text-align:left;border:1px solid var(--border);white-space:nowrap}
+td{padding:10px 14px;border:1px solid var(--border);vertical-align:top}
+tr:nth-child(even){background:#fafafa}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* === INTERACTIVE COMPONENTS === */
+
+/* CAP Triangle */
+.cap-container{display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap;margin:20px 0}
+.cap-svg{flex-shrink:0;position:relative}
+.cap-label{cursor:pointer;font-weight:800;font-size:1.05rem;transition:.3s}
+.cap-label:hover{transform:scale(1.08)}
+.cap-desc{flex:1;min-width:260px}
+.cap-desc h3{font-size:1.2rem;margin-bottom:6px}
+.cap-desc p{font-size:.86rem;color:var(--text2);min-height:60px}
+.cap-active-info{padding:14px 18px;background:var(--ds-light);border-radius:var(--radius-sm);margin-top:12px;font-size:.84rem;border:2px dashed var(--ds)}
+
+/* Node Cluster */
+.cluster{position:relative;width:100%;height:380px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.node{position:absolute;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.76rem;color:#fff;transition:all .5s ease;cursor:pointer;z-index:2;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.node.leader{width:60px;height:60px;box-shadow:0 0 0 4px var(--amber),0 8px 24px rgba(217,119,6,.35)}
+.node.follower{background:var(--ds);opacity:.7}
+.node.down{background:#9ca3af;opacity:.4}
+.node.replicating{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.18)} 50%{box-shadow:0 0 0 8px rgba(124,58,237,.3),0 8px 24px rgba(124,58,237,.4)}}
+.cluster-conn{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.cluster-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.cluster-controls button{padding:9px 18px;border:none;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.btn-primary{background:var(--ds);color:#fff}
+.btn-primary:hover{background:var(--ds-dark);transform:translateY(-1px)}
+.btn-outline{background:var(--surface);color:var(--ds);border:2px solid var(--ds)}
+.btn-outline:hover{background:var(--ds-light)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-warn{background:var(--amber);color:#fff}
+.btn-warn:hover{background:#b45309}
+.btn-sm{padding:6px 14px;font-size:.76rem;border-radius:6px}
+.cluster-legend{display:flex;gap:16px;font-size:.78rem;color:var(--text2);margin-top:8px}
+.cluster-legend span{display:flex;align-items:center;gap:6px}
+.ldot{width:12px;height:12px;border-radius:50%;display:inline-block}
+
+/* Log Panel */
+.log-panel{background:#1a1a2e;color:#a6e3a1;font-family:var(--mono);font-size:.76rem;padding:14px 18px;border-radius:var(--radius-sm);max-height:180px;overflow-y:auto;margin-top:14px;line-height:1.6}
+.log-panel .log-entry{margin-bottom:2px}
+.log-panel .log-time{color:#6c7086;margin-right:8px}
+.log-panel .log-event{color:#89b4fa}
+.log-panel .log-warn{color:#fab387}
+.log-panel .log-err{color:#f38ba8}
+
+/* Load Balancer */
+.lb-container{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+.lb-client{background:var(--surface);border:2px solid var(--ds);border-radius:var(--radius);padding:16px 20px;text-align:center;min-width:100px}
+.lb-client .req{display:inline-block;width:34px;height:34px;border-radius:6px;background:var(--ds);color:#fff;font-weight:900;font-size:.72rem;line-height:34px;margin:3px;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)}}
+.lb-arrow{font-size:1.5rem;color:var(--ds);align-self:center}
+.lb-server{border:2px solid var(--green);border-radius:var(--radius);padding:16px 20px;text-align:center;min-width:120px;background:var(--green-light);transition:all .3s}
+.lb-server.active{background:#a7f3d0;border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.2)}
+.lb-server .srv-name{font-weight:800;font-size:.9rem;color:var(--green)}
+.lb-server .srv-count{font-size:2rem;font-weight:900;color:var(--ds-dark);margin:4px 0}
+.lb-server .srv-bar{height:6px;background:#d1fae5;border-radius:3px;margin-top:6px}
+.lb-server .srv-bar-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+
+/* Consistency slider */
+.consistency-scale{position:relative;height:60px;margin:20px 40px}
+.consistency-scale .track{position:absolute;left:0;right:0;top:50%;height:8px;background:linear-gradient(90deg,#2563eb,#7c3aed,#dc2626);border-radius:4px;transform:translateY(-50%)}
+.consistency-scale .handle{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--ds);cursor:pointer;z-index:2;transition:left .3s ease}
+.consistency-scale .labels{position:absolute;top:100%;width:100%;display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2);margin-top:8px}
+
+/* Stats cards */
+.stats-row{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+.stat-card{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.stat-card .val{font-size:2rem;font-weight:900;color:var(--ds)}
+.stat-card .lbl{font-size:.76rem;color:var(--text2);margin-top:4px}
+
+/* Two-column */
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:768px){.twocol,.grid2,.grid3{grid-template-columns:1fr}.cap-container{flex-direction:column;align-items:center}.hero h1{font-size:1.8rem}.nav a{font-size:.74rem;padding:6px 10px}.cluster{height:300px}}
+
+/* Footer */
+.ft{text-align:center;padding:32px 20px;color:var(--text3);font-size:.78rem;border-top:1px solid var(--border);margin-top:40px}
+.ft a{color:var(--ds);text-decoration:none}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="#top">🕸️ 分布式系统</a>
+  <a href="#cap">CAP 定理</a>
+  <a href="#consistency">一致性模型</a>
+  <a href="#communication">节点通信</a>
+  <a href="#election">领导选举</a>
+  <a href="#replication">数据复制</a>
+  <a href="#loadbalance">负载均衡</a>
+  <a href="#patterns">常见模式</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <h1>🕸️ 分布式系统 · 交互式学习平台</h1>
+  <p class="sub">从 CAP 定理到共识算法，从数据复制到负载均衡——通过可视化交互深入理解分布式系统的核心原理与工程实践</p>
+  <div class="tags">
+    <span class="tag">CAP 定理</span><span class="tag">一致性模型</span><span class="tag">Paxos / Raft</span>
+    <span class="tag">领导选举</span><span class="tag">数据复制</span><span class="tag">负载均衡</span>
+    <span class="tag">Gossip 协议</span><span class="tag">Quorum</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ====== SECTION 1: CAP 定理 ====== -->
+<section class="sec" id="cap">
+  <div class="sec-title"><span class="n">1</span> CAP 定理 — 分布式系统的「不可能三角」</div>
+  <div class="card">
+    <p>CAP 定理由 Eric Brewer 于 2000 年提出，指出一个分布式系统最多只能同时满足以下三项中的两项：<strong>一致性（Consistency）、可用性（Availability）、分区容错性（Partition Tolerance）</strong>。</p>
+  </div>
+
+  <div class="cap-container">
+    <!-- CAP SVG Triangle -->
+    <div class="cap-svg">
+      <svg id="capTriangle" width="340" height="310" viewBox="0 0 340 310">
+        <!-- Triangle -->
+        <polygon points="170,15 320,280 20,280" fill="rgba(124,58,237,0.06)" stroke="var(--ds)" stroke-width="2.5"/>
+        <!-- C label -->
+        <text x="170" y="48" text-anchor="middle" font-weight="900" font-size="20" fill="var(--cp)" class="cap-label" cursor="pointer" id="capC">Consistency</text>
+        <text x="170" y="66" text-anchor="middle" font-size="11" fill="var(--text3)">一致性</text>
+        <!-- A label -->
+        <text x="328" y="272" text-anchor="end" font-weight="900" font-size="20" fill="var(--blue)" class="cap-label" cursor="pointer" id="capA">Availability</text>
+        <text x="328" y="290" text-anchor="end" font-size="11" fill="var(--text3)">可用性</text>
+        <!-- P label -->
+        <text x="12" y="272" text-anchor="start" font-weight="900" font-size="20" fill="var(--green)" class="cap-label" cursor="pointer" id="capP">Partition Tolerance</text>
+        <text x="12" y="290" text-anchor="start" font-size="11" fill="var(--text3)">分区容错性</text>
+        <!-- Edges (interactive) -->
+        <line x1="170" y1="60" x2="308" y2="265" stroke="#e5e7eb" stroke-width="6" stroke-linecap="round" id="edgeCA" cursor="pointer"/>
+        <line x1="308" y1="265" x2="32" y2="265" stroke="#e5e7eb" stroke-width="6" stroke-linecap="round" id="edgeAP" cursor="pointer"/>
+        <line x1="32" y1="265" x2="170" y2="60" stroke="#e5e7eb" stroke-width="6" stroke-linecap="round" id="edgeCP" cursor="pointer"/>
+        <!-- Edge labels -->
+        <text x="245" y="175" text-anchor="middle" font-size="10" fill="var(--text3)" id="edgeCALabel">CP 系统</text>
+        <text x="170" y="305" text-anchor="middle" font-size="10" fill="var(--text3)" id="edgeAPLabel">AP 系统</text>
+        <text x="95" y="175" text-anchor="middle" font-size="10" fill="var(--text3)" id="edgeCPLabel">CA 系统</text>
+        <!-- Active edge highlight -->
+        <line x1="308" y1="265" x2="32" y2="265" stroke="var(--ds)" stroke-width="6" stroke-linecap="round" id="highlightEdge" opacity="0"/>
+        <!-- Center -->
+        <circle cx="170" cy="195" r="24" fill="rgba(124,58,237,0.1)" stroke="var(--ds)" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="170" y="191" text-anchor="middle" font-size="9" fill="var(--ds-dark)">CAP</text>
+        <text x="170" y="205" text-anchor="middle" font-size="9" fill="var(--ds-dark)">Theorem</text>
+      </svg>
+    </div>
+
+    <div class="cap-desc">
+      <div class="cap-active-info" id="capInfo">
+        <strong>👆 点击三角形的三条边</strong>，查看不同取舍策略的典型系统
+      </div>
+      <div style="margin-top:14px" id="capExamples">
+        <div class="tip info"><span class="ti">💡</span><span>在<strong>网络分区（P）</strong>不可避免的前提下，实际系统只能在 <strong>CP</strong>（牺牲可用性保一致性）和 <strong>AP</strong>（牺牲一致性保可用性）之间二选一。不存在严格意义上的 CA 分布式系统。</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:8px">
+    <div class="card" style="border-left:4px solid var(--cp)">
+      <h3 style="color:var(--cp)">🔴 CP 系统</h3>
+      <p style="font-size:.82rem">牺牲可用性，保证一致性</p>
+      <p style="font-size:.78rem;color:var(--text3)">ZooKeeper · etcd · Consul · HBase<br>分区时拒绝写入，保证数据一致</p>
+    </div>
+    <div class="card" style="border-left:4px solid var(--blue)">
+      <h3 style="color:var(--blue)">🔵 AP 系统</h3>
+      <p style="font-size:.82rem">牺牲一致性，保证可用性</p>
+      <p style="font-size:.78rem;color:var(--text3)">Cassandra · DynamoDB · CouchDB · Eureka<br>分区时允许写入，最终一致</p>
+    </div>
+    <div class="card" style="border-left:4px solid var(--amber)">
+      <h3 style="color:var(--amber)">🟡 可调一致性</h3>
+      <p style="font-size:.82rem">Paxos / Raft 平衡方案</p>
+      <p style="font-size:.78rem;color:var(--text3)">TiDB · CockroachDB · Spanner<br>多数派共识，灵活配置一致性级别</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 2: 一致性模型 ====== -->
+<section class="sec" id="consistency">
+  <div class="sec-title"><span class="n">2</span> 一致性模型 — 从强到弱的光谱</div>
+
+  <div class="consistency-scale" style="height:80px">
+    <div class="track"></div>
+    <div class="labels">
+      <span>⚡ 强一致性</span><span>📝 顺序一致性</span><span>🕐 因果一致性</span><span>🌐 最终一致性</span><span>💨 弱一致性</span>
+    </div>
+  </div>
+
+  <div class="twocol" style="margin-top:20px">
+    <div class="card" style="border-left:4px solid var(--cp)">
+      <h3 style="color:var(--cp)">强一致性 (Linearizability)</h3>
+      <p style="font-size:.82rem">写操作完成后，所有后续读都能看到最新值。表现为「看起来只有一份数据」。</p>
+      <div class="code"><pre>Client A: write(x=5) ──► 写入成功
+Client B:        read(x) ──► 返回 5 ✅
+Client B 永远读不到旧值 4</pre></div>
+      <p style="font-size:.78rem;color:var(--text3)">代价：高延迟，可用性下降</p>
+    </div>
+    <div class="card" style="border-left:4px solid var(--green)">
+      <h3 style="color:var(--green)">最终一致性 (Eventual)</h3>
+      <p style="font-size:.82rem">如果没有新的写操作，最终所有副本都会收敛到相同值。</p>
+      <div class="code"><pre>Client A: write(x=5) ──► 副本1 写入成功
+Client B: read(x)  ──► 返回 4 (副本2 未同步)
+... 一段时间后 ...
+Client B: read(x)  ──► 返回 5 ✅ (最终一致)</pre></div>
+      <p style="font-size:.78rem;color:var(--text3)">优势：高可用、低延迟</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>一致性模型光谱对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>模型</th><th>保证</th><th>延迟</th><th>可用性</th><th>典型系统</th></tr>
+        <tr><td><strong>强一致性</strong></td><td>所有节点看到相同数据</td><td>高</td><td>低</td><td>etcd, ZooKeeper</td></tr>
+        <tr><td><strong>顺序一致性</strong></td><td>操作顺序全局一致</td><td>中高</td><td>中</td><td>ZooKeeper (顺序节点)</td></tr>
+        <tr><td><strong>因果一致性</strong></td><td>有因果关系的操作有序</td><td>中</td><td>中高</td><td>COPS, MongoDB</td></tr>
+        <tr><td><strong>最终一致性</strong></td><td>最终收敛到相同值</td><td>低</td><td>高</td><td>Cassandra, DynamoDB, DNS</td></tr>
+        <tr><td><strong>弱一致性</strong></td><td>不保证读到最新值</td><td>最低</td><td>最高</td><td>Memcached, CDN</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 3: 节点通信 ====== -->
+<section class="sec" id="communication">
+  <div class="sec-title"><span class="n">3</span> 分布式节点通信 · 交互演示</div>
+  <div class="card">
+    <p>点击节点模拟消息传递，观察 <strong>Gossip 协议</strong>如何让信息在集群中传播——每个节点随机选择其他节点同步状态，最终所有节点达成一致。</p>
+  </div>
+
+  <div class="cluster" id="clusterDemo">
+    <svg class="cluster-conn" id="connSvg" width="100%" height="100%"></svg>
+  </div>
+
+  <div class="cluster-controls">
+    <button class="btn-primary" onclick="gossipRound()">🔄 发起一轮 Gossip</button>
+    <button class="btn-outline" onclick="sendMessage()">📨 发送新消息</button>
+    <button class="btn-danger btn-sm" onclick="killRandomNode()">💥 随机宕机</button>
+    <button class="btn-outline btn-sm" onclick="reviveNodes()">🩹 全部恢复</button>
+    <button class="btn-outline btn-sm" onclick="resetCluster()">🔁 重置</button>
+  </div>
+  <div class="cluster-legend">
+    <span><span class="ldot" style="background:var(--ds)"></span> 正常节点</span>
+    <span><span class="ldot" style="background:var(--green)"></span> 已收到消息</span>
+    <span><span class="ldot" style="background:var(--amber)"></span> 消息发起者</span>
+    <span><span class="ldot" style="background:#9ca3af"></span> 已宕机</span>
+  </div>
+  <div class="stats-row" id="gossipStats">
+    <div class="stat-card"><div class="val" id="statReceived">0</div><div class="lbl">收到消息 / 7</div></div>
+    <div class="stat-card"><div class="val" id="statRounds">0</div><div class="lbl">Gossip 轮次</div></div>
+    <div class="stat-card"><div class="val" id="statAlive">7</div><div class="lbl">存活节点</div></div>
+  </div>
+  <div class="log-panel" id="gossipLog">
+    <div class="log-entry"><span class="log-time">[启动]</span> 集群初始化完成，7 个节点就绪</div>
+  </div>
+</section>
+
+<!-- ====== SECTION 4: 领导选举 ====== -->
+<section class="sec" id="election">
+  <div class="sec-title"><span class="n">4</span> 领导选举 — Raft 协议模拟</div>
+  <div class="card">
+    <p>Raft 将时间划分为 <strong>Term（任期）</strong>，每个 Term 以选举开始。节点处于 Follower / Candidate / Leader 三态之一。当 Follower 在选举超时内未收到 Leader 心跳，转为 Candidate 发起选举（RequestVote），获得多数票即成为新 Leader。</p>
+  </div>
+
+  <div class="twocol">
+    <div class="card" style="border-left:4px solid var(--amber)">
+      <h3 style="color:var(--amber)">⚡ Raft 选举流程</h3>
+      <div style="font-size:.82rem;line-height:2">
+        <div>① Follower 选举超时 → 转 Candidate</div>
+        <div>② Term++，投票给自己</div>
+        <div>③ 向所有节点发送 RequestVote RPC</div>
+        <div>④ 收到多数票 → 转 Leader</div>
+        <div>⑤ Leader 定期发送心跳 (AppendEntries)</div>
+        <div>⑥ 发现更高 Term → 退位为 Follower</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--ds)">
+      <h3 style="color:var(--ds)">🎯 关键设计</h3>
+      <div style="font-size:.82rem">
+        <p>✅ <strong>随机选举超时</strong>（150-300ms）：避免多个节点同时竞选导致平票</p>
+        <p>✅ <strong>每个 Term 只投一票</strong>：保证一个 Term 最多一个 Leader</p>
+        <p>✅ <strong>Term 单调递增</strong>：更高 Term 的请求优先级更高</p>
+        <p>✅ <strong>日志匹配属性</strong>：只有日志足够新的节点才能当选 Leader</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cluster" id="raftCluster" style="height:320px">
+    <svg class="cluster-conn" id="raftConnSvg" width="100%" height="100%"></svg>
+  </div>
+
+  <div class="cluster-controls">
+    <button class="btn-primary" onclick="startElection()">🗳️ 发起选举</button>
+    <button class="btn-outline" onclick="leaderHeartbeat()">💓 Leader 心跳</button>
+    <button class="btn-danger btn-sm" onclick="killLeaderRaft()">💥 干掉 Leader</button>
+    <button class="btn-outline btn-sm" onclick="resetRaftCluster()">🔁 重置</button>
+  </div>
+  <div class="log-panel" id="raftLog">
+    <div class="log-entry"><span class="log-time">[启动]</span> Raft 集群就绪：3 个节点 (Term=1)，等待选举</div>
+  </div>
+</section>
+
+<!-- ====== SECTION 5: 数据复制 ====== -->
+<section class="sec" id="replication">
+  <div class="sec-title"><span class="n">5</span> 数据复制 — Quorum 写入模拟</div>
+  <div class="card">
+    <p>在 N=5 个副本的集群中，定义 <strong>W</strong>（写成功所需节点数）和 <strong>R</strong>（读成功所需节点数）。当 <strong>W + R > N</strong> 时，读写集必有交集，保证强一致性。拖动滑块调整 W/R 值，观察对一致性和可用性的影响。</p>
+  </div>
+
+  <div class="twocol">
+    <div class="card" style="border-left:4px solid var(--ds)">
+      <h3>⚙️ Quorum 参数配置</h3>
+      <div style="margin:12px 0">
+        <label style="font-size:.84rem;font-weight:600">N = 5 个副本</label>
+        <div style="margin:8px 0;display:flex;align-items:center;gap:10px">
+          <span style="min-width:80px;font-size:.82rem">W (写 Quorum):</span>
+          <input type="range" id="quorumW" min="1" max="5" value="3" style="flex:1" oninput="updateQuorum()">
+          <span id="quorumWVal" style="font-weight:900;min-width:20px;color:var(--ds)">3</span>
+        </div>
+        <div style="margin:8px 0;display:flex;align-items:center;gap:10px">
+          <span style="min-width:80px;font-size:.82rem">R (读 Quorum):</span>
+          <input type="range" id="quorumR" min="1" max="5" value="3" style="flex:1" oninput="updateQuorum()">
+          <span id="quorumRVal" style="font-weight:900;min-width:20px;color:var(--ds)">3</span>
+        </div>
+      </div>
+      <div id="quorumResult" style="margin-top:12px;padding:12px 16px;background:var(--green-light);border-radius:8px;font-size:.84rem">
+        ✅ W+R=6 > N=5 → <strong>强一致性保证</strong>（读写集必有交集）
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--cyan)">
+      <h3 style="color:var(--cyan)">🖐️ 副本状态</h3>
+      <div id="replicaNodes" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="btn-primary btn-sm" style="margin-top:12px" onclick="simulateWrite()">✍️ 模拟写入 (x=<span id="writeVal">42</span>)</button>
+      <button class="btn-outline btn-sm" style="margin-top:8px" onclick="simulateRead()">📖 模拟读取</button>
+    </div>
+  </div>
+
+  <div class="log-panel" id="quorumLog" style="margin-top:16px">
+    <div class="log-entry"><span class="log-time">[就绪]</span> N=5 副本集群，Quorum 配置 W=3 R=3</div>
+  </div>
+</section>
+
+<!-- ====== SECTION 6: 负载均衡 ====== -->
+<section class="sec" id="loadbalance">
+  <div class="sec-title"><span class="n">6</span> 负载均衡 · 策略模拟</div>
+  <div class="card">
+    <p>选择不同负载均衡策略，观察请求在后端 4 台服务器之间的分配情况。模拟 <strong>轮询 (Round Robin)、加权轮询、最少连接、一致性哈希</strong> 四种经典算法。</p>
+  </div>
+
+  <div class="cluster-controls" style="margin-bottom:12px">
+    <button class="btn-primary" data-strategy="round-robin" onclick="switchLBStrategy(this)">🔄 轮询</button>
+    <button class="btn-outline" data-strategy="weighted" onclick="switchLBStrategy(this)">⚖️ 加权轮询</button>
+    <button class="btn-outline" data-strategy="least-conn" onclick="switchLBStrategy(this)">📊 最少连接</button>
+    <button class="btn-outline" data-strategy="hash" onclick="switchLBStrategy(this)">🔑 一致性哈希</button>
+    <button class="btn-outline btn-sm" onclick="sendLBRequests(10)">📨 批量发送 10</button>
+    <button class="btn-outline btn-sm" onclick="resetLB()">🔁 重置</button>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-left:4px solid var(--ds)">
+      <h3>📨 请求发送</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin:10px 0">
+        <input type="text" id="lbKey" placeholder="请求 Key (哈希用)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;font-family:var(--sans)" value="user_1001">
+        <button class="btn-primary btn-sm" onclick="sendLBRequest()">发送</button>
+      </div>
+      <div id="lbHistory" style="max-height:140px;overflow-y:auto;font-size:.78rem;color:var(--text2)"></div>
+    </div>
+    <div id="lbServers" class="card" style="border-left:4px solid var(--green)">
+      <h3 style="color:var(--green)">🖥️ 服务器负载分布</h3>
+      <div id="lbServerList" style="display:flex;flex-direction:column;gap:10px;margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="stats-row" id="lbStats">
+    <div class="stat-card"><div class="val" id="lbTotal">0</div><div class="lbl">总请求数</div></div>
+    <div class="stat-card"><div class="val" id="lbStrategy">轮询</div><div class="lbl">当前策略</div></div>
+    <div class="stat-card"><div class="val" id="lbBalance">-</div><div class="lbl">均衡度</div></div>
+  </div>
+</section>
+
+<!-- ====== SECTION 7: 常见模式 ====== -->
+<section class="sec" id="patterns">
+  <div class="sec-title"><span class="n">7</span> 分布式系统常见模式与最佳实践</div>
+
+  <div class="grid3">
+    <div class="card">
+      <h3>🔐 两阶段提交 (2PC)</h3>
+      <p style="font-size:.82rem">协调者先问所有参与者 Prepare，全部同意再 Commit。简单但有单点故障和阻塞问题。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：XA 事务、分布式数据库</p>
+    </div>
+    <div class="card">
+      <h3>📋 三阶段提交 (3PC)</h3>
+      <p style="font-size:.82rem">在 2PC 基础上增加 PreCommit 阶段 + 超时机制，减少阻塞时间。</p>
+      <p style="font-size:.76rem;color:var(--text3)">劣势：复杂度高，网络分区时仍有问题</p>
+    </div>
+    <div class="card">
+      <h3>🗳️ Paxos / Raft</h3>
+      <p style="font-size:.82rem">多数派共识算法。Raft 是 Paxos 的易懂替代，通过 Leader 简化共识流程。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：etcd, TiKV, Consul</p>
+    </div>
+    <div class="card">
+      <h3>📡 Gossip 协议</h3>
+      <p style="font-size:.82rem">节点随机选择邻居交换信息，最终全网收敛。去中心化、高容错。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：Cassandra, Consul, Serf</p>
+    </div>
+    <div class="card">
+      <h3>⏱️ 租约 (Lease)</h3>
+      <p style="font-size:.82rem">授予节点一段时间的独占权，到期自动释放。避免死锁和脑裂。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：分布式锁续期、Leader 心跳</p>
+    </div>
+    <div class="card">
+      <h3>🔒 分布式锁</h3>
+      <p style="font-size:.82rem">用 Redis/ZooKeeper/etcd 实现跨进程互斥。注意锁续期和 Redlock 算法。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：定时任务互斥、资源竞争</p>
+    </div>
+    <div class="card">
+      <h3>🚧 熔断器 (Circuit Breaker)</h3>
+      <p style="font-size:.82rem">下游故障时快速失败，避免级联雪崩。Closed→Open→Half-Open 三态切换。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：Hystrix, Sentinel, Resilience4j</p>
+    </div>
+    <div class="card">
+      <h3>🛡️ 限流 (Rate Limiting)</h3>
+      <p style="font-size:.82rem">令牌桶 / 漏桶 / 滑动窗口控制请求速率，保护后端服务。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：API 网关、Nginx, Guava RateLimiter</p>
+    </div>
+    <div class="card">
+      <h3>🔍 服务发现</h3>
+      <p style="font-size:.82rem">动态注册和发现服务实例。客户端发现 vs 服务端发现（Sidecar 模式）。</p>
+      <p style="font-size:.76rem;color:var(--text3)">应用：Nacos, Eureka, Consul, Kubernetes DNS</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="ft">
+  <p>🕸️ 分布式系统交互式学习平台 · 通过可视化交互理解分布式原理</p>
+  <p style="margin-top:6px">参考资料：Raft Paper · Designing Data-Intensive Applications · Google Spanner · Amazon Dynamo</p>
+</div>
+
+</div><!-- .wrap -->
+
+<script>
+// ==========================
+// CAP THEOREM INTERACTION
+// ==========================
+const capSVG = document.getElementById('capTriangle');
+const capInfo = document.getElementById('capInfo');
+const capExamples = document.getElementById('capExamples');
+
+const capData = {
+  CA: {
+    edge: 'edgeCA', label: 'edgeCALabel',
+    title: 'CA — 一致性 + 可用性',
+    desc: '牺牲分区容错性。在网络完全可靠时不分区，但实际网络中不可能做到。<br>典型场景：单机数据库、传统关系型数据库（MySQL 单机）。',
+    examples: '<div class="tip red"><span class="ti">⚠️</span><span>在分布式环境中，<strong>网络分区不可避免</strong>，CA 系统一旦遇到分区就必须在 C 和 A 之间选择。因此真正的分布式系统<strong>不存在严格 CA</strong>。</span></div>'
+  },
+  CP: {
+    edge: 'edgeCP', label: 'edgeCPLabel',
+    title: 'CP — 一致性 + 分区容错',
+    desc: '牺牲可用性，保证一致性。分区发生时拒绝写入，直到分区恢复。<br>典型系统：ZooKeeper、etcd、HBase、MongoDB（强一致配置）。',
+    examples: '<div class="tip info"><span class="ti">💡</span><span><strong>金融交易、分布式锁、配置中心</strong>等场景必须选 CP——宁愿暂时不可用，也不能让数据不一致。ZooKeeper 选举期间不可用就是典型取舍。</span></div>'
+  },
+  AP: {
+    edge: 'edgeAP', label: 'edgeAPLabel',
+    title: 'AP — 可用性 + 分区容错',
+    desc: '牺牲强一致性，保证可用性。分区时继续接受写入，最终通过反熵（Anti-Entropy）达到一致。<br>典型系统：Cassandra、DynamoDB、CouchDB、Eureka。',
+    examples: '<div class="tip good"><span class="ti">✅</span><span><strong>社交网络、CDN、DNS、电商商品列表</strong>等场景适合 AP——短暂的不一致可接受，但服务中断不可接受。用户看到稍旧的数据比什么都看不到好得多。</span></div>'
+  }
+};
+
+// Edge click handlers
+['CA','CP','AP'].forEach(type => {
+  const d = capData[type];
+  const edge = document.getElementById(d.edge);
+  if (edge) {
+    edge.addEventListener('click', () => highlightCap(type));
+    edge.addEventListener('mouseenter', () => { edge.style.stroke = 'var(--ds)'; edge.style.strokeWidth = '8'; });
+    edge.addEventListener('mouseleave', () => { edge.style.stroke = '#e5e7eb'; edge.style.strokeWidth = '6'; });
+  }
+});
+
+function highlightCap(type) {
+  const d = capData[type];
+  // Reset all
+  ['CA','CP','AP'].forEach(t => {
+    const e = document.getElementById(capData[t].edge);
+    if (e) { e.style.stroke = '#e5e7eb'; e.style.strokeWidth = '6'; }
+    const l = document.getElementById(capData[t].label);
+    if (l) l.style.fontWeight = 'normal';
+  });
+  // Highlight
+  const edge = document.getElementById(d.edge);
+  if (edge) { edge.style.stroke = 'var(--ds)'; edge.style.strokeWidth = '8'; }
+  const label = document.getElementById(d.label);
+  if (label) label.style.fontWeight = '900';
+
+  capInfo.innerHTML = `<strong>${d.title}</strong><br><span style="font-size:.82rem;line-height:1.6">${d.desc}</span>`;
+  capExamples.innerHTML = d.examples;
+}
+
+// ==========================
+// GOSSIP CLUSTER DEMO
+// ==========================
+const clusterDemo = document.getElementById('clusterDemo');
+const connSvg = document.getElementById('connSvg');
+const gossipLog = document.getElementById('gossipLog');
+
+const NODES = 7;
+let nodes = [];
+let gossipRounds = 0;
+let messageId = 0;
+
+function initCluster() {
+  nodes = [];
+  for (let i = 0; i < NODES; i++) {
+    const angle = (2 * Math.PI * i) / NODES - Math.PI / 2;
+    const cx = 50 + 38 * Math.cos(angle);
+    const cy = 50 + 38 * Math.sin(angle);
+    nodes.push({
+      id: i,
+      x: cx, y: cy,
+      hasMessage: false,
+      alive: true,
+      leader: false,
+      color: 'var(--ds)'
+    });
+  }
+  gossipRounds = 0;
+}
+
+function renderCluster() {
+  clusterDemo.querySelectorAll('.node').forEach(n => n.remove());
+  nodes.forEach((nd, i) => {
+    const el = document.createElement('div');
+    el.className = 'node' + (nd.leader ? ' leader' : '') + (nd.replicating ? ' replicating' : '') + (!nd.alive ? ' down' : '');
+    el.style.left = nd.x + '%';
+    el.style.top = nd.y + '%';
+    el.style.transform = 'translate(-50%,-50%)';
+    el.style.background = nd.alive ? (nd.leader ? 'var(--amber)' : (nd.hasMessage ? 'var(--green)' : nd.color)) : '#9ca3af';
+    el.textContent = nd.leader ? '⭐' + i : 'N' + i;
+    el.title = `节点 ${i}` + (nd.leader ? ' (消息发起者)' : '') + (!nd.alive ? ' (宕机)' : '');
+    clusterDemo.appendChild(el);
+  });
+  updateConnections();
+  updateStats();
+}
+
+function updateConnections() {
+  connSvg.innerHTML = '';
+  const w = clusterDemo.clientWidth;
+  const h = clusterDemo.clientHeight;
+  for (let i = 0; i < NODES; i++) {
+    for (let j = i + 1; j < NODES; j++) {
+      if (!nodes[i].alive || !nodes[j].alive) continue;
+      const x1 = nodes[i].x * w / 100;
+      const y1 = nodes[i].y * h / 100;
+      const x2 = nodes[j].x * w / 100;
+      const y2 = nodes[j].y * h / 100;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', 'rgba(124,58,237,0.15)');
+      line.setAttribute('stroke-width', '1.5');
+      connSvg.appendChild(line);
+    }
+  }
+}
+
+function updateStats() {
+  const received = nodes.filter(n => n.hasMessage).length;
+  const alive = nodes.filter(n => n.alive).length;
+  document.getElementById('statReceived').textContent = received;
+  document.getElementById('statRounds').textContent = gossipRounds;
+  document.getElementById('statAlive').textContent = alive;
+}
+
+function addLog(msg, cls) {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const now = new Date().toLocaleTimeString();
+  entry.innerHTML = `<span class="log-time">[${now}]</span> <span class="${cls || 'log-event'}">${msg}</span>`;
+  gossipLog.appendChild(entry);
+  gossipLog.scrollTop = gossipLog.scrollHeight;
+}
+
+function sendMessage() {
+  const alive = nodes.filter(n => n.alive);
+  if (alive.length === 0) return addLog('无存活节点，无法发送消息', 'log-err');
+  nodes.forEach(n => { n.hasMessage = false; n.leader = false; });
+  const sender = alive[Math.floor(Math.random() * alive.length)];
+  sender.hasMessage = true;
+  sender.leader = true;
+  messageId++;
+  addLog(`节点 ${sender.id} 发起新消息 #${messageId}`, 'log-event');
+  renderCluster();
+}
+
+function gossipRound() {
+  gossipRounds++;
+  const alive = nodes.filter(n => n.alive);
+  if (alive.length < 2) { addLog('存活节点不足 2 个，Gossip 无法传播', 'log-warn'); return; }
+
+  let spread = 0;
+  nodes.forEach(nd => {
+    if (!nd.alive || !nd.hasMessage) return;
+    // Pick a random alive peer
+    const peers = alive.filter(p => p.id !== nd.id);
+    if (peers.length === 0) return;
+    const target = peers[Math.floor(Math.random() * peers.length)];
+    if (!target.hasMessage) {
+      target.hasMessage = true;
+      spread++;
+    }
+  });
+
+  addLog(`Gossip 第 ${gossipRounds} 轮：消息传播到 ${spread} 个新节点`, 'log-event');
+  renderCluster();
+}
+
+function killRandomNode() {
+  const alive = nodes.filter(n => n.alive);
+  if (alive.length <= 1) { addLog('只剩 1 个节点了，再杀就全挂了', 'log-warn'); return; }
+  const victim = alive[Math.floor(Math.random() * alive.length)];
+  victim.alive = false;
+  addLog(`节点 ${victim.id} 宕机 💥`, 'log-err');
+  renderCluster();
+}
+
+function reviveNodes() {
+  let revived = 0;
+  nodes.forEach(n => { if (!n.alive) { n.alive = true; revived++; } });
+  if (revived > 0) addLog(`${revived} 个节点已恢复`, 'log-event');
+  renderCluster();
+}
+
+function resetCluster() {
+  initCluster();
+  gossipRounds = 0;
+  gossipLog.innerHTML = '<div class="log-entry"><span class="log-time">[启动]</span> 集群初始化完成，7 个节点就绪</div>';
+  renderCluster();
+}
+
+// ==========================
+// RAFT ELECTION DEMO
+// ==========================
+const raftCluster = document.getElementById('raftCluster');
+const raftConnSvg = document.getElementById('raftConnSvg');
+const raftLog = document.getElementById('gossipLog') === gossipLog ? document.getElementById('raftLog') : document.getElementById('raftLog');
+
+const RAFT_N = 5;
+let raftNodes = [];
+let raftTerm = 1;
+
+function initRaftCluster() {
+  raftNodes = [];
+  for (let i = 0; i < RAFT_N; i++) {
+    const angle = (2 * Math.PI * i) / RAFT_N - Math.PI / 2;
+    const cx = 50 + 36 * Math.cos(angle);
+    const cy = 50 + 36 * Math.sin(angle);
+    raftNodes.push({
+      id: i, x: cx, y: cy,
+      state: 'follower', // follower | candidate | leader
+      votedFor: -1,
+      alive: true, term: raftTerm
+    });
+  }
+}
+
+function addRaftLog(msg, cls) {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const now = new Date().toLocaleTimeString();
+  entry.innerHTML = `<span class="log-time">[${now}]</span> <span class="${cls || 'log-event'}">${msg}</span>`;
+  raftLog.appendChild(entry);
+  raftLog.scrollTop = raftLog.scrollHeight;
+}
+
+function renderRaftCluster() {
+  raftCluster.querySelectorAll('.node').forEach(n => n.remove());
+  raftNodes.forEach((nd, i) => {
+    const el = document.createElement('div');
+    el.className = 'node';
+    if (nd.state === 'leader') el.classList.add('leader');
+    if (!nd.alive) el.classList.add('down');
+    el.style.left = nd.x + '%';
+    el.style.top = nd.y + '%';
+    el.style.transform = 'translate(-50%,-50%)';
+
+    if (!nd.alive) {
+      el.style.background = '#9ca3af';
+    } else if (nd.state === 'leader') {
+      el.style.background = 'var(--amber)';
+    } else if (nd.state === 'candidate') {
+      el.style.background = 'var(--pink)';
+    } else {
+      el.style.background = 'var(--ds)';
+    }
+
+    const stateEmoji = nd.state === 'leader' ? '👑' : nd.state === 'candidate' ? '🗳️' : '👤';
+    el.textContent = stateEmoji + i;
+    el.title = `节点 ${i} · ${nd.state} · Term ${raftTerm}`;
+    raftCluster.appendChild(el);
+  });
+
+  // Update connections
+  raftConnSvg.innerHTML = '';
+  const w = raftCluster.clientWidth;
+  const h = raftCluster.clientHeight;
+  for (let i = 0; i < RAFT_N; i++) {
+    for (let j = i + 1; j < RAFT_N; j++) {
+      if (!raftNodes[i].alive || !raftNodes[j].alive) continue;
+      const x1 = raftNodes[i].x * w / 100;
+      const y1 = raftNodes[i].y * h / 100;
+      const x2 = raftNodes[j].x * w / 100;
+      const y2 = raftNodes[j].y * h / 100;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', 'rgba(124,58,237,0.15)');
+      line.setAttribute('stroke-width', '1.5');
+      raftConnSvg.appendChild(line);
+    }
+  }
+}
+
+function startElection() {
+  raftTerm++;
+  raftNodes.forEach(n => { n.state = 'follower'; n.votedFor = -1; n.term = raftTerm; });
+  addRaftLog(`Term ${raftTerm} 开始，发起选举...`, 'log-event');
+
+  // Random candidate
+  const alive = raftNodes.filter(n => n.alive);
+  if (alive.length === 0) { addRaftLog('无存活节点', 'log-err'); return; }
+  const candidate = alive[Math.floor(Math.random() * alive.length)];
+  candidate.state = 'candidate';
+  candidate.votedFor = candidate.id;
+  addRaftLog(`节点 ${candidate.id} 转为 Candidate，Term=${raftTerm}，投票给自己`, 'log-event');
+
+  // Simulate voting
+  let votes = 1;
+  alive.forEach(n => {
+    if (n.id === candidate.id) return;
+    if (n.votedFor === -1) {
+      n.votedFor = candidate.id;
+      votes++;
+      addRaftLog(`节点 ${n.id} 投票给节点 ${candidate.id}`, 'log-event');
+    }
+  });
+
+  const majority = Math.floor(RAFT_N / 2) + 1;
+  if (votes >= majority) {
+    candidate.state = 'leader';
+    addRaftLog(`✅ 节点 ${candidate.id} 获得 ${votes}/${RAFT_N} 票 → 成为 Leader！Term=${raftTerm}`, 'log-event');
+  } else {
+    addRaftLog(`❌ 票数不足 (${votes}/${majority})，选举失败，将重新选举`, 'log-warn');
+  }
+  renderRaftCluster();
+}
+
+function leaderHeartbeat() {
+  const leader = raftNodes.find(n => n.state === 'leader' && n.alive);
+  if (!leader) { addRaftLog('当前无 Leader，无法发送心跳', 'log-warn'); return; }
+  addRaftLog(`Leader 节点 ${leader.id} 发送心跳 (Term=${raftTerm}) → 所有 Follower 重置选举计时器`, 'log-event');
+}
+
+function killLeaderRaft() {
+  const leader = raftNodes.find(n => n.state === 'leader' && n.alive);
+  if (!leader) { addRaftLog('当前无 Leader 可干掉', 'log-warn'); return; }
+  leader.alive = false;
+  leader.state = 'follower';
+  addRaftLog(`💥 Leader 节点 ${leader.id} 宕机！集群将在超时后重新选举`, 'log-err');
+  renderRaftCluster();
+}
+
+function resetRaftCluster() {
+  raftTerm = 1;
+  initRaftCluster();
+  raftLog.innerHTML = '<div class="log-entry"><span class="log-time">[启动]</span> Raft 集群就绪：5 个节点 (Term=1)，等待选举</div>';
+  renderRaftCluster();
+}
+
+// ==========================
+// QUORUM REPLICATION
+// ==========================
+const N_REPLICAS = 5;
+let replicas = [];
+let writeValue = 42;
+
+function initReplicas() {
+  replicas = [];
+  for (let i = 0; i < N_REPLICAS; i++) {
+    replicas.push({ id: i, value: null, version: 0 });
+  }
+}
+
+function updateQuorum() {
+  const W = parseInt(document.getElementById('quorumW').value);
+  const R = parseInt(document.getElementById('quorumR').value);
+  document.getElementById('quorumWVal').textContent = W;
+  document.getElementById('quorumRVal').textContent = R;
+
+  const resultEl = document.getElementById('quorumResult');
+  if (W + R > N_REPLICAS) {
+    resultEl.style.background = 'var(--green-light)';
+    resultEl.innerHTML = `✅ W+R=${W+R} > N=${N_REPLICAS} → <strong>强一致性保证</strong>（读写集必有交集）`;
+  } else {
+    resultEl.style.background = 'var(--red-light)';
+    resultEl.innerHTML = `⚠️ W+R=${W+R} ≤ N=${N_REPLICAS} → <strong>可能读到旧数据</strong>（读写集可能不重叠）`;
+  }
+}
+
+function renderReplicas() {
+  const container = document.getElementById('replicaNodes');
+  container.innerHTML = '';
+  replicas.forEach(r => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:.82rem;padding:6px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)';
+    div.innerHTML = `
+      <span style="font-weight:700;color:var(--ds);min-width:50px">副本 ${r.id}</span>
+      <span style="flex:1;font-family:var(--mono);font-size:.78rem">x = ${r.value !== null ? r.value : 'null'}</span>
+      <span style="color:var(--text3);font-size:.7rem">v${r.version}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function simulateWrite() {
+  const W = parseInt(document.getElementById('quorumW').value);
+  const log = document.getElementById('quorumLog');
+  writeValue = Math.floor(Math.random() * 100) + 1;
+  document.getElementById('writeVal').textContent = writeValue;
+
+  // Write to first W replicas
+  let written = 0;
+  replicas.forEach(r => {
+    if (written < W) {
+      r.value = writeValue;
+      r.version++;
+      written++;
+    }
+  });
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const now = new Date().toLocaleTimeString();
+  entry.innerHTML = `<span class="log-time">[${now}]</span> <span class="log-event">✍️ 写入 x=${writeValue}，W=${W}，成功写入 ${written}/${N_REPLICAS} 个副本</span>`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+
+  renderReplicas();
+  updateQuorum();
+}
+
+function simulateRead() {
+  const R = parseInt(document.getElementById('quorumR').value);
+  const log = document.getElementById('quorumLog');
+
+  // Read from R replicas, return max version value
+  const reads = replicas.slice(0, R);
+  const maxVer = reads.reduce((max, r) => r.version > max.version ? r : max, reads[0]);
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const now = new Date().toLocaleTimeString();
+  entry.innerHTML = `<span class="log-time">[${now}]</span> <span class="log-event">📖 读取 R=${R}，结果 x = ${maxVer.value !== null ? maxVer.value : 'null'} (版本 v${maxVer.version})${reads.some(r => r.value !== maxVer.value) ? ' ⚠️ 副本间值不一致' : ' ✅ 所有副本一致'}</span>`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ==========================
+// LOAD BALANCER
+// ==========================
+const LB_SERVERS = ['S1', 'S2', 'S3', 'S4'];
+const serverWeights = [1, 2, 1, 3]; // weighted RR
+let lbCounts = [0, 0, 0, 0];
+let lbTotal = 0;
+let currentStrategy = 'round-robin';
+let rrIndex = 0;
+let weightedIndex = 0;
+
+function switchLBStrategy(btn) {
+  document.querySelectorAll('[data-strategy]').forEach(b => {
+    b.className = 'btn-outline';
+  });
+  btn.className = 'btn-primary';
+  currentStrategy = btn.dataset.strategy;
+  document.getElementById('lbStrategy').textContent = btn.textContent.trim();
+  resetLB();
+}
+
+function resetLB() {
+  lbCounts = [0, 0, 0, 0];
+  lbTotal = 0;
+  rrIndex = 0;
+  weightedIndex = 0;
+  document.getElementById('lbTotal').textContent = '0';
+  document.getElementById('lbBalance').textContent = '-';
+  document.getElementById('lbHistory').innerHTML = '';
+  renderLBServers();
+}
+
+function sendLBRequests(n) {
+  for (let i = 0; i < n; i++) {
+    const key = 'req_' + (lbTotal + 1);
+    selectServer(key);
+  }
+}
+
+function sendLBRequest() {
+  const key = document.getElementById('lbKey').value || ('req_' + (lbTotal + 1));
+  selectServer(key);
+}
+
+function selectServer(key) {
+  let idx;
+  switch (currentStrategy) {
+    case 'round-robin':
+      idx = rrIndex % LB_SERVERS.length;
+      rrIndex++;
+      break;
+    case 'weighted':
+      // Simple weighted round-robin
+      let totalW = serverWeights.reduce((a,b) => a+b, 0);
+      let w = weightedIndex % totalW;
+      let sum = 0;
+      idx = 0;
+      for (let i = 0; i < serverWeights.length; i++) {
+        sum += serverWeights[i];
+        if (w < sum) { idx = i; break; }
+      }
+      weightedIndex++;
+      break;
+    case 'least-conn':
+      idx = lbCounts.indexOf(Math.min(...lbCounts));
+      break;
+    case 'hash':
+      // Simple hash
+      let h = 0;
+      for (let i = 0; i < key.length; i++) h = ((h << 5) - h) + key.charCodeAt(i);
+      idx = Math.abs(h) % LB_SERVERS.length;
+      break;
+    default:
+      idx = rrIndex % LB_SERVERS.length;
+      rrIndex++;
+  }
+
+  lbCounts[idx]++;
+  lbTotal++;
+
+  document.getElementById('lbTotal').textContent = lbTotal;
+
+  // Balance metric
+  const maxCount = Math.max(...lbCounts);
+  const minCount = Math.min(...lbCounts);
+  const balance = maxCount === 0 ? 1 : minCount / maxCount;
+  const balStr = balance === 1 ? '完全均衡 ✅' : balance > 0.7 ? '基本均衡 👍' : '不均衡 ⚠️';
+  document.getElementById('lbBalance').textContent = balStr;
+
+  // History
+  const history = document.getElementById('lbHistory');
+  const entry = document.createElement('div');
+  entry.style.cssText = 'padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:.76rem';
+  entry.textContent = `#${lbTotal} → ${LB_SERVERS[idx]} (${key})`;
+  history.appendChild(entry);
+  history.scrollTop = history.scrollHeight;
+
+  renderLBServers();
+}
+
+function renderLBServers() {
+  const container = document.getElementById('lbServerList');
+  container.innerHTML = '';
+  const maxCount = Math.max(...lbCounts, 1);
+
+  LB_SERVERS.forEach((name, i) => {
+    const pct = Math.round((lbCounts[i] / maxCount) * 100);
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:700;font-size:.82rem;color:var(--ds-dark)">${name}</span>
+        <span style="font-size:.78rem;color:var(--text2)">${lbCounts[i]} 请求</span>
+      </div>
+      <div style="height:8px;background:#f0f0f0;border-radius:4px">
+        <div style="height:100%;background:${lbCounts[i] === maxCount ? 'var(--ds)' : 'var(--green)'};border-radius:4px;width:${pct}%;transition:width .3s"></div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ==========================
+// INITIALIZATION
+// ==========================
+window.addEventListener('load', () => {
+  initCluster();
+  renderCluster();
+  initRaftCluster();
+  renderRaftCluster();
+  initReplicas();
+  renderReplicas();
+  renderLBServers();
+});
+
+window.addEventListener('resize', () => {
+  updateConnections();
+  renderRaftCluster();
+});
+</script>
+
+</body>
+</html>
