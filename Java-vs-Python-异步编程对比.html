@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java vs Python · 异步编程深度对比分析</title>
+<style>
+:root {
+  --java: #e76f00; --java-dark: #c25200; --java-light: #fff3e8;
+  --py: #3776AB; --py-dark: #1e4a6d; --py-light: #e8f0f8;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+  --shadow-java: 0 2px 12px rgba(231,111,0,.12);
+  --shadow-py: 0 2px 12px rgba(55,118,171,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;padding:0 20px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.05rem;color:var(--text);padding:14px 0;margin-right:12px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo .j{color:var(--java)}.nav .logo .p{color:var(--py)}
+.nav a{text-decoration:none;color:var(--text2);font-size:.82rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover{background:#f3f4f6;color:var(--text)}
+.nav .ico{font-size:.9rem}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--java) 0%,var(--py) 100%);color:#fff;padding:68px 40px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-80px;left:-60px;width:280px;height:280px;background:rgba(255,255,255,.06);border-radius:50%}
+.hero::after{content:"";position:absolute;bottom:-60px;right:-60px;width:260px;height:260px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h1{font-size:2.6rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative}
+.hero .sub{font-size:1.05rem;opacity:.92;margin-top:12px;max-width:700px;margin-inline:auto;position:relative}
+.hero .tags{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative}
+.hero .tag{background:rgba(255,255,255,.16);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.25)}
+.hero .tag.j{border-color:rgba(255,180,80,.4);background:rgba(255,180,80,.15)}
+.hero .tag.p{border-color:rgba(120,180,255,.4);background:rgba(120,180,255,.15)}
+
+.wrap{max-width:1200px;margin:0 auto;padding:30px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:44px}
+.sec-title{font-size:1.6rem;font-weight:800;margin-bottom:20px;padding-bottom:10px;border-bottom:3px solid var(--border);display:flex;align-items:center;gap:12px}
+.sec-title .n{min-width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-title .n.j{background:var(--java);color:#fff}
+.sec-title .n.p{background:var(--py);color:#fff}
+.sec-title .n.mix{background:linear-gradient(135deg,var(--java),var(--py));color:#fff}
+.sec-intro{font-size:.88rem;color:var(--text2);margin-bottom:22px;line-height:1.75}
+
+/* DUAL COLUMN */
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+@media(max-width:768px){.dual{grid-template-columns:1fr}}
+
+.col-java,.col-python{background:var(--surface);border-radius:var(--radius);padding:28px 26px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.col-java{border-top:4px solid var(--java);box-shadow:var(--shadow-java)}
+.col-python{border-top:4px solid var(--py);box-shadow:var(--shadow-py)}
+.col-java::before,.col-python::before{content:"";position:absolute;top:0;right:0;width:80px;height:80px;border-radius:0 0 0 100%;opacity:.04}
+.col-java::before{background:var(--java)}
+.col-python::before{background:var(--py)}
+.col-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.col-header .badge{font-size:.78rem;font-weight:700;padding:3px 14px;border-radius:20px;color:#fff}
+.col-header .badge.j{background:var(--java)}
+.col-header .badge.p{background:var(--py)}
+.col-header .lang-name{font-weight:800;font-size:1.15rem}
+.col-header .lang-name.j{color:var(--java-dark)}
+.col-header .lang-name.p{color:var(--py-dark)}
+
+.col-java p,.col-python p{font-size:.85rem;color:var(--text2);line-height:1.72}
+.col-java ul,.col-python ul{padding-left:18px;font-size:.85rem;color:var(--text2);line-height:1.8;margin:10px 0}
+.col-java li::marker{color:var(--java)}
+.col-python li::marker{color:var(--py)}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.06rem;margin-bottom:10px}
+
+/* CODE */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang-badge{position:absolute;top:8px;right:16px;font-size:.64rem;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.code .lang-badge.j{color:#fab387}
+.code .lang-badge.p{color:#74c7ec}
+.code pre{font-family:var(--mono);font-size:.78rem;color:#cdd6f4;white-space:pre;line-height:1.78}
+.kw{color:#cba6f7}.str{color:#a6e3a1}.cmt{color:#6c7086;font-style:italic}
+.fn{color:#89b4fa}.num{color:#fab387}.typ{color:#f9e2af}
+.ann{color:#f38ba8}.var{color:#a6e3a1}.dir{color:#89dceb}
+.copy-btn{position:absolute;top:8px;right:58px;background:rgba(255,255,255,.08);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.67rem;font-family:var(--sans);transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+
+/* COMPARE TABLE */
+.comp-table{width:100%;border-collapse:collapse;font-size:.83rem;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:20px 0}
+.comp-table th{background:#f8fafc;font-weight:700;padding:14px 16px;text-align:left;border-bottom:2px solid var(--border);font-size:.82rem}
+.comp-table th.j-col{background:linear-gradient(135deg,#fff3e8,#fff);color:var(--java-dark)}
+.comp-table th.p-col{background:linear-gradient(135deg,#e8f0f8,#fff);color:var(--py-dark)}
+.comp-table th.dim-col{background:#f1f5f9;color:var(--text2)}
+.comp-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.65}
+.comp-table td.j-col{color:var(--java-dark);background:#fffaf5}
+.comp-table td.p-col{color:var(--py-dark);background:#fafcfe}
+.comp-table tr:hover td{background:#f8fafc}
+.comp-table tr:hover td.j-col{background:#fff8f0}
+.comp-table tr:hover td.p-col{background:#f0f4fa}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.1rem}
+.tip.info{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.java-tip{background:var(--java-light);border-left:4px solid var(--java)}
+.tip.py-tip{background:var(--py-light);border-left:4px solid var(--py);display:none}
+
+/* DIAGRAM */
+.diagram-box{background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius);padding:36px 24px;text-align:center;margin:18px 0}
+.diagram-box svg{max-width:100%;height:auto}
+
+/* GLOSSARY GRID */
+.glossary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.gloss-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.gloss-item:hover{box-shadow:var(--shadow-hover)}
+.gloss-item .term{font-weight:800;font-size:.94rem;margin-bottom:6px;color:var(--text)}
+.gloss-item .term .jtag{color:var(--java);font-size:.72rem;border:1px solid var(--java);padding:1px 8px;border-radius:10px;margin-left:6px}
+.gloss-item .term .ptag{color:var(--py);font-size:.72rem;border:1px solid var(--py);padding:1px 8px;border-radius:10px;margin-left:6px}
+.gloss-item .def{font-size:.82rem;color:var(--text2);line-height:1.65}
+
+/* SCENARIO TABLE */
+.scenario-table{width:100%;border-collapse:collapse;font-size:.83rem;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:20px 0}
+.scenario-table th{background:#f1f5f9;font-weight:700;padding:12px 16px;text-align:left;border-bottom:2px solid var(--border)}
+.scenario-table td{padding:12px 16px;border-bottom:1px solid var(--border);line-height:1.65}
+.scenario-table .win-j{color:var(--java);font-weight:600}
+.scenario-table .win-p{color:var(--py);font-weight:600}
+.scenario-table .draw{color:var(--text3)}
+.scenario-table tr:hover td{background:#fafbfc}
+
+/* FOOTER */
+.footer{text-align:center;padding:40px 20px 30px;color:var(--text3);font-size:.8rem;border-top:1px solid var(--border)}
+.footer a{color:var(--py)}
+
+/* ANIMATION */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.col-java,.col-python,.card,.gloss-item{animation:fadeIn .5s ease backwards}
+.col-python{animation-delay:.1s}
+
+/* MOBILE */
+@media(max-width:768px){
+  .hero h1{font-size:1.7rem}
+  .hero{padding:46px 20px 38px}
+  .sec-title{font-size:1.3rem}
+  .glossary-grid{grid-template-columns:1fr}
+  .comp-table,.scenario-table{font-size:.76rem}
+  .comp-table td,.comp-table th,.scenario-table td,.scenario-table th{padding:8px 10px}
+  .col-java,.col-python{padding:20px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="nav">
+  <div class="logo"><span class="j">☕</span> Java <span style="margin:0 6px">vs</span> <span class="p">🐍</span> Python</div>
+  <a href="#principle">底层原理</a>
+  <a href="#concurrency">并发模型</a>
+  <a href="#code">代码对比</a>
+  <a href="#perf">性能场景</a>
+  <a href="#glossary">术语解释</a>
+  <a href="#summary">总结</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>Java vs Python · 异步编程深度对比</h1>
+  <p class="sub">从底层原理到代码实战，全方位解析两种语言异步机制的异同与适用场景</p>
+  <div class="tags">
+    <span class="tag j">线程池 ThreadPool</span>
+    <span class="tag j">CompletableFuture</span>
+    <span class="tag p">事件循环 Event Loop</span>
+    <span class="tag p">async / await</span>
+    <span class="tag">多线程 vs 协程</span>
+    <span class="tag">GIL 真相</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ===== Section 1: 底层原理对比 ===== -->
+<section class="sec" id="principle">
+  <h2 class="sec-title"><span class="n mix">1</span> 底层异步机制全景对比</h2>
+  <p class="sec-intro">Java 和 Python 的异步模型根植于完全不同的设计哲学——Java 依赖操作系统级线程实现<strong>真并行</strong>，Python 则通过事件循环在<strong>单线程</strong>内调度协程。</p>
+
+  <div class="dual">
+    <!-- Java -->
+    <div class="col-java">
+      <div class="col-header">
+        <span class="badge j">Java</span>
+        <span class="lang-name j">线程驱动异步</span>
+      </div>
+      <p>Java 的异步能力建立在 <strong>JVM 线程</strong>之上，线程是操作系统内核级资源。异步任务被提交到线程池，由 OS 调度器负责时间片分配，<strong>不同线程可以运行在不同 CPU 核心上</strong>。</p>
+      <ul>
+        <li><strong>核心组件：</strong>ExecutorService / ThreadPoolExecutor / ForkJoinPool</li>
+        <li><strong>任务抽象：</strong>Runnable → Callable → Future → CompletableFuture</li>
+        <li><strong>线程复用：</strong>线程池避免频繁创建/销毁线程的开销</li>
+        <li><strong>并行能力：</strong>可充分利用多核 CPU，真正同时执行多个任务</li>
+        <li><strong>上下文切换：</strong>线程切换由 OS 管理，有一定开销</li>
+      </ul>
+      <div class="diagram-box">
+        <svg viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg">
+          <text x="200" y="22" text-anchor="middle" font-size="11" fill="#e76f00" font-weight="700">Java 线程池模型</text>
+          <rect x="20" y="42" width="140" height="40" rx="6" fill="#fff3e8" stroke="#e76f00" stroke-width="1.5"/>
+          <text x="90" y="58" text-anchor="middle" font-size="10" fill="#c25200">ThreadPool</text>
+          <text x="90" y="74" text-anchor="middle" font-size="8" fill="#999">核心/最大/队列</text>
+          <path d="M160,62 L195,62" stroke="#e76f00" stroke-width="1.5" marker-end="url(#arrowJ)"/>
+          <rect x="200" y="42" width="90" height="40" rx="6" fill="#fff3e8" stroke="#e76f00" stroke-width="1.5"/>
+          <text x="245" y="58" text-anchor="middle" font-size="9" fill="#c25200">Thread 1</text>
+          <text x="245" y="72" text-anchor="middle" font-size="8" fill="#999">💻 CPU Core 0</text>
+          <path d="M160,112 L195,112" stroke="#e76f00" stroke-width="1.5" marker-end="url(#arrowJ)"/>
+          <rect x="200" y="100" width="90" height="40" rx="6" fill="#fff3e8" stroke="#e76f00" stroke-width="1.5"/>
+          <text x="245" y="116" text-anchor="middle" font-size="9" fill="#c25200">Thread 2</text>
+          <text x="245" y="130" text-anchor="middle" font-size="8" fill="#999">💻 CPU Core 1</text>
+          <path d="M160,160 L195,160" stroke="#e76f00" stroke-width="1.5" marker-end="url(#arrowJ)"/>
+          <rect x="200" y="148" width="90" height="40" rx="6" fill="#fff3e8" stroke="#e76f00" stroke-width="1.5"/>
+          <text x="245" y="164" text-anchor="middle" font-size="9" fill="#c25200">Thread 3</text>
+          <text x="245" y="178" text-anchor="middle" font-size="8" fill="#999">💻 CPU Core 2</text>
+          <defs><marker id="arrowJ" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#e76f00"/></marker></defs>
+        </svg>
+      </div>
+      <div class="tip info"><span class="ti">💡</span> Java 线程本质上是 OS 线程（1:1 映射），<b>线程阻塞时 OS 会调度其他线程运行</b>，不需要程序自己管理切换。</div>
+    </div>
+
+    <!-- Python -->
+    <div class="col-python">
+      <div class="col-header">
+        <span class="badge p">Python</span>
+        <span class="lang-name p">事件循环 + 协程</span>
+      </div>
+      <p>Python 的异步依赖 <strong>事件循环 (Event Loop)</strong> 在单线程内调度协程。协程在遇到 <code>await</code> 时主动让出控制权，事件循环切换到下一个可执行的协程。<strong>所有协程运行在同一个线程内</strong>。</p>
+      <ul>
+        <li><strong>核心组件：</strong>asyncio / Event Loop / Task / Future</li>
+        <li><strong>任务抽象：</strong>Coroutine → Task → asyncio.gather()</li>
+        <li><strong>协作式调度：</strong>协程在 await 处主动让出，由事件循环统一调度</li>
+        <li><strong>单线程局限：</strong>CPU 密集任务会阻塞整个事件循环</li>
+        <li><strong>无上下文切换开销：</strong>协程切换在用户空间完成，极低开销</li>
+      </ul>
+      <div class="diagram-box">
+        <svg viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg">
+          <text x="260" y="18" text-anchor="middle" font-size="11" fill="#3776AB" font-weight="700">Python 事件循环模型</text>
+          <circle cx="100" cy="125" r="44" fill="#e8f0f8" stroke="#3776AB" stroke-width="2" stroke-dasharray="6,3"/>
+          <text x="100" y="120" text-anchor="middle" font-size="9" fill="#1e4a6d">Event</text>
+          <text x="100" y="133" text-anchor="middle" font-size="9" fill="#1e4a6d">Loop</text>
+          <text x="100" y="155" text-anchor="middle" font-size="7" fill="#999">单线程</text>
+          <rect x="190" y="50" width="110" height="30" rx="5" fill="#e8f0f8" stroke="#3776AB" stroke-width="1.2"/>
+          <text x="245" y="69" text-anchor="middle" font-size="9" fill="#1e4a6d">协程 A (await →)</text>
+          <rect x="190" y="90" width="110" height="30" rx="5" fill="#e8f0f8" stroke="#3776AB" stroke-width="1.2"/>
+          <text x="245" y="109" text-anchor="middle" font-size="9" fill="#1e4a6d">协程 B (运行中)</text>
+          <rect x="190" y="130" width="110" height="30" rx="5" fill="#e8f0f8" stroke="#3776AB" stroke-width="1.2"/>
+          <text x="245" y="149" text-anchor="middle" font-size="9" fill="#1e4a6d">协程 C (就绪)</text>
+          <path d="M144,65 L190,65" stroke="#3776AB" stroke-width="1" marker-end="url(#arrowP)"/>
+          <path d="M144,105 L190,105" stroke="#3776AB" stroke-width="1" marker-end="url(#arrowP)"/>
+          <path d="M144,145 L190,145" stroke="#3776AB" stroke-width="1" marker-end="url(#arrowP)"/>
+          <text x="370" y="70" font-size="8" fill="#999">await 处切换</text>
+          <text x="370" y="88" font-size="7" fill="#aaa">无需 OS 介入</text>
+          <defs><marker id="arrowP" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5 Z" fill="#3776AB"/></marker></defs>
+        </svg>
+      </div>
+      <div class="tip info"><span class="ti">💡</span> <code>await</code> 不是"等待"，是"让出"——协程把控制权还给事件循环，让它去调度其他协程，等到 IO 就绪后再回来继续。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Section 2: 并发模型差异 ===== -->
+<section class="sec" id="concurrency">
+  <h2 class="sec-title"><span class="n mix">2</span> 并发模型：多线程 vs 协程</h2>
+  <div class="dual">
+    <div class="col-java">
+      <div class="col-header"><span class="badge j">Java</span><span class="lang-name j">抢占式多线程</span></div>
+      <p>Java 使用<strong>操作系统级线程</strong>，由 OS 调度器抢占式分配 CPU 时间片。线程可以在任何时候被操作系统挂起，切换到另一个线程。</p>
+      <ul>
+        <li>线程是<b>重量级</b>资源，每个约占用 ~1MB 栈空间</li>
+        <li>线程池默认大小通常为 CPU 核数（~8-32）</li>
+        <li>适合 <b>CPU 密集型</b>任务——真正多核并行计算</li>
+        <li><b>没有 GIL 限制</b>，多线程可以同时执行</li>
+        <li>线程安全问题需要靠锁 / CAS / synchronized 解决</li>
+        <li>Java 21+ 引入 <b>Virtual Thread</b>（虚拟线程），类似协程但仍映射到 OS 线程</li>
+      </ul>
+    </div>
+    <div class="col-python">
+      <div class="col-header"><span class="badge p">Python</span><span class="lang-name p">协作式协程</span></div>
+      <p>Python asyncio 使用<strong>单线程 + 协作式调度</strong>，协程在 await 处主动让出。没有操作系统层面的抢占，协程自己决定何时切换。</p>
+      <ul>
+        <li>协程是<b>轻量级</b>资源，每秒可创建数万个</li>
+        <li>可同时运行 <b>数千到数万</b>个协程而不会耗尽内存</li>
+        <li>适合 <b>IO 密集型</b>任务——网络请求、文件读写、数据库查询</li>
+        <li><b>GIL 依然存在</b>，但 asyncio 绕过了它（单线程内无需竞争）</li>
+        <li>不需要锁——只有一个线程在跑，数据天然安全</li>
+        <li>但 <b>不能利用多核</b>——CPU 密集任务需要 multiprocessing</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GIL 深度解析 -->
+  <div class="card" style="margin-top:20px;border-left:4px solid var(--purple)">
+    <h3>🔬 GIL 在异步编程中的真实影响</h3>
+    <p style="font-size:.84rem;color:var(--text2);line-height:1.75">
+      许多开发者对 GIL 有一个常见误解——以为 Python 完全不能并发。真相是：<br><br>
+      <strong>GIL 影响的是多线程并行（threading）</strong>，因为 GIL 保证同一时刻只有一个线程执行 Python 字节码。<br>
+      <strong>asyncio 不受 GIL 的直接影响</strong>，因为它只在单个线程内运行。asyncio 的问题是单线程 CPU 上限，不是 GIL。<br><br>
+      <span style="background:#f3e8ff;padding:2px 8px;border-radius:4px;font-size:.8rem">📊 结论：Java 多线程 = 真正多核并行；Python asyncio = 单核高效 IO 并发；Python multiprocessing = 绕过 GIL 的多核方案</span>
+    </p>
+  </div>
+</section>
+
+<!-- ===== Section 3: 代码对比 ===== -->
+<section class="sec" id="code">
+  <h2 class="sec-title"><span class="n mix">3</span> 实战代码对比</h2>
+
+  <!-- 示例 1: 简单异步调用 -->
+  <h3 style="font-weight:700;margin:18px 0 8px;font-size:.95rem">📌 示例一：发起 3 个 HTTP 请求并等待全部返回</h3>
+  <div class="dual">
+    <div class="col-java" style="padding:14px 10px">
+      <div class="code"><span class="copy-btn" onclick="copyCode(this)">复制</span><span class="lang-badge j">Java · HttpClient</span>
+<pre><span class="cmt">// Java 17+ HttpClient + CompletableFuture</span>
+<span class="kw">var</span> client = HttpClient.newHttpClient();
+<span class="kw">var</span> uris = List.of(
+    URI.create(<span class="str">"https://api.example.com/a"</span>),
+    URI.create(<span class="str">"https://api.example.com/b"</span>),
+    URI.create(<span class="str">"https://api.example.com/c"</span>)
+);
+
+<span class="cmt">// 同时发起 3 个异步请求</span>
+<span class="kw">var</span> futures = uris.stream()
+    .map(uri -> client.sendAsync(
+        HttpRequest.newBuilder(uri).build(),
+        BodyHandlers.ofString()))
+    .toList();
+
+<span class="cmt">// 等待所有完成，组合结果</span>
+CompletableFuture.allOf(
+    futures.toArray(CompletableFuture[]::new)
+).thenRun(() -> {
+    <span class="kw">var</span> results = futures.stream()
+        .map(CompletableFuture::join)
+        .toList();
+    System.out.println(<span class="str">"全部完成: "</span> + results);
+}).join();</pre>
+      </div>
+    </div>
+    <div class="col-python" style="padding:14px 10px">
+      <div class="code"><span class="copy-btn" onclick="copyCode(this)">复制</span><span class="lang-badge p">Python · aiohttp</span>
+<pre><span class="kw">import</span> aiohttp
+<span class="kw">import</span> asyncio
+
+<span class="kw">async def</span> <span class="fn">fetch</span>(session, url):
+    <span class="kw">async with</span> session.get(url) <span class="kw">as</span> resp:
+        <span class="kw">return await</span> resp.text()
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    urls = [
+        <span class="str">"https://api.example.com/a"</span>,
+        <span class="str">"https://api.example.com/b"</span>,
+        <span class="str">"https://api.example.com/c"</span>,
+    ]
+    <span class="kw">async with</span> aiohttp.ClientSession() <span class="kw">as</span> session:
+        <span class="cmt"># 同时发起 3 个请求</span>
+        tasks = [fetch(session, url) <span class="kw">for</span> url <span class="kw">in</span> urls]
+        results = <span class="kw">await</span> asyncio.gather(*tasks)
+        <span class="fn">print</span>(<span class="str">"全部完成:"</span>, results)
+
+asyncio.run(main())</pre>
+      </div>
+    </div>
+  </div>
+  <div class="tip info"><span class="ti">🔍</span> <b>关键差异：</b>Java 使用 <code>CompletableFuture</code> 链式组合，线程池内并行执行；Python 使用 <code>asyncio.gather()</code> 并发等待，单线程事件循环调度。</div>
+
+  <!-- 示例 2: 获取最快的那个 -->
+  <h3 style="font-weight:700;margin:24px 0 8px;font-size:.95rem">📌 示例二：竞速——多个数据源取最快的回复</h3>
+  <div class="dual">
+    <div class="col-java" style="padding:14px 10px">
+      <div class="code"><span class="copy-btn" onclick="copyCode(this)">复制</span><span class="lang-badge j">anyOf 竞速</span>
+<pre><span class="cmt">// 从多个数据源取最快的</span>
+<span class="kw">var</span> sourceA = CompletableFuture.supplyAsync(
+    () -> queryFromSource(<span class="str">"A"</span>));
+<span class="kw">var</span> sourceB = CompletableFuture.supplyAsync(
+    () -> queryFromSource(<span class="str">"B"</span>));
+<span class="kw">var</span> sourceC = CompletableFuture.supplyAsync(
+    () -> queryFromSource(<span class="str">"C"</span>));
+
+<span class="cmt">// 只要任意一个完成就返回</span>
+CompletableFuture.anyOf(sourceA, sourceB, sourceC)
+    .thenAccept(result ->
+        System.out.println(<span class="str">"最快完成: "</span> + result))
+    .join();</pre>
+      </div>
+    </div>
+    <div class="col-python" style="padding:14px 10px">
+      <div class="code"><span class="copy-btn" onclick="copyCode(this)">复制</span><span class="lang-badge p">wait FIRST_COMPLETED</span>
+<pre><span class="kw">import</span> asyncio
+
+<span class="kw">async def</span> <span class="fn">race_sources</span>():
+    sources = [
+        query_from_source(<span class="str">"A"</span>),
+        query_from_source(<span class="str">"B"</span>),
+        query_from_source(<span class="str">"C"</span>),
+    ]
+    <span class="cmt"># 谁先完成取谁</span>
+    done, pending = <span class="kw">await</span> asyncio.wait(
+        sources,
+        return_when=asyncio.FIRST_COMPLETED)
+    <span class="kw">for</span> task <span class="kw">in</span> pending:
+        task.cancel()  <span class="cmt"># 取消未完成的</span>
+    result = done.pop().result()
+    <span class="fn">print</span>(<span class="str">"最快完成:"</span>, result)
+</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 示例 3: 顺序与并行混合 -->
+  <h3 style="font-weight:700;margin:24px 0 8px;font-size:.95rem">📌 示例三：顺序依赖 + 并行混合编排（类 DAG）</h3>
+  <div class="dual">
+    <div class="col-java" style="padding:14px 10px">
+      <div class="code"><span class="copy-btn" onclick="copyCode(this)">复制</span><span class="lang-badge j">thenCombine</span>
+<pre><span class="cmt">// 场景：A→(B∥C)→D</span>
+<span class="cmt">// A 完成后，B 和 C 并行，两者都完成后执行 D</span>
+CompletableFuture
+    .supplyAsync(() -> fetchUser(<span class="str">"uid"</span>))  <span class="cmt">// A</span>
+    .thenCompose(user -> {
+        <span class="kw">var</span> orders  = fetchOrdersAsync(user);   <span class="cmt">// B</span>
+        <span class="kw">var</span> points  = fetchPointsAsync(user);   <span class="cmt">// C</span>
+        <span class="kw">return</span> orders.thenCombine(points,
+            (o, p) -> <span class="kw">new</span> UserReport(user, o, p)); <span class="cmt">// D</span>
+    })
+    .thenAccept(report -> System.out.println(report))
+    .join();</pre>
+      </div>
+    </div>
+    <div class="col-python" style="padding:14px 10px">
+      <div class="code"><span class="copy-btn" onclick="copyCode(this)">复制</span><span class="lang-badge p">asyncio.gather</span>
+<pre><span class="cmt"># 场景：A→(B∥C)→D</span>
+<span class="kw">async def</span> <span class="fn">get_user_report</span>(user_id):
+    user = <span class="kw">await</span> fetch_user(user_id)     <span class="cmt"># A</span>
+    <span class="cmt"># B 和 C 并行执行</span>
+    orders, points = <span class="kw">await</span> asyncio.gather(
+        fetch_orders(user),            <span class="cmt"># B</span>
+        fetch_points(user),            <span class="cmt"># C</span>
+    )
+    <span class="kw">return await</span> build_report(user, orders, points)  <span class="cmt"># D</span>
+</pre>
+      </div>
+    </div>
+  </div>
+  <div class="tip info"><span class="ti">🔍</span> <b>可读性对比：</b>Python 的 <code>await asyncio.gather()</code> 比 Java 的 <code>thenCombine()</code> 嵌套更直观，但 Java 的函数式链式风格在复杂 DAG 编排时表达能力更强。</div>
+</section>
+
+<!-- ===== Section 4: 性能与场景对比 ===== -->
+<section class="sec" id="perf">
+  <h2 class="sec-title"><span class="n mix">4</span> 性能特征与适用场景</h2>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th class="dim-col" style="width:18%">对比维度</th>
+        <th class="j-col" style="width:41%">☕ Java 方案</th>
+        <th class="p-col" style="width:41%">🐍 Python 方案</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>异步模型</strong></td>
+        <td class="j-col">多线程池 + CompletableFuture / Virtual Threads (Java 21+)</td>
+        <td class="p-col">单线程事件循环 + asyncio / 协程</td>
+      </tr>
+      <tr>
+        <td><strong>并行能力</strong></td>
+        <td class="j-col">✅ 真并行 — 多核 CPU 同时计算</td>
+        <td class="p-col">❌ 假并行 — 单核时分复用，CPU 密集需 multiprocessing</td>
+      </tr>
+      <tr>
+        <td><strong>单任务内存开销</strong></td>
+        <td class="j-col">线程 ~1MB 栈；虚拟线程 ~几 KB</td>
+        <td class="p-col">协程 ~几 KB，极低内存开销</td>
+      </tr>
+      <tr>
+        <td><strong>大规模并发上限</strong></td>
+        <td class="j-col">传统线程 ~千级；虚拟线程可达百万级</td>
+        <td class="p-col">轻松支撑数万到数十万协程</td>
+      </tr>
+      <tr>
+        <td><strong>上下文切换开销</strong></td>
+        <td class="j-col">OS 调度切换，微秒级（传统线程）</td>
+        <td class="p-col">用户空间切换，纳秒级，几乎为零</td>
+      </tr>
+      <tr>
+        <td><strong>线程安全</strong></td>
+        <td class="j-col">需要锁 / volatile / CAS / synchronized</td>
+        <td class="p-col">单线程协程天然线程安全，无需锁</td>
+      </tr>
+      <tr>
+        <td><strong>调试复杂度</strong></td>
+        <td class="j-col">多线程调试困难（竞态条件 / 死锁）</td>
+        <td class="p-col">单线程调试简单，但协程间状态追踪有时棘手</td>
+      </tr>
+      <tr>
+        <td><strong>CPU 密集任务</strong></td>
+        <td class="j-col">✅ 天然适合，多核并行计算</td>
+        <td class="p-col">❌ 不适合，会阻塞事件循环；需 multiprocessing</td>
+      </tr>
+      <tr>
+        <td><strong>网络 IO 密集</strong></td>
+        <td class="j-col">✅ 适用，但线程池大小需合理配置</td>
+        <td class="p-col">✅✅ 最佳场景，协程天然设计面向 IO</td>
+      </tr>
+      <tr>
+        <td><strong>学习曲线</strong></td>
+        <td class="j-col">中等 — 需理解线程/线程池/Future 链式编排</td>
+        <td class="p-col">较低 — async/await 语法糖接近同步代码写法</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 场景推荐表 -->
+  <h3 style="font-weight:700;margin:32px 0 12px;font-size:1.1rem">🎯 场景推荐矩阵</h3>
+  <table class="scenario-table">
+    <thead>
+      <tr>
+        <th style="width:28%">典型场景</th>
+        <th style="width:18%">推荐语言</th>
+        <th style="width:54%">原因</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>高并发 API 网关 / Web 服务</strong></td>
+        <td><span class="draw">各有优势</span></td>
+        <td>Java（Spring WebFlux/Vert.x）= 性能极致 + 生态完善；<br>Python（FastAPI）= 开发效率高 + 对接 ML/AI 天然便利</td>
+      </tr>
+      <tr>
+        <td><strong>Web 爬虫 / 数据采集</strong></td>
+        <td><span class="win-p">Python</span></td>
+        <td>aiohttp + asyncio 爬虫生态成熟，协程万级并发无压力</td>
+      </tr>
+      <tr>
+        <td><strong>实时数据计算 / 金融引擎</strong></td>
+        <td><span class="win-j">Java</span></td>
+        <td>多核并行计算 + 微秒级延迟控制，GC 调优成熟</td>
+      </tr>
+      <tr>
+        <td><strong>LLM/AI API 调用编排</strong></td>
+        <td><span class="win-p">Python</span></td>
+        <td>LangChain/LlamaIndex 等 AI 生态均基于 Python 异步</td>
+      </tr>
+      <tr>
+        <td><strong>微服务 RPC 框架</strong></td>
+        <td><span class="win-j">Java</span></td>
+        <td>Dubbo/gRPC/Spring Cloud 企业级生态碾压</td>
+      </tr>
+      <tr>
+        <td><strong>消息推送 / IM 长连接</strong></td>
+        <td><span class="draw">各有优势</span></td>
+        <td>Java（Netty）= 百万长连接；Python（aiohttp+WS）= 原型开发快</td>
+      </tr>
+      <tr>
+        <td><strong>ETL / 数据管道</strong></td>
+        <td><span class="win-p">Python</span></td>
+        <td>pandas + asyncio 组合拳，数据处理 + 异步 IO 一体</td>
+      </tr>
+      <tr>
+        <td><strong>分布式事务协调</strong></td>
+        <td><span class="win-j">Java</span></td>
+        <td>Seata/RocketMQ 事务消息等完整方案成熟</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== Section 5: 关键术语解释 ===== -->
+<section class="sec" id="glossary">
+  <h2 class="sec-title"><span class="n mix">5</span> 关键术语解释面板</h2>
+
+  <div class="glossary-grid">
+
+    <div class="gloss-item">
+      <div class="term">线程 Thread <span class="jtag">Java</span></div>
+      <div class="def">操作系统调度的最小执行单元。Java 的 <code>Thread</code> 是 OS 线程的 1:1 映射，拥有独立的调用栈和程序计数器。创建/销毁开销较大，需配合线程池复用。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">协程 Coroutine <span class="ptag">Python</span></div>
+      <div class="def">用户空间的轻量级"微线程"，由 async/await 语法定义。协程在 await 处主动让出控制权给事件循环，切换在用户态完成，几乎无开销。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">线程池 ThreadPool <span class="jtag">Java</span></div>
+      <div class="def">预先创建一组线程的容器，任务提交到池中由空闲线程执行。核心参数：coreSize（常驻线程数）、maxSize（最大线程数）、workQueue（等待队列）。避免频繁创建/销毁线程。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">事件循环 Event Loop <span class="ptag">Python</span></div>
+      <div class="def">asyncio 的核心调度器，运行在单线程中。它维护一个任务队列，不断轮询：检查 IO 是否就绪 → 调度可执行的协程 → 处理回调。一句话：<b>一个永不停止的 while 循环</b>。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">CompletableFuture <span class="jtag">Java</span></div>
+      <div class="def">Java 8+ 的异步任务编排器。支持链式调用：<code>thenApply</code>（转换）、<code>thenCompose</code>（串联）、<code>thenCombine</code>（合并）、<code>anyOf</code>（竞速）。非阻塞，任务在后台线程池中执行。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">async / await <span class="ptag">Python</span></div>
+      <div class="def">Python 3.5+ 的协程语法。用 <code>async def</code> 定义协程函数，<code>await</code> 挂起当前协程并将控制权交还事件循环。写起来像同步代码，实际是异步执行。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">GIL (Global Interpreter Lock) <span class="ptag">Python</span></div>
+      <div class="def">CPython 解释器的全局锁，确保同一时刻只有一个线程执行 Python 字节码。<b>asyncio 不受 GIL 直接影响</b>（单线程），但 threading 多线程受 GIL 限制。CPU 密集需用 multiprocessing 绕过。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">Virtual Thread (虚拟线程) <span class="jtag">Java</span></div>
+      <div class="def">Java 21 引入的轻量级线程（Project Loom）。由 JVM 而非 OS 管理调度，阻塞时自动让出底层 OS 线程。可以用传统 Thread API 编写异步代码而无须 CompletableFuture。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">ForkJoinPool <span class="jtag">Java</span></div>
+      <div class="def">Java 7 引入的工作窃取线程池，适用于分治递归任务。每个线程有自己的任务队列，空闲线程会从其他线程队列尾部"偷"任务执行。<code>CompletableFuture</code> 默认使用 ForkJoinPool。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">asyncio.gather() <span class="ptag">Python</span></div>
+      <div class="def">将多个协程打包成一个 Task，并发执行并等待全部完成。返回结果列表，顺序与传入顺序一致。任何子任务抛异常都会传播。相当于 Java 的 <code>CompletableFuture.allOf()</code>。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">ExecutorService <span class="jtag">Java</span></div>
+      <div class="def">Java 线程池的标准接口，负责管理线程生命周期和任务调度。常用实现：<code>newFixedThreadPool(n)</code> 固定大小、<code>newCachedThreadPool()</code> 弹性伸缩、<code>newScheduledThreadPool()</code> 支持定时。</div>
+    </div>
+
+    <div class="gloss-item">
+      <div class="term">asyncio.Queue <span class="ptag">Python</span></div>
+      <div class="def">异步安全的生产者-消费者队列。支持 <code>put()</code> / <code>get()</code> 的 await 语义，满时生产者挂起、空时消费者挂起。常用于协程间通信和工作流编排。</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Section 6: 总结 ===== -->
+<section class="sec" id="summary">
+  <h2 class="sec-title"><span class="n mix">6</span> 一句话总结 + 选型建议</h2>
+
+  <div class="dual">
+    <div class="col-java">
+      <div class="col-header"><span class="badge j">Java</span><span class="lang-name j">选 Java 当...</span></div>
+      <ul>
+        <li>项目需要<strong>多核并行计算</strong>能力</li>
+        <li>团队在企业级 Java 生态（Spring、Dubbo）已有积累</li>
+        <li>需要 <strong>严格的线程安全</strong>保证和 JVM GC 调优</li>
+        <li>容忍复杂的线程模型（或使用 Java 21+ Virtual Thread 简化）</li>
+        <li>场景：金融交易引擎、高吞吐微服务、分布式计算框架</li>
+      </ul>
+    </div>
+    <div class="col-python">
+      <div class="col-header"><span class="badge p">Python</span><span class="lang-name p">选 Python 当...</span></div>
+      <ul>
+        <li>项目主要是 <strong>IO 密集型</strong>（网络请求 / 数据库 / 文件）</li>
+        <li>需要<strong>快速原型和迭代</strong>（async/await 学习曲线低）</li>
+        <li>需要与 <strong>AI/ML 生态</strong>深度集成</li>
+        <li>需要支撑<strong>万级并发</strong>连接但不想维护线程池</li>
+        <li>场景：API 网关、爬虫、AI Agent 编排、实时数据推送</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;text-align:center;border:2px solid var(--border);background:linear-gradient(135deg,#fff8f0 0%,#f0f4fa 100%)">
+    <p style="font-size:1.05rem;font-weight:700;line-height:1.8;color:var(--text)">
+      ☕ Java 异步 = <span style="color:var(--java)">操作系统线程并行 + CompletableFuture 编排</span> — 适合 CPU 密集 + 企业级微服务<br>
+      🐍 Python 异步 = <span style="color:var(--py)">事件循环 + async/await 协程</span> — 适合 IO 密集 + AI 生态 + 快速交付<br><br>
+      <span style="font-size:.82rem;color:var(--text2)">没有银弹，只有场景匹配。项目中两者并存也很常见：<br>Python 做 AI 推理 + 异步网关 + 数据管道，Java 做核心交易 + 分布式协调。</span>
+    </p>
+  </div>
+</section>
+
+</div>
+
+<footer class="footer">
+  <p>Frontend Learning Hub · Java vs Python 异步编程深度对比 · <a href="index.html">返回首页</a></p>
+</footer>
+
+<script>
+// Copy code to clipboard
+function copyCode(btn){
+  var code = btn.parentElement.querySelector('pre').innerText;
+  navigator.clipboard.writeText(code).then(function(){
+    btn.textContent='已复制';
+    setTimeout(function(){btn.textContent='复制'},1500);
+  });
+}
+
+// Highlight active nav on scroll
+var sections = document.querySelectorAll('.sec');
+var navLinks = document.querySelectorAll('.nav a');
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      navLinks.forEach(function(l){l.classList.remove('active')});
+      var id = e.target.id;
+      var link = document.querySelector('.nav a[href="#'+id+'"]');
+      if(link) link.classList.add('active');
+    }
+  });
+},{threshold:.3});
+sections.forEach(function(s){observer.observe(s)});
+</script>
+</body>
+</html>
