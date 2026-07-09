@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redis 从入门到精通 · 交互式学习指南</title>
+<style>
+:root {
+  --redis: #DC382D; --redis-dark: #a82820; --redis-light: #fef0ef;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* === NAV === */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--redis);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px}
+.nav .logo svg{width:24px;height:24px}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s}
+.nav a:hover,.nav a.active{background:var(--redis-light);color:var(--redis)}
+
+/* === HERO === */
+.hero{background:linear-gradient(135deg,#DC382D 0%,#a82820 50%,#1a1a2e 100%);color:#fff;padding:70px 40px 56px;text-align:center}
+.hero h1{font-size:2.8rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2}
+.hero .sub{font-size:1.08rem;opacity:.88;margin-top:12px;max-width:640px;margin-inline:auto}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 60px}
+
+/* === SECTION === */
+.sec{margin-top:40px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--redis);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--redis);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 30px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+
+/* === TABS === */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-wrap:wrap}
+.tab{flex:1;min-width:70px;padding:12px 10px;border:none;background:transparent;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text2);font-family:var(--sans);transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab:hover{color:var(--text);background:#faf5f5}
+.tab.active{border-bottom-color:var(--redis);color:var(--redis)}
+.tab-panel{display:none;animation:fadeIn .3s}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* === CODE === */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.66rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.8rem;color:#cdd6f4;white-space:pre;line-height:1.7}
+.kw{color:#cba6f7}.str{color:#a6e3a1}.cmt{color:#6c7086;font-style:italic}
+.fn{color:#89b4fa}.num{color:#fab387}.typ{color:#f9e2af}
+.copy-btn{position:absolute;top:8px;right:16px;background:rgba(255,255,255,.1);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.7rem;font-family:var(--sans);transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* === TIP === */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--redis-light);border-left:4px solid var(--redis)}
+.tip.warn{background:#fef3c7;border-left:4px solid var(--orange)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+
+/* === TABLE === */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:#fef0ef;padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--redis)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:#fefafa}
+td code{background:var(--redis-light);color:var(--redis);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.78rem}
+
+/* === FLOW === */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:16px;background:#f0f2f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.78rem;text-align:center}
+.flow-node.red{border-color:var(--redis);background:var(--redis-light);color:var(--redis-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#064e3b}
+.flow-node.orange{border-color:var(--orange);background:var(--orange-light);color:#7c2d12}
+.flow-arrow{color:var(--text3);font-size:1.1rem;font-weight:700}
+
+/* === SIMULATOR === */
+.sim{background:var(--code-bg);border-radius:var(--radius);padding:24px;margin:16px 0}
+.sim .sim-title{color:#cdd6f4;font-size:.88rem;font-weight:700;margin-bottom:12px}
+.sim-input{display:flex;gap:10px;margin-bottom:12px}
+.sim-input .prefix{color:#a6e3a1;font-size:.84rem;font-family:var(--mono);padding:10px 0;white-space:nowrap}
+.sim-input input{flex:1;background:#2a2a3e;border:1px solid #4a4a60;color:#cdd6f4;font-family:var(--mono);font-size:.84rem;padding:10px 14px;border-radius:6px;outline:none;transition:border .2s}
+.sim-input input:focus{border-color:var(--redis)}
+.sim-input button{background:var(--redis);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:700;font-family:var(--sans);font-size:.84rem;transition:all .2s}
+.sim-input button:hover{background:var(--redis-dark)}
+.sim-output{background:#111122;border-radius:6px;padding:14px 18px;min-height:60px;max-height:300px;overflow-y:auto}
+.sim-output pre{font-family:var(--mono);font-size:.8rem;color:#cdd6f4;white-space:pre-wrap;line-height:1.6}
+.sim-output .ok{color:#a6e3a1}.sim-output .err{color:#f38ba8}.sim-output .num{color:#fab387}
+.sim-hint{color:#6c7086;font-size:.74rem;margin-top:8px}
+
+/* === SVG BOX === */
+.svg-box{text-align:center;overflow-x:auto;padding:16px 0}
+
+/* === GRID === */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+
+.cache-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:20px;transition:all .25s}
+.cache-card:hover{border-color:var(--redis);box-shadow:0 2px 12px rgba(220,56,45,.08)}
+.cache-card h4{font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.cache-card .ic{font-size:1.3rem}
+
+.acc-header{cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 0;user-select:none}
+.acc-body{display:none;padding-bottom:14px}
+.acc.open .acc-body{display:block}
+.chev{transition:transform .3s;color:var(--text3)}
+.acc.open .chev{transform:rotate(180deg)}
+
+.footer{text-align:center;padding:40px 0 20px;color:var(--text3);font-size:.78rem}
+
+@media(max-width:768px){
+  .hero{padding:48px 16px 36px}.hero h1{font-size:1.7rem}
+  .card{padding:18px 16px}
+  .tabs{flex-direction:column}.tab{flex:none}
+  .sim-input{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ====== NAV ====== -->
+<nav class="nav" id="navbar">
+  <span class="logo">
+    <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#DC382D"/><path d="M10 22V10l6 6-6 6z" fill="#fff" opacity="0"/><text x="16" y="22" text-anchor="middle" fill="#fff" font-size="18" font-weight="900">R</text></svg>
+    Redis
+  </span>
+  <a href="#s0" class="active">总览</a>
+  <a href="#s1">数据类型</a>
+  <a href="#s2">常用命令</a>
+  <a href="#s3">持久化</a>
+  <a href="#s4">缓存策略</a>
+  <a href="#s5">分布式</a>
+  <a href="#s6">模拟器</a>
+</nav>
+
+<!-- ====== HERO ====== -->
+<header class="hero">
+  <h1>Redis 从入门到精通</h1>
+  <p class="sub">覆盖数据类型、命令实战、持久化机制、缓存策略、分布式场景 — 带交互式命令模拟器</p>
+  <div class="tags">
+    <span class="tag">String · List · Hash · Set · ZSet</span>
+    <span class="tag">RDB vs AOF</span>
+    <span class="tag">缓存穿透·雪崩·击穿</span>
+    <span class="tag">分布式锁</span>
+    <span class="tag">消息队列</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ====== SECTION 0: OVERVIEW ====== -->
+<div class="sec" id="s0">
+<div class="card">
+  <h2 class="sec-title" style="margin-top:0"><span class="n">0</span>Redis 核心架构总览</h2>
+  <div class="svg-box">
+    <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="sd"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/></filter>
+        <marker id="ar" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+      <text x="440" y="28" text-anchor="middle" font-size="14" font-weight="800" fill="#1a1a2e">Redis 架构全景</text>
+
+      <!-- Client -->
+      <rect x="30" y="120" width="120" height="60" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#sd)"/>
+      <text x="90" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Client</text>
+      <text x="90" y="162" text-anchor="middle" font-size="9" fill="#3b82f6">redis-cli · SDK</text>
+      <line x1="150" y1="150" x2="185" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- RESP Protocol -->
+      <rect x="190" y="120" width="110" height="60" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" filter="url(#sd)"/>
+      <text x="245" y="143" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">RESP 协议</text>
+      <text x="245" y="160" text-anchor="middle" font-size="9" fill="#7c3aed">TCP 6379</text>
+      <line x1="300" y1="150" x2="335" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- Core Engine -->
+      <rect x="340" y="90" width="200" height="120" rx="10" fill="#fef0ef" stroke="#DC382D" stroke-width="2.5" filter="url(#sd)"/>
+      <text x="440" y="118" text-anchor="middle" font-size="14" font-weight="800" fill="#a82820">⚙️ Redis Core</text>
+      <text x="440" y="140" text-anchor="middle" font-size="10" fill="#DC382D">单线程事件循环</text>
+      <text x="440" y="158" text-anchor="middle" font-size="10" fill="#DC382D">ae 事件驱动 · IO 多路复用</text>
+      <text x="440" y="176" text-anchor="middle" font-size="10" fill="#DC382D">命令解析 → 执行 → 响应</text>
+
+      <line x1="540" y1="150" x2="575" y2="85" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="540" y1="150" x2="575" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="540" y1="150" x2="600" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- Data Structures -->
+      <rect x="580" y="50" width="130" height="60" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#sd)"/>
+      <text x="645" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#064e3b">📦 数据结构</text>
+      <text x="645" y="92" text-anchor="middle" font-size="9" fill="#059669">SDS · ZipList · Skiplist</text>
+
+      <!-- Persistence -->
+      <rect x="580" y="180" width="130" height="60" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="2" filter="url(#sd)"/>
+      <text x="645" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#7c2d12">💾 持久化</text>
+      <text x="645" y="222" text-anchor="middle" font-size="9" fill="#ea580c">RDB 快照 · AOF 日志</text>
+
+      <!-- 6 Data Types -->
+      <rect x="740" y="45" width="120" height="20" rx="4" fill="#fef0ef" stroke="#DC382D" stroke-width="1"/>
+      <text x="800" y="59" text-anchor="middle" font-size="9" fill="#DC382D">String</text>
+      <rect x="740" y="68" width="120" height="20" rx="4" fill="#fef0ef" stroke="#DC382D" stroke-width="1"/>
+      <text x="800" y="82" text-anchor="middle" font-size="9" fill="#DC382D">List · Hash</text>
+      <rect x="740" y="91" width="120" height="20" rx="4" fill="#fef0ef" stroke="#DC382D" stroke-width="1"/>
+      <text x="800" y="105" text-anchor="middle" font-size="9" fill="#DC382D">Set · ZSet</text>
+      <rect x="740" y="114" width="120" height="20" rx="4" fill="#fef0ef" stroke="#DC382D" stroke-width="1"/>
+      <text x="800" y="128" text-anchor="middle" font-size="9" fill="#DC382D">Stream · Bitmap...</text>
+
+      <!-- Bottom: Modules -->
+      <rect x="340" y="240" width="290" height="38" rx="8" fill="#f0f2f8" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="485" y="263" text-anchor="middle" font-size="10" font-weight="600" fill="#5a6170">Redis Modules: RediSearch · RedisJSON · RedisGraph · RedisBloom · RedisAI</text>
+
+      <text x="440" y="295" text-anchor="middle" font-size="9" fill="#94a3b8">单线程模型 + IO 多路复用(epoll/kqueue) → 纯内存操作 → 微秒级响应</text>
+    </svg>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 1: DATA TYPES ====== -->
+<div class="sec" id="s1">
+<h2 class="sec-title"><span class="n">1</span>数据类型 & 使用场景</h2>
+
+<!-- Data Type Tabs -->
+<div class="tabs" id="typeTabs">
+  <button class="tab active" onclick="switchType(0)">📝 String</button>
+  <button class="tab" onclick="switchType(1)">📋 List</button>
+  <button class="tab" onclick="switchType(2)">🗂️ Hash</button>
+  <button class="tab" onclick="switchType(3)">🔖 Set</button>
+  <button class="tab" onclick="switchType(4)">🏆 ZSet</button>
+</div>
+
+<!-- String -->
+<div class="tab-panel active" id="typePanel0">
+<div class="card">
+  <h3 style="color:var(--redis)">String — 最基础的类型，二进制安全</h3>
+  <p style="font-size:.9rem;color:var(--text2)">最大 512MB。可以存字符串、整数、浮点数、二进制数据（图片/序列化对象）。底层用 <strong>SDS</strong>（Simple Dynamic String），预分配空间 + 惰性释放。</p>
+
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:.9rem">🔥 典型场景</h4>
+      <ul style="font-size:.85rem;color:var(--text2);padding-left:18px;margin-top:6px">
+        <li><strong>缓存对象</strong>：JSON 序列化后存入，读时反序列化</li>
+        <li><strong>计数器</strong>：INCR 原子自增，统计 PV/点赞数</li>
+        <li><strong>分布式锁</strong>：SET key value NX EX 30</li>
+        <li><strong>Session 共享</strong>：分布式下统一存储 Session</li>
+        <li><strong>限流</strong>：INCR + EXPIRE 实现滑动窗口</li>
+      </ul>
+    </div>
+    <div>
+      <div class="code"><span class="lang">Redis</span>
+<pre><span class="cmt"># 基本操作</span>
+<span class="fn">SET</span> user:1 <span class="str">'{"name":"张三","age":28}'</span>
+<span class="fn">GET</span> user:1                        <span class="cmt"># 获取</span>
+<span class="fn">SET</span> user:1 <span class="str">'{"name":"张三","age":29}'</span> <span class="fn">XX</span>  <span class="cmt"># 存在才更新</span>
+<span class="fn">SET</span> lock:order:1001 <span class="num">1</span> <span class="fn">NX EX 30</span>    <span class="cmt"># 分布式锁</span>
+
+<span class="cmt"># 计数器</span>
+<span class="fn">INCR</span> article:view:10086            <span class="cmt"># 原子 +1</span>
+<span class="fn">INCRBY</span> user:score:1 <span class="num">50</span>           <span class="cmt"># +50</span>
+<span class="fn">DECR</span> stock:sku12345                <span class="cmt"># 库存扣减</span></pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- List -->
+<div class="tab-panel" id="typePanel1">
+<div class="card">
+  <h3 style="color:var(--redis)">List — 有序可重复的字符串链表</h3>
+  <p style="font-size:.9rem;color:var(--text2)">底层用 <strong>QuickList</strong>（LinkedList + ZipList 混合），两端操作 O(1)。最多 2³²-1 个元素。</p>
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:.9rem">🔥 典型场景</h4>
+      <ul style="font-size:.85rem;color:var(--text2);padding-left:18px;margin-top:6px">
+        <li><strong>消息队列</strong>：LPUSH + RPOP / BRPOP（阻塞消费）</li>
+        <li><strong>最新列表</strong>：LPUSH + LTRIM 保持固定长度（如最新 100 条消息）</li>
+        <li><strong>时间线</strong>：按时间排序的动态流</li>
+        <li><strong>栈</strong>：LPUSH + LPOP</li>
+      </ul>
+    </div>
+    <div>
+      <div class="code"><span class="lang">Redis</span>
+<pre><span class="fn">LPUSH</span> timeline <span class="str">"msg1"</span> <span class="str">"msg2"</span>      <span class="cmt"># 左侧插入</span>
+<span class="fn">RPUSH</span> queue <span class="str">"task1"</span> <span class="str">"task2"</span>       <span class="cmt"># 右侧插入</span>
+<span class="fn">LPOP</span> queue                        <span class="cmt"># 左侧弹出</span>
+<span class="fn">BRPOP</span> queue <span class="num">5</span>                    <span class="cmt"># 阻塞弹出，超时5秒</span>
+<span class="fn">LRANGE</span> timeline <span class="num">0</span> <span class="num">9</span>            <span class="cmt"># 取最新 10 条</span>
+<span class="fn">LTRIM</span> timeline <span class="num">0</span> <span class="num">99</span>           <span class="cmt"># 只保留前 100 条</span></pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Hash -->
+<div class="tab-panel" id="typePanel2">
+<div class="card">
+  <h3 style="color:var(--redis)">Hash — 字段-值映射表</h3>
+  <p style="font-size:.9rem;color:var(--text2)">适合存储对象。小 Hash 用 ZipList 压缩存储（节省内存），大 Hash 用 HashTable。</p>
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:.9rem">🔥 典型场景</h4>
+      <ul style="font-size:.85rem;color:var(--text2);padding-left:18px;margin-top:6px">
+        <li><strong>对象存储</strong>：用户信息、商品详情（比 String JSON 更灵活 — 可部分修改）</li>
+        <li><strong>购物车</strong>：HSET cart:user1 sku123 3（用户ID → 商品ID → 数量）</li>
+        <li><strong>计数器组</strong>：文章的各维度统计（阅读、点赞、收藏）</li>
+      </ul>
+    </div>
+    <div>
+      <div class="code"><span class="lang">Redis</span>
+<pre><span class="fn">HSET</span> user:1 name <span class="str">"张三"</span> age <span class="num">28</span>  <span class="cmt"># 设置多字段</span>
+<span class="fn">HGET</span> user:1 name                 <span class="cmt"># 获取单字段</span>
+<span class="fn">HMGET</span> user:1 name age city     <span class="cmt"># 批量获取</span>
+<span class="fn">HINCRBY</span> user:1 age <span class="num">1</span>          <span class="cmt"># 原子自增</span>
+<span class="fn">HGETALL</span> user:1                 <span class="cmt"># 获取所有字段</span>
+<span class="fn">HDEL</span> user:1 city               <span class="cmt"># 删除字段</span></pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Set -->
+<div class="tab-panel" id="typePanel3">
+<div class="card">
+  <h3 style="color:var(--redis)">Set — 无序不重复集合</h3>
+  <p style="font-size:.9rem;color:var(--text2)">底层用 HashTable（值全为 NULL）或 IntSet。支持交/并/差集运算。</p>
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:.9rem">🔥 典型场景</h4>
+      <ul style="font-size:.85rem;color:var(--text2);padding-left:18px;margin-top:6px">
+        <li><strong>标签系统</strong>：文章标签去重</li>
+        <li><strong>共同好友</strong>：SINTER user:1:friends user:2:friends</li>
+        <li><strong>抽奖/随机</strong>：SRANDMEMBER / SPOP 随机抽取</li>
+        <li><strong>去重统计</strong>：独立访客 UV（比 HyperLogLog 精确但耗内存）</li>
+      </ul>
+    </div>
+    <div>
+      <div class="code"><span class="lang">Redis</span>
+<pre><span class="fn">SADD</span> tags:article:1 <span class="str">"Redis"</span> <span class="str">"Go"</span> <span class="fn">SADD</span> tags:article:2 <span class="str">"Redis"</span> <span class="str">"Java"</span>
+<span class="fn">SINTER</span> tags:article:1 tags:article:2  <span class="cmt"># 交集 → {"Redis"}</span>
+<span class="fn">SUNION</span> tags:article:1 tags:article:2  <span class="cmt"># 并集</span>
+<span class="fn">SDIFF</span> tags:article:1 tags:article:2   <span class="cmt"># 差集 → {"Go"}</span>
+<span class="fn">SISMEMBER</span> tags:article:1 <span class="str">"Redis"</span>   <span class="cmt"># 是否存在</span>
+<span class="fn">SCARD</span> tags:article:1                  <span class="cmt"># 集合大小</span></pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ZSet -->
+<div class="tab-panel" id="typePanel4">
+<div class="card">
+  <h3 style="color:var(--redis)">ZSet (Sorted Set) — 有序不重复集合</h3>
+  <p style="font-size:.9rem;color:var(--text2)">每个成员关联一个 score（double 类型），按 score 排序。底层用 <strong>Skiplist + HashTable</strong>。</p>
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:.9rem">🔥 典型场景</h4>
+      <ul style="font-size:.85rem;color:var(--text2);padding-left:18px;margin-top:6px">
+        <li><strong>排行榜</strong>：游戏积分榜、文章热度榜（ZREVRANGE 取 Top N）</li>
+        <li><strong>延迟队列</strong>：score = 当前时间 + 延迟秒数，定时 ZRANGEBYSCORE</li>
+        <li><strong>带权重的去重集合</strong>：如搜索热词 + 搜索次数</li>
+        <li><strong>滑动窗口限流</strong>：score = 时间戳，ZREMRANGEBYSCORE 清理过期</li>
+      </ul>
+    </div>
+    <div>
+      <div class="code"><span class="lang">Redis</span>
+<pre><span class="fn">ZADD</span> leaderboard <span class="num">1000</span> <span class="str">"player1"</span> <span class="num">850</span> <span class="str">"player2"</span>
+<span class="fn">ZINCRBY</span> leaderboard <span class="num">50</span> <span class="str">"player1"</span>     <span class="cmt"># 加分</span>
+<span class="fn">ZREVRANGE</span> leaderboard <span class="num">0</span> <span class="num">9</span> WITHSCORES <span class="cmt"># Top10</span>
+<span class="fn">ZRANK</span> leaderboard <span class="str">"player1"</span>            <span class="cmt"># 排名</span>
+<span class="fn">ZSCORE</span> leaderboard <span class="str">"player1"</span>           <span class="cmt"># 分数</span>
+<span class="fn">ZREMRANGEBYSCORE</span> delay <span class="num">0</span> <span class="num">1620000000</span> <span class="cmt"># 移除过期</span></pre></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ====== SECTION 2: COMMANDS ====== -->
+<div class="sec" id="s2">
+<h2 class="sec-title"><span class="n">2</span>常用命令速查</h2>
+
+<div class="card">
+  <p style="font-size:.9rem;color:var(--text2);margin-bottom:16px">以下为生产环境高频使用的命令，按功能分类整理：</p>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:12%">分类</th><th style="width:30%">命令</th><th style="width:20%">示例</th><th>说明</th></tr>
+      <tr><td rowspan="6"><strong>Key 通用</strong></td>
+        <td><code>EXISTS</code></td><td><code>EXISTS key</code></td><td>判断 key 是否存在</td></tr>
+      <tr><td><code>EXPIRE</code></td><td><code>EXPIRE key 300</code></td><td>设置过期时间 300 秒</td></tr>
+      <tr><td><code>TTL</code></td><td><code>TTL key</code></td><td>查看剩余过期秒数（-1 永不过期，-2 已过期）</td></tr>
+      <tr><td><code>DEL</code></td><td><code>DEL key1 key2</code></td><td>删除一个或多个 key</td></tr>
+      <tr><td><code>SCAN</code></td><td><code>SCAN 0 MATCH user:* COUNT 100</code></td><td>渐进式遍历（替代 KEYS，不阻塞）</td></tr>
+      <tr><td><code>TYPE</code></td><td><code>TYPE key</code></td><td>查看 key 的数据类型</td></tr>
+      <tr><td rowspan="5"><strong>String</strong></td>
+        <td><code>SET key val EX 60 NX</code></td><td colspan="2">SET + 过期 + 不存在才设（分布式锁标准写法）</td></tr>
+      <tr><td><code>GETSET</code></td><td><code>GETSET key newval</code></td><td>设新值并返回旧值</td></tr>
+      <tr><td><code>MGET / MSET</code></td><td><code>MGET k1 k2 k3</code></td><td>批量操作，减少网络 RTT</td></tr>
+      <tr><td><code>SETBIT / GETBIT</code></td><td><code>SETBIT sign:202607 1001 1</code></td><td>位图签到</td></tr>
+      <tr><td><code>BITCOUNT</code></td><td><code>BITCOUNT sign:202607</code></td><td>统计签到人数</td></tr>
+      <tr><td rowspan="4"><strong>运维</strong></td>
+        <td><code>INFO</code></td><td><code>INFO memory</code></td><td>查看服务器信息</td></tr>
+      <tr><td><code>CONFIG GET</code></td><td><code>CONFIG GET maxmemory</code></td><td>查看配置</td></tr>
+      <tr><td><code>SLOWLOG</code></td><td><code>SLOWLOG GET 10</code></td><td>慢查询日志</td></tr>
+      <tr><td><code>MONITOR</code></td><td><code>MONITOR</code></td><td>实时监控所有命令（生产慎用）</td></tr>
+    </table>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <span><strong>生产禁忌：</strong><code>KEYS *</code> 会阻塞 Redis（O(n) 遍历全部 key），生产环境必须用 <code>SCAN</code> 替代。大 key 用 <code>UNLINK</code>（异步删除）替代 <code>DEL</code>。</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 3: PERSISTENCE ====== -->
+<div class="sec" id="s3">
+<h2 class="sec-title"><span class="n">3</span>持久化：RDB vs AOF</h2>
+
+<div class="card">
+  <div class="svg-box">
+    <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+      <defs><filter id="sdp"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/></filter></defs>
+      <text x="450" y="24" text-anchor="middle" font-size="14" font-weight="800" fill="#1a1a2e">持久化机制对比</text>
+
+      <!-- Memory -->
+      <rect x="320" y="55" width="260" height="40" rx="8" fill="#fef0ef" stroke="#DC382D" stroke-width="2" filter="url(#sdp)"/>
+      <text x="450" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#a82820">Redis 内存数据</text>
+
+      <!-- Fork arrow -->
+      <line x1="360" y1="95" x2="360" y2="125" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="540" y1="95" x2="540" y2="125" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- RDB -->
+      <rect x="80" y="130" width="340" height="105" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#sdp)"/>
+      <text x="250" y="155" text-anchor="middle" font-size="13" font-weight="800" fill="#064e3b">📸 RDB 快照</text>
+      <text x="250" y="175" text-anchor="middle" font-size="9" fill="#059669">SAVE（阻塞）/ BGSAVE（fork 子进程）</text>
+      <text x="250" y="193" text-anchor="middle" font-size="9" fill="#059669">dump.rdb 二进制快照文件</text>
+      <text x="250" y="211" text-anchor="middle" font-size="9" fill="#059669">触发：900s 内 1 次修改 · 300s 内 10 次 · 60s 内 10000 次</text>
+      <text x="250" y="227" text-anchor="middle" font-size="9" fill="#047857">恢复快 · 文件小 · 但可能丢失最后一次快照后的数据</text>
+
+      <!-- AOF -->
+      <rect x="480" y="130" width="340" height="105" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2" filter="url(#sdp)"/>
+      <text x="650" y="155" text-anchor="middle" font-size="13" font-weight="800" fill="#7c2d12">📝 AOF 日志</text>
+      <text x="650" y="175" text-anchor="middle" font-size="9" fill="#ea580c">记录每条写命令到 appendonly.aof</text>
+      <text x="650" y="193" text-anchor="middle" font-size="9" fill="#ea580c">同步策略：always / everysec / no</text>
+      <text x="650" y="211" text-anchor="middle" font-size="9" fill="#ea580c">AOF 重写（BGREWRITEAOF）压缩日志</text>
+      <text x="650" y="227" text-anchor="middle" font-size="9" fill="#b45309">数据更安全 · 文件更大 · 恢复慢 · 块写入阻塞风险</text>
+    </svg>
+  </div>
+
+  <div class="tbl-wrap" style="margin-top:12px">
+    <table>
+      <tr><th>维度</th><th>RDB</th><th>AOF</th></tr>
+      <tr><td><strong>持久化方式</strong></td><td>定时全量快照</td><td>追加写命令日志</td></tr>
+      <tr><td><strong>文件大小</strong></td><td>小（压缩的二进制）</td><td>大（文本协议）</td></tr>
+      <tr><td><strong>恢复速度</strong></td><td>快</td><td>慢（重放命令）</td></tr>
+      <tr><td><strong>数据安全</strong></td><td>可能丢失最后一次快照之后的数据</td><td>everysec 最多丢 1 秒 · always 不丢</td></tr>
+      <tr><td><strong>性能影响</strong></td><td>fork 子进程写盘，主进程不阻塞 IO</td><td>always 每次刷盘影响大 · everysec 几乎无影响</td></tr>
+      <tr><td><strong>恢复容错</strong></td><td>文件损坏可能无法恢复</td><td>自带 redis-check-aof 修复工具</td></tr>
+      <tr><td><strong>推荐场景</strong></td><td>允许少量数据丢失的缓存场景</td><td>金融、订单等不容丢失的场景</td></tr>
+    </table>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <span><strong>最佳实践：RDB + AOF 混合持久化（Redis 4.0+）</strong>—— <code>aof-use-rdb-preamble yes</code>。AOF 重写时将当前数据以 RDB 格式写入 AOF 文件头部，后续增量用 AOF 格式追加。兼具 RDB 的快速恢复和 AOF 的数据安全。</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 4: CACHE STRATEGIES ====== -->
+<div class="sec" id="s4">
+<h2 class="sec-title"><span class="n">4</span>缓存三大问题 & 解决方案</h2>
+
+<div class="card">
+  <div class="grid3">
+    <!-- Cache Penetration -->
+    <div class="cache-card">
+      <h4><span class="ic">🕳️</span> 缓存穿透</h4>
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px"><strong>现象：</strong>查询不存在的数据，缓存和 DB 都查不到，大量请求直接打到 DB。</p>
+      <p style="font-size:.82rem;color:var(--green);margin-bottom:6px"><strong>✅ 解决方案：</strong></p>
+      <ul style="font-size:.8rem;color:var(--text2);padding-left:16px">
+        <li>① <strong>布隆过滤器</strong>：将所有存在的 key 预先存入 Bloom Filter，请求先过 BF</li>
+        <li>② <strong>缓存空值</strong>：查不到也缓存（如 null），设短过期时间（如 60s）</li>
+        <li>③ <strong>参数校验</strong>：非法 ID 直接拦截</li>
+      </ul>
+      <div class="code" style="margin-top:10px"><span class="lang">伪代码</span>
+<pre><span class="kw">if</span> bloomFilter.<span class="fn">mightContain</span>(key) {
+  val = cache.get(key)
+  <span class="kw">if</span> (val == <span class="kw">null</span>) { val = db.query(); cache.set(key, val) }
+} <span class="kw">else</span> {
+  <span class="kw">return</span> <span class="str">"not found"</span>   <span class="cmt">// 布隆过滤</span>
+}</pre></div>
+    </div>
+
+    <!-- Cache Avalanche -->
+    <div class="cache-card">
+      <h4><span class="ic">🌪️</span> 缓存雪崩</h4>
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px"><strong>现象：</strong>大量缓存 key 同时过期 / Redis 宕机，所有请求瞬间打到 DB。</p>
+      <p style="font-size:.82rem;color:var(--green);margin-bottom:6px"><strong>✅ 解决方案：</strong></p>
+      <ul style="font-size:.8rem;color:var(--text2);padding-left:16px">
+        <li>① <strong>过期时间加随机值</strong>：TTL = 3600 + random(0,300)</li>
+        <li>② <strong>Redis 高可用</strong>：主从 + 哨兵 / Cluster</li>
+        <li>③ <strong>多级缓存</strong>：本地缓存（Caffeine）+ 远程 Redis</li>
+        <li>④ <strong>限流 + 降级</strong>：缓存不可用时走限流</li>
+      </ul>
+    </div>
+
+    <!-- Cache Breakdown -->
+    <div class="cache-card">
+      <h4><span class="ic">💥</span> 缓存击穿</h4>
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:8px"><strong>现象：</strong>热点 key 过期瞬间，大量并发请求同时查 DB。</p>
+      <p style="font-size:.82rem;color:var(--green);margin-bottom:6px"><strong>✅ 解决方案：</strong></p>
+      <ul style="font-size:.8rem;color:var(--text2);padding-left:16px">
+        <li>① <strong>互斥锁</strong>：查 DB 前先 SETNX 锁，只有一个线程查 DB，其余等待</li>
+        <li>② <strong>逻辑过期</strong>：缓存永不过期，另起线程异步更新</li>
+        <li>③ <strong>热点不过期</strong>：对热点 key 不设 TTL，手动更新</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code" style="margin-top:16px"><span class="lang">Java</span>
+<pre><span class="cmt">// 缓存击穿 · 互斥锁方案</span>
+<span class="kw">public</span> String <span class="fn">queryWithMutex</span>(String key) {
+    String val = redis.get(key);
+    <span class="kw">if</span> (val != <span class="kw">null</span>) <span class="kw">return</span> val;
+
+    String lockKey = <span class="str">"lock:"</span> + key;
+    <span class="kw">try</span> {
+        <span class="cmt">// 抢锁：set lock:key 1 NX EX 10</span>
+        <span class="kw">if</span> (redis.<span class="fn">setnx</span>(lockKey, <span class="str">"1"</span>, <span class="num">10</span>)) {
+            <span class="cmt">// Double Check：加锁后再查一次缓存</span>
+            val = redis.get(key);
+            <span class="kw">if</span> (val != <span class="kw">null</span>) <span class="kw">return</span> val;
+            <span class="cmt">// 查 DB 并回写缓存</span>
+            val = db.query(key);
+            redis.<span class="fn">set</span>(key, val, <span class="num">3600</span> + <span class="kw">new</span> Random().<span class="fn">nextInt</span>(<span class="num">300</span>));
+            <span class="kw">return</span> val;
+        } <span class="kw">else</span> {
+            Thread.<span class="fn">sleep</span>(<span class="num">50</span>);       <span class="cmt">// 没抢到锁，短暂等待</span>
+            <span class="kw">return</span> queryWithMutex(key); <span class="cmt">// 递归重试</span>
+        }
+    } <span class="kw">finally</span> { redis.<span class="fn">del</span>(lockKey); }
+}</pre>
+  </div>
+
+  <div class="tip blue">
+    <span class="ti">💡</span>
+    <span><strong>一句话区分：</strong>穿透 = 查不存在的数据 · 雪崩 = 大量 key 同时过期 · 击穿 = 单个热点 key 过期。三者的共性：缓存失效 → 流量直冲 DB。</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 5: DISTRIBUTED ====== -->
+<div class="sec" id="s5">
+<h2 class="sec-title"><span class="n">5</span>分布式场景</h2>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🔐 分布式锁</h3>
+  <p style="font-size:.9rem;color:var(--text2)">核心命令：<code>SET lock_key unique_value NX EX 30</code>。NX 保证互斥，EX 防止死锁，unique_value 保证只有加锁者才能解锁。</p>
+
+  <div class="flow-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:14px;background:#f0f2f8;border-radius:8px;margin:12px 0;font-size:.78rem;overflow-x:auto">
+    <span class="flow-node red">① SET NX EX</span><span class="flow-arrow">→</span>
+    <span class="flow-node">② 执行业务</span><span class="flow-arrow">→</span>
+    <span class="flow-node green">③ Lua 解锁<br><small>校验 value</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node orange">④ 看门狗续期<br><small>锁未释放自动续</small></span>
+  </div>
+
+  <div class="code"><span class="lang">Lua (原子解锁)</span>
+<pre><span class="cmt">-- 必须用 Lua 保证 get+del 原子性，防止误删别人的锁</span>
+<span class="kw">if</span> redis.call(<span class="str">"get"</span>, KEYS[<span class="num">1</span>]) == ARGV[<span class="num">1</span>] <span class="kw">then</span>
+    <span class="kw">return</span> redis.call(<span class="str">"del"</span>, KEYS[<span class="num">1</span>])
+<span class="kw">else</span>
+    <span class="kw">return</span> <span class="num">0</span>
+<span class="kw">end</span></pre>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--redis)">📨 消息队列</h3>
+  <p style="font-size:.9rem;color:var(--text2)">Redis 提供三种消息队列方案，从简到繁：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:18%">方案</th><th style="width:25%">实现</th><th style="width:20%">特点</th><th>适用场景</th></tr>
+      <tr>
+        <td><strong>List 队列</strong></td>
+        <td>LPUSH + BRPOP</td>
+        <td>简单 · 无 ACK · 无重试</td>
+        <td>简单的生产-消费，允许少量丢失</td>
+      </tr>
+      <tr>
+        <td><strong>Pub/Sub</strong></td>
+        <td>PUBLISH + SUBSCRIBE</td>
+        <td>实时推送 · 不持久 · 断连丢消息</td>
+        <td>实时通知、聊天室</td>
+      </tr>
+      <tr>
+        <td><strong>Stream（5.0+）</strong></td>
+        <td>XADD + XREADGROUP</td>
+        <td>支持消费者组 · ACK 确认 · 消息持久化 · 阻塞读取</td>
+        <td>需要可靠消息投递的场景（类似 Kafka 简化版）</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="code"><span class="lang">Redis Stream 示例</span>
+<pre><span class="cmt"># 生产者</span>
+<span class="fn">XADD</span> order_stream * action create order_id <span class="num">1001</span> amount <span class="num">99.9</span>
+
+<span class="cmt"># 创建消费者组</span>
+<span class="fn">XGROUP CREATE</span> order_stream order_group $ MKSTREAM
+
+<span class="cmt"># 消费者读取（阻塞 2 秒，读取 > 未 ACK 的消息）</span>
+<span class="fn">XREADGROUP GROUP</span> order_group consumer1 COUNT <span class="num">1</span> BLOCK <span class="num">2000</span> STREAMS order_stream >
+
+<span class="cmt"># 确认消息</span>
+<span class="fn">XACK</span> order_stream order_group <span class="num">1689000000000-0</span></pre>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 6: SIMULATOR ====== -->
+<div class="sec" id="s6">
+<h2 class="sec-title"><span class="n">🎮</span>命令模拟练习器</h2>
+
+<div class="card" style="padding-bottom:20px">
+  <p style="font-size:.9rem;color:var(--text2);margin-bottom:12px">在下方输入 Redis 命令，模拟器会解释命令含义并展示预期结果。支持 String / List / Hash / Set / ZSet 等基本命令。</p>
+
+  <div class="sim">
+    <div class="sim-title">127.0.0.1:6379> 命令模拟器</div>
+    <div class="sim-input">
+      <span class="prefix">redis></span>
+      <input type="text" id="cmdInput" placeholder="输入 Redis 命令，如：SET user:1 张三" onkeydown="if(event.key==='Enter')executeCmd()">
+      <button onclick="executeCmd()">▶ 执行</button>
+    </div>
+    <div class="sim-output" id="cmdOutput">
+      <pre><span style="color:#6c7086">欢迎使用 Redis 命令模拟器！试试输入以下命令：</span>
+SET user:1 <span style="color:#a6e3a1">"张三"</span>
+GET user:1
+INCR counter
+LPUSH mylist <span style="color:#a6e3a1">"a"</span> <span style="color:#a6e3a1">"b"</span> <span style="color:#a6e3a1">"c"</span>
+HSET user:2 name <span style="color:#a6e3a1">"李四"</span> age 30
+SADD tags <span style="color:#a6e3a1">"Redis"</span> <span style="color:#a6e3a1">"Go"</span>
+ZADD rank 100 <span style="color:#a6e3a1">"player1"</span> 200 <span style="color:#a6e3a1">"player2"</span></pre>
+    </div>
+    <div class="sim-hint">支持命令：SET / GET / DEL / EXISTS / INCR / DECR / INCRBY / EXPIRE / TTL / LPUSH / RPUSH / LPOP / RPOP / LRANGE / HSET / HGET / HGETALL / HDEL / SADD / SMEMBERS / SREM / ZADD / ZRANGE / ZRANK / PING</div>
+  </div>
+
+  <div class="acc" id="simData" style="display:none">
+    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">
+      <strong>📊 当前模拟数据状态</strong><span class="chev" style="margin-left:auto">▼</span>
+    </div>
+    <div class="acc-body"><pre id="simState" style="font-family:var(--mono);font-size:.78rem;color:var(--text2);background:#f8f9fc;padding:14px;border-radius:6px"></pre></div>
+  </div>
+</div>
+</div>
+
+<div class="footer">
+  <p>Redis 从入门到精通 · 交互式学习指南 · 数据类型 / 命令 / 持久化 / 缓存策略 / 分布式场景</p>
+</div>
+
+</div><!-- end wrap -->
+
+<script>
+// ===== NAV ACTIVE =====
+const navLinks = document.querySelectorAll('.nav a');
+const secs = document.querySelectorAll('.sec');
+window.addEventListener('scroll',()=>{
+  let current='s0';
+  secs.forEach(s=>{const top=s.getBoundingClientRect().top;if(top<120)current=s.id});
+  navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+current));
+});
+
+// ===== DATA TYPE TABS =====
+function switchType(idx){
+  document.querySelectorAll('#typeTabs .tab').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab-panel').forEach(p=>{
+    if(p.id.startsWith('typePanel'))p.classList.toggle('active',p.id==='typePanel'+idx);
+  });
+}
+
+// ===== COPY CODE =====
+document.querySelectorAll('.code').forEach(b=>{
+  const btn=document.createElement('button');
+  btn.className='copy-btn';btn.textContent='复制';
+  btn.onclick=function(){
+    const p=b.querySelector('pre');
+    if(p)navigator.clipboard.writeText(p.innerText).then(()=>{btn.textContent='已复制!';setTimeout(()=>btn.textContent='复制',1500)});
+  };
+  b.appendChild(btn);
+});
+
+// ===== COMMAND SIMULATOR =====
+const simStore={};
+function setCmdOutput(html){document.getElementById('cmdOutput').innerHTML='<pre>'+html+'</pre>'}
+function ok(s){return'<span class="ok">'+s+'</span>'}
+function err(s){return'<span class="err">'+s+'</span>'}
+function num(s){return'<span class="num">'+s+'</span>'}
+
+function executeCmd(){
+  const input=document.getElementById('cmdInput').value.trim();
+  if(!input){setCmdOutput(err('(error) ERR empty command'));return}
+  const parts=input.match(/(?:[^\s"]+|"[^"]*")+/g)||[];
+  const cmd=parts[0].toUpperCase();
+  const args=parts.slice(1).map(a=>a.replace(/^"|"$/g,''));
+
+  try{
+    if(cmd==='PING'){setCmdOutput(ok('PONG'));}
+    else if(cmd==='SET'&&args.length>=2){const k=args[0],v=args[1];let t=null;const iNX=args.indexOf('NX'),iEX=args.indexOf('EX');if(iEX!==-1&&iEX+1<args.length)t=parseInt(args[iEX+1]);if(iNX!==-1&&simStore[k]!==undefined){setCmdOutput('(nil)');return}simStore[k]={type:'string',value:v,expire:t?Date.now()+t*1000:null};setCmdOutput(ok('OK')+(t?' <span style="color:#6c7086">(TTL: '+t+'s)</span>':''));}
+    else if(cmd==='GET'&&args.length>=1){const v=simStore[args[0]];if(!v||(v.expire&&Date.now()>v.expire)){setCmdOutput('(nil)');return}setCmdOutput(ok('"'+v.value+'"'));}
+    else if(cmd==='DEL'&&args.length>=1){let c=0;args.forEach(k=>{if(simStore[k]){delete simStore[k];c++}});setCmdOutput(ok('(integer) '+c));}
+    else if(cmd==='EXISTS'&&args.length>=1){let c=0;args.forEach(k=>{if(simStore[k]&&(!simStore[k].expire||Date.now()<=simStore[k].expire))c++});setCmdOutput(ok('(integer) '+c));}
+    else if(cmd==='INCR'&&args.length>=1){const k=args[0];let v=simStore[k];if(!v||v.type!=='string'){simStore[k]={type:'string',value:'1',expire:null};setCmdOutput(ok('(integer) 1'));return}const nv=parseInt(v.value||0)+1;v.value=String(nv);setCmdOutput(ok('(integer) '+nv));}
+    else if(cmd==='DECR'&&args.length>=1){const k=args[0];let v=simStore[k];if(!v||v.type!=='string'){simStore[k]={type:'string',value:'-1',expire:null};setCmdOutput(ok('(integer) -1'));return}const nv=parseInt(v.value||0)-1;v.value=String(nv);setCmdOutput(ok('(integer) '+nv));}
+    else if(cmd==='INCRBY'&&args.length>=2){const k=args[0],by=parseInt(args[1]);let v=simStore[k];if(!v||v.type!=='string'){simStore[k]={type:'string',value:String(by),expire:null};setCmdOutput(ok('(integer) '+by));return}const nv=parseInt(v.value||0)+by;v.value=String(nv);setCmdOutput(ok('(integer) '+nv));}
+    else if(cmd==='EXPIRE'&&args.length>=2){const k=args[0],t=parseInt(args[1]);if(!simStore[k]){setCmdOutput(ok('(integer) 0'));return}simStore[k].expire=Date.now()+t*1000;setCmdOutput(ok('(integer) 1'));}
+    else if(cmd==='TTL'&&args.length>=1){const v=simStore[args[0]];if(!v){setCmdOutput(ok('(integer) -2'));return}if(!v.expire){setCmdOutput(ok('(integer) -1'));return}const r=Math.max(0,Math.round((v.expire-Date.now())/1000));setCmdOutput(ok('(integer) '+r));}
+    // LIST
+    else if(cmd==='LPUSH'&&args.length>=2){const k=args[0];if(!simStore[k])simStore[k]={type:'list',value:[]};args.slice(1).reverse().forEach(a=>simStore[k].value.unshift(a));setCmdOutput(ok('(integer) '+simStore[k].value.length));}
+    else if(cmd==='RPUSH'&&args.length>=2){const k=args[0];if(!simStore[k])simStore[k]={type:'list',value:[]};args.slice(1).forEach(a=>simStore[k].value.push(a));setCmdOutput(ok('(integer) '+simStore[k].value.length));}
+    else if(cmd==='LPOP'&&args.length>=1){const v=simStore[args[0]];if(!v||v.type!=='list'||v.value.length===0){setCmdOutput('(nil)');return}setCmdOutput(ok('"'+v.value.shift()+'"'));}
+    else if(cmd==='RPOP'&&args.length>=1){const v=simStore[args[0]];if(!v||v.type!=='list'||v.value.length===0){setCmdOutput('(nil)');return}setCmdOutput(ok('"'+v.value.pop()+'"'));}
+    else if(cmd==='LRANGE'&&args.length>=3){const v=simStore[args[0]];if(!v||v.type!=='list'){setCmdOutput(ok('(empty array)'));return}let s=parseInt(args[1]),e=parseInt(args[2]);if(s<0)s+=v.value.length;if(e<0)e+=v.value.length;s=Math.max(0,s);e=Math.min(v.value.length-1,e);const r=v.value.slice(s,e+1);setCmdOutput(r.length?r.map((x,i)=>ok((s+i+1)+') '+JSON.stringify(x))).join('<br>'):ok('(empty array)'));}
+    // HASH
+    else if(cmd==='HSET'&&args.length>=3){const k=args[0];if(!simStore[k])simStore[k]={type:'hash',value:{}};let c=0;for(let i=1;i<args.length-1;i+=2){const f=args[i],fv=args[i+1];if(!simStore[k].value[f])c++;simStore[k].value[f]=fv}setCmdOutput(ok('(integer) '+c));}
+    else if(cmd==='HGET'&&args.length>=2){const v=simStore[args[0]];if(!v||v.type!=='hash'){setCmdOutput('(nil)');return}setCmdOutput(v.value[args[1]]!==undefined?ok('"'+v.value[args[1]]+'"'):'(nil)');}
+    else if(cmd==='HGETALL'&&args.length>=1){const v=simStore[args[0]];if(!v||v.type!=='hash'){setCmdOutput(ok('(empty array)'));return}const r=[];Object.entries(v.value).forEach(([f,fv])=>{r.push(num('"'+f+'"'),ok('"'+fv+'"'))});setCmdOutput(r.map((x,i)=>num((i+1)+') ')+x).join('<br>')||ok('(empty array)'));}
+    else if(cmd==='HDEL'&&args.length>=2){const v=simStore[args[0]];if(!v||v.type!=='hash'){setCmdOutput(ok('(integer) 0'));return}let c=0;args.slice(1).forEach(f=>{if(v.value[f]!==undefined){delete v.value[f];c++}});setCmdOutput(ok('(integer) '+c));}
+    // SET
+    else if(cmd==='SADD'&&args.length>=2){const k=args[0];if(!simStore[k])simStore[k]={type:'set',value:new Set()};let c=0;args.slice(1).forEach(a=>{if(!simStore[k].value.has(a)){simStore[k].value.add(a);c++}});setCmdOutput(ok('(integer) '+c));}
+    else if(cmd==='SMEMBERS'&&args.length>=1){const v=simStore[args[0]];if(!v||v.type!=='set'||v.value.size===0){setCmdOutput(ok('(empty array)'));return}const r=[...v.value];setCmdOutput(r.map((x,i)=>ok((i+1)+') '+JSON.stringify(x))).join('<br>'));}
+    else if(cmd==='SREM'&&args.length>=2){const v=simStore[args[0]];if(!v||v.type!=='set'){setCmdOutput(ok('(integer) 0'));return}let c=0;args.slice(1).forEach(a=>{if(v.value.has(a)){v.value.delete(a);c++}});setCmdOutput(ok('(integer) '+c));}
+    // ZSET
+    else if(cmd==='ZADD'&&args.length>=3){const k=args[0];if(!simStore[k])simStore[k]={type:'zset',value:{}};let c=0;for(let i=1;i<args.length-1;i+=2){const sc=parseFloat(args[i]),m=args[i+1];if(simStore[k].value[m]===undefined)c++;simStore[k].value[m]=sc}setCmdOutput(ok('(integer) '+c));}
+    else if(cmd==='ZRANGE'&&args.length>=3){const v=simStore[args[0]];if(!v||v.type!=='zset'){setCmdOutput(ok('(empty array)'));return}const e=[...Object.entries(v.value)].sort((a,b)=>a[1]-b[1]);let s=parseInt(args[1]),ed=parseInt(args[2]);const r=e.slice(s,ed+1);setCmdOutput(r.length?r.map((x,i)=>ok((i+1)+') '+JSON.stringify(x[0]))).join('<br>'):ok('(empty array)'));}
+    else if(cmd==='ZRANK'&&args.length>=2){const v=simStore[args[0]];if(!v||v.type!=='zset'){setCmdOutput('(nil)');return}const e=[...Object.entries(v.value)].sort((a,b)=>a[1]-b[1]);const idx=e.findIndex(([m])=>m===args[1]);setCmdOutput(idx!==-1?ok('(integer) '+idx):'(nil)');}
+    else{setCmdOutput(err('(error) ERR unknown command \''+cmd+'\''));}
+  }catch(e){setCmdOutput(err('(error) ERR '+e.message));}
+  document.getElementById('cmdInput').value='';
+  updateSimState();
+}
+
+function updateSimState(){
+  const keys=Object.entries(simStore);
+  if(keys.length===0){document.getElementById('simData').style.display='none';return}
+  document.getElementById('simData').style.display='block';
+  let html='';
+  keys.forEach(([k,v])=>{
+    let valStr='';
+    if(v.type==='string')valStr=v.value;
+    else if(v.type==='list')valStr='['+v.value.map(JSON.stringify).join(', ')+']';
+    else if(v.type==='hash')valStr=JSON.stringify(v.value);
+    else if(v.type==='set')valStr='{'+[...v.value].map(JSON.stringify).join(', ')+'}';
+    else if(v.type==='zset')valStr=JSON.stringify(v.value);
+    const ttl=v.expire?Math.round((v.expire-Date.now())/1000)+'s':'forever';
+    html+='<span style="color:#DC382D">'+k+'</span> ('+v.type+', TTL: '+ttl+') → '+valStr+'\n';
+  });
+  document.getElementById('simState').innerHTML=html;
+}
+
+// Init
+updateSimState();
+</script>
+</body>
+</html>
