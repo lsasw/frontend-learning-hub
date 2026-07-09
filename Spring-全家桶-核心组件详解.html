@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring 全家桶 · 核心组件与功能全景</title>
+<style>
+:root {
+  --sp: #6db33f; --sp-dark: #4a7c28; --sp-light: #f0f7eb;
+  --boot: #5fa134; --boot-light: #edf5e6;
+  --cloud: #0091cd; --cloud-light: #e6f4fa;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--sp);padding:14px 0;margin-right:12px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--sp-light);color:var(--sp-dark)}
+.nav-divider{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 4px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#6db33f 0%,#4a7c28 45%,#1a1a2e 100%);color:#fff;padding:64px 40px 52px;text-align:center}
+.hero h1{font-size:2.7rem;font-weight:900;letter-spacing:-1px;line-height:1.2}
+.hero .sub{font-size:1.06rem;opacity:.9;margin-top:14px;max-width:720px;margin-inline:auto}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--sp);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--sp);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-title.cloud{border-bottom-color:var(--cloud)}.sec-title.cloud .n{background:var(--cloud)}
+.sec-title.boot{border-bottom-color:var(--boot)}.sec-title.boot .n{background:var(--boot)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.06rem;margin-bottom:10px;color:var(--sp-dark)}
+.card p{font-size:.87rem;margin-bottom:8px}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--sp-light);border-left:4px solid var(--sp)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.cloud{background:var(--cloud-light);border-left:4px solid var(--cloud)}
+.tip.boot{background:var(--boot-light);border-left:4px solid var(--boot)}
+
+/* CODE */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.64rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.79rem;color:#cdd6f4;white-space:pre;line-height:1.74}
+.kw{color:#cba6f7}.str{color:#a6e3a1}.cmt{color:#6c7086;font-style:italic}
+.fn{color:#89b4fa}.num{color:#fab387}.typ{color:#f9e2af}
+.ann{color:#f38ba8}.var{color:#a6e3a1}
+.copy-btn{position:absolute;top:8px;right:48px;background:rgba(255,255,255,.1);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.68rem;font-family:var(--sans);transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--sp-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--sp)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:#f9fdf6}
+td code{background:var(--sp-light);color:var(--sp-dark);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.77rem}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:14px;background:#f0f2f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto;justify-content:center}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.77rem;text-align:center;min-width:80px}
+.flow-node.green{border-color:var(--sp);background:var(--sp-light);color:var(--sp-dark)}
+.flow-node.blue{border-color:var(--blue);background:var(--blue-light);color:#1e40af}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.cloud{border-color:var(--cloud);background:var(--cloud-light);color:#0369a1}
+.flow-node.orange{border-color:#f97316;background:#fff7ed;color:#c2410c}
+.flow-arrow{color:var(--text3);font-size:1rem;font-weight:700}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+
+/* COMPONENT CARD */
+.comp-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:20px;transition:all .25s}
+.comp-card:hover{border-color:var(--sp);box-shadow:0 2px 12px rgba(109,179,63,.08)}
+.comp-card .icon{font-size:2.2rem;margin-bottom:8px}
+.comp-card h4{font-size:.95rem;margin-bottom:6px;color:var(--sp-dark)}
+.comp-card p{font-size:.78rem;color:var(--text2);line-height:1.55}
+.comp-card .usecase{margin-top:10px;font-size:.73rem;background:var(--sp-light);color:var(--sp-dark);padding:4px 10px;border-radius:12px;display:inline-block}
+
+/* COMPARISON TABLE */
+.compare-table{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:16px 0}
+.compare-table table{margin:0}
+.compare-table th:first-child{width:15%}
+.compare-table td:first-child{font-weight:700;white-space:nowrap}
+.tag-fw{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-size:.73rem;font-weight:600}
+.tag-bt{background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:.73rem;font-weight:600}
+.tag-cl{background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:4px;font-size:.73rem;font-weight:600}
+
+/* ARCH DIAGRAM */
+.arch-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0;overflow-x:auto}
+.arch-row{display:flex;gap:14px;align-items:center;flex-shrink:0}
+.arch-node{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px 18px;text-align:center;min-width:110px}
+.arch-node h5{font-size:.8rem;margin-bottom:2px}
+.arch-node small{font-size:.7rem;color:var(--text3)}
+.arch-node.solid{border-color:var(--sp);background:var(--sp-light)}
+.arch-node.outline{border-style:dashed;border-color:var(--cloud);background:var(--cloud-light)}
+.arch-line{font-size:1.1rem;color:var(--text3);font-weight:700;flex-shrink:0}
+.arch-line-down{font-size:1.3rem;color:var(--text3);font-weight:700}
+
+/* SUMMARY */
+.summary-box{background:linear-gradient(135deg,#6db33f 0%,#4a7c28 100%);color:#fff;border-radius:var(--radius);padding:26px 28px;margin:16px 0}
+.summary-box h3{font-size:1.12rem;margin-bottom:10px}
+.summary-box ul{list-style:none;padding:0}
+.summary-box ul li{padding:5px 0;font-size:.83rem;padding-left:18px;position:relative}
+.summary-box ul li::before{content:"▸";position:absolute;left:0;color:rgba(255,255,255,.6)}
+.summary-box code{background:rgba(255,255,255,.15);color:#fff;padding:1px 6px;border-radius:3px;font-size:.78rem}
+
+/* SCENARIO */
+.scene{padding:14px 18px;border-radius:var(--radius-sm);margin:10px 0;font-size:.83rem}
+.scene.fw{background:var(--sp-light);border:1px dashed var(--sp)}
+.scene.boot{background:var(--boot-light);border:1px dashed var(--boot)}
+.scene.cloud{background:var(--cloud-light);border:1px dashed var(--cloud)}
+.scene h5{font-size:.88rem;margin-bottom:4px}
+
+/* RESPONSIVE */
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+@media(max-width:480px){
+  .hero h1{font-size:1.7rem}.hero{padding:40px 18px 32px}
+  .card{padding:16px}.sec-title{font-size:1.3rem}
+  .compare-table th:first-child,.compare-table td:first-child{min-width:90px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M20 3H4a1 1 0 00-1 1v16a1 1 0 001 1h16a1 1 0 001-1V4a1 1 0 00-1-1z" stroke="#6db33f" stroke-width="2"/><path d="M7 8l2.5 2.5L7 13m5-5h5" stroke="#6db33f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Spring 全家桶
+  </div>
+  <span class="nav-divider"></span>
+  <a href="#compare">三者对比</a>
+  <a href="#framework">Spring Framework</a>
+  <a href="#boot">Spring Boot</a>
+  <a href="#cloud">Spring Cloud</a>
+  <a href="#summary">总结</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>🌿 Spring 全家桶核心组件全景</h1>
+  <p class="sub">从 Spring Framework 的 IoC/AOP 根基，到 Spring Boot 的自动配置利器，再到 Spring Cloud 的微服务治理体系——一套连贯的 Java 企业级开发生态</p>
+  <div class="tags">
+    <span class="tag">IoC / DI</span><span class="tag">AOP</span><span class="tag">Spring MVC</span>
+    <span class="tag">自动配置</span><span class="tag">Starter</span><span class="tag">Actuator</span>
+    <span class="tag">Eureka / Nacos</span><span class="tag">Gateway</span><span class="tag">Sentinel</span>
+    <span class="tag">Sleuth / Zipkin</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════════ 1. 三者对比 ═══════════ -->
+<section class="sec" id="compare">
+  <div class="sec-title"><span class="n">1</span> Spring Framework / Boot / Cloud 三者关系</div>
+
+  <div class="card">
+    <p><strong>一句话定位：</strong>Spring Framework 是地基，Spring Boot 是脚手架，Spring Cloud 是微服务工具箱。不是替代关系，而是<strong>层层叠加</strong>的互补关系。</p>
+
+    <div class="arch-wrap">
+      <div class="arch-row">
+        <div class="arch-node solid"><h5>Spring Cloud</h5><small>微服务治理</small></div>
+      </div>
+      <div class="arch-line-down">▲</div>
+      <div class="arch-row">
+        <div class="arch-node solid"><h5>Spring Boot</h5><small>自动配置 · 快速启动</small></div>
+      </div>
+      <div class="arch-line-down">▲</div>
+      <div class="arch-row">
+        <div class="arch-node solid"><h5>Spring Framework</h5><small>IoC · AOP · 核心容器</small></div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:.76rem;margin-top:8px">三层架构：下层为上层提供基础，上层扩展下层的应用场景</p>
+  </div>
+
+  <div class="compare-table">
+    <table>
+      <thead>
+        <tr><th>维度</th><th>Spring Framework</th><th>Spring Boot</th><th>Spring Cloud</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag-fw">定位</span></td>
+          <td>Java 企业级开发基础框架</td>
+          <td>快速构建独立 Spring 应用</td>
+          <td>分布式/微服务治理方案</td>
+        </tr>
+        <tr>
+          <td><span class="tag-fw">核心能力</span></td>
+          <td>IoC、AOP、数据访问、MVC</td>
+          <td>自动配置、嵌入式服务器、Actuator</td>
+          <td>注册发现、配置中心、网关、熔断</td>
+        </tr>
+        <tr>
+          <td><span class="tag-fw">启动方式</span></td>
+          <td>需手动配置，依赖外部容器</td>
+          <td>内嵌 Tomcat/Jetty，<code>java -jar</code> 直接启动</td>
+          <td>基于 Boot，引入 Starter 依赖即用</td>
+        </tr>
+        <tr>
+          <td><span class="tag-fw">配置复杂度</span></td>
+          <td>XML / Java Config，手动装配</td>
+          <td>约定大于配置，起步依赖一键引入</td>
+          <td>注解驱动，开箱即用</td>
+        </tr>
+        <tr>
+          <td><span class="tag-fw">诞生时间</span></td>
+          <td>2004（Rod Johnson）</td>
+          <td>2014</td>
+          <td>2015</td>
+        </tr>
+        <tr>
+          <td><span class="tag-fw">典型场景</span></td>
+          <td>任意 Java 企业应用</td>
+          <td>单体应用、RESTful API、微服务基础模块</td>
+          <td>微服务体系：服务治理、流量控制、链路追踪</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════ 2. Spring Framework ═══════════ -->
+<section class="sec" id="framework">
+  <div class="sec-title"><span class="n">2</span> Spring Framework — 核心基础</div>
+
+  <div class="card">
+    <p>Spring Framework 是整个生态的<strong>基石</strong>，提供了最核心的 IoC 容器和 AOP 机制。理解 Spring Framework 的原理，是深入 Boot 和 Cloud 的前提。</p>
+  </div>
+
+  <!-- 2.1 IoC -->
+  <div class="card">
+    <h3>🔧 IoC 容器（控制反转 / 依赖注入）</h3>
+    <p><strong>核心思想：</strong>对象不再自己创建依赖，而是由 Spring 容器统一管理和注入。<code>ApplicationContext</code> 是容器的入口，通过 <code>@Autowired</code> / <code>@Component</code> / <code>@Bean</code> 等注解驱动。</p>
+
+    <div class="flow">
+      <div class="flow-node green">@Component<br><small>标记 Bean</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">ApplicationContext<br><small>IoC 容器</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">@Autowired<br><small>注入依赖</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">业务代码<br><small>直接使用</small></div>
+    </div>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">// 定义 Service</span>
+<span class="ann">@Service</span>
+<span class="kw">public class</span> <span class="typ">OrderService</span> {
+    <span class="kw">public void</span> <span class="fn">createOrder</span>() { <span class="cmt">/* ... */</span> }
+}
+
+<span class="cmt">// 通过构造器注入（推荐方式）</span>
+<span class="ann">@RestController</span>
+<span class="kw">public class</span> <span class="typ">OrderController</span> {
+    <span class="kw">private final</span> <span class="typ">OrderService</span> orderService;
+
+    <span class="kw">public</span> <span class="typ">OrderController</span>(<span class="typ">OrderService</span> orderService) {
+        <span class="kw">this</span>.orderService = orderService;  <span class="cmt">// Spring 自动注入</span>
+    }
+}</pre>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">✅</span>
+      <div><strong>使用建议：</strong>优先使用<strong>构造器注入</strong>，避免字段注入（<code>@Autowired</code> 在字段上），因为构造器注入有利于单元测试和不可变性。Spring 4.3+ 单构造器时 <code>@Autowired</code> 可省略。</div>
+    </div>
+
+    <div class="grid2">
+      <div><strong>🏗️ Bean 作用域：</strong>
+        <table>
+          <tr><td><code>singleton</code></td><td>默认，全局唯一实例</td></tr>
+          <tr><td><code>prototype</code></td><td>每次获取创建新实例</td></tr>
+          <tr><td><code>request</code></td><td>每次 HTTP 请求一个实例</td></tr>
+          <tr><td><code>session</code></td><td>每个 HTTP Session 一个</td></tr>
+        </table>
+      </div>
+      <div><strong>🔄 Bean 生命周期：</strong>
+        <table>
+          <tr><td>实例化 → 属性填充 → </td></tr>
+          <tr><td><code>BeanNameAware</code> → </td></tr>
+          <tr><td><code>@PostConstruct</code> → </td></tr>
+          <tr><td><code>InitializingBean</code> → </td></tr>
+          <tr><td>就绪 → <code>@PreDestroy</code></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.2 AOP -->
+  <div class="card">
+    <h3>🎯 AOP（面向切面编程）</h3>
+    <p><strong>核心思想：</strong>将<strong>横切关注点</strong>（日志、事务、权限）从业务代码中抽离出来，通过"切面"织入目标方法，实现业务与基础设施的解耦。</p>
+
+    <div class="flow">
+      <div class="flow-node green">切面 (Aspect)<br><small>@Aspect</small></div>
+      <span class="flow-arrow">织入→</span>
+      <div class="flow-node blue">切入点 (Pointcut)<br><small>匹配方法</small></div>
+      <span class="flow-arrow">触发→</span>
+      <div class="flow-node purple">通知 (Advice)<br><small>Before/After/Around</small></div>
+    </div>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="ann">@Aspect</span>
+<span class="ann">@Component</span>
+<span class="kw">public class</span> <span class="typ">LoggingAspect</span> {
+
+    <span class="cmt">// 拦截 com.example.service 包下所有方法</span>
+    <span class="ann">@Around</span>(<span class="str">"execution(* com.example.service.*.*(..))"</span>)
+    <span class="kw">public</span> <span class="typ">Object</span> <span class="fn">logExecution</span>(<span class="typ">ProceedingJoinPoint</span> joinPoint) <span class="kw">throws</span> <span class="typ">Throwable</span> {
+        <span class="kw">long</span> start = <span class="typ">System</span>.currentTimeMillis();
+        <span class="typ">Object</span> result = joinPoint.<span class="fn">proceed</span>();  <span class="cmt">// 执行目标方法</span>
+        <span class="kw">long</span> elapsed = <span class="typ">System</span>.currentTimeMillis() - start;
+        <span class="typ">log</span>.<span class="fn">info</span>(<span class="str">"{} took {}ms"</span>, joinPoint.getSignature(), elapsed);
+        <span class="kw">return</span> result;
+    }
+}</pre>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">💡</span>
+      <div><strong>AOP 的典型应用：</strong>事务管理（<code>@Transactional</code> 底层就是 AOP）、日志记录、权限校验、性能监控、缓存处理。Spring AOP 默认使用 <strong>JDK 动态代理</strong>（接口）或 <strong>CGLIB</strong>（类）。</div>
+    </div>
+  </div>
+
+  <!-- 2.3 Transaction -->
+  <div class="card">
+    <h3>🗄️ 事务管理</h3>
+    <p>Spring 通过 <code>@Transactional</code> 注解提供<strong>声明式事务</strong>，底层基于 AOP 实现。支持编程式事务（<code>TransactionTemplate</code>），但声明式更常用。</p>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="ann">@Transactional</span>(
+    propagation = <span class="typ">Propagation</span>.REQUIRED,      <span class="cmt">// 传播行为</span>
+    isolation   = <span class="typ">Isolation</span>.READ_COMMITTED,   <span class="cmt">// 隔离级别</span>
+    timeout     = <span class="num">30</span>,                          <span class="cmt">// 超时秒数</span>
+    rollbackFor = <span class="typ">Exception</span>.<span class="kw">class</span>             <span class="cmt">// 回滚策略</span>
+)
+<span class="kw">public void</span> <span class="fn">transfer</span>(<span class="typ">Long</span> from, <span class="typ">Long</span> to, <span class="typ">BigDecimal</span> amount) {
+    accountMapper.<span class="fn">debit</span>(from, amount);
+    accountMapper.<span class="fn">credit</span>(to, amount);
+}</pre>
+    </div>
+
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <div><strong>常见坑：</strong><code>@Transactional</code> 仅对 <code>public</code> 方法生效；同一个类内方法互调不走代理，事务不生效；默认只回滚 RuntimeException 和 Error，受检异常不会回滚（需配置 <code>rollbackFor</code>）。</div>
+    </div>
+  </div>
+
+  <!-- 2.4 Spring MVC -->
+  <div class="card">
+    <h3>🌐 Spring MVC</h3>
+    <p><strong>核心流程：</strong><code>DispatcherServlet</code> 作为前端控制器，统一调度请求 → 处理器映射 → 控制器处理 → 视图解析 → 响应返回。RESTful 场景下常用 <code>@RestController</code> 直接返回 JSON。</p>
+
+    <div class="flow">
+      <div class="flow-node green">DispatcherServlet<br><small>前端控制器</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">HandlerMapping<br><small>处理器映射</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">Controller<br><small>业务处理</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">ViewResolver<br><small>视图解析</small></div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:.76rem;margin-top:6px">DispatcherServlet 是 Spring MVC 的核心调度枢纽</p>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(<span class="str">"/api/users"</span>)
+<span class="kw">public class</span> <span class="typ">UserController</span> {
+
+    <span class="ann">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> <span class="typ">ResponseEntity</span>&lt;<span class="typ">User</span>&gt; <span class="fn">getUser</span>(<span class="ann">@PathVariable</span> <span class="typ">Long</span> id) {
+        <span class="kw">return</span> <span class="typ">ResponseEntity</span>.<span class="fn">ok</span>(userService.<span class="fn">findById</span>(id));
+    }
+
+    <span class="ann">@PostMapping</span>
+    <span class="kw">public</span> <span class="typ">User</span> <span class="fn">create</span>(<span class="ann">@Valid</span> <span class="ann">@RequestBody</span> <span class="typ">UserDTO</span> dto) {
+        <span class="kw">return</span> userService.<span class="fn">create</span>(dto);
+    }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 3. Spring Boot ═══════════ -->
+<section class="sec" id="boot">
+  <div class="sec-title boot"><span class="n">3</span> Spring Boot — 开箱即用的生产力引擎</div>
+
+  <div class="card">
+    <p>Spring Boot 的核心哲学：<strong>"约定大于配置"</strong>。它不是在 Spring Framework 上加功能，而是<strong>消除配置的繁琐</strong>，让你专注于业务代码。</p>
+  </div>
+
+  <!-- 3.1 自动配置 -->
+  <div class="card">
+    <h3>⚙️ 自动配置（Auto-Configuration）</h3>
+    <p><strong>原理：</strong>通过 <code>@EnableAutoConfiguration</code> 和 <code>spring.factories</code> 文件，Spring Boot 根据 classpath 中的 jar 包<strong>自动推断</strong>你需要哪些 Bean 配置，省去大量 XML 和 Java Config。</p>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">// 只需这几行，就是一个完整的 Web 应用</span>
+<span class="ann">@SpringBootApplication</span>  <span class="cmt">// = @Configuration + @EnableAutoConfiguration + @ComponentScan</span>
+<span class="kw">public class</span> <span class="typ">Application</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="typ">String</span>[] args) {
+        <span class="typ">SpringApplication</span>.<span class="fn">run</span>(<span class="typ">Application</span>.<span class="kw">class</span>, args);
+    }
+}</pre>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">💡</span>
+      <div><strong>条件注解：</strong>自动配置依赖一系列 <code>@ConditionalOnXxx</code> 注解，如 <code>@ConditionalOnClass</code>（classpath 有某类才生效）、<code>@ConditionalOnMissingBean</code>（用户未自定义才生效）、<code>@ConditionalOnProperty</code>（配置项存在才生效）。可以用 <code>--debug</code> 查看哪些自动配置生效/未生效。</div>
+    </div>
+  </div>
+
+  <!-- 3.2 Starter -->
+  <div class="card">
+    <h3>📦 起步依赖（Starter）</h3>
+    <p><strong>核心思想：</strong>一个 Starter 就是一个<strong>依赖包集合</strong>，引入它就等于引入了该功能所需的所有依赖，且版本经过测试兼容。告别版本冲突地狱。</p>
+
+    <div class="grid3">
+      <div class="comp-card">
+        <div class="icon">🌐</div>
+        <h4>spring-boot-starter-web</h4>
+        <p>内嵌 Tomcat + Spring MVC + Jackson，一键启动 REST API</p>
+        <span class="usecase">Web 应用 / RESTful API</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🗄️</div>
+        <h4>spring-boot-starter-data-jpa</h4>
+        <p>Hibernate + Spring Data JPA + 连接池，数据库操作全家桶</p>
+        <span class="usecase">关系型数据库 CRUD</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🔴</div>
+        <h4>spring-boot-starter-data-redis</h4>
+        <p>Lettuce 客户端 + RedisTemplate，缓存直连</p>
+        <span class="usecase">缓存 / 分布式锁</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🧪</div>
+        <h4>spring-boot-starter-test</h4>
+        <p>JUnit 5 + Mockito + AssertJ，测试全家桶</p>
+        <span class="usecase">单元测试 / 集成测试</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🔐</div>
+        <h4>spring-boot-starter-security</h4>
+        <p>Spring Security + 认证授权 + 默认表单登录</p>
+        <span class="usecase">认证 / 授权 / OAuth2</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">📊</div>
+        <h4>spring-boot-starter-actuator</h4>
+        <p>健康检查 + 指标 + 环境信息 + 线程 dump</p>
+        <span class="usecase">运维监控</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.3 嵌入式服务器 -->
+  <div class="card">
+    <h3>🚀 嵌入式服务器</h3>
+    <p><strong>不再需要外置 Tomcat！</strong>Spring Boot 内嵌 Tomcat / Jetty / Undertow，打成 Fat Jar 后 <code>java -jar</code> 直接启动。部署从一个 war 包 + 一个容器配置，变成<strong>一个 jar 包搞定一切</strong>。</p>
+
+    <div class="flow">
+      <div class="flow-node green">java -jar app.jar</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">Spring Boot Launcher</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">内嵌 Tomcat 启动</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">应用就绪 🎉</div>
+    </div>
+
+    <div class="code">
+      <span class="lang">xml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">&lt;!-- 排除 Tomcat，改用 Undertow（更高吞吐） --&gt;</span>
+&lt;<span class="kw">dependency</span>&gt;
+    &lt;<span class="typ">groupId</span>&gt;org.springframework.boot&lt;/<span class="typ">groupId</span>&gt;
+    &lt;<span class="typ">artifactId</span>&gt;spring-boot-starter-web&lt;/<span class="typ">artifactId</span>&gt;
+    &lt;<span class="kw">exclusions</span>&gt;
+        &lt;<span class="fn">exclusion</span>&gt;
+            &lt;<span class="typ">groupId</span>&gt;org.springframework.boot&lt;/<span class="typ">groupId</span>&gt;
+            &lt;<span class="typ">artifactId</span>&gt;spring-boot-starter-tomcat&lt;/<span class="typ">artifactId</span>&gt;
+        &lt;/<span class="fn">exclusion</span>&gt;
+    &lt;/<span class="kw">exclusions</span>&gt;
+&lt;/<span class="kw">dependency</span>&gt;
+&lt;<span class="kw">dependency</span>&gt;
+    &lt;<span class="typ">groupId</span>&gt;org.springframework.boot&lt;/<span class="typ">groupId</span>&gt;
+    &lt;<span class="typ">artifactId</span>&gt;spring-boot-starter-undertow&lt;/<span class="typ">artifactId</span>&gt;
+&lt;/<span class="kw">dependency</span>&gt;</pre>
+    </div>
+  </div>
+
+  <!-- 3.4 Actuator -->
+  <div class="card">
+    <h3>📊 Actuator — 生产级运维端点</h3>
+    <p>提供开箱即用的<strong>运维监控能力</strong>，包括健康检查、应用指标、环境信息、日志级别动态调整等。Spring Boot Admin 可以基于 Actuator 构建可视化监控面板。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>端点</th><th>功能</th><th>示例</th></tr></thead>
+        <tbody>
+          <tr><td><code>/actuator/health</code></td><td>健康检查（含 DB、Redis 等组件状态）</td><td>K8s liveness/readiness probe</td></tr>
+          <tr><td><code>/actuator/metrics</code></td><td>应用指标（JVM 内存、HTTP 请求、线程池）</td><td>接入 Prometheus + Grafana</td></tr>
+          <tr><td><code>/actuator/info</code></td><td>自定义应用信息（版本、构建时间等）</td><td>配合 CI/CD 注入版本号</td></tr>
+          <tr><td><code>/actuator/env</code></td><td>环境变量 & 配置属性</td><td>排查配置是否生效</td></tr>
+          <tr><td><code>/actuator/loggers</code></td><td>动态调整日志级别</td><td>线上调试，临时开启 DEBUG</td></tr>
+          <tr><td><code>/actuator/threaddump</code></td><td>线程 dump</td><td>排查死锁 / 线程池满</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 4. Spring Cloud ═══════════ -->
+<section class="sec" id="cloud">
+  <div class="sec-title cloud"><span class="n">4</span> Spring Cloud — 微服务治理工具箱</div>
+
+  <div class="card">
+    <p>Spring Cloud 提供了一套完整的<strong>微服务治理方案</strong>。它基于 Spring Boot，通过引入对应的 Starter 依赖即可获得服务注册、配置管理、网关路由等分布式系统核心能力。</p>
+
+    <div class="flow">
+      <div class="flow-node cloud">Eureka / Nacos<br><small>注册中心</small></div>
+      <span class="flow-arrow">⇄</span>
+      <div class="flow-node green">Gateway<br><small>API 网关</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">微服务 A</div>
+      <div class="flow-node blue">微服务 B</div>
+      <div class="flow-node blue">微服务 C</div>
+    </div>
+  </div>
+
+  <!-- 4.1 服务注册与发现 -->
+  <div class="card">
+    <h3>🔍 服务注册与发现</h3>
+    <p><strong>核心问题：</strong>微服务实例的 IP 和端口是动态变化的，需要一个<strong>注册中心</strong>来统一管理服务元数据。服务启动时注册，定时心跳续约，调用方从注册中心获取可用实例列表。</p>
+
+    <div class="grid2">
+      <div class="comp-card">
+        <div class="icon">🇪</div>
+        <h4>Eureka（Netflix）</h4>
+        <p>AP 模型（高可用 + 分区容错），自我保护机制。<br>已进入维护模式，存量项目仍在使用。</p>
+        <span class="usecase">旧项目 / 学习入门</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🏗️</div>
+        <h4>Nacos（Alibaba）</h4>
+        <p>CP + AP 可切换，同时支持<strong>服务发现 + 配置中心</strong>，功能更全。<br>目前国内主流选择。</p>
+        <span class="usecase">新项目首选</span>
+      </div>
+    </div>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">// 服务提供者 — 注册到 Nacos</span>
+<span class="ann">@SpringBootApplication</span>
+<span class="ann">@EnableDiscoveryClient</span>  <span class="cmt">// 开启服务发现</span>
+<span class="kw">public class</span> <span class="typ">OrderApplication</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="typ">String</span>[] args) {
+        <span class="typ">SpringApplication</span>.<span class="fn">run</span>(<span class="typ">OrderApplication</span>.<span class="kw">class</span>, args);
+    }
+}
+
+<span class="cmt">// 服务消费者 — 通过 Feign 声明式调用</span>
+<span class="ann">@FeignClient</span>(<span class="str">"order-service"</span>)  <span class="cmt">// 服务名即注册中心的名称</span>
+<span class="kw">public interface</span> <span class="typ">OrderClient</span> {
+    <span class="ann">@GetMapping</span>(<span class="str">"/orders/{id}"</span>)
+    <span class="typ">Order</span> <span class="fn">findById</span>(<span class="ann">@PathVariable</span> <span class="typ">Long</span> id);
+}</pre>
+    </div>
+  </div>
+
+  <!-- 4.2 配置中心 -->
+  <div class="card">
+    <h3>📝 配置中心</h3>
+    <p><strong>核心问题：</strong>微服务数量多，配置散落在各服务中，修改一个配置要重启大量实例。<strong>配置中心</strong>统一管理所有配置，支持<strong>动态刷新</strong>——改完即生效，无需重启。</p>
+
+    <div class="grid2">
+      <div class="comp-card">
+        <div class="icon">☁️</div>
+        <h4>Spring Cloud Config</h4>
+        <p>官方方案，配置存储在 Git/SVN，通过 Bus + MQ 广播刷新事件。功能基础但稳定。</p>
+        <span class="usecase">Git 管理配置的团队</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🏗️</div>
+        <h4>Nacos Config</h4>
+        <p>配置管理 + 服务发现一体化，自带管理控制台，支持灰度和版本回滚。</p>
+        <span class="usecase">国内主流选择</span>
+      </div>
+    </div>
+
+    <div class="code">
+      <span class="lang">yaml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt"># bootstrap.yml — Nacos 配置中心</span>
+<span class="kw">spring</span>:
+  <span class="kw">application</span>:
+    <span class="kw">name</span>: order-service
+  <span class="kw">cloud</span>:
+    <span class="kw">nacos</span>:
+      <span class="kw">config</span>:
+        <span class="kw">server-addr</span>: localhost:8848
+        <span class="kw">file-extension</span>: yaml
+        <span class="kw">refresh-enabled</span>: <span class="kw">true</span>   <span class="cmt"># ✅ 开启动态刷新</span></pre>
+    </div>
+  </div>
+
+  <!-- 4.3 API 网关 -->
+  <div class="card">
+    <h3>🚪 API 网关（Gateway）</h3>
+    <p><strong>核心问题：</strong>外部请求如何路由到正确的微服务？网关是系统的<strong>统一入口</strong>，负责路由转发、鉴权、限流、日志、跨域处理。Spring Cloud Gateway 基于 WebFlux，性能优于 Zuul。</p>
+
+    <div class="flow">
+      <div class="flow-node orange">客户端</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node cloud">Gateway<br><small>鉴权 + 路由 + 限流</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">order-service</div>
+      <span class="flow-node green">user-service</span>
+      <div class="flow-node green">payment-service</div>
+    </div>
+
+    <div class="code">
+      <span class="lang">yaml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="kw">spring</span>:
+  <span class="kw">cloud</span>:
+    <span class="kw">gateway</span>:
+      <span class="kw">routes</span>:
+        - <span class="kw">id</span>: order-route
+          <span class="kw">uri</span>: lb://order-service     <span class="cmt"># lb:// 表示从注册中心负载均衡</span>
+          <span class="kw">predicates</span>:
+            - <span class="kw">Path</span>=/api/orders/**
+          <span class="kw">filters</span>:
+            - <span class="kw">StripPrefix</span>=<span class="num">1</span>         <span class="cmt"># 去掉 /api 前缀再转发</span>
+        - <span class="kw">id</span>: user-route
+          <span class="kw">uri</span>: lb://user-service
+          <span class="kw">predicates</span>:
+            - <span class="kw">Path</span>=/api/users/**</pre>
+    </div>
+  </div>
+
+  <!-- 4.4 负载均衡 -->
+  <div class="card">
+    <h3>⚖️ 负载均衡</h3>
+    <p><strong>核心问题：</strong>微服务往往多实例部署，调用方需要选择一个健康的实例发起请求。<strong>Spring Cloud LoadBalancer</strong>（替代已弃用的 Ribbon）提供客户端负载均衡能力。</p>
+
+    <div class="grid3">
+      <div class="comp-card">
+        <div class="icon">🔄</div>
+        <h4>轮询（Round Robin）</h4>
+        <p>依次轮询每个服务实例</p>
+        <span class="usecase">默认策略</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🎲</div>
+        <h4>随机（Random）</h4>
+        <p>随机选取一个可用实例</p>
+        <span class="usecase">简单场景</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">⚡</div>
+        <h4>加权响应时间</h4>
+        <p>响应越快的实例分配越多请求</p>
+        <span class="usecase">性能不均衡时</span>
+      </div>
+    </div>
+
+    <div class="code">
+      <span class="lang">yaml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="kw">spring</span>:
+  <span class="kw">cloud</span>:
+    <span class="kw">loadbalancer</span>:
+      <span class="kw">ribbon</span>:
+        <span class="kw">enabled</span>: <span class="typ">false</span>        <span class="cmt"># 关闭旧版 Ribbon</span>
+      <span class="kw">cache</span>:
+        <span class="kw">ttl</span>: 35s               <span class="cmt"># 实例列表缓存时间</span></pre>
+    </div>
+
+    <div class="tip boot">
+      <span class="ti">🍃</span>
+      <div><strong>Feign 已内置负载均衡：</strong>使用 <code>spring-cloud-starter-openfeign</code> 后，<code>@FeignClient</code> 注解的服务调用自动经过 LoadBalancer，无需额外配置。</div>
+    </div>
+  </div>
+
+  <!-- 4.5 熔断器 -->
+  <div class="card">
+    <h3>🛡️ 熔断器（Circuit Breaker）</h3>
+    <p><strong>核心问题：</strong>微服务间存在调用链，下游故障会级联上游，最终拖垮整个系统（<strong>雪崩效应</strong>）。熔断器在下游不可用时快速失败，保护上游服务。</p>
+
+    <div class="grid2">
+      <div class="comp-card">
+        <div class="icon">🛡️</div>
+        <h4>Sentinel（Alibaba）</h4>
+        <p>流量控制 + 熔断降级 + 系统负载保护。<br>可视化控制台，实时监控，规则可动态调整。<strong>国内首选。</strong></p>
+        <span class="usecase">流量防护 / 熔断降级</span>
+      </div>
+      <div class="comp-card">
+        <div class="icon">⚡</div>
+        <h4>Resilience4j</h4>
+        <p>轻量级容错库，支持熔断、重试、限流、舱壁。<br>Spring Cloud 官方推荐，替代 Hystrix。</p>
+        <span class="usecase">轻量级容错</span>
+      </div>
+    </div>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">// Sentinel 熔断降级示例</span>
+<span class="ann">@GetMapping</span>(<span class="str">"/orders/{id}"</span>)
+<span class="ann">@SentinelResource</span>(
+    value = <span class="str">"getOrder"</span>,
+    blockHandler = <span class="str">"handleBlock"</span>,       <span class="cmt">// 限流/熔断触发</span>
+    fallback   = <span class="str">"handleFallback"</span>       <span class="cmt">// 业务异常触发</span>
+)
+<span class="kw">public</span> <span class="typ">Order</span> <span class="fn">getOrder</span>(<span class="ann">@PathVariable</span> <span class="typ">Long</span> id) {
+    <span class="kw">return</span> orderService.<span class="fn">findById</span>(id);
+}
+
+<span class="cmt">// 降级处理方法</span>
+<span class="kw">public</span> <span class="typ">Order</span> <span class="fn">handleFallback</span>(<span class="typ">Long</span> id, <span class="typ">Throwable</span> t) {
+    <span class="kw">return</span> <span class="str">"服务暂时不可用"</span>;
+}</pre>
+    </div>
+
+    <div class="scene cloud">
+      <h5>📊 熔断器三种状态：</h5>
+      <div class="flow" style="justify-content:flex-start">
+        <div class="flow-node green">CLOSED<br><small>正常</small></div>
+        <span class="flow-arrow">失败率>阈值→</span>
+        <div class="flow-node orange">OPEN<br><small>快速失败</small></div>
+        <span class="flow-arrow">等待超时→</span>
+        <div class="flow-node blue">HALF-OPEN<br><small>探测恢复</small></div>
+        <span class="flow-arrow">成功→</span>
+        <div class="flow-node green">CLOSED</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.6 链路追踪 -->
+  <div class="card">
+    <h3>🔎 分布式链路追踪</h3>
+    <p><strong>核心问题：</strong>一个请求可能经过多个微服务，如何追踪完整的调用链路？<strong>Sleuth</strong> 自动为每个请求生成 TraceId/SpanId，<strong>Zipkin / SkyWalking</strong> 负责收集和可视化展示。</p>
+
+    <div class="arch-wrap">
+      <div class="arch-row">
+        <div class="arch-node cloud"><h5>Gateway</h5><small>TraceId 入口</small></div>
+        <span class="arch-line">→</span>
+        <div class="arch-node solid"><h5>Service A</h5><small>Span A</small></div>
+        <span class="arch-line">→</span>
+        <div class="arch-node solid"><h5>Service B</h5><small>Span B</small></div>
+        <span class="arch-line">⇣</span>
+        <div class="arch-node solid"><h5>DB</h5><small>Span C</small></div>
+      </div>
+      <div class="arch-line-down">▼ 上报</div>
+      <div class="arch-row">
+        <div class="arch-node outline"><h5>Zipkin / SkyWalking</h5><small>聚合 & 可视化</small></div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>组件</th><th>作用</th><th>关键特性</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Spring Cloud Sleuth</strong></td><td>链路数据采集</td><td>自动生成 TraceId / SpanId，零侵入；支持与 Zipkin、Brave 集成</td></tr>
+          <tr><td><strong>Zipkin</strong></td><td>链路数据存储与展示</td><td>轻量级，Twitter 开源，自带 Dashboard</td></tr>
+          <tr><td><strong>SkyWalking</strong></td><td>APM 全链路监控</td><td>Apache 顶级项目，支持 JVM 指标、拓扑图、告警，比 Zipkin 功能更全</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code">
+      <span class="lang">yaml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt"># Sleuth + Zipkin 配置</span>
+<span class="kw">spring</span>:
+  <span class="kw">sleuth</span>:
+    <span class="kw">sampler</span>:
+      <span class="kw">probability</span>: <span class="num">1.0</span>          <span class="cmt"># 采样率 100%（生产建议 0.1）</span>
+  <span class="kw">zipkin</span>:
+    <span class="kw">base-url</span>: http://localhost:9411
+    <span class="kw">sender</span>:
+      <span class="kw">type</span>: web</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 5. 总结 ═══════════ -->
+<section class="sec" id="summary">
+  <div class="sec-title"><span class="n">5</span> 选型建议与总结</div>
+
+  <div class="summary-box">
+    <h3>🌿 Spring 全家桶选型速查</h3>
+    <ul>
+      <li><strong>单体应用：</strong><code>Spring Boot</code> + <code>Spring MVC</code> + <code>MyBatis-Plus / JPA</code> → 最简方案，快速交付</li>
+      <li><strong>微服务：</strong><code>Spring Cloud Alibaba</code>（Nacos + Sentinel + Gateway）→ 国内生产首选，组件全且中文文档好</li>
+      <li><strong>轻量微服务：</strong><code>Spring Boot</code> + <code>Spring Cloud Gateway</code> + <code>Resilience4j</code> → 如果团队对 Nacos 不熟，可用 Eureka / Consul 替代</li>
+      <li><strong>云原生：</strong>K8s + <code>Spring Boot</code> 即可，服务发现/配置管理/负载均衡可下沉到 K8s 层面</li>
+    </ul>
+  </div>
+
+  <div class="compare-table">
+    <table>
+      <thead>
+        <tr><th style="width:14%">层级</th><th>框架</th><th>一句话总结</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:700"><span class="tag-fw">基础层</span></td>
+          <td>Spring Framework</td>
+          <td><strong>打地基：</strong>IoC 容器 + AOP + 数据访问，是一切 Spring 应用的根基</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700"><span class="tag-bt">开发层</span></td>
+          <td>Spring Boot</td>
+          <td><strong>提效率：</strong>自动配置 + 起步依赖 + 内嵌服务器，让开发专注于业务</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700"><span class="tag-cl">治理层</span></td>
+          <td>Spring Cloud</td>
+          <td><strong>管集群：</strong>服务发现 + 配置中心 + 网关 + 熔断 + 链路追踪，微服务全家桶</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>🔄 学习路线建议</h3>
+    <div class="flow">
+      <div class="flow-node green">① Spring Framework<br><small>IoC / AOP / MVC</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">② Spring Boot<br><small>自动配置 / Starter / Actuator</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">③ MyBatis-Plus / JPA<br><small>数据访问层</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">④ Spring Security<br><small>认证授权</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node cloud">⑤ Spring Cloud<br><small>微服务治理</small></div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:.76rem;margin-top:8px">从内到外，层层递进——不要跳过 Framework 直接学 Cloud</p>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<script>
+// Nav active highlight
+document.querySelectorAll('.sec').forEach(sec => {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.nav a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px' });
+  observer.observe(sec);
+});
+</script>
+</body>
+</html>

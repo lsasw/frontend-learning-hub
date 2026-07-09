@@ -418,6 +418,12 @@ body{
       <span class="icon">🌐</span> AI 前端工程生态
     </a>
 
+    <div class="cat">🐍 Python 后端</div>
+    <a class="nav-item" data-nav="python-backend-stack" data-title="Python 后端技术栈 · 全景架构与选型指南" href="Python-后端技术栈全景图.html" target="contentFrame">
+      <span class="icon">📐</span> Python 后端技术栈
+      <span class="tag-new">NEW</span>
+    </a>
+
     <div class="cat">☕ Java 进阶</div>
     <a class="nav-item" data-nav="java-juc" data-title="Java JUC 并发工具包 · 系统学习指南" href="Java-JUC-并发工具包教程.html" target="contentFrame">
       <span class="icon">🔒</span> JUC 并发工具包
@@ -435,6 +441,12 @@ body{
     </a>
     <a class="nav-item" data-nav="mq-concepts" data-title="消息队列核心概念 · 从零到一" href="消息队列-核心概念入门.html" target="contentFrame">
       <span class="icon">📖</span> MQ 核心概念入门
+    </a>
+    <a class="nav-item" data-nav="mq-dedup" data-title="消息队列防重复消费详解 · 3 实例场景" href="消息队列-防重复消费详解.html" target="contentFrame">
+      <span class="icon">🛡️</span> 防重复消费详解
+    </a>
+    <a class="nav-item" data-nav="spring-family" data-title="Spring 全家桶 · 核心组件与功能全景" href="Spring-全家桶-核心组件详解.html" target="contentFrame">
+      <span class="icon">🌿</span> Spring 全家桶详解
       <span class="tag-new">NEW</span>
     </a>
   </nav>
@@ -449,11 +461,11 @@ body{
     <div class="welcome" id="welcomePage">
       <div class="welcome-hero">
         <h1>📚 交互式技术教程合集</h1>
-        <p class="lead">10 个精心制作的单文件 HTML 教程，覆盖 AI 智能体、AI 开发工具、Java 进阶、基础设施四大领域，打开即用，支持交互式学习。</p>
+        <p class="lead">13 个精心制作的单文件 HTML 教程，覆盖 AI 智能体、AI 开发工具、Python 后端、Java 进阶、基础设施五大领域，打开即用，支持交互式学习。</p>
         <div class="stats">
-          <div class="stat"><div class="num">10</div><div class="lbl">教程</div></div>
-          <div class="stat"><div class="num">4</div><div class="lbl">分类</div></div>
-          <div class="stat"><div class="num">~18K</div><div class="lbl">行代码</div></div>
+          <div class="stat"><div class="num">13</div><div class="lbl">教程</div></div>
+          <div class="stat"><div class="num">5</div><div class="lbl">分类</div></div>
+          <div class="stat"><div class="num">~27K</div><div class="lbl">行代码</div></div>
         </div>
       </div>
 
@@ -500,6 +512,18 @@ body{
           <p>类加载 → 内存模型 → GC 算法 → JIT 编译 → 性能调优，完整知识体系</p>
           <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">JVM</span></div>
         </a>
+        <a class="card-link" data-nav="spring-family" data-title="Spring 全家桶 · 核心组件与功能全景" href="Spring-全家桶-核心组件详解.html" target="contentFrame">
+          <div class="card-icon ic-java">🌿</div>
+          <h3>Spring 全家桶核心组件</h3>
+          <p>Framework Ioc/AOP/MVC · Boot 自动配置 · Cloud 微服务治理，三层联动全景讲解</p>
+          <div class="tags"><span class="tag ic-java">Spring</span><span class="tag ic-java">微服务</span><span class="tag ic-java">Boot</span></div>
+        </a>
+        <a class="card-link" data-nav="python-backend-stack" data-title="Python 后端技术栈 · 全景架构与选型指南" href="Python-后端技术栈全景图.html" target="contentFrame">
+          <div class="card-icon ic-python">🐍</div>
+          <h3>Python 后端技术栈全景图</h3>
+          <p>Web 框架 · ORM · 异步服务器 · API 工具 · 缓存 · 任务队列 · 认证权限 —— 7 大分类主流 vs 替代方案全对比</p>
+          <div class="tags"><span class="tag ic-python">Python</span><span class="tag ic-python">后端</span><span class="tag ic-python">选型</span></div>
+        </a>
         <a class="card-link" data-nav="redis" data-title="Redis 从入门到精通 · 交互式学习指南" href="Redis-交互式学习指南.html" target="contentFrame">
           <div class="card-icon ic-redis">🔴</div>
           <h3>Redis 交互式学习指南</h3>
@@ -517,6 +541,12 @@ body{
           <h3>消息队列核心概念入门</h3>
           <p>从零开始理解 MQ：Producer / Consumer / Broker / ACK / DLQ，含交互式模拟器</p>
           <div class="tags"><span class="tag ic-infra">MQ</span><span class="tag ic-mq">消息队列</span><span class="tag ic-mq">入门</span></div>
+        </a>
+        <a class="card-link" data-nav="mq-dedup" data-title="消息队列防重复消费详解 · 3 实例场景" href="消息队列-防重复消费详解.html" target="contentFrame">
+          <div class="card-icon ic-mq">🛡️</div>
+          <h3>MQ 防重复消费详解</h3>
+          <p>3 实例场景下两层防护：MQ 层负载隔离 + 业务层幂等兜底，Kafka/RocketMQ/RabbitMQ 全覆盖</p>
+          <div class="tags"><span class="tag ic-infra">MQ</span><span class="tag ic-mq">幂等</span><span class="tag ic-infra">生产实战</span></div>
         </a>
       </div>
     </div>

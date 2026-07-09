@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 后端技术栈 · 全景架构与选型指南</title>
+<style>
+:root {
+  --py: #3776AB; --py-dark: #1e4a6d; --py-light: #e8f0f8;
+  --yel: #FFD43B; --yel-dark: #b89500; --yel-light: #fff9e0;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--py);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--py-light);color:var(--py-dark)}
+.nav-divider{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 4px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#3776AB 0%,#1e4a6d 50%,#0d1f30 100%);color:#fff;padding:64px 40px 52px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-80px;right:-60px;width:300px;height:300px;background:rgba(255,212,59,.08);border-radius:50%}
+.hero::after{content:"";position:absolute;bottom:-40px;left:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h1{font-size:2.7rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative}
+.hero .sub{font-size:1.06rem;opacity:.9;margin-top:14px;max-width:720px;margin-inline:auto;position:relative}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px;position:relative}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--py);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--py);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-intro{font-size:.88rem;color:var(--text2);margin-bottom:18px;line-height:1.7}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.06rem;margin-bottom:10px;color:var(--py-dark)}
+.card p{font-size:.87rem;margin-bottom:8px}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--py-light);border-left:4px solid var(--py)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.yel{background:var(--yel-light);border-left:4px solid var(--yel-dark)}
+
+/* CODE */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.64rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.79rem;color:#cdd6f4;white-space:pre;line-height:1.74}
+.kw{color:#cba6f7}.str{color:#a6e3a1}.cmt{color:#6c7086;font-style:italic}
+.fn{color:#89b4fa}.num{color:#fab387}.typ{color:#f9e2af}
+.ann{color:#f38ba8}.var{color:#a6e3a1}
+.copy-btn{position:absolute;top:8px;right:48px;background:rgba(255,255,255,.1);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.68rem;font-family:var(--sans);transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--py-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--py);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:#f4f8fc}
+td code{background:var(--py-light);color:var(--py-dark);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.77rem}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:14px;background:#f0f2f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto;justify-content:center}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.77rem;text-align:center;min-width:80px}
+.flow-node.py{border-color:var(--py);background:var(--py-light);color:var(--py-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#065f46}
+.flow-node.blue{border-color:var(--blue);background:var(--blue-light);color:#1e40af}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.orange{border-color:#f97316;background:#fff7ed;color:#c2410c}
+.flow-node.yel{border-color:var(--yel-dark);background:var(--yel-light);color:#5c4700}
+.flow-arrow{color:var(--text3);font-size:1rem;font-weight:700}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+
+/* COMPONENT CARD */
+.comp-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:20px;transition:all .25s}
+.comp-card:hover{border-color:var(--py);box-shadow:0 2px 12px rgba(55,118,171,.08)}
+.comp-card .icon{font-size:2.2rem;margin-bottom:8px}
+.comp-card h4{font-size:.95rem;margin-bottom:6px;color:var(--py-dark)}
+.comp-card p{font-size:.78rem;color:var(--text2);line-height:1.55}
+.comp-card .meta{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.comp-card .meta span{font-size:.68rem;padding:3px 9px;border-radius:10px;font-weight:500}
+.comp-card .meta .pro{background:var(--green-light);color:#065f46}
+.comp-card .meta .con{background:var(--red-light);color:#991b1b}
+.comp-card .meta .use{background:var(--py-light);color:var(--py-dark)}
+
+/* COMPARISON TABLE */
+.compare-table{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:16px 0}
+.compare-table table{margin:0}
+.compare-table th:first-child{width:14%}
+.compare-table td:first-child{font-weight:700;white-space:nowrap}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.71rem;font-weight:600}
+.badge.dj{background:#c7d8b6;color:#2b510d}
+.badge.fl{background:#e0e7ff;color:#3730a3}
+.badge.fa{background:#d6f3e7;color:#064e3b}
+.badge.rq{background:#fef3c7;color:#92400e}
+.badge.al{background:#e0f2fe;color:#0369a1}
+.badge.or{background:#fce7f3;color:#9d174d}
+.badge.mj{background:#dcfce7;color:#166534}
+.badge.mn{background:#f3e8ff;color:#6b21a8}
+.badge.sa{background:#fee2e2;color:#991b1b}
+
+/* STARTS indicator */
+.stars{font-size:.71rem;color:var(--text3);margin-left:4px}
+.stars::before{content:"★ ";color:#f59e0b}
+
+/* DECISION MATRIX */
+.matrix{margin:16px 0}
+.matrix table th{background:var(--py);color:#fff;border-color:var(--py-dark)}
+.matrix td:first-child{font-weight:700}
+.matrix .rec{color:var(--green);font-weight:700}
+.matrix .alt{color:var(--amber)}
+.matrix .maybe{color:var(--text3);font-style:italic}
+
+/* SUMMARY */
+.summary-box{background:linear-gradient(135deg,#3776AB 0%,#1e4a6d 100%);color:#fff;border-radius:var(--radius);padding:26px 28px;margin:16px 0}
+.summary-box h3{font-size:1.12rem;margin-bottom:10px}
+.summary-box ul{list-style:none;padding:0}
+.summary-box ul li{padding:5px 0;font-size:.83rem;padding-left:18px;position:relative}
+.summary-box ul li::before{content:"▸";position:absolute;left:0;color:rgba(255,255,255,.6)}
+.summary-box code{background:rgba(255,255,255,.15);color:#fff;padding:1px 6px;border-radius:3px;font-size:.78rem}
+
+/* STACK VISUAL */
+.stack-vis{display:flex;flex-direction:column;align-items:center;gap:4px;margin:20px 0;overflow-x:auto}
+.stack-row{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.stack-node{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:10px 18px;text-align:center;min-width:110px}
+.stack-node h5{font-size:.8rem;margin-bottom:2px}
+.stack-node small{font-size:.7rem;color:var(--text3)}
+.stack-node.solid{border-color:var(--py);background:var(--py-light)}
+.stack-node.outline{border-style:dashed;border-color:var(--yel-dark);background:var(--yel-light)}
+.stack-line{font-size:1.1rem;color:var(--text3);font-weight:700;flex-shrink:0}
+.stack-line-down{font-size:1.3rem;color:var(--text3);font-weight:700}
+
+/* SCENARIO */
+.scene{padding:14px 18px;border-radius:var(--radius-sm);margin:10px 0;font-size:.83rem}
+.scene.py{background:var(--py-light);border:1px dashed var(--py)}
+.scene.fast{background:var(--green-light);border:1px dashed var(--green)}
+.scene.micro{background:var(--blue-light);border:1px dashed var(--blue)}
+.scene h5{font-size:.88rem;margin-bottom:4px}
+
+/* RESPONSIVE */
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+@media(max-width:480px){
+  .hero h1{font-size:1.7rem}.hero{padding:40px 18px 32px}
+  .card{padding:16px}.sec-title{font-size:1.3rem}
+  .compare-table th:first-child,.compare-table td:first-child{min-width:90px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.03 2 3 5.58 3 10c0 3.54 2.39 6.51 5.67 7.38.44.08.6-.19.6-.42 0-.21-.01-.91-.01-1.65-2.46.45-2.97-1.05-2.97-1.05-.4-.96-.98-1.22-.98-1.22-.8-.51.06-.5.06-.5.88.06 1.35.87 1.35.87.73 1.07 1.87.83 2.32.64.07-.55.28-.93.51-1.14-1.78-.19-3.64-.84-3.64-3.74 0-.83.31-1.5.82-2.03-.08-.19-.36-.96.08-2 0 0 .65-.2 2.12.76A7.5 7.5 0 0112 6.5c.68 0 1.36.09 2 .26 1.47-.96 2.12-.76 2.12-.76.44 1.04.16 1.81.08 2 .51.53.82 1.2.82 2.03 0 2.91-1.87 3.55-3.65 3.74.29.24.54.71.54 1.43 0 1.03-.01 1.86-.01 2.11 0 .23.16.5.6.42C18.61 16.51 21 13.54 21 10c0-4.42-4.03-8-9-8z" fill="url(#pyg)"/><defs><linearGradient id="pyg"><stop offset="0%" stop-color="#3776AB"/><stop offset="100%" stop-color="#FFD43B"/></linearGradient></defs></svg>
+    Python 后端技术栈
+  </div>
+  <span class="nav-divider"></span>
+  <a href="#frameworks">Web 框架</a>
+  <a href="#orm">数据库与 ORM</a>
+  <a href="#servers">异步与服务器</a>
+  <a href="#api">API 工具</a>
+  <a href="#cache">缓存</a>
+  <a href="#queue">任务队列</a>
+  <a href="#auth">认证权限</a>
+  <a href="#decision">选型决策</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>🐍 Python 后端技术栈全景图</h1>
+  <p class="sub">从 Web 框架、ORM、异步服务器到缓存、任务队列、认证——系统整理每层的"主流选项"与"可替换方案"，覆盖优劣对比、适用场景与社区热度，助你做出精准技术选型</p>
+  <div class="tags">
+    <span class="tag">Django</span><span class="tag">Flask</span><span class="tag">FastAPI</span>
+    <span class="tag">SQLAlchemy</span><span class="tag">Uvicorn</span><span class="tag">Celery</span>
+    <span class="tag">Redis</span><span class="tag">JWT</span><span class="tag">OpenAPI</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════════ 1. Web 框架 ═══════════ -->
+<section class="sec" id="frameworks">
+  <div class="sec-title"><span class="n">1</span> Web 框架 — 核心骨架</div>
+  <p class="sec-intro">Web 框架决定项目的整体架构风格、开发效率和扩展空间。Python 生态中三大主力各有所长，此外还有一批高性能新秀值得关注。</p>
+
+  <div class="card">
+    <h3>🔭 主流三大框架对比</h3>
+    <div class="tbl-wrap compare-table">
+      <table>
+        <thead><tr><th>维度</th><th>Django</th><th>Flask</th><th>FastAPI</th></tr></thead>
+        <tbody>
+          <tr><td>定位</td><td>全栈"电池全含"</td><td>微框架 · 极简灵活</td><td>现代异步 API 框架</td></tr>
+          <tr><td>并发模型</td><td>同步（可配 ASGI）</td><td>同步（可扩展）</td><td>原生异步 async/await</td></tr>
+          <tr><td>ORM</td><td>内置 Django ORM</td><td>自由选 SQLAlchemy 等</td><td>自由选 SQLAlchemy 等</td></tr>
+          <tr><td>API 支持</td><td>Django REST Framework</td><td>Flask-RESTful / 手动</td><td>内置 OpenAPI + 自动文档</td></tr>
+          <tr><td>管理后台</td><td>Admin 开箱即用 ★</td><td>Flask-Admin（第三方）</td><td>需自行实现或 SQLAdmin</td></tr>
+          <tr><td>学习曲线</td><td>中高（约定多）</td><td>低（上手快）</td><td>中（需理解 async）</td></tr>
+          <tr><td>最佳场景</td><td>CMS / 后台系统 / 全栈应用</td><td>微服务 / 简单 API / 原型</td><td>高性能 API / 实时服务 / 微服务</td></tr>
+          <tr><td>GitHub Stars</td><td><span class="stars">81k+</span></td><td><span class="stars">68k+</span></td><td><span class="stars">77k+</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🏗 可替换/补充框架一览</h3>
+    <div class="grid3">
+      <div class="comp-card">
+        <div class="icon">🔷</div>
+        <h4>Pyramid</h4>
+        <p>介于 Django 与 Flask 之间的"中庸之道"，按需组装。"Start small, finish big" 理念。适合需要灵活但又不想要过于极简的团队。</p>
+        <div class="meta"><span class="use">中大型应用</span><span class="pro">渐进增强</span><span class="con">社区较小</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="icon">⚡</div>
+        <h4>Litestar（原 Starlite）</h4>
+        <p>FastAPI 的强力挑战者——原生 async、类视图、DI、内置 DTO 验证、性能极佳。API 设计与 FastAPI 类似但社区仍在快速成长中。</p>
+        <div class="meta"><span class="use">高性能 API</span><span class="pro">类型完备</span><span class="con">生态年轻</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🚀</div>
+        <h4>Sanic</h4>
+        <p>全球首个 Python 异步 Web 框架，类 Flask API 风格。"async everywhere" 的早期探索者，内置 WebSocket 支持，适合对异步体验有极致追求的项目。</p>
+        <div class="meta"><span class="use">实时服务</span><span class="pro">异步原生</span><span class="con">生态不如 FastAPI</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🌐</div>
+        <h4>Falcon</h4>
+        <p>专为 REST API 设计的极简轻量框架，无模板引擎、无 ORM，极致性能。适合构建纯粹的后端 API 网关或超高性能微服务。</p>
+        <div class="meta"><span class="use">纯 API 网关</span><span class="pro">最低开销</span><span class="con">功能少</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🧩</div>
+        <h4>Bottle</h4>
+        <p>单文件微框架（整个框架就一个 .py 文件），零依赖，极度轻量。适合嵌入式场景、简单 API 或教学用途。不适合中大型项目。</p>
+        <div class="meta"><span class="use">嵌入式/原型</span><span class="pro">零依赖</span><span class="con">功能极简</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="icon">🏗</div>
+        <h4>Tornado</h4>
+        <p>Facebook 开源的非阻塞异步框架，曾是 Python 异步编程的先锋。内置 HTTP 客户端 + WebSocket + 长轮询，适合需要长连接保持的场景。</p>
+        <div class="meta"><span class="use">长连接/WebSocket</span><span class="pro">成熟稳定</span><span class="con">不再前沿</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip info"><span class="ti">💡</span><div><strong>快速选型建议：</strong>全栈 CMS/后台系统选 Django，微服务/高性能 API 选 FastAPI，简单原型/小型服务选 Flask。2024 年后新项目建议优先考虑 async-first 框架（FastAPI / Litestar）。</div></div>
+</section>
+
+<!-- ═══════════ 2. 数据库与 ORM ═══════════ -->
+<section class="sec" id="orm">
+  <div class="sec-title"><span class="n">2</span> 数据库与 ORM — 数据持久化</div>
+  <p class="sec-intro">ORM 层连接业务逻辑与数据库，选型直接关系到查询性能、开发效率和数据库迁移成本。同步 SQLAlchemy 稳坐头把交椅，异步生态中 Tortoise-ORM 和 SQLAlchemy 2.0 async 双雄并立。</p>
+
+  <div class="card">
+    <h3>🔍 核心 ORM 对比</h3>
+    <div class="tbl-wrap compare-table">
+      <table>
+        <thead><tr><th>特性</th><th>SQLAlchemy</th><th>Django ORM</th><th>Tortoise-ORM</th><th>Peewee</th></tr></thead>
+        <tbody>
+          <tr><td>并发模型</td><td>同步 + 2.0 起支持 async</td><td>同步（可 async 装饰器）</td><td>原生异步 async/await</td><td>同步</td></tr>
+          <tr><td>抽象层级</td><td>Core（底层 SQL）+ORM（高层）</td><td>纯 ORM 映射</td><td>类 Django ORM 风格</td><td>简洁 ORM</td></tr>
+          <tr><td>数据库支持</td><td>PostgreSQL/MySQL/SQLite/等</td><td>同上（Django 驱动）</td><td>PostgreSQL/MySQL/SQLite</td><td>PostgreSQL/MySQL/SQLite</td></tr>
+          <tr><td>迁移工具</td><td>Alembic（生态标准）</td><td>内置 makemigrations</td><td>Aerich</td><td>peewee_migrate 插件</td></tr>
+          <tr><td>关联 Django</td><td>可独立或在 Django 中替代默认 ORM</td><td>原生绑定 Django 生态</td><td>异步替代方案</td><td>独立</td></tr>
+          <tr><td>适用场景</td><td>几乎所有 Python 项目 ★</td><td>Django 项目首选</td><td>FastAPI / 纯异步项目</td><td>小型项目 / 嵌入式</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tip yel"><span class="ti">⚡</span><div><strong>SQLAlchemy 2.0 里程碑：</strong>2.0 起正式支持 <code>async session</code> 和原生 <code>select()</code> 语句，语法更接近 Python 风格，同时保持与 1.x 的兼容性。是目前唯一能在同步和异步项目间无缝切换的 ORM。</div></div>
+
+  <div class="grid3">
+    <div class="comp-card">
+      <div class="icon">📦</div>
+      <h4>PonyORM</h4>
+      <p>用 Python 生成器表达式写查询，语法优雅到令人惊叹。<code>select(p for p in Person if p.age > 18)</code> 直接用 Python 表达式转 SQL。社区较小，生产慎用。</p>
+      <div class="meta"><span class="pro">语法极优雅</span><span class="con">社区小、性能一般</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🛠</div>
+      <h4>SQLModel</h4>
+      <p>FastAPI 作者 tiangolo 出品，融合 SQLAlchemy + Pydantic 的「二合一」模型——一个模型类同时完成数据库映射和数据验证。适合 FastAPI + SQLAlchemy 全栈。</p>
+      <div class="meta"><span class="pro">FastAPI 官方推荐</span><span class="con">不够成熟</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">⚡</div>
+      <h4>Piccolo</h4>
+      <p>新兴异步 ORM，自带 Admin 后台面板和迁移工具，主打"比 Django ORM 更灵活、比 Tortoise 更完整"的中间路线。</p>
+      <div class="meta"><span class="pro">内置 Admin</span><span class="con">生态极新</span></div>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">Python</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>
+<span class="cmt"># SQLAlchemy 2.0 异步查询示例</span>
+<span class="kw">from</span> sqlalchemy.ext.asyncio <span class="kw">import</span> create_async_engine, AsyncSession
+<span class="kw">from</span> sqlalchemy <span class="kw">import</span> select
+
+engine = <span class="fn">create_async_engine</span>(<span class="str">"postgresql+asyncpg://..."</span>)
+
+<span class="kw">async def</span> <span class="fn">get_users_over</span>(age: int):
+    <span class="kw">async with</span> <span class="typ">AsyncSession</span>(engine) <span class="kw">as</span> session:
+        stmt = <span class="fn">select</span>(User).where(User.age > age)
+        result = <span class="kw">await</span> session.<span class="fn">execute</span>(stmt)
+        <span class="kw">return</span> result.<span class="fn">scalars</span>().<span class="fn">all</span>()</pre>
+  </div>
+</section>
+
+<!-- ═══════════ 3. 异步框架与服务器 ═══════════ -->
+<section class="sec" id="servers">
+  <div class="sec-title"><span class="n">3</span> 异步框架与服务器 — 运行时载体</div>
+  <p class="sec-intro">Python 服务器分两大阵营：传统的 WSGI（同步）和现代的 ASGI（异步）。选型取决于你的框架——同步框架用 WSGI 服务器，异步框架必须用 ASGI 服务器。</p>
+
+  <div class="stack-vis">
+    <div class="stack-row">
+      <div class="stack-node solid"><h5>ASGI Server</h5><small>Uvicorn / Hypercorn / Daphne</small></div>
+      <div class="stack-line">—</div>
+      <div class="stack-node solid"><h5>Async App</h5><small>FastAPI / Sanic / Litestar</small></div>
+    </div>
+    <div class="stack-line-down">▌</div>
+    <div class="stack-row">
+      <div class="stack-node outline"><h5>WSGI Server</h5><small>Gunicorn / uWSGI / Waitress</small></div>
+      <div class="stack-line">—</div>
+      <div class="stack-node outline"><h5>Sync App</h5><small>Django / Flask / Pyramid</small></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="comp-card">
+      <div class="icon">🦄</div>
+      <h4>Uvicorn <span class="badge fa">ASGI</span></h4>
+      <p>基于 uvloop + httptools 的闪电级 ASGI 服务器，FastAPI 官方首选。单进程即可处理万级并发。生产通常配合 Gunicorn 做多进程管理。</p>
+      <div class="meta"><span class="pro">极致性能</span><span class="use">FastAPI/Litestar 首选</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🦖</div>
+      <h4>Gunicorn <span class="badge or">WSGI</span></h4>
+      <p>Ruby Unicorn 的 Python 版本，最成熟的 WSGI 服务器。"Green Unicorn"。核心价值是 process management —— 配合 Uvicorn worker 可同时管理异步工作进程。</p>
+      <div class="meta"><span class="pro">进程管理王者</span><span class="con">纯 WSGI，需配合 worker</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">📡</div>
+      <h4>Hypercorn <span class="badge fa">ASGI</span></h4>
+      <p>支持 HTTP/1、HTTP/2、HTTP/3（QUIC）、WebSocket，协议支持最全的 ASGI 服务器。可同时运行同步和异步应用。</p>
+      <div class="meta"><span class="pro">协议支持最全</span><span class="con">性能略低于 Uvicorn</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🏭</div>
+      <h4>uWSGI <span class="badge or">WSGI</span></h4>
+      <p>意大利炮级别的全能型应用服务器——支持多协议、多语言、多 worker 模式。配置复杂但功能极其强大，适合需要精细控制的生产环境。</p>
+      <div class="meta"><span class="pro">功能最全面</span><span class="con">配置复杂、重</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🎭</div>
+      <h4>Daphne <span class="badge fa">ASGI</span></h4>
+      <p>Django Channels 官方 ASGI 服务器，专为 Django 的 WebSocket / HTTP/2 支持设计。如果你在用 Django Channels，这就是官方标配。</p>
+      <div class="meta"><span class="pro">Django Channels 标配</span><span class="con">通用性不如 Uvicorn</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🪟</div>
+      <h4>Waitress <span class="badge or">WSGI</span></h4>
+      <p>纯 Python 实现的 WSGI 服务器，跨平台无需 C 扩展。Windows 下生产部署的首选（Gunicorn 不支持 Windows），适合所有需要跨平台兼容的场景。</p>
+      <div class="meta"><span class="pro">跨平台/Windows 首选</span><span class="con">性能一般</span></div>
+    </div>
+  </div>
+
+  <div class="tip blue"><span class="ti">🔧</span><div><strong>生产环境最佳实践：</strong>Gunicorn（进程管理）+ Uvicorn worker（每进程内异步）= 兼顾并发与管理。命令：<code>gunicorn -w 4 -k uvicorn.workers.UvicornWorker app:app</code></div></div>
+</section>
+
+<!-- ═══════════ 4. API 开发工具 ═══════════ -->
+<section class="sec" id="api">
+  <div class="sec-title"><span class="n">4</span> API 开发工具 — 接口定义与文档</div>
+  <p class="sec-intro">REST API 作为后端服务的主流交互方式，自动化文档、参数校验、类型安全三件事情做得好不好，直接影响前后端协作效率和接口质量。</p>
+
+  <div class="card">
+    <h3>📋 API 工具链对比</h3>
+    <div class="tbl-wrap compare-table">
+      <table>
+        <thead><tr><th>工具</th><th>定位</th><th>配合框架</th><th>文档方式</th><th>适用场景</th></tr></thead>
+        <tbody>
+          <tr><td><strong>FastAPI 内置 OpenAPI</strong></td><td>框架级，零配置自动生成</td><td>FastAPI 专用</td><td>Swagger UI + ReDoc 双文档</td><td>FastAPI 项目首选，省心</td></tr>
+          <tr><td><strong>Django REST Framework</strong></td><td>Django 生态 REST API 事实标准</td><td>Django</td><td>需搭配 drf-spectacular 生成 OpenAPI</td><td>Django 项目必装</td></tr>
+          <tr><td><strong>Flask-RESTful / Flask-RESTX</strong></td><td>Flask 的 API 扩展</td><td>Flask</td><td>Flask-RESTX 自带 Swagger</td><td>Flask REST API</td></tr>
+          <tr><td><strong>Connexion</strong></td><td>"API First"——先写 OpenAPI 规范再写代码</td><td>Flask / aiohttp</td><td>OpenAPI 规范即源码</td><td>契约先行的团队</td></tr>
+          <tr><td><strong>APIFairy</strong></td><td>轻量 API 框架、Flask 集成</td><td>Flask</td><td>自动生成 OpenAPI + Swagger</td><td>Flask 轻量 API</td></tr>
+          <tr><td><strong>Django Ninja</strong></td><td>Django 上的 FastAPI 风格 API 开发</td><td>Django</td><td>内置 OpenAPI + Swagger</td><td>想用 FastAPI 语法写 Django</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="comp-card">
+      <div class="icon">🔌</div>
+      <h4>GraphQL: Strawberry</h4>
+      <p>Python 最活跃的 GraphQL 库，支持 Django / FastAPI / Flask / aiohttp 全生态。类型注解定义 Schema，内置 DataLoader 解决 N+1 查询。</p>
+      <div class="meta"><span class="pro">全框架通用</span><span class="use">复杂数据查询</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🔗</div>
+      <h4>GraphQL: Graphene</h4>
+      <p>Python GraphQL 生态的元老，Django 用户的首选。通过 graphene-django 深度集成，自动推导 Query 和 Mutation。</p>
+      <div class="meta"><span class="pro">Django 集成最深</span><span class="con">更新放缓</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🗂</div>
+      <h4>gRPC: grpcio</h4>
+      <p>Google 的高性能 RPC 框架，基于 HTTP/2 + Protobuf。适合微服务间内部通信，延迟比 REST 低一个数量级。需定义 .proto 文件。</p>
+      <div class="meta"><span class="pro">极低延迟</span><span class="con">学习成本高</span></div>
+    </div>
+  </div>
+
+  <div class="tip good"><span class="ti">✅</span><div><strong>推荐组合：</strong>REST API 首选 FastAPI（自动 OpenAPI 文档无需额外配置）+ Pydantic（数据校验） + Uvicorn。需要复杂数据查询场景再用 GraphQL（Strawberry），微服务间内部通信用 gRPC。</div></div>
+</section>
+
+<!-- ═══════════ 5. 缓存方案 ═══════════ -->
+<section class="sec" id="cache">
+  <div class="sec-title"><span class="n">5</span> 缓存方案 — 提速利器</div>
+  <p class="sec-intro">缓存是性能优化的第一站——从本地内存缓存到分布式 Redis，不同场景对应不同方案。</p>
+
+  <div class="card">
+    <h3>🗄 主流缓存方案一览</h3>
+    <div class="tbl-wrap compare-table">
+      <table>
+        <thead><tr><th>方案</th><th>类型</th><th>特点</th><th>适用场景</th><th>替代性</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Redis</strong></td><td>分布式内存</td><td>数据结构丰富（String/Hash/List/Set/SortedSet）、持久化、集群模式、发布订阅</td><td>几乎所有场景 ★</td><td>标配，很难被替代</td></tr>
+          <tr><td><strong>Memcached</strong></td><td>分布式内存</td><td>极致简单、纯 KV、多线程、内存管理优秀</td><td>简单 KV 缓存，Redis 出现后逐渐边缘化</td><td>Redis 的旧日对手</td></tr>
+          <tr><td><strong>cachetools</strong></td><td>进程内内存</td><td>纯 Python，支持 TTL/LRU/LFU/TTL 策略，零依赖</td><td>单进程小数据缓存、无外部依赖场景</td><td>内存缓存最简方案</td></tr>
+          <tr><td><strong>diskcache</strong></td><td>磁盘缓存</td><td>基于 SQLite 的磁盘持久化缓存，支持 LRU 淘汰</td><td>大容量缓存、持久化本地缓存</td><td>不想搭 Redis 时的大缓存方案</td></tr>
+          <tr><td><strong>Python lru_cache</strong></td><td>函数级内存</td><td>标准库 functools.lru_cache / cache，装饰器即用</td><td>耗时计算的函数结果缓存</td><td>零成本、最简单</td></tr>
+          <tr><td><strong>Django Cache Framework</strong></td><td>框架级抽象</td><td>统一 API，后端可切换 Redis/Memcached/DB/File</td><td>Django 项目首选</td><td>Django 生态标准</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="comp-card">
+      <div class="icon">🔥</div>
+      <h4>Redis 客户端: redis-py</h4>
+      <p>Python 操作 Redis 的事实标准库，支持连接池、Pipeline、Pub/Sub、Lua 脚本。async 版本用 <code>redis.asyncio</code>，与 FastAPI 天然搭配。</p>
+      <div class="meta"><span class="pro">生态最全</span><span class="use">标准选择</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">⚡</div>
+      <h4>Redis 客户端: walrus</h4>
+      <p>基于 redis-py 的轻量封装，提供 Cache/Lock/RateLimiter 等常用模式的高级抽象，减少样板代码。</p>
+      <div class="meta"><span class="pro">高级抽象少写代码</span><span class="con">不如 redis-py 灵活</span></div>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">Python</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>
+<span class="cmt"># Redis 缓存模式三种写法</span>
+<span class="kw">import</span> redis.asyncio <span class="kw">as</span> aioredis
+
+redis = aioredis.<span class="typ">Redis</span>(<span class="fn">from_url</span>=<span class="str">"redis://localhost"</span>)
+
+<span class="cmt"># ① 简单的 SET + GET + TTL</span>
+<span class="kw">await</span> redis.<span class="fn">set</span>(<span class="str">"user:1"</span>, user_json, ex=<span class="num">300</span>)  <span class="cmt"># 5分钟过期</span>
+user = <span class="kw">await</span> redis.<span class="fn">get</span>(<span class="str">"user:1"</span>)
+
+<span class="cmt"># ② 缓存穿透防护：SETNX</span>
+<span class="kw">if await</span> redis.<span class="fn">setnx</span>(<span class="str">"lock:task:1"</span>, <span class="num">1</span>):
+    <span class="kw">await</span> redis.<span class="fn">expire</span>(<span class="str">"lock:task:1"</span>, <span class="num">10</span>)
+    <span class="cmt"># 执行业务...</span>
+
+<span class="cmt"># ③ 缓存雪崩：随机过期时间</span>
+<span class="kw">import</span> random
+ttl = <span class="num">300</span> + random.<span class="fn">randint</span>(<span class="num">0</span>, <span class="num">60</span>)  <span class="cmt"># 5~6 分钟随机</span>
+<span class="kw">await</span> redis.<span class="fn">setex</span>(<span class="str">"hot:data"</span>, ttl, value)</pre>
+  </div>
+</section>
+
+<!-- ═══════════ 6. 任务队列 ═══════════ -->
+<section class="sec" id="queue">
+  <div class="sec-title"><span class="n">6</span> 任务队列 — 异步解耦</div>
+  <p class="sec-intro">耗时操作（发邮件、图像处理、报表生成）必须从请求线程中剥离。任务队列就是做这件事的——把"现在做不了的事情"放到后台慢慢做。</p>
+
+  <div class="card">
+    <h3>📨 任务队列方案对比</h3>
+    <div class="tbl-wrap compare-table">
+      <table>
+        <thead><tr><th>方案</th><th>Broker 依赖</th><th>定时任务</th><th>优先级</th><th>监控面板</th><th>适用规模</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Celery</strong></td><td>Redis / RabbitMQ / SQS 等</td><td>✅ Celery Beat</td><td>✅</td><td>✅ Flower</td><td>中大型项目 ★</td></tr>
+          <tr><td><strong>Dramatiq</strong></td><td>Redis / RabbitMQ</td><td>需配合 APScheduler</td><td>✅</td><td>⚠ 社区方案</td><td>中型项目</td></tr>
+          <tr><td><strong>RQ (Redis Queue)</strong></td><td>Redis 专用</td><td>RQ Scheduler</td><td>❌ 先到先得</td><td>✅ RQ Dashboard</td><td>小型项目</td></tr>
+          <tr><td><strong>Huey</strong></td><td>Redis / SQLite / 文件</td><td>✅ 内置</td><td>❌</td><td>❌ 无官方面板</td><td>小型/嵌入式</td></tr>
+          <tr><td><strong>ARQ</strong></td><td>Redis 专用</td><td>✅ 内置 cron</td><td>通过队列隔离</td><td>⚠ 社区方案</td><td>异步项目</td></tr>
+          <tr><td><strong>Taskiq</strong></td><td>Redis / RabbitMQ / NATS</td><td>✅ Taskiq Scheduler</td><td>✅</td><td>✅ Taskiq Monitor</td><td>异步项目首选</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="comp-card">
+      <div class="icon">🌿</div>
+      <h4>Celery — 元老级</h4>
+      <p>Python 异步任务队列的代名词。背靠丰富的文档和社区生态，配置灵活、支持数十种 broker/backend 组合。缺点是配置复杂、错误排查费劲。</p>
+      <div class="meta"><span class="pro">生态最全、最流行</span><span class="con">配置繁琐、调试难</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">⚡</div>
+      <h4>Dramatiq — 轻量高效</h4>
+      <p>Celery 的现代化替代品——API 简洁、自动重试、支持中间件、性能优秀。npm 的创建者开发。"比 Celery 好用 3 倍"。</p>
+      <div class="meta"><span class="pro">API 简洁、性能好</span><span class="con">生态不如 Celery</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🔄</div>
+      <h4>Taskiq — 异步原生</h4>
+      <p>专为 Python async/await 设计的任务队列。FastAPI 集成优秀，类型安全、依赖注入。async-first 项目（FastAPI/Litestar）的最新技术前沿。</p>
+      <div class="meta"><span class="pro">async 原生、类型安全</span><span class="con">较新、文档少</span></div>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">Python</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>
+<span class="cmt"># Celery — 经典写法</span>
+<span class="kw">from</span> celery <span class="kw">import</span> Celery
+
+app = <span class="typ">Celery</span>(<span class="str">'tasks'</span>, broker=<span class="str">'redis://localhost:6379/0'</span>)
+
+<span class="ann">@app.task</span>(bind=<span class="kw">True</span>, max_retries=<span class="num">3</span>, default_retry_delay=<span class="num">60</span>)
+<span class="kw">def</span> <span class="fn">send_welcome_email</span>(self, user_id):
+    <span class="kw">try</span>:
+        user = <span class="fn">get_user</span>(user_id)
+        <span class="fn">email_service.send</span>(user.email, <span class="str">"Welcome!"</span>)
+    <span class="kw">except</span> <span class="typ">Exception</span> <span class="kw">as</span> e:
+        <span class="cmt"># 失败后自动重试最多 3 次，每次间隔递增</span>
+        <span class="kw">raise</span> self.<span class="fn">retry</span>(exc=e)
+
+<span class="cmt"># ── Taskiq — async 原生风格 ──</span>
+<span class="kw">from</span> taskiq <span class="kw">import</span> TaskiqScheduler
+
+<span class="ann">@broker.task</span>
+<span class="kw">async def</span> <span class="fn">generate_report</span>(user_id: int) -> str:
+    data = <span class="kw">await</span> fetch_user_data(user_id)
+    <span class="kw">return await</span> render_pdf(data)</pre>
+  </div>
+
+  <div class="tip warn"><span class="ti">⚠</span><div><strong>选型要点：</strong>历史项目、Django/Flask 同步项目选 Celery；新项目 async-first 选 Taskiq；就想要简单好用选 Dramatiq；Huey 适合单机小工具不需要额外 broker 部署。</div></div>
+</section>
+
+<!-- ═══════════ 7. 认证与权限 ═══════════ -->
+<section class="sec" id="auth">
+  <div class="sec-title"><span class="n">7</span> 认证与权限 — 安全防线</div>
+  <p class="sec-intro">认证（你是谁）和授权（你能做什么）是后端安全的两根支柱。方案从简单的 JWT 到完整的企业级 OAuth2 / OIDC 体系，复杂度差异巨大。</p>
+
+  <div class="card">
+    <h3>🔐 认证方案全景对比</h3>
+    <div class="tbl-wrap compare-table">
+      <table>
+        <thead><tr><th>方案</th><th>类型</th><th>复杂度</th><th>适用场景</th><th>代表实现</th></tr></thead>
+        <tbody>
+          <tr><td><strong>JWT</strong></td><td>无状态令牌</td><td>低</td><td>微服务间认证、前后端分离、API 鉴权</td><td>PyJWT / python-jose</td></tr>
+          <tr><td><strong>OAuth2 + OIDC</strong></td><td>授权框架 + 身份层</td><td>中高</td><td>第三方登录、SSO 单点登录、企业级应用</td><td>Authlib / OAuthLib</td></tr>
+          <tr><td><strong>Session 认证</strong></td><td>有状态服务端</td><td>低</td><td>传统 MVC 网站、Django 管理后台</td><td>Django Auth / Flask-Login</td></tr>
+          <tr><td><strong>API Key</strong></td><td>静态令牌</td><td>最低</td><td>内部服务调用、第三方 API、机器间通信</td><td>自定义中间件</td></tr>
+          <tr><td><strong>Keycloak</strong></td><td>独立认证服务</td><td>中</td><td>需要完整 IDP 的企业级系统</td><td>python-keycloak</td></tr>
+          <tr><td><strong>Auth0 / Clerk</strong></td><td>SaaS 认证平台</td><td>低</td><td>不想自己写认证逻辑的团队</td><td>对应 SDK</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="comp-card">
+      <div class="icon">🎫</div>
+      <h4>PyJWT</h4>
+      <p>Python 最流行的 JWT 库，支持 HS256/RS256/ES256 多种算法，encode/decode 简单直接。FastAPI 中的 JWT 验证几乎都基于此库。</p>
+      <div class="meta"><span class="pro">简洁、标准兼容</span><span class="use">JWT 首选</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🔑</div>
+      <h4>Authlib</h4>
+      <p>Python OAuth/OIDC 最完整的实现，支持 OAuth 1.0/2.0、OIDC、JWT、JWS/JWE/JWK。提供 Flask/Django/Starlette 的集成方案。</p>
+      <div class="meta"><span class="pro">OAuth 完整生态</span><span class="use">需要 OAuth2 时首选</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🛡</div>
+      <h4>FastAPI Users</h4>
+      <p>FastAPI 的用户管理插件——注册、登录、密码重置、邮箱验证、OAuth 一键集成。省去手动写用户系统的麻烦。</p>
+      <div class="meta"><span class="pro">FastAPI 开箱即用</span><span class="con">仅限 FastAPI</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🔒</div>
+      <h4>passlib</h4>
+      <p>密码哈希的事实标准库，支持 bcrypt/argon2/scrypt/pbkdf2。不处理认证流程，只专注密码加密这一件事。</p>
+      <div class="meta"><span class="pro">密码哈希专家</span><span class="use">所有项目通用</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">🏰</div>
+      <h4>python-keycloak</h4>
+      <p>Keycloak 的 Python 客户端，支持管理 API + OpenID Connect。如果企业在用 Keycloak 做统一认证，这就是 Python 端的标准对接方式。</p>
+      <div class="meta"><span class="pro">企业级 Keycloak 集成</span><span class="con">依赖 Keycloak 服务</span></div>
+    </div>
+    <div class="comp-card">
+      <div class="icon">📋</div>
+      <h4>Casbin / Oso</h4>
+      <p>权限模型引擎——Casbin 支持 ACL/RBAC/ABAC 等所有常见模型，Oso 用声明式语言写权限规则。从认证到授权的下一步。</p>
+      <div class="meta"><span class="pro">权限模型灵活</span><span class="use">复杂权限场景</span></div>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">Python</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>
+<span class="cmt"># FastAPI + JWT 最小实现</span>
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Depends, HTTPException
+<span class="kw">from</span> fastapi.security <span class="kw">import</span> OAuth2PasswordBearer
+<span class="kw">import</span> jwt
+
+oauth2_scheme = <span class="typ">OAuth2PasswordBearer</span>(tokenUrl=<span class="str">"login"</span>)
+
+<span class="kw">def</span> <span class="fn">create_token</span>(user_id: str):
+    <span class="kw">return</span> jwt.<span class="fn">encode</span>(
+        {<span class="str">"sub"</span>: user_id, <span class="str">"exp"</span>: <span class="fn">datetime.utcnow</span>() + <span class="fn">timedelta</span>(hours=<span class="num">24</span>)},
+        SECRET_KEY, algorithm=<span class="str">"HS256"</span>
+    )
+
+<span class="kw">async def</span> <span class="fn">get_current_user</span>(token = <span class="typ">Depends</span>(oauth2_scheme)):
+    <span class="kw">try</span>:
+        payload = jwt.<span class="fn">decode</span>(token, SECRET_KEY, algorithms=[<span class="str">"HS256"</span>])
+        <span class="kw">return</span> payload[<span class="str">"sub"</span>]
+    <span class="kw">except</span> jwt.<span class="typ">ExpiredSignatureError</span>:
+        <span class="kw">raise</span> <span class="typ">HTTPException</span>(<span class="num">401</span>, <span class="str">"Token expired"</span>)</pre>
+  </div>
+</section>
+
+<!-- ═══════════ 选型决策矩阵 ═══════════ -->
+<section class="sec" id="decision">
+  <div class="sec-title"><span class="n">8</span> 选型决策矩阵 — 一站配齐</div>
+  <p class="sec-intro">根据项目类型，以下是推荐的技术组合。收起"全都得自己研究"的焦虑，直接对号入座。</p>
+
+  <div class="card">
+    <h3>🧭 按项目类型推荐技术栈</h3>
+    <div class="tbl-wrap matrix">
+      <table>
+        <thead><tr><th>项目类型</th><th>Web 框架</th><th>ORM</th><th>服务器</th><th>任务队列</th><th>缓存</th><th>认证</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge mj">大型全栈</span><br>CMS/ERP/后台</td>
+            <td class="rec">Django</td>
+            <td>Django ORM</td>
+            <td>Gunicorn + Uvicorn</td>
+            <td>Celery</td>
+            <td>Redis + Django Cache</td>
+            <td>Django Auth + JWT</td>
+          </tr>
+          <tr>
+            <td><span class="badge fa">高性能 API</span><br>微服务 / 网关</td>
+            <td class="rec">FastAPI</td>
+            <td>SQLAlchemy 2.0 async</td>
+            <td>Uvicorn + Gunicorn</td>
+            <td>Taskiq / ARQ</td>
+            <td>Redis</td>
+            <td>PyJWT / Authlib</td>
+          </tr>
+          <tr>
+            <td><span class="badge fl">轻量快速原型</span><br>工具 / 内部服务</td>
+            <td class="rec">Flask</td>
+            <td>Peewee / SQLAlchemy</td>
+            <td>Gunicorn</td>
+            <td>Huey / RQ</td>
+            <td>cachetools / Redis</td>
+            <td>Flask-Login</td>
+          </tr>
+          <tr>
+            <td><span class="badge sa">实时 / WebSocket</span><br>聊天 / 协作</td>
+            <td class="rec">FastAPI</td>
+            <td>SQLAlchemy async</td>
+            <td>Hypercorn</td>
+            <td>ARQ</td>
+            <td>Redis</td>
+            <td>JWT</td>
+          </tr>
+          <tr>
+            <td><span class="badge mn">数据密集型</span><br>报表 / ETL / 数据管道</td>
+            <td class="alt">FastAPI / Flask</td>
+            <td>SQLAlchemy Core（不用 ORM 层）</td>
+            <td>Uvicorn</td>
+            <td>Celery + Beat</td>
+            <td>Redis</td>
+            <td>API Key</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>📌 核心选型原则</h3>
+    <ul>
+      <li><strong>不要过度设计：</strong>小项目用 Django 太重、用 Flask 正好；反过来，大项目用 Flask 会陷入"拼拼图地狱"</li>
+      <li><strong>2024+ 新项目优先 async：</strong>FastAPI / Litestar > Flask > Django，除非你需要 Django Admin 或已有 Django 团队</li>
+      <li><strong>ORM 选 SQLAlchemy 几乎不会错：</strong>它覆盖了 80% 的场景，是 Python 生态最强大、最成熟的 ORM，没有之一</li>
+      <li><strong>Redis 是"默认缓存"：</strong>除非资源极其有限（此时可用本地 diskcache/cachetools），否则 Redis 的经验曲线和运维成本远低于它的价值</li>
+      <li><strong>Celery 不是唯一：</strong>在新项目中，<code>Taskiq</code>（async）和 <code>Dramatiq</code>（简洁）都是比 Celery 更好的选择</li>
+      <li><strong>认证别自己造轮子：</strong>JWT + PyJWT 做 API 认证，Authlib 做 OAuth2/OIDC，FastAPI Users 做全功能用户管理，企业内用 Keycloak</li>
+    </ul>
+  </div>
+
+  <div class="grid2">
+    <div class="scene py">
+      <h5>🏢 企业级 Django 全栈</h5>
+      <p>框架：Django 4.2+ / ORM：Django ORM / 服务器：Gunicorn + Uvicorn / 队列：Celery / 缓存：Redis / 认证：Django Auth + DRF + JWT<br><strong>适合：</strong>ERP、CMS、SaaS 后台系统、有经典关系型数据模型的项目。</p>
+    </div>
+    <div class="scene fast">
+      <h5>⚡ 高性能微服务 FastAPI</h5>
+      <p>框架：FastAPI / ORM：SQLAlchemy 2.0 async / 服务器：Uvicorn + Gunicorn / 队列：Taskiq / 缓存：Redis / 认证：PyJWT / docs: 自动 OpenAPI<br><strong>适合：</strong>纯 API 服务、微服务网关、实时数据接口、AI 模型服务。</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<script>
+// Highlight nav active section on scroll
+(function(){
+  const nav = document.getElementById('nav');
+  const links = nav.querySelectorAll('a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+  function onScroll(){
+    let current = sections[0];
+    for(const s of sections){
+      if(s.getBoundingClientRect().top <= 120){ current = s; }
+      else break;
+    }
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current.id));
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+
+// Copy code
+function copyCode(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent = '已复制!';
+    setTimeout(()=>btn.textContent='复制', 1500);
+  }).catch(()=>{
+    btn.textContent = '失败';
+    setTimeout(()=>btn.textContent='复制', 1500);
+  });
+}
+</script>
+</body>
+</html>

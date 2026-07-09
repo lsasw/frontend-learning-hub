@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消息队列防重复消费 · 3 实例场景全解</title>
+<style>
+:root {
+  --mq: #f97316; --mq-dark: #c2410c; --mq-light: #fff7ed;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--mq);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px}
+.nav .logo svg{width:24px;height:24px}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s}
+.nav a:hover,.nav a.active{background:var(--mq-light);color:var(--mq)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#f97316 0%,#c2410c 50%,#1a1a2e 100%);color:#fff;padding:70px 40px 56px;text-align:center}
+.hero h1{font-size:2.8rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2}
+.hero .sub{font-size:1.08rem;opacity:.88;margin-top:12px;max-width:680px;margin-inline:auto}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--mq);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--mq);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 30px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.08rem;margin-bottom:12px;color:var(--mq-dark)}
+.card p{margin-bottom:10px;font-size:.88rem}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--mq-light);border-left:4px solid var(--mq)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+
+/* CODE */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.66rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.8rem;color:#cdd6f4;white-space:pre;line-height:1.7}
+.kw{color:#cba6f7}.str{color:#a6e3a1}.cmt{color:#6c7086;font-style:italic}
+.fn{color:#89b4fa}.num{color:#fab387}.typ{color:#f9e2af}
+.copy-btn{position:absolute;top:8px;right:46px;background:rgba(255,255,255,.1);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.7rem;font-family:var(--sans);transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:var(--mq-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--mq)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:#fffbeb}
+td code{background:var(--mq-light);color:var(--mq-dark);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.78rem}
+
+/* FLOW */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:16px;background:#f0f2f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.78rem;text-align:center}
+.flow-node.orange{border-color:var(--mq);background:var(--mq-light);color:var(--mq-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#064e3b}
+.flow-node.blue{border-color:var(--blue);background:var(--blue-light);color:#1e40af}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.red{border-color:var(--red);background:var(--red-light);color:#991b1b}
+.flow-arrow{color:var(--text3);font-size:1.1rem;font-weight:700}
+
+/* SVG */
+.svg-box{text-align:center;overflow-x:auto;padding:16px 0}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+
+/* ACCORDION */
+.acc-header{cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 0;user-select:none;font-weight:700;font-size:.95rem;border-bottom:1px solid var(--border)}
+.acc-header .arr{transition:transform .25s;font-size:.75rem;color:var(--text3)}
+.acc-header.open .arr{transform:rotate(90deg)}
+.acc-body{display:none;padding:16px 0 8px 20px;animation:fadeIn .3s}
+.acc-body.open{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* TWO-LAYER */
+.layer-box{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.layer-box .layer{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:22px;text-align:center}
+.layer-box .layer.top{border-color:var(--green);border-top:4px solid var(--green)}
+.layer-box .layer.bottom{border-color:var(--blue);border-top:4px solid var(--blue)}
+.layer-box .layer h4{font-size:1rem;margin-bottom:8px}
+.layer-box .layer.top h4{color:var(--green)}
+.layer-box .layer.bottom h4{color:var(--blue)}
+.layer-box .layer p{font-size:.82rem;color:var(--text2)}
+
+/* INSTANCE CARD */
+.inst-card{background:var(--surface);border-radius:var(--radius-sm);padding:16px 18px;border:1px solid var(--border);text-align:center;transition:.25s}
+.inst-card:hover{border-color:var(--mq);box-shadow:0 2px 10px rgba(249,115,22,.08)}
+.inst-card .label{font-weight:700;font-size:.82rem;color:var(--mq-dark)}
+.inst-card .desc{font-size:.75rem;color:var(--text2);margin-top:4px}
+
+/* SCENARIO BOX */
+.scene{background:var(--red-light);border:2px dashed var(--red);border-radius:var(--radius);padding:20px 24px;margin:16px 0}
+.scene h4{color:#991b1b;margin-bottom:8px;font-size:.95rem}
+.scene p{font-size:.83rem;color:var(--text2)}
+.scene code{background:#fecaca;color:#991b1b;padding:1px 6px;border-radius:3px;font-size:.78rem}
+
+/* ARCH DIAGRAM */
+.arch-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:16px 0}
+.arch-row{display:flex;gap:20px;align-items:center}
+.arch-node{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 20px;text-align:center;min-width:120px}
+.arch-node.orange{border-color:var(--mq);background:var(--mq-light)}
+.arch-node.blue{border-color:var(--blue);background:var(--blue-light)}
+.arch-node.green{border-color:var(--green);background:var(--green-light)}
+.arch-node h5{font-size:.82rem;margin-bottom:2px}
+.arch-node small{font-size:.7rem;color:var(--text3)}
+.arch-connector{font-size:1.2rem;color:var(--text3);font-weight:700}
+.arch-line{width:3px;height:24px;background:var(--text3);border-radius:2px}
+
+/* SUMMARY BOX */
+.summary-box{background:linear-gradient(135deg,#f97316 0%,#c2410c 100%);color:#fff;border-radius:var(--radius);padding:28px 30px;margin:16px 0}
+.summary-box h3{font-size:1.15rem;margin-bottom:12px}
+.summary-box ul{list-style:none;padding:0}
+.summary-box ul li{padding:6px 0;font-size:.85rem;padding-left:20px;position:relative}
+.summary-box ul li::before{content:"▸";position:absolute;left:0;color:rgba(255,255,255,.6)}
+.summary-box code{background:rgba(255,255,255,.15);color:#fff;padding:1px 6px;border-radius:3px;font-size:.8rem}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:30px;margin:16px 0}
+.timeline::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;margin-bottom:16px}
+.timeline-item::before{content:"";position:absolute;left:-24px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--red);border:2px solid #fff;box-shadow:0 0 0 2px var(--red)}
+.timeline-item h5{font-size:.85rem;margin-bottom:4px;color:var(--red)}
+.timeline-item p{font-size:.8rem;color:var(--text2)}
+
+/* CONTRAST */
+.contrast{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.contrast .bad{background:var(--red-light);border-radius:var(--radius-sm);padding:16px}
+.contrast .bad h6{color:#991b1b;margin-bottom:6px}
+.contrast .good{background:var(--green-light);border-radius:var(--radius-sm);padding:16px}
+.contrast .good h6{color:#064e3b;margin-bottom:6px}
+.contrast pre{font-family:var(--mono);font-size:.76rem;white-space:pre-wrap}
+
+@media(max-width:768px){
+  .grid2,.layer-box,.contrast{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .hero h1{font-size:1.8rem}.hero{padding:40px 20px 36px}
+  .card{padding:18px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" stroke="#f97316" stroke-width="2"/><line x1="6" y1="10" x2="18" y2="10" stroke="#f97316" stroke-width="1.5" stroke-dasharray="3 2"/><line x1="6" y1="14" x2="14" y2="14" stroke="#f97316" stroke-width="1.5" stroke-dasharray="3 2"/><circle cx="16" cy="8" r="1.5" fill="#f97316"/></svg>
+    防重复消费
+  </div>
+  <a href="#overview">分层总览</a>
+  <a href="#kafka">Kafka 方案</a>
+  <a href="#rocketmq">RocketMQ 方案</a>
+  <a href="#rabbitmq">RabbitMQ 方案</a>
+  <a href="#why-repeat">为什么会重复</a>
+  <a href="#idempotent">幂等三法</a>
+  <a href="#summary">总结配置</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>🛡️ 消息队列防重复消费</h1>
+  <p class="sub">3 个消费者实例下，如何保证消息不被重复处理？—— 分两层的完整解法：MQ 层的负载隔离 + 业务层的幂等兜底</p>
+  <div class="tags">
+    <span class="tag">Consumer Group</span><span class="tag">Partition</span><span class="tag">负载均衡</span>
+    <span class="tag">At-Least-Once</span><span class="tag">幂等</span><span class="tag">SETNX</span>
+    <span class="tag">Rebalance</span><span class="tag">ACK</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════════ 1. 分层总览 ═══════════ -->
+<section class="sec" id="overview">
+  <div class="sec-title"><span class="n">1</span> "不重复消费"的两种含义</div>
+
+  <div class="card">
+    <p>这个问题要分两层看：<strong>"不重复消费"本身有两种含义</strong>——一种是"多个实例别抢同一条消息"（负载均衡层面），另一种是"消息被重复投递后怎么保证业务不出错"（幂等层面）。两者都得处理，缺一不可。</p>
+
+    <div class="layer-box">
+      <div class="layer top">
+        <h4>🔗 第一层：MQ 层面</h4>
+        <p><strong>防止多个实例抢同一条消息</strong></p>
+        <p style="margin-top:8px;font-size:.78rem">通过分区/队列分配机制，确保同一条消息<strong>只投递给一个消费者实例</strong></p>
+        <p style="margin-top:4px;font-size:.74rem;color:var(--text3)">Kafka → Consumer Group + Partition<br>RocketMQ → CLUSTERING 模式<br>RabbitMQ → 竞争消费</p>
+      </div>
+      <div class="layer bottom">
+        <h4>🛡️ 第二层：业务层面</h4>
+        <p><strong>消费了也保证业务不出错</strong></p>
+        <p style="margin-top:8px;font-size:.78rem">MQ 的"至少一次投递"语义下，消息<strong>可能被重复投递</strong>，必须做幂等</p>
+        <p style="margin-top:4px;font-size:.74rem;color:var(--text3)">唯一键约束 / Redis 标记 / 业务状态机</p>
+      </div>
+    </div>
+
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <div><strong>关键认知：只做第一层是不够的</strong>——线上大部分"重复消费导致数据错乱"的事故，根源都是漏了第二层的幂等保护。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 2. Kafka 方案 ═══════════ -->
+<section class="sec" id="kafka">
+  <div class="sec-title"><span class="n">2</span> Kafka：Consumer Group + 分区独占</div>
+
+  <div class="card">
+    <h3>核心机制：同一消费者组内，一个分区只能被一个实例消费</h3>
+    <p>3 个实例用 <strong>相同的 <code>group.id</code></strong>，Topic 设 <strong>3 个或更多分区</strong>，Kafka 自动做分区分配（Rebalance），天然保证不会有两个实例同时消费同一条消息。</p>
+
+    <div class="arch-wrap">
+      <div style="display:flex;gap:16px">
+        <div class="arch-node orange"><h5>Partition 0</h5><small>消息 0,3,6…</small></div>
+        <div class="arch-node orange"><h5>Partition 1</h5><small>消息 1,4,7…</small></div>
+        <div class="arch-node orange"><h5>Partition 2</h5><small>消息 2,5,8…</small></div>
+      </div>
+      <div style="display:flex;gap:40px;font-size:1.2rem;color:var(--text3)">
+        <span>↓</span><span>↓</span><span>↓</span>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div class="arch-node green"><h5>实例 A</h5><small>Consumer Group: "order-group"</small></div>
+        <div class="arch-node green"><h5>实例 B</h5><small>Consumer Group: "order-group"</small></div>
+        <div class="arch-node green"><h5>实例 C</h5><small>Consumer Group: "order-group"</small></div>
+      </div>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">💡</span>
+      <div><strong>关键配置：分区数 ≥ 实例数</strong>，否则多出来的实例分不到分区，白白闲置。比如 6 个实例但只有 3 个分区，则有 3 个实例空转。</div>
+    </div>
+
+    <div class="code">
+      <span class="lang">yaml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre># Kafka 关键配置
+spring.kafka.consumer.group-id: order-process-group    # ✅ 三个实例用同一个 group.id
+spring.kafka.consumer.auto-offset-reset: earliest
+spring.kafka.consumer.enable-auto-commit: false         # 关自动提交，手动控制 offset
+
+# Topic 创建时指定分区数 ≥ 实例数
+# bin/kafka-topics.sh --create --topic orders --partitions 3 --replication-factor 2</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 3. RocketMQ 方案 ═══════════ -->
+<section class="sec" id="rocketmq">
+  <div class="sec-title"><span class="n">3</span> RocketMQ：集群模式 + 队列负载均衡</div>
+
+  <div class="card">
+    <h3>核心机制：集群模式下 Broker 按 Queue 分配，一条消息只给一个实例</h3>
+    <p>RocketMQ 默认就是 <strong>CLUSTERING（集群）模式</strong>。同一 Consumer Group 的多个实例，Broker 按队列做负载均衡，效果等价于 Kafka 的分区分配。</p>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">// ✅ 集群模式（默认），同组 3 个实例不会抢同一条消息</span>
+<span class="typ">consumer</span>.<span class="fn">setMessageModel</span>(<span class="typ">MessageModel</span>.<span class="kw">CLUSTERING</span>);
+
+<span class="cmt">// ❌ 广播模式——故意让每个实例都消费一遍，别配错！</span>
+<span class="cmt">// consumer.setMessageModel(MessageModel.BROADCASTING);</span></pre>
+    </div>
+
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <div>如果配成 <code>BROADCASTING</code> 模式，每个实例都会收到全量消息——这跟你的"避免重复消费"目标正好相反，<strong>确认不要用广播模式</strong>。</div>
+    </div>
+
+    <div class="arch-wrap">
+      <div style="display:flex;gap:16px">
+        <div class="arch-node orange"><h5>Queue 0</h5></div>
+        <div class="arch-node orange"><h5>Queue 1</h5></div>
+        <div class="arch-node orange"><h5>Queue 2</h5></div>
+      </div>
+      <div style="display:flex;gap:40px;font-size:1.2rem;color:var(--text3)">
+        <span>↓</span><span>↓</span><span>↓</span>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div class="arch-node green"><h5>实例 A</h5><small>Mode: CLUSTERING</small></div>
+        <div class="arch-node green"><h5>实例 B</h5><small>Mode: CLUSTERING</small></div>
+        <div class="arch-node green"><h5>实例 C</h5><small>Mode: CLUSTERING</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 4. RabbitMQ 方案 ═══════════ -->
+<section class="sec" id="rabbitmq">
+  <div class="sec-title"><span class="n">4</span> RabbitMQ：竞争消费 + Prefetch</div>
+
+  <div class="card">
+    <h3>核心机制：一条消息被推给某个实例后，其它实例不会再收到同一条消息</h3>
+    <p>RabbitMQ 没有"分区"概念，靠 Broker 端的<strong>竞争消费</strong>天然保证一条消息只推给一个消费者。但要注意 <code>prefetch count</code> 设置。</p>
+
+    <div class="flow">
+      <div class="flow-node orange">Queue</div>
+      <span class="flow-arrow">竞争消费 →</span>
+      <div class="flow-node green">实例 A</div>
+      <div class="flow-node green">实例 B</div>
+      <div class="flow-node green">实例 C</div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:.78rem;margin-top:8px">一条消息被推给某个实例后，其它实例不会再收到同一条消息</p>
+
+    <div class="tip info">
+      <span class="ti">💡</span>
+      <div><strong>prefetch count 别设太大</strong>——某个实例一次拉走一大批消息、自己处理不过来，会造成消费不均衡（不是重复消费问题，是负载不均问题）。推荐设 1~10。</div>
+    </div>
+
+    <div class="code">
+      <span class="lang">yaml</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre># RabbitMQ 关键配置
+spring.rabbitmq.listener.simple.prefetch: 5            # ✅ 每次只拉 5 条，防止不均衡
+spring.rabbitmq.listener.simple.acknowledge-mode: manual # ✅ 手动 ACK
+spring.rabbitmq.listener.simple.concurrency: 3          # 并发消费者数</pre>
+    </div>
+
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <div>如果消费失败或超时未 ACK，消息会被 <strong>重新入队再分配</strong>，这可能导致同一条消息在不同时间点被不同实例消费——这属于"重复投递"，需要第二层幂等兜底。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 5. 为什么会重复 ═══════════ -->
+<section class="sec" id="why-repeat">
+  <div class="sec-title"><span class="n">5</span> 即便 MQ 做了保证，为什么还会重复？</div>
+
+  <div class="card">
+    <h3>At-Least-Once 语义下，重复投递是正常现象，不是 Bug</h3>
+    <p>MQ 保证的是"至少一次投递"（at-least-once），<strong>不是"恰好一次"（exactly-once）</strong>。以下场景都会触发重复：</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <h5>场景 1：消费成功但 ACK 发送前，实例挂了 / 网络抖动</h5>
+        <p>业务逻辑执行完了，但 ACK 没发出去。MQ 判定消费失败，把消息重新投给另一个实例 → 同一条消息被消费了两次。</p>
+      </div>
+      <div class="timeline-item">
+        <h5>场景 2：消费者组发生 Rebalance</h5>
+        <p>新增/减少实例触发 Rebalance。过程中 offset 提交不及时，部分消息被重复分配。</p>
+      </div>
+      <div class="timeline-item">
+        <h5>场景 3：生产者重试导致重复发送</h5>
+        <p>网络超时，生产者不确定消息是否已送达，重试后又发了一条 → MQ 队列里同一条消息出现了两份。</p>
+      </div>
+    </div>
+
+    <div class="tip red">
+      <span class="ti">🔥</span>
+      <div><strong>结论：这些场景光靠 MQ 的分区/负载均衡机制是解决不了的，必须在业务层做幂等处理。</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 6. 幂等三法 ═══════════ -->
+<section class="sec" id="idempotent">
+  <div class="sec-title"><span class="n">6</span> 业务层保证幂等的三种做法</div>
+
+  <!-- 方式一 -->
+  <div class="card">
+    <h3>方式一：唯一键 + 数据库唯一约束（最简单可靠）</h3>
+    <p>每条消息带上唯一的 <code>messageId</code>，数据库建唯一索引。重复插入直接抛异常，天然拦截。</p>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="cmt">// 每条消息带上全局唯一的 messageId 或业务唯一键</span>
+<span class="kw">@Transactional</span>
+<span class="kw">public void</span> <span class="fn">consume</span>(<span class="typ">String</span> messageId, <span class="typ">OrderData</span> data) {
+    <span class="kw">try</span> {
+        <span class="cmt">// 利用数据库唯一索引，重复插入会抛异常，天然拦截重复消费</span>
+        <span class="typ">consumeLogMapper</span>.<span class="fn">insert</span>(messageId);  <span class="cmt">// message_id 字段加唯一索引</span>
+        <span class="cmt">// 执行真正的业务逻辑</span>
+        <span class="typ">orderService</span>.<span class="fn">process</span>(data);
+    } <span class="kw">catch</span> (<span class="typ">DuplicateKeyException</span> e) {
+        <span class="typ">log</span>.<span class="fn">info</span>(<span class="str">"消息{}已消费过，跳过"</span>, messageId);
+        <span class="kw">return</span>;
+    }
+}</pre>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">✅</span>
+      <div><strong>优点：</strong>实现简单，不依赖外部组件，数据库天然保证一致性。<br><strong>注意：</strong>确保 insert 和业务逻辑在<strong>同一个事务</strong>中（加 <code>@Transactional</code>），否则可能 insert 成功但业务逻辑失败。</div>
+    </div>
+  </div>
+
+  <!-- 方式二 -->
+  <div class="card">
+    <h3>方式二：Redis 做幂等标记（适合高并发，比数据库快）</h3>
+    <p>利用 Redis 的 <code>SETNX</code> 原子操作做消费标记，只有第一次设置成功才执行业务。</p>
+
+    <div class="code">
+      <span class="lang">java</span>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)">复制</button>
+      <pre><span class="kw">public void</span> <span class="fn">consume</span>(<span class="typ">String</span> messageId, <span class="typ">OrderData</span> data) {
+    <span class="cmt">// SETNX：只有 key 不存在时才设置成功，天然做到"只处理一次"的判断</span>
+    <span class="typ">Boolean</span> isFirstTime = <span class="typ">redisTemplate</span>.<span class="fn">opsForValue</span>()
+        .<span class="fn">setIfAbsent</span>(<span class="str">"mq:consumed:"</span> + messageId, <span class="str">"1"</span>, <span class="typ">Duration</span>.<span class="fn">ofHours</span>(<span class="num">24</span>));
+
+    <span class="kw">if</span> (<span class="typ">Boolean</span>.<span class="kw">FALSE</span>.<span class="fn">equals</span>(isFirstTime)) {
+        <span class="typ">log</span>.<span class="fn">info</span>(<span class="str">"消息{}重复投递，跳过"</span>, messageId);
+        <span class="kw">return</span>;
+    }
+    <span class="typ">orderService</span>.<span class="fn">process</span>(data);
+}</pre>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">💡</span>
+      <div><strong>关键参数：</strong>过期时间要设得<strong>比消息的最大重试周期长</strong>（比如设 24h）。太短的话 Redis key 过期后，后续重试消息查不到标记会被重复处理。<br><strong>缺点：</strong>SETNX 成功但业务逻辑失败时，需要回滚 Redis 标记（或者用 Lua 脚本保证原子性）。</div>
+    </div>
+  </div>
+
+  <!-- 方式三 -->
+  <div class="card">
+    <h3>方式三：业务本身天然幂等（最优雅，零额外开销）</h3>
+    <p>把业务操作设计为<strong>状态机式</strong>，重复执行的结果完全一样，不需要任何额外记录。</p>
+
+    <div class="contrast">
+      <div class="bad">
+        <h6>❌ 反例：不幂等</h6>
+        <pre>account.setBalance(
+    account.getBalance() - amount
+);
+// 重复消费 → 余额被扣两次！</pre>
+      </div>
+      <div class="good">
+        <h6>✅ 正例：状态机式判断，天然幂等</h6>
+        <pre>UPDATE orders
+SET status = 'PAID'
+WHERE order_id = ?
+  AND status = 'UNPAID';
+// 第二次执行时 status
+// 已经不是 UNPAID 了
+// SQL 影响行数 = 0
+// 不会重复扣款</pre>
+      </div>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">🏆</span>
+      <div><strong>推荐优先考虑这个方式</strong>——不用额外建表、不用 Redis、不用 catch DuplicateKeyException。只要你的业务模型支持状态流转，这在设计上是最干净的解法。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 7. 总结 ═══════════ -->
+<section class="sec" id="summary">
+  <div class="sec-title"><span class="n">7</span> 3 实例场景下的完整配置方案</div>
+
+  <div class="card">
+    <h3>生产环境两层的完整对比</h3>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>MQ 类型</th>
+            <th>第一层：MQ 配置</th>
+            <th>关键注意点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Kafka</strong></td>
+            <td>3 个实例用同一个 <code>group.id</code>，Topic 分区数 ≥ 3</td>
+            <td>分区数不够时多余实例空转；Rebalance 期间可能有短暂重复</td>
+          </tr>
+          <tr>
+            <td><strong>RocketMQ</strong></td>
+            <td>3 个实例用同一个 Consumer Group，模式设为 <code>CLUSTERING</code></td>
+            <td>别配成 <code>BROADCASTING</code>（广播模式会全量投递）</td>
+          </tr>
+          <tr>
+            <td><strong>RabbitMQ</strong></td>
+            <td>3 个实例监听同一个 Queue，天然竞争消费</td>
+            <td><code>prefetch count</code> 设 1~10，防止某个实例一次性拉太多</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:16px">
+      <table>
+        <thead>
+          <tr>
+            <th>第二层：幂等方式</th>
+            <th>实现</th>
+            <th>适用场景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>唯一键约束</strong></td>
+            <td>DB 建消费记录表 + <code>message_id</code> 唯一索引</td>
+            <td>通用，最可靠，适合中等并发</td>
+          </tr>
+          <tr>
+            <td><strong>Redis 标记</strong></td>
+            <td><code>SETNX</code> + 过期时间 > 最大重试周期</td>
+            <td>高并发，比数据库快，需处理 SETNX 成功但业务失败的场景</td>
+          </tr>
+          <tr>
+            <td><strong>业务状态机</strong></td>
+            <td><code>UPDATE ... WHERE status = 'OLD'</code> 式判断</td>
+            <td>最优雅，有明确状态流转的业务优先考虑</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>🎯 一句话总结</h3>
+    <ul>
+      <li>MQ 层面的机制解决的是 <strong>"正常情况下别抢重"</strong></li>
+      <li>业务层幂等解决的是 <strong>"异常情况下重复来了也不出错"</strong></li>
+      <li>生产环境这两层都得有，只做第一层是不够的</li>
+      <li>线上大部分"重复消费导致数据错乱"的事故，根源都是漏了第二层的幂等保护</li>
+    </ul>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<script>
+// Nav active highlight on scroll
+document.querySelectorAll('.sec').forEach(sec => {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.nav a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px' });
+  observer.observe(sec);
+});
+</script>
+</body>
+</html>
