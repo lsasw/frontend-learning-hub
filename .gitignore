@@ -1,0 +1,12 @@
+# WorkBuddy workspace data
+.workbuddy/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+*.swp
+*.swo
+*~

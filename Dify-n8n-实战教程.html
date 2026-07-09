@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dify × n8n — AI 工作流双平台实战教程</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --border: #e2e6ed;
+    --text: #1a1a2e;
+    --text2: #5a6170;
+    --accent: #4361ee;
+    --accent2: #7209b7;
+    --green: #06d6a0;
+    --orange: #f77f00;
+    --red: #ef476f;
+    --code-bg: #1e1e2e;
+    --card-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --card-hover-shadow: 0 4px 16px rgba(0,0,0,.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: var(--font-sans); background: var(--bg); color: var(--text); line-height: 1.7; }
+
+  /* --- Header --- */
+  .header {
+    background: linear-gradient(135deg, #4361ee 0%, #7209b7 50%, #f72585 100%);
+    color: #fff; padding: 48px 40px 32px; text-align: center;
+  }
+  .header h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -.5px; }
+  .header p { font-size: 1.05rem; opacity: .88; margin-top: 8px; max-width: 680px; margin-inline: auto; }
+  .header .badges { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+  .header .badge { background: rgba(255,255,255,.18); backdrop-filter: blur(6px); padding: 5px 14px; border-radius: 20px; font-size: .85rem; border: 1px solid rgba(255,255,255,.25); }
+
+  /* --- Container --- */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  /* --- Tabs --- */
+  .tabs { display:flex; gap:0; margin-bottom: 28px; background: var(--surface); border-radius: var(--radius); border:1px solid var(--border); overflow:hidden; }
+  .tab-btn {
+    flex:1; padding: 14px 0; border:none; background:transparent; cursor:pointer; font-size:.95rem; font-weight:600;
+    color: var(--text2); transition: all .2s; position:relative; font-family:var(--font-sans);
+  }
+  .tab-btn:hover { color: var(--text); background: #f0f2f8; }
+  .tab-btn.active { color: #fff; background: var(--accent); }
+  .tab-btn .icon { margin-right: 6px; font-size:1.1rem; }
+
+  /* --- Cards --- */
+  .card { background: var(--surface); border-radius: var(--radius); border:1px solid var(--border); padding: 28px 30px; margin-bottom: 24px; box-shadow: var(--card-shadow); transition: box-shadow .25s; }
+  .card:hover { box-shadow: var(--card-hover-shadow); }
+  .card-header { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
+  .card-icon { width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.3rem; flex-shrink:0; }
+  .card-icon.dify { background: #eef2ff; color: var(--accent); }
+  .card-icon.n8n { background: #fff0e6; color: var(--orange); }
+  .card-icon.both { background: #f3e8ff; color: var(--accent2); }
+  .card h2 { font-size: 1.25rem; margin:0; }
+  .card h3 { font-size: 1.05rem; margin: 18px 0 8px; color: var(--accent); }
+  .card h4 { font-size: .92rem; margin: 14px 0 6px; color: var(--text); }
+
+  /* --- Concept Grid --- */
+  .concept-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:14px; margin:12px 0; }
+  .concept-item { padding: 16px 18px; border-radius: var(--radius-sm); border:1px solid var(--border); background: #fafbfc; }
+  .concept-item strong { display:block; margin-bottom:4px; font-size:.92rem; }
+  .concept-item span { font-size:.84rem; color:var(--text2); }
+
+  /* --- Code Blocks --- */
+  .code-block { background: var(--code-bg); border-radius: var(--radius-sm); padding: 18px 22px; margin: 12px 0; overflow-x: auto; position:relative; }
+  .code-block .lang-tag { position:absolute; top: 8px; right: 14px; font-size:.72rem; color: #a0a0b0; text-transform:uppercase; letter-spacing:1px; }
+  .code-block code { font-family: var(--font-mono); font-size: .82rem; color: #e0e0f0; white-space:pre; line-height: 1.65; }
+  .code-block .keyword { color: #c792ea; }
+  .code-block .string { color: #c3e88d; }
+  .code-block .comment { color: #676e95; font-style:italic; }
+  .code-block .func { color: #82aaff; }
+  .code-block .number { color: #f78c6c; }
+  .copy-btn { position:absolute; top:8px; right: 14px; background: rgba(255,255,255,.1); border:none; color:#a0a0b0; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:.72rem; transition:.2s; }
+  .copy-btn:hover { background: rgba(255,255,255,.2); color:#fff; }
+
+  /* --- Tips --- */
+  .tip { padding: 12px 16px; border-radius: var(--radius-sm); margin: 12px 0; font-size:.88rem; display:flex; gap:10px; align-items:flex-start; }
+  .tip.info { background: #eef2ff; border-left:4px solid var(--accent); }
+  .tip.warn { background: #fff8e6; border-left:4px solid var(--orange); }
+  .tip.good { background: #e8faf3; border-left:4px solid var(--green); }
+  .tip .tip-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+
+  /* --- Flow Diagram --- */
+  .flow { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding: 16px; background: #f0f2f8; border-radius: var(--radius-sm); margin: 12px 0; font-size:.84rem; overflow-x:auto; }
+  .flow .node { background: var(--surface); border:2px solid var(--border); border-radius: 8px; padding: 8px 14px; white-space:nowrap; font-weight:600; font-size:.82rem; }
+  .flow .node.start { border-color: var(--green); background: #e8faf3; }
+  .flow .node.ai { border-color: var(--accent); background: #eef2ff; }
+  .flow .node.action { border-color: var(--orange); background: #fff8e6; }
+  .flow .node.end { border-color: var(--red); background: #fde8ef; }
+  .flow .arrow { color: var(--text2); font-size:1.1rem; }
+
+  /* --- Table --- */
+  .tbl-wrap { overflow-x:auto; margin: 12px 0; }
+  table { width:100%; border-collapse:collapse; font-size:.86rem; }
+  th { background: #f0f2f8; padding: 10px 14px; text-align:left; font-weight:700; border-bottom:2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom:1px solid var(--border); }
+  tr:hover td { background: #fafbfc; }
+
+  /* --- Feature Grid --- */
+  .feat-compare { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; font-size:.85rem; }
+  .feat-compare .fc-h { font-weight:700; padding:10px 14px; background:#f0f2f8; border-bottom:2px solid var(--border); }
+  .feat-compare .fc-c { padding:10px 14px; border-bottom:1px solid var(--border); }
+  .feat-compare .fc-c:nth-child(3n+2) { background: rgba(67,97,238,.03); }
+  .feat-compare .fc-c:nth-child(3n+3) { background: rgba(247,127,0,.03); }
+  .star { color: var(--orange); }
+
+  /* --- Section --- */
+  .section-title { font-size:1.55rem; font-weight: 800; margin: 40px 0 18px; padding-bottom: 8px; border-bottom: 3px solid var(--accent); display: inline-block; }
+
+  /* --- Tab content --- */
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* --- Responsive --- */
+  @media (max-width: 768px) {
+    .header { padding: 32px 16px 24px; }
+    .header h1 { font-size: 1.5rem; }
+    .feat-compare { display:block; }
+    .feat-compare .fc-h { display:none; }
+    .feat-compare .fc-c { display:flex; justify-content:space-between; }
+    .feat-compare .fc-c::before { content: attr(data-label); font-weight:600; }
+    .card { padding: 18px 16px; }
+  }
+
+  /* --- Print --- */
+  @media print {
+    .header { background: #fff !important; color: var(--text) !important; }
+    .tab-content { display:block !important; }
+    .tabs { display:none; }
+  }
+
+  /* --- TOC --- */
+  .toc { margin-bottom: 28px; }
+  .toc details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; cursor:pointer; }
+  .toc summary { font-weight:700; font-size:.95rem; margin-bottom:8px; }
+  .toc ul { list-style:none; padding-left:0; display:grid; grid-template-columns: 1fr 1fr; gap:4px 20px; }
+  .toc a { color: var(--accent); text-decoration:none; font-size:.85rem; }
+  .toc a:hover { text-decoration:underline; }
+
+  /* --- Architecture diagram --- */
+  .arch-box { display:flex; gap:1px; flex-wrap:wrap; margin:14px 0; }
+  .arch-layer { flex:1; min-width:120px; padding:14px; border-radius:var(--radius-sm); text-align:center; }
+  .arch-layer h4 { margin:0 0 6px; font-size:.88rem; }
+  .arch-layer p { font-size:.78rem; color:var(--text2); margin:0; line-height:1.5; }
+  .arch-l0 { background: #eef2ff; border: 2px solid var(--accent); }
+  .arch-l1 { background: #e8faf3; border: 2px solid var(--green); }
+  .arch-l2 { background: #fff0e6; border: 2px solid var(--orange); }
+  .arch-l3 { background: #fde8ef; border: 2px solid var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header class="header">
+  <h1>Dify × n8n</h1>
+  <p>AI 应用构建 + 工作流自动化双平台实战教程 —— 面向金融估值 & 前端全栈场景</p>
+  <div class="badges">
+    <span class="badge">开源双雄</span>
+    <span class="badge">2026 最新</span>
+    <span class="badge">Dify 139k ★</span>
+    <span class="badge">n8n 112k ★</span>
+    <span class="badge">金融场景实战</span>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ==================== TOC ==================== -->
+<div class="toc">
+  <details open>
+    <summary>📑 目录导航</summary>
+    <ul>
+      <li><a href="#dify">1. Dify — AI 应用构建平台</a></li>
+      <li><a href="#dify-types">2. Dify 四大应用类型</a></li>
+      <li><a href="#dify-rag">3. Dify RAG 知识库引擎</a></li>
+      <li><a href="#dify-workflow">4. Dify 工作流节点详解</a></li>
+      <li><a href="#dify-case">5. Dify 实战：金融估值智能助手</a></li>
+      <li><a href="#dify-deploy">6. Dify 部署与配置</a></li>
+      <li><a href="#n8n">7. n8n — 工作流自动化引擎</a></li>
+      <li><a href="#n8n-nodes">8. n8n 节点体系全解</a></li>
+      <li><a href="#n8n-ai">9. n8n AI Agent 与 LangChain</a></li>
+      <li><a href="#n8n-case">10. n8n 实战：估值报告自动生成</a></li>
+      <li><a href="#n8n-best">11. n8n 部署与最佳实践</a></li>
+      <li><a href="#compare">12. Dify vs n8n 对比与协同</a></li>
+    </ul>
+  </details>
+</div>
+
+<!-- ==================== TABS ==================== -->
+<div class="tabs" id="mainTabs">
+  <button class="tab-btn active" onclick="switchTab('dify')"><span class="icon">🧠</span> Dify 平台</button>
+  <button class="tab-btn" onclick="switchTab('n8n')"><span class="icon">⚡</span> n8n 平台</button>
+  <button class="tab-btn" onclick="switchTab('compare')"><span class="icon">⚖️</span> 对比 & 协同</button>
+</div>
+
+<!-- ==================== DIFY TAB ==================== -->
+<div class="tab-content active" id="tab-dify">
+
+<!-- Dify Overview -->
+<div class="card" id="dify">
+  <div class="card-header">
+    <div class="card-icon dify">🧠</div>
+    <h2>Dify — 为 AI 而生的应用构建平台</h2>
+  </div>
+  <p>Dify 是一个<strong>开源 LLM 应用开发平台</strong>，将模型管理、Prompt 调试、RAG 检索、工作流编排、Agent 能力全部集成在可视化 Web 界面中。如果说 LangChain 是给程序员用的代码库，那 <strong>Dify 就是给所有人用的 AI 工厂</strong>。</p>
+  
+  <div class="arch-box" style="margin-top:16px;">
+    <div class="arch-layer arch-l0"><h4>🧩 应用层</h4><p>Chatflow · Workflow · Agent · Text Generator</p></div>
+    <div class="arch-layer arch-l1"><h4>⚙️ 编排层</h4><p>DAG 工作流引擎 · 条件分支 · 循环迭代</p></div>
+    <div class="arch-layer arch-l2"><h4>🧠 AI 能力层</h4><p>RAG Pipeline · 混合检索 · Agent 推理 · 多模型路由</p></div>
+    <div class="arch-layer arch-l3"><h4>🔌 基础设施层</h4><p>向量库 · PostgreSQL · Redis · 插件市场</p></div>
+  </div>
+
+  <div class="tip info">
+    <span class="tip-icon">💡</span>
+    <span><strong>一句话定位：</strong>Dify 的出发点是"我要构建一个 AI 应用，需要 RAG、Agent、Prompt 编排"—— 核心是让 LLM 变得可用、可管理、可上生产。</span>
+  </div>
+
+  <h3>核心特性一览</h3>
+  <div class="concept-grid">
+    <div class="concept-item"><strong>🎯 模型中立</strong><span>GPT-4 / Claude / DeepSeek / 通义千问 一键切换，业务逻辑零改动</span></div>
+    <div class="concept-item"><strong>📚 完整 RAG 引擎</strong><span>文档导入 → 自动分块 → Embedding → 混合检索 → Reranking</span></div>
+    <div class="concept-item"><strong>🔧 可视化 Workflow</strong><span>拖拽式 DAG 编排，条件分支 + 循环 + 代码节点 + 人工审批</span></div>
+    <div class="concept-item"><strong>🤖 Agent 框架</strong><span>ReAct / Function Calling / Plan-and-Execute 多种推理模式</span></div>
+    <div class="concept-item"><strong>🔌 插件市场</strong><span>100+ 模型 + 工具插件，官方仓库 + 社区贡献</span></div>
+    <div class="concept-item"><strong>📊 LLMOps 观测</strong><span>日志追踪 · 成本分析 · 标注改进 · A/B 测试 Prompt</span></div>
+    <div class="concept-item"><strong>🌐 内置 WebApp</strong><span>零前端即可发布对话界面，支持嵌入 iframe / SDK</span></div>
+    <div class="concept-item"><strong>📡 RESTful API</strong><span>完整 API，可被其他系统调用 —— 与 n8n 协同的关键</span></div>
+  </div>
+</div>
+
+<!-- Dify App Types -->
+<div class="card" id="dify-types">
+  <div class="card-header">
+    <div class="card-icon dify">📱</div>
+    <h2>四大应用类型详解</h2>
+  </div>
+
+  <table>
+    <tr><th style="width:15%">类型</th><th style="width:30%">适用场景</th><th style="width:30%">核心能力</th><th style="width:25%">金融场景举例</th></tr>
+    <tr>
+      <td><strong>💬 Chatflow</strong></td>
+      <td>对话式 AI 应用（客服、助手、咨询）</td>
+      <td>多轮对话 · 上下文记忆 · 知识库检索 · 工具调用</td>
+      <td>「DCF 估值问答助手」—— 上传估值手册 PDF，对话式查询 WACC 计算方法</td>
+    </tr>
+    <tr>
+      <td><strong>🔄 Workflow</strong></td>
+      <td>批处理 / 自动化流水线</td>
+      <td>定时触发 · 批量处理 · 条件分支 · 代码执行</td>
+      <td>「财务报告自动分析」—— 每日读取上市公司公告 → AI 提取关键指标 → 入库</td>
+    </tr>
+    <tr>
+      <td><strong>🤖 Agent</strong></td>
+      <td>自主推理 + 工具调用的智能体</td>
+      <td>ReAct 推理 · Function Calling · 多工具编排</td>
+      <td>「投研分析 Agent」—— 输入公司名 → 自动搜财报 → 算估值 → 写研报</td>
+    </tr>
+    <tr>
+      <td><strong>📝 Text Generator</strong></td>
+      <td>文本补全 / 内容生成</td>
+      <td>Prompt 模板 · 变量填充 · 输出格式化</td>
+      <td>「估值模板填充」—— 填入参数 → 输出标准化的估值报告段落</td>
+    </tr>
+  </table>
+
+  <div class="tip good">
+    <span class="tip-icon">✅</span>
+    <span><strong>选型建议：</strong>金融估值场景首选 <strong>Chatflow</strong>（内部工具）或 <strong>Agent</strong>（自动化研究），批量数据处理用 <strong>Workflow</strong>。</span>
+  </div>
+</div>
+
+<!-- Dify RAG -->
+<div class="card" id="dify-rag">
+  <div class="card-header">
+    <div class="card-icon dify">📚</div>
+    <h2>RAG 知识库引擎 —— Dify 的王牌</h2>
+  </div>
+  <p>这是 Dify 最出彩的能力。一套<strong>完整的 RAG Pipeline</strong>，从文档上传到检索生成的每一步都可通过可视化界面配置 —— 不需要写 Python、不需要调 LangChain。</p>
+
+  <div class="flow">
+    <span class="node start">📄 文档上传</span><span class="arrow">→</span>
+    <span class="node">✂️ 智能分块</span><span class="arrow">→</span>
+    <span class="node ai">🧮 Embedding</span><span class="arrow">→</span>
+    <span class="node">🗄️ 向量存储</span><span class="arrow">→</span>
+    <span class="node ai">🔍 混合检索</span><span class="arrow">→</span>
+    <span class="node ai">📊 Reranking</span><span class="arrow">→</span>
+    <span class="node end">💬 LLM 生成</span>
+  </div>
+
+  <h3>RAG 配置要点</h3>
+  <div class="concept-grid">
+    <div class="concept-item"><strong>📥 文档格式</strong><span>PDF / Word / PPT / Markdown / TXT / 网页 URL / Notion</span></div>
+    <div class="concept-item"><strong>✂️ 分块策略</strong><span>自动分块 / 自定义长度 · 父子分块 · Q&A 模式</span></div>
+    <div class="concept-item"><strong>🧮 Embedding 模型</strong><span>OpenAI text-embedding-3 / BGE-M3 / Jina / Cohere</span></div>
+    <div class="concept-item"><strong>🗄️ 向量数据库</strong><span>Weaviate / Milvus / Qdrant / pgvector / Chroma</span></div>
+    <div class="concept-item"><strong>🔍 检索模式</strong><span>向量检索 · 关键词 BM25 · 混合检索 · Top-K 可配</span></div>
+    <div class="concept-item"><strong>📊 Reranking</strong><span>Cohere Rerank / Jina Reranker 二次排序提升精度</span></div>
+  </div>
+
+  <div class="code-block">
+    <span class="lang-tag">dify 知识库 API</span>
+    <code><span class="comment"># 通过 API 向知识库上传文档</span>
+<span class="func">curl</span> -X POST <span class="string">"https://your-dify/v1/datasets/{dataset_id}/documents"</span> \
+  -H <span class="string">"Authorization: Bearer {api_key}"</span> \
+  -F <span class="string">"file=@financial_model_guide.pdf"</span> \
+  -F <span class="string">"indexing_technique=high_quality"</span>
+
+<span class="comment"># 检索知识库</span>
+<span class="func">curl</span> -X POST <span class="string">"https://your-dify/v1/datasets/{dataset_id}/retrieve"</span> \
+  -H <span class="string">"Authorization: Bearer {api_key}"</span> \
+  -d <span class="string">'{"query":"WACC 如何计算？","retrieval_model":{"search_method":"hybrid_search"}}'</span></code>
+  </div>
+</div>
+
+<!-- Dify Workflow Nodes -->
+<div class="card" id="dify-workflow">
+  <div class="card-header">
+    <div class="card-icon dify">🔀</div>
+    <h2>工作流节点类型全解</h2>
+  </div>
+  <p>Dify Workflow 基于 <strong>DAG（有向无环图）</strong>结构，通过拖拽节点、连线来编排 AI 逻辑。以下是所有核心节点：</p>
+
+  <table>
+    <tr><th>分类</th><th>节点</th><th>功能说明</th></tr>
+    <tr>
+      <td rowspan="2"><strong>基础</strong></td>
+      <td><strong>Start</strong></td>
+      <td>定义输入变量（文本 / 段落 / 数字 / 文件），触发工作流入口</td>
+    </tr>
+    <tr>
+      <td><strong>End / Answer</strong></td>
+      <td>直接回复结果 或 声明变量输出给下游 API 调用者</td>
+    </tr>
+    <tr>
+      <td rowspan="4"><strong>AI</strong></td>
+      <td><strong>LLM</strong></td>
+      <td>调用大模型，支持 System/User Prompt + 变量 + 上下文注入 + 记忆窗口</td>
+    </tr>
+    <tr>
+      <td><strong>Knowledge Retrieval</strong></td>
+      <td>从知识库检索相关文档片段，返回 Top-K + Score</td>
+    </tr>
+    <tr>
+      <td><strong>Question Classifier</strong></td>
+      <td>用 LLM 对用户输入分类，输出到不同分支处理</td>
+    </tr>
+    <tr>
+      <td><strong>Parameter Extractor</strong></td>
+      <td>从自然语言中提取结构化参数（如"计算茅台 2025 DCF" → {股票:茅台, 年份:2025, 方法:DCF}）</td>
+    </tr>
+    <tr>
+      <td rowspan="5"><strong>逻辑</strong></td>
+      <td><strong>IF/ELSE</strong></td>
+      <td>条件分支，支持 等于 / 包含 / 为空 / 正则 等操作符</td>
+    </tr>
+    <tr>
+      <td><strong>Code</strong></td>
+      <td>执行 Python / JavaScript 代码，做复杂数据转换</td>
+    </tr>
+    <tr>
+      <td><strong>Template Transform</strong></td>
+      <td>用 Jinja2 模板语法拼接字符串</td>
+    </tr>
+    <tr>
+      <td><strong>Variable Aggregator</strong></td>
+      <td>聚合多路输入变量为一个输出</td>
+    </tr>
+    <tr>
+      <td><strong>Iteration</strong></td>
+      <td>对数组逐条执行子流程（如批量生成 10 家公司的估值摘要）</td>
+    </tr>
+    <tr>
+      <td rowspan="4"><strong>工具</strong></td>
+      <td><strong>HTTP Request</strong></td>
+      <td>调用任意 REST API（获取行情数据、查询数据库等）</td>
+    </tr>
+    <tr>
+      <td><strong>Tool (插件)</strong></td>
+      <td>调用已安装的插件工具（搜索 / 计算 / 画图等）</td>
+    </tr>
+    <tr>
+      <td><strong>Google / Tavily Search</strong></td>
+      <td>联网搜索获取实时信息</td>
+    </tr>
+    <tr>
+      <td><strong>Assigner</strong></td>
+      <td>为会话变量赋值（如设置 user_role="analyst"）</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Dify Case Study -->
+<div class="card" id="dify-case">
+  <div class="card-header">
+    <div class="card-icon dify">🏗️</div>
+    <h2>实战案例：DCF 估值智能助手</h2>
+  </div>
+  <p><strong>需求：</strong>内部估值团队需要一个 AI 助手 —— 能读懂公司财报、解释 DCF/WACC 概念、用搜索工具获取最新市场数据、计算估值结果。</p>
+
+  <h3>Step 1：创建 Chatflow</h3>
+  <p>Dify 首页 → 创建应用 → 选择 <strong>Chatflow</strong> → 命名「DCF 估值助手」</p>
+
+  <h3>Step 2：Workflow 设计</h3>
+  <div class="flow">
+    <span class="node start">🏁 Start<br><small>query: 用户问题</small></span><span class="arrow">→</span>
+    <span class="node ai">🔀 问题分类<br><small>LLM 判断意图</small></span><span class="arrow">↙↘</span>
+    <span class="node">📚 知识库<br><small>检索概念</small></span>
+    <span class="node ai">🌐 联网搜索<br><small>获取数据</small></span>
+    <span class="arrow">↓</span><span class="arrow">↓</span>
+    <span class="node ai">🧠 LLM 综合<br><small>整合回答</small></span><span class="arrow">→</span>
+    <span class="node end">💬 Answer<br><small>输出结果</small></span>
+  </div>
+
+  <h3>Step 3：关键节点配置</h3>
+
+  <div class="code-block">
+    <span class="lang-tag">问题分类节点 System Prompt</span>
+    <code><span class="keyword">你是</span>一个智能路由助手。根据用户输入判断类型：
+- <span class="string">"概念解释"</span>：用户在问估值模型理论（DCF/WACC/CAPM 含义）
+- <span class="string">"数据查询"</span>：用户在问具体数据（某公司市值/财报/股价）
+- <span class="string">"估值计算"</span>：用户要求计算某公司的估值
+
+<span class="keyword">只回复</span>以上三个标签之一，不要任何额外文字。</code>
+  </div>
+
+  <div class="code-block">
+    <span class="lang-tag">代码节点：DCF 计算 (Python)</span>
+    <code><span class="keyword">def</span> <span class="func">main</span>(fcff: float, wacc: float, growth: float, terminal_g: float = 0.03) -> dict:
+    <span class="string">"""计算 DCF 企业价值"""</span>
+    projections = []
+    total_pv = 0
+    fcf = fcff
+    
+    <span class="comment"># 预测期（5 年）</span>
+    <span class="keyword">for</span> year <span class="keyword">in</span> range(1, 6):
+        fcf *= (1 + growth)
+        pv = fcf / ((1 + wacc) ** year)
+        projections.append({<span class="string">"year"</span>: year, <span class="string">"fcf"</span>: round(fcf,2), <span class="string">"pv"</span>: round(pv,2)})
+        total_pv += pv
+    
+    <span class="comment"># 终值（永续增长模型）</span>
+    terminal_value = (fcf * (1 + terminal_g)) / (wacc - terminal_g)
+    terminal_pv = terminal_value / ((1 + wacc) ** 5)
+    
+    <span class="keyword">return</span> {
+        <span class="string">"projections"</span>: projections,
+        <span class="string">"terminal_value"</span>: round(terminal_value, 2),
+        <span class="string">"terminal_pv"</span>: round(terminal_pv, 2),
+        <span class="string">"enterprise_value"</span>: round(total_pv + terminal_pv, 2)
+    }</code>
+  </div>
+
+  <div class="code-block">
+    <span class="lang-tag">LLM 综合节点 System Prompt</span>
+    <code><span class="keyword">你是</span>一位资深金融估值分析师。请根据以下信息回答用户问题：
+
+<span class="string">【知识库检索结果】</span>
+{{knowledge_context}}
+
+<span class="string">【搜索结果】</span>
+{{search_results}}
+
+<span class="string">【估值计算结果】</span>
+{{dcf_result}}
+
+<span class="string">【要求】</span>
+1. 先给出简洁的结论
+2. 展开详细分析（引用数据来源）
+3. 如果有计算，展示关键步骤
+4. 用 Markdown 格式，表格展示数据</code>
+  </div>
+
+  <h3>最终效果</h3>
+  <div class="tip good">
+    <span class="tip-icon">✅</span>
+    <span>用户输入 <em>"帮我算一下茅台 2025 年的 DCF 估值，假设 FCFF 800 亿，WACC 9%"</em> → Agent 自动分类 → 联网搜最新数据 → 用 Code 节点计算 → LLM 生成含表格的完整估值报告。整个过程 <strong>0 行前端代码</strong>。</span>
+  </div>
+</div>
+
+<!-- Dify Deploy -->
+<div class="card" id="dify-deploy">
+  <div class="card-header">
+    <div class="card-icon dify">🚀</div>
+    <h2>部署与配置</h2>
+  </div>
+
+  <h3>Docker Compose 一键部署（推荐）</h3>
+  <div class="code-block">
+    <span class="lang-tag">bash</span>
+    <code><span class="comment"># 克隆仓库</span>
+git clone https://github.com/langgenius/dify.git
+cd dify/docker
+
+<span class="comment"># 复制并编辑环境变量</span>
+cp .env.example .env
+<span class="comment"># 编辑 .env：配置数据库密码、模型 API Key 等</span>
+
+<span class="comment"># 一键启动所有服务（API + Worker + Web + Redis + PostgreSQL + Weaviate）</span>
+docker compose up -d
+
+<span class="comment"># 访问 http://localhost</span></code>
+  </div>
+
+  <h3>生产环境关键配置</h3>
+  <table>
+    <tr><th>配置项</th><th>推荐值</th><th>说明</th></tr>
+    <tr><td>数据库</td><td>PostgreSQL 15+</td><td>生产必须，禁止 SQLite</td></tr>
+    <tr><td>向量库</td><td>Weaviate / pgvector</td><td>pgvector 可与 PG 同实例，省资源</td></tr>
+    <tr><td>反向代理</td><td>Nginx + Let's Encrypt</td><td>HTTPS 是刚需</td></tr>
+    <tr><td>模型接入</td><td>DeepSeek / 通义千问</td><td>国内合规首选</td></tr>
+    <tr><td>最低配置</td><td>4 核 8GB</td><td>RAG 场景需要更多内存</td></tr>
+  </table>
+
+  <div class="tip warn">
+    <span class="tip-icon">⚠️</span>
+    <span><strong>注意：</strong>Dify 的 <code>.env</code> 中 <code>SECRET_KEY</code> 必须修改为强随机字符串！否则 JWT 签名可被伪造。</span>
+  </div>
+</div>
+
+</div><!-- end tab-dify -->
+
+<!-- ==================== N8N TAB ==================== -->
+<div class="tab-content" id="tab-n8n">
+
+<div class="card" id="n8n">
+  <div class="card-header">
+    <div class="card-icon n8n">⚡</div>
+    <h2>n8n — 加了 AI 能力的自动化引擎</h2>
+  </div>
+  <p>n8n（取自 "Nodes to Nodes"）是一个<strong>公平代码（Fair-code）的工作流自动化平台</strong>，构建在 Node.js 之上。核心哲学：<strong>一切皆节点</strong> —— HTTP 请求、数据库查询、AI 调用、代码执行，全用可视化画布串联。</p>
+  
+  <p>2025 年获得 112k GitHub Stars（JavaScript Rising Stars 总冠军），1.8 亿美元 C 轮融资，估值 25 亿美元。近年持续加强 AI 能力：<strong>AI Agent Builder、LangChain 原生集成、AI Workflow Builder</strong>（自然语言生成工作流）。</p>
+
+  <div class="tip info">
+    <span class="tip-icon">💡</span>
+    <span><strong>一句话定位：</strong>n8n 的出发点是"我要自动化一个业务流程，其中某些步骤可以用 AI"—— 核心是连接万物，AI 是能力之一而非全部。</span>
+  </div>
+
+  <h3>核心特性一览</h3>
+  <div class="concept-grid">
+    <div class="concept-item"><strong>🔗 1200+ 内置节点</strong><span>Slack · Notion · PostgreSQL · GitHub · AWS · OpenAI · 几乎覆盖所有 SaaS</span></div>
+    <div class="concept-item"><strong>🎨 可视化画布</strong><span>拖拽连接节点，实时预览每步输出，数据流透明可追踪</span></div>
+    <div class="concept-item"><strong>🤖 AI Agent Builder</strong><span>创建带记忆、工具调用、guardrails 的 AI Agent</span></div>
+    <div class="concept-item"><strong>🧪 LangChain 集成</strong><span>原生支持 LangChain chain，混合无代码 + 有代码 AI 链</span></div>
+    <div class="concept-item"><strong>🖥️ 自托管 = 完全免费</strong><span>无功能限制、无执行次数限制（企业版按需）</span></div>
+    <div class="concept-item"><strong>⚡ 单实例 220+/秒</strong><span>企业级并发，适合高吞吐数据管道</span></div>
+    <div class="concept-item"><strong>🔄 版本控制</strong><span>工作流版本化发布 + 回滚 + 多人协作冲突检测</span></div>
+    <div class="concept-item"><strong>📡 Webhook / API</strong><span>原生 HTTP 触发器 + REST API，可被任意系统调用</span></div>
+  </div>
+</div>
+
+<!-- n8n Nodes -->
+<div class="card" id="n8n-nodes">
+  <div class="card-header">
+    <div class="card-icon n8n">🔩</div>
+    <h2>节点体系全解</h2>
+  </div>
+
+  <h3>1. 触发器节点（决定"什么时候跑"）</h3>
+  <table>
+    <tr><th style="width:20%">节点</th><th>说明</th><th>金融场景</th></tr>
+    <tr><td><strong>Schedule Trigger</strong></td><td>Cron 定时触发，支持每分钟→每年</td><td>每日 18:00 收盘后自动拉取行情数据</td></tr>
+    <tr><td><strong>Webhook</strong></td><td>接收 HTTP POST 请求，支持 Basic Auth / Header Auth</td><td>前端表单提交 → 触发估值计算流程</td></tr>
+    <tr><td><strong>GitHub Trigger</strong></td><td>监听 PR / Issue / Star / Push 等事件</td><td>金融模型代码更新 → 自动跑回测</td></tr>
+    <tr><td><strong>Error Trigger</strong></td><td>捕获主工作流失败 → 触发告警</td><td>估值计算异常 → Slack 通知 + 记录数据库</td></tr>
+    <tr><td><strong>Manual Trigger</strong></td><td>手动执行 + 注入测试数据</td><td>调试时模拟输入参数</td></tr>
+  </table>
+
+  <h3>2. 逻辑控制节点（决定"怎么跑"）</h3>
+  <table>
+    <tr><th style="width:20%">节点</th><th>说明</th></tr>
+    <tr><td><strong>IF</strong></td><td>条件分支：支持 == / != / contains / regex / isEmpty 等运算符</td></tr>
+    <tr><td><strong>Switch</strong></td><td>多路分支，比 IF 更灵活（类似 switch-case）</td></tr>
+    <tr><td><strong>Split in Batches</strong></td><td>将大数据集分批处理（如每次 100 条），避免内存溢出</td></tr>
+    <tr><td><strong>Merge</strong></td><td>合并并行分支的数据，支持多种合并策略（append / merge by key / wait）</td></tr>
+    <tr><td><strong>Loop / While</strong></td><td>循环执行直到条件不满足</td></tr>
+    <tr><td><strong>Execute Workflow</strong></td><td>调用子工作流，实现模块化架构</td></tr>
+  </table>
+
+  <h3>3. 数据处理节点</h3>
+  <table>
+    <tr><th style="width:20%">节点</th><th>说明</th></tr>
+    <tr><td><strong>Code (JS/Python)</strong></td><td>编写自定义逻辑，数据转换、签名验证、指数退避重试</td></tr>
+    <tr><td><strong>HTTP Request</strong></td><td>调用任意 REST API（GET/POST/PUT/DELETE），支持 OAuth2 / Bearer Token / API Key</td></tr>
+    <tr><td><strong>Set / Function</strong></td><td>设置变量、数据映射、字段重命名</td></tr>
+    <tr><td><strong>Date & Time</strong></td><td>日期格式化、时区转换、时间计算</td></tr>
+  </table>
+
+  <h3>4. 代码节点实战</h3>
+  <div class="code-block">
+    <span class="lang-tag">n8n Code 节点 · JavaScript</span>
+    <code><span class="comment">// 从多个数据源拼装估值参数</span>
+<span class="keyword">const</span> items = $input.all();
+
+<span class="keyword">for</span> (<span class="keyword">const</span> item <span class="keyword">of</span> items) {
+  <span class="comment">// 从上一个节点拿到股票数据</span>
+  <span class="keyword">const</span> { ticker, marketCap, totalDebt, cash, ebitda } = item.json;
+  
+  <span class="comment">// 计算 EV/EBITDA 倍数</span>
+  <span class="keyword">const</span> enterpriseValue = marketCap + totalDebt - cash;
+  <span class="keyword">const</span> evEbitdaMultiple = (enterpriseValue / ebitda).toFixed(2);
+  
+  <span class="comment">// 估值区间判断</span>
+  <span class="keyword">let</span> signal = <span class="string">'中性'</span>;
+  <span class="keyword">if</span> (evEbitdaMultiple < 10) signal = <span class="string">'低估 🟢'</span>;
+  <span class="keyword">else</span> <span class="keyword">if</span> (evEbitdaMultiple > 20) signal = <span class="string">'高估 🔴'</span>;
+  
+  item.json.evEbitda = evEbitdaMultiple;
+  item.json.signal = signal;
+}
+
+<span class="keyword">return</span> items;</code>
+  </div>
+</div>
+
+<!-- n8n AI -->
+<div class="card" id="n8n-ai">
+  <div class="card-header">
+    <div class="card-icon n8n">🤖</div>
+    <h2>AI Agent Builder 与 LangChain 集成</h2>
+  </div>
+  <p>n8n 从 2025 年底开始重点投入 AI 能力，形成了<strong>无代码 Agent 构建</strong>的独特优势。实测数据显示：<strong>用 n8n 构建 AI 工作流的速度是手写 Python + LangChain 的 3 倍</strong>。</p>
+
+  <h3>AI Agent 节点架构</h3>
+  <div class="flow">
+    <span class="node start">👤 用户输入</span><span class="arrow">→</span>
+    <span class="node ai">🧠 AI Agent</span><span class="arrow">→</span>
+    <span class="node">🔧 工具选择</span><span class="arrow">→</span>
+    <span class="node">⚡ 执行</span><span class="arrow">→</span>
+    <span class="node ai">📊 结果</span><span class="arrow">→</span>
+    <span class="node action">🔄 循环直到完成</span>
+  </div>
+
+  <table>
+    <tr><th style="width:20%">AI 能力</th><th>说明</th><th>金融场景</th></tr>
+    <tr>
+      <td><strong>AI Agent 节点</strong></td>
+      <td>自动规划工具调用路径，协调多个子工作流</td>
+      <td>「输入公司名 → 搜财报 → 算估值 → 写报告」全自动</td>
+    </tr>
+    <tr>
+      <td><strong>LLM Chain</strong></td>
+      <td>LangChain 风格的链式调用：Prompt → LLM → Output Parser</td>
+      <td>财报数据 → LLM 提取关键指标 → 结构化 JSON</td>
+    </tr>
+    <tr>
+      <td><strong>Vector Store</strong></td>
+      <td>连接 Pinecone / Qdrant / Weaviate 等向量数据库</td>
+      <td>相似研报检索 + RAG 增强回答</td>
+    </tr>
+    <tr>
+      <td><strong>Memory 节点</strong></td>
+      <td>窗口记忆 / 摘要记忆 / 向量记忆</td>
+      <td>多轮估值对话保持上下文</td>
+    </tr>
+    <tr>
+      <td><strong>OpenAI Moderation</strong></td>
+      <td>内容审核 API，过滤违规内容</td>
+      <td>确保金融建议合规输出</td>
+    </tr>
+    <tr>
+      <td><strong>AI Workflow Builder</strong></td>
+      <td>用自然语言描述需求 → 自动生成工作流</td>
+      <td>「帮我做一个每日估值报告自动发送到飞书」→ 自动搭建</td>
+    </tr>
+  </table>
+
+  <div class="tip warn">
+    <span class="tip-icon">⚠️</span>
+    <span><strong>注意：</strong>AI Agent 节点的 <strong>Tool Call Loop 没有默认上限</strong>，建议在 Agent 设置中配置 <code>maxIterations</code> 防止死循环烧 Token。</span>
+  </div>
+</div>
+
+<!-- n8n Case Study -->
+<div class="card" id="n8n-case">
+  <div class="card-header">
+    <div class="card-icon n8n">🏗️</div>
+    <h2>实战案例：每日估值报告自动生成流水线</h2>
+  </div>
+  <p><strong>需求：</strong>每个交易日收盘后，自动拉取自选股数据 → AI 分析估值变化 → 生成 HTML 报告 → 发送到飞书群。</p>
+
+  <h3>工作流全景</h3>
+  <div class="flow">
+    <span class="node start">⏰ 18:00 定时</span><span class="arrow">→</span>
+    <span class="node">📡 HTTP 拉行情<br><small>腾讯自选股 API</small></span><span class="arrow">→</span>
+    <span class="node">🔄 分批处理<br><small>Split in Batches</small></span><span class="arrow">→</span>
+    <span class="node ai">🧠 AI 分析<br><small>LLM 节点</small></span><span class="arrow">→</span>
+    <span class="node">📊 汇总拼接<br><small>Code 节点</small></span><span class="arrow">→</span>
+    <span class="node">🔀 判断信号<br><small>IF 节点</small></span><span class="arrow">→</span>
+    <span class="node action">📨 飞书通知<br><small>HTTP POST</small></span>
+  </div>
+
+  <h3>关键节点配置</h3>
+
+  <div class="code-block">
+    <span class="lang-tag">Code 节点：估值报告 HTML 生成</span>
+    <code><span class="comment">// 接收 AI 分析结果，生成 HTML 报告</span>
+<span class="keyword">const</span> analyses = $input.all();
+<span class="keyword">const</span> date = <span class="keyword">new</span> Date().toLocaleDateString(<span class="string">'zh-CN'</span>);
+
+<span class="keyword">let</span> rows = analyses.map(a => {
+  <span class="keyword">const</span> d = a.json;
+  <span class="keyword">const</span> change = d.changePct > 0 ? <span class="string">`🔴+${d.changePct}%`</span> : <span class="string">`🟢${d.changePct}%`</span>;
+  <span class="keyword">return</span> <span class="string">`&lt;tr&gt;
+    &lt;td&gt;${d.ticker}&lt;/td&gt;
+    &lt;td&gt;${d.name}&lt;/td&gt;
+    &lt;td&gt;¥${d.price}&lt;/td&gt;
+    &lt;td&gt;${change}&lt;/td&gt;
+    &lt;td&gt;${d.aiSummary}&lt;/td&gt;
+  &lt;/tr&gt;`</span>;
+}).join(<span class="string">''</span>);
+
+<span class="keyword">const</span> html = <span class="string">`&lt;h2&gt;📊 每日估值报告 — ${date}&lt;/h2&gt;
+&lt;table border="1" style="border-collapse:collapse"&gt;
+&lt;tr&gt;&lt;th&gt;代码&lt;/th&gt;&lt;th&gt;名称&lt;/th&gt;&lt;th&gt;现价&lt;/th&gt;&lt;th&gt;涨跌幅&lt;/th&gt;&lt;th&gt;AI 分析&lt;/th&gt;&lt;/tr&gt;
+${rows}
+&lt;/table&gt;
+&lt;p&gt;⚠️ 本报告由 AI 自动生成，仅供参考，不构成投资建议。&lt;/p&gt;`</span>;
+
+<span class="keyword">return</span> [{ json: { reportHtml: html, date } }];</code>
+  </div>
+
+  <div class="code-block">
+    <span class="lang-tag">LLM 节点 System Prompt</span>
+    <code><span class="keyword">你是一个</span>资深股票分析师。请根据当前行情数据分析估值变化：
+
+股票名称：{{name}}  代码：{{ticker}}
+现价：{{price}}  涨跌幅：{{changePct}}%
+PE(TTM)：{{pe}}  PB：{{pb}}
+市值：{{marketCap}} 亿
+
+<span class="keyword">请输出</span> JSON 格式：
+{
+  "ticker": "代码",
+  "name": "名称",
+  "price": 现价,
+  "changePct": 涨跌幅,
+  "aiSummary": "一句话分析（含估值判断和关键因素，不超过50字）"
+}
+
+<span class="keyword">只输出</span> JSON，不要任何额外内容。</code>
+  </div>
+
+  <div class="code-block">
+    <span class="lang-tag">飞书 Webhook 通知</span>
+    <code><span class="comment"># n8n HTTP Request 节点配置</span>
+Method: <span class="string">POST</span>
+URL: <span class="string">https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_WEBHOOK</span>
+Body:
+{
+  "msg_type": "interactive",
+  "card": {
+    "header": { "title": { "content": "📊 每日估值报告", "tag": "plain_text" } },
+    "elements": [
+      { "tag": "markdown", "content": "{{reportHtml}}" }
+    ]
+  }
+}</code>
+  </div>
+
+  <div class="tip good">
+    <span class="tip-icon">✅</span>
+    <span>这个工作流部署后<strong>完全自动运行</strong>：每个交易日 18:00 → 自动拉数据 → AI 分析 → 生成报告 → 推送飞书卡。整个过程不需要任何人工干预。</span>
+  </div>
+</div>
+
+<!-- n8n Best Practices -->
+<div class="card" id="n8n-best">
+  <div class="card-header">
+    <div class="card-icon n8n">✅</div>
+    <h2>部署与最佳实践</h2>
+  </div>
+
+  <h3>Docker 快速部署</h3>
+  <div class="code-block">
+    <span class="lang-tag">bash</span>
+    <code><span class="comment"># 快速体验（数据不持久）</span>
+docker run -it --rm --name n8n -p 5678:5678 n8nio/n8n
+
+<span class="comment"># 生产部署（数据持久化）</span>
+docker run -d --name n8n -p 5678:5678 \
+  -v n8n_data:/home/node/.n8n \
+  -e N8N_BASIC_AUTH_ACTIVE=true \
+  -e N8N_BASIC_AUTH_USER=admin \
+  -e N8N_BASIC_AUTH_PASSWORD=你的强密码 \
+  -e N8N_ENCRYPTION_KEY=你的加密密钥 \
+  -e N8N_HOST=your-domain.com \
+  -e N8N_PROTOCOL=https \
+  -e GENERIC_TIMEZONE=Asia/Shanghai \
+  n8nio/n8n</code>
+  </div>
+
+  <h3>六条核心最佳实践</h3>
+  <div class="concept-grid">
+    <div class="concept-item"><strong>🧩 模块化设计</strong><span>避免 50 个节点的巨型工作流 → 拆分为「主流程 + Execute Workflow 子模块」</span></div>
+    <div class="concept-item"><strong>🛡️ 错误处理</strong><span>关键节点启用 Continue On Fail + Error Trigger → Slack 告警</span></div>
+    <div class="concept-item"><strong>📡 Webhook 优先</strong><span>避免轮询！Webhook 实现秒级响应，显著降低系统负载</span></div>
+    <div class="concept-item"><strong>📦 批量处理</strong><span>使用 Split in Batches 分批（每批 100 条），避免内存溢出</span></div>
+    <div class="concept-item"><strong>🔐 凭证安全</strong><span>永不硬编码密钥！使用凭证系统或 <code>$env.VAR_NAME</code> 环境变量</span></div>
+    <div class="concept-item"><strong>📝 版本控制</strong><span>导出 JSON 存入 Git，分环境管理（dev → staging → prod）</span></div>
+  </div>
+
+  <h3>环境变量安全检查清单</h3>
+  <table>
+    <tr><th>变量</th><th>必须</th><th>说明</th></tr>
+    <tr><td>N8N_ENCRYPTION_KEY</td><td>✅ 必须</td><td>用于加密数据库中的凭证，生产环境必设</td></tr>
+    <tr><td>N8N_BASIC_AUTH_*</td><td>✅ 必须</td><td>为 n8n 编辑器设置 Basic Auth 登录</td></tr>
+    <tr><td>DB_TYPE=postgresdb</td><td>✅ 推荐</td><td>生产环境用 PostgreSQL 替代默认 SQLite</td></tr>
+    <tr><td>N8N_HOST / N8N_PROTOCOL</td><td>✅ 推荐</td><td>配置域名和 HTTPS，确保 Webhook 正常工作</td></tr>
+    <tr><td>GENERIC_TIMEZONE</td><td>✅ 推荐</td><td>设为 Asia/Shanghai，避免定时任务时区错误</td></tr>
+  </table>
+</div>
+
+</div><!-- end tab-n8n -->
+
+<!-- ==================== COMPARE TAB ==================== -->
+<div class="tab-content" id="tab-compare">
+
+<div class="card" id="compare">
+  <div class="card-header">
+    <div class="card-icon both">⚖️</div>
+    <h2>Dify vs n8n — 全方位对比</h2>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:14%">维度</th><th style="width:43%">🧠 Dify</th><th style="width:43%">⚡ n8n</th></tr>
+      <tr>
+        <td><strong>定位</strong></td>
+        <td>AI 应用构建平台 —— 让 LLM 变得可用</td>
+        <td>工作流自动化引擎 —— 连接万物</td>
+      </tr>
+      <tr>
+        <td><strong>核心语言</strong></td>
+        <td>Python + TypeScript</td>
+        <td>TypeScript (Node.js)</td>
+      </tr>
+      <tr>
+        <td><strong>AI 原生度</strong></td>
+        <td>⭐⭐⭐⭐⭐ AI-first 设计</td>
+        <td>⭐⭐⭐ 后加但仍强大</td>
+      </tr>
+      <tr>
+        <td><strong>RAG 能力</strong></td>
+        <td>⭐⭐⭐⭐⭐ 完整 Pipeline（业界领先）</td>
+        <td>⭐⭐ 基础向量库集成</td>
+      </tr>
+      <tr>
+        <td><strong>SaaS 集成</strong></td>
+        <td>⭐⭐ 100+ 模型 + 插件</td>
+        <td>⭐⭐⭐⭐⭐ 1200+ 内置节点</td>
+      </tr>
+      <tr>
+        <td><strong>工作流编排</strong></td>
+        <td>⭐⭐⭐⭐ DAG 拖拽 + 分支 + 循环</td>
+        <td>⭐⭐⭐⭐⭐ 更丰富的控制流节点</td>
+      </tr>
+      <tr>
+        <td><strong>对话界面</strong></td>
+        <td>⭐⭐⭐⭐⭐ 内置 WebApp + 嵌入 SDK</td>
+        <td>⭐⭐ 需自建前端</td>
+      </tr>
+      <tr>
+        <td><strong>Prompt 管理</strong></td>
+        <td>⭐⭐⭐⭐⭐ 版本管理 + A/B 测试</td>
+        <td>⭐⭐⭐ 基础模板管理</td>
+      </tr>
+      <tr>
+        <td><strong>LLMOps 观测</strong></td>
+        <td>⭐⭐⭐⭐⭐ 日志 / 成本 / 标注</td>
+        <td>⭐⭐⭐ 执行日志为主</td>
+      </tr>
+      <tr>
+        <td><strong>ETL 数据管道</strong></td>
+        <td>⭐⭐ 基础 HTTP + 代码</td>
+        <td>⭐⭐⭐⭐⭐ 数据库 + 分批 + 合并</td>
+      </tr>
+      <tr>
+        <td><strong>代码灵活性</strong></td>
+        <td>⭐⭐⭐ Python/JS 沙箱节点</td>
+        <td>⭐⭐⭐⭐ JS 节点 + npm 包</td>
+      </tr>
+      <tr>
+        <td><strong>自托管</strong></td>
+        <td>✅ 完全免费 · Docker Compose</td>
+        <td>✅ 完全免费 · Docker / npm</td>
+      </tr>
+      <tr>
+        <td><strong>最低配置</strong></td>
+        <td>2 核 4GB（RAG 需更多）</td>
+        <td>2 核 4GB</td>
+      </tr>
+      <tr>
+        <td><strong>计费模式</strong></td>
+        <td>云版：按 AI 消息量</td>
+        <td>云版：按工作流执行次数</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- Collaborative Architecture -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon both">🤝</div>
+    <h2>「都要」方案：n8n 编排 + Dify AI</h2>
+  </div>
+  <p>这不是调和矛盾，而是<strong>实际生产中最优解</strong>：n8n 负责业务流程编排和外部系统连接，Dify 负责深度 AI 逻辑处理。<strong>各司其职，通过 API 松耦合。</strong></p>
+
+  <h3>协同架构</h3>
+  <div class="flow">
+    <span class="node start">n8n<br>定时 / Webhook</span><span class="arrow">→</span>
+    <span class="node">n8n<br>数据采集</span><span class="arrow">→</span>
+    <span class="node action">n8n<br>HTTP→Dify</span><span class="arrow">→</span>
+    <span class="node ai">Dify<br>RAG + LLM</span><span class="arrow">→</span>
+    <span class="node">n8n<br>格式化</span><span class="arrow">→</span>
+    <span class="node action">n8n<br>推送到飞书</span>
+  </div>
+
+  <h3>实战：n8n → Dify 协同估值报告</h3>
+  <div class="code-block">
+    <span class="lang-tag">n8n HTTP Request 节点 → 调用 Dify API</span>
+    <code><span class="comment">// n8n 的 HTTP Request 节点配置</span>
+Method: <span class="string">POST</span>
+URL: <span class="string">https://your-dify.com/v1/chat-messages</span>
+Headers:
+  Authorization: <span class="string">Bearer app-YOUR_DIFY_API_KEY</span>
+  Content-Type: <span class="string">application/json</span>
+Body (JSON):
+{
+  <span class="string">"inputs"</span>: {},
+  <span class="string">"query"</span>: <span class="string">"分析 {{$json.ticker}} {{$json.name}} 的当前估值水平，</span>
+<span class="string">           当前价格 {{$json.price}}，PE {{$json.pe}}，市值 {{$json.marketCap}}亿"</span>,
+  <span class="string">"response_mode"</span>: <span class="string">"blocking"</span>,
+  <span class="string">"user"</span>: <span class="string">"valuation-system"</span>
+}</code>
+  </div>
+
+  <div class="tip good">
+    <span class="tip-icon">✅</span>
+    <span><strong>协同优势：</strong>Dify 作为 AI 引擎独立迭代 Prompt 和 RAG 策略，无需动 n8n 的编排逻辑。n8n 的 1200+ 节点补足 Dify 薄弱的 SaaS 连接能力。两者都自托管 → 硬件成本月均不到 ¥150。</span>
+  </div>
+</div>
+
+<!-- Quick Decision -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon both">🎯</div>
+    <h2>快速选型决策表</h2>
+  </div>
+
+  <table>
+    <tr><th>你的需求</th><th>推荐</th><th>理由</th></tr>
+    <tr>
+      <td>构建 AI 知识库问答（RAG）</td>
+      <td>🧠 <strong>Dify</strong></td>
+      <td>完整的 RAG Pipeline，内置 WebApp，5 分钟上线</td>
+    </tr>
+    <tr>
+      <td>多系统数据同步 (ERP→CRM→通知)</td>
+      <td>⚡ <strong>n8n</strong></td>
+      <td>1200+ 节点，几乎能连接所有 SaaS</td>
+    </tr>
+    <tr>
+      <td>金融估值模型自动化</td>
+      <td>🤝 <strong>两者协同</strong></td>
+      <td>n8n 采集数据 + Dify AI 分析 + 代码计算 → 完美</td>
+    </tr>
+    <tr>
+      <td>快速出 AI 产品 MVP</td>
+      <td>🧠 <strong>Dify</strong></td>
+      <td>内置对话界面，不需要写前端</td>
+    </tr>
+    <tr>
+      <td>DevOps 自动化 (CI/CD + 告警)</td>
+      <td>⚡ <strong>n8n</strong></td>
+      <td>GitHub + Slack + 数据库 原生节点</td>
+    </tr>
+    <tr>
+      <td>AI 客服 / 对话机器人</td>
+      <td>🧠 <strong>Dify</strong></td>
+      <td>知识库 + Guardrails + 嵌入 SDK 一站式</td>
+    </tr>
+    <tr>
+      <td>定时 HTML 报告生成 + 多渠道分发</td>
+      <td>⚡ <strong>n8n</strong></td>
+      <td>Cron 定时 + Code 生成 HTML + 飞书/邮件/微信推送</td>
+    </tr>
+    <tr>
+      <td>CodeBuddy 技能 + AI 流水线</td>
+      <td>🤝 <strong>两者协同</strong></td>
+      <td>n8n 触发 → Dify AI 处理 → n8n 回调 → CodeBuddy</td>
+    </tr>
+  </table>
+
+  <div class="tip info" style="margin-top:16px;">
+    <span class="tip-icon">💡</span>
+    <span><strong>一句话口诀：</strong>「AI 重，选 Dify；连接多，选 n8n；两者都要，n8n 做壳 Dify 做核。」</span>
+  </div>
+</div>
+
+</div><!-- end tab-compare -->
+
+<!-- ==================== FOOTER ==================== -->
+<div style="text-align:center; padding:32px 0 16px; color:var(--text2); font-size:.82rem;">
+  <p>Dify × n8n 双平台实战教程 · 面向金融估值 & 前端全栈场景 · 2026.07</p>
+  <p style="margin-top:4px;">所有示例均可在 Docker 环境中一键复现 · 自托管 = 零成本</p>
+</div>
+
+</div><!-- end container -->
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Copy code
+document.querySelectorAll('.code-block').forEach(b => {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = '复制';
+  btn.onclick = function() {
+    const code = b.querySelector('code');
+    if (!code) return;
+    // Filter out comment/span markup for plain text
+    const text = code.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '已复制!';
+      setTimeout(() => { btn.textContent = '复制'; }, 1500);
+    });
+  };
+  b.appendChild(btn);
+});
+</script>
+
+</body>
+</html>

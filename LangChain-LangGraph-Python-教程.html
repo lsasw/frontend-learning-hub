@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain · LangGraph · Python 实战教程</title>
+<style>
+  :root {
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --text2: #4b5563;
+    --border: #e5e7eb;
+    --lc: #1c3c3c;
+    --lg: #2d1b69;
+    --py: #1e3a5f;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --green: #059669;
+    --orange: #ea580c;
+    --red: #dc2626;
+    --code-bg: #1e293b;
+    --code-text: #e2e8f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1a1a36 100%);
+    color: #fff; padding: 48px 32px; text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .hero h1 { font-size: 2em; margin-bottom: 8px; }
+  .hero .sub { opacity: 0.7; font-size: 0.95em; max-width: 600px; margin: 0 auto; }
+
+  /* ── Tabs ── */
+  .tab-nav {
+    display: flex; gap: 0; background: var(--card); position: sticky; top: 0; z-index: 100;
+    border-bottom: 2px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    justify-content: center;
+  }
+  .tab-btn {
+    flex: 0 1 220px; padding: 14px 20px; font-size: 0.95em; font-weight: 600;
+    cursor: pointer; border: none; background: transparent; color: var(--text2);
+    transition: all 0.2s; position: relative; text-align: center;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn.active::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px;
+    background: var(--accent); border-radius: 2px 2px 0 0;
+  }
+  .tab-badge {
+    display: inline-block; padding: 1px 8px; border-radius: 8px; font-size: 0.7em;
+    margin-left: 6px; vertical-align: middle;
+  }
+  .badge-lc { background: #ccfbf1; color: #0f766e; }
+  .badge-lg { background: #ede9fe; color: #6d28d9; }
+  .badge-py { background: #dbeafe; color: #1e40af; }
+
+  /* ── Main Content ── */
+  .container { max-width: 1040px; margin: 0 auto; padding: 32px 20px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section { margin-bottom: 48px; }
+  .section h2 {
+    font-size: 1.35em; margin-bottom: 16px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent); display: inline-block;
+  }
+  .section h3 { font-size: 1.1em; margin: 24px 0 10px; color: var(--accent2); }
+  .section p { margin: 10px 0; color: var(--text2); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; margin: 16px 0;
+  }
+  .card h4 { font-size: 1em; margin-bottom: 8px; }
+  .card-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px; margin: 16px 0;
+  }
+
+  /* ── Code Block ── */
+  .code-block {
+    background: var(--code-bg); color: var(--code-text); border-radius: 8px;
+    padding: 16px 20px; margin: 12px 0; overflow-x: auto; position: relative;
+    font-family: "SF Mono", "Cascadia Code", "Consolas", "Fira Code", monospace;
+    font-size: 0.85em; line-height: 1.65;
+  }
+  .code-block .comment { color: #94a3b8; }
+  .code-block .keyword { color: #f472b6; }
+  .code-block .string { color: #a5d6ff; }
+  .code-block .func { color: #67e8f9; }
+  .code-block .number { color: #fbbf24; }
+  .code-block .type { color: #c084fc; }
+  .code-block .decorator { color: #fbbf24; }
+  .code-lang {
+    position: absolute; top: 8px; right: 14px; font-size: 0.72em;
+    color: #64748b; text-transform: uppercase;
+  }
+  .copy-btn {
+    position: absolute; top: 8px; right: 60px; font-size: 0.72em;
+    background: rgba(255,255,255,0.1); border: none; color: #94a3b8; cursor: pointer;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ── Diagram ── */
+  .diag {
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; margin: 16px 0; overflow-x: auto; font-size: 0.82em;
+  }
+  .diag pre { margin: 0; font-family: "SF Mono", "Cascadia Code", monospace; line-height: 1.5; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em; }
+  th, td { padding: 8px 12px; border: 1px solid var(--border); text-align: left; }
+  th { background: #f1f5f9; font-weight: 600; }
+  tr:nth-child(even) { background: #fafbfc; }
+
+  /* ── Tags ── */
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 0.75em;
+    font-weight: 600; margin-right: 4px;
+  }
+  .tag-lc { background: #ccfbf1; color: #0f766e; }
+  .tag-lg { background: #ede9fe; color: #6d28d9; }
+  .tag-py { background: #dbeafe; color: #1e40af; }
+
+  /* ── Tips ── */
+  .tip {
+    background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 12px 0; font-size: 0.9em;
+  }
+  .tip strong { color: #92400e; }
+
+  /* ── Timeline ── */
+  .flow-steps {
+    display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0;
+  }
+  .flow-step {
+    flex: 1; min-width: 120px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; text-align: center; font-size: 0.85em;
+  }
+  .flow-step .step-num {
+    display: inline-block; width: 24px; height: 24px; line-height: 24px;
+    background: var(--accent); color: #fff; border-radius: 50%; font-size: 0.78em;
+    margin-bottom: 6px;
+  }
+  .flow-arrow { align-self: center; font-size: 1.2em; color: #94a3b8; }
+
+  .footer {
+    margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid var(--border);
+    color: var(--text2); font-size: 0.82em;
+  }
+
+  @media (max-width: 768px) {
+    .tab-nav { flex-wrap: wrap; }
+    .tab-btn { flex: 1 1 auto; padding: 10px 12px; font-size: 0.82em; }
+    .container { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero">
+  <h1>LangChain · LangGraph · Python</h1>
+  <p class="sub">AI 应用开发三剑客 —— 从 LLM 调用到多智能体状态机，一套文档搞定</p>
+  <p class="sub" style="margin-top:8px;font-size:0.85em;">每个主题都配有架构图、代码案例和实战场景</p>
+</div>
+
+<!-- ═══════════ TAB NAV ═══════════ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('langchain')">
+     LangChain<span class="tab-badge badge-lc">LLM 应用框架</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('langgraph')">
+     LangGraph<span class="tab-badge badge-lg">状态机 & Agent</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('python')">
+     Python<span class="tab-badge badge-py">AI 开发基石</span>
+  </button>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--              LANGCHAIN 面板                       -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="container">
+<div class="tab-panel active" id="tab-langchain">
+
+<div class="section">
+  <h2> LangChain 是什么？</h2>
+  <p>
+    LangChain 是一个<strong>构建 LLM 驱动应用的开源框架</strong>。
+    它把「调模型」这件事做了系统化封装：提示模板、链式调用、工具集成、记忆管理、RAG 检索——全部开箱即用。
+  </p>
+  <div class="diag">
+    <pre>
+┌─────────────────────────────────────────────────────────┐
+│                   LangChain 核心架构                       │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│   ┌──────────┐   ┌───────────┐   ┌──────────┐          │
+│   │  Prompt  │   │  Model    │   │  Output  │          │
+│   │ Templates│──→│ (LLM/Chat)│──→│ Parsers  │          │
+│   └──────────┘   └───────────┘   └──────────┘          │
+│                                                           │
+│   ┌──────────────────────────────────────────┐          │
+│   │              Chains（链）                   │          │
+│   │  RunnableSequence 串联多个步骤              │          │
+│   │  Prompt → Model → Parser → ...             │          │
+│   └──────────────────────────────────────────┘          │
+│                                                           │
+│   ┌──────────┐  ┌──────────┐  ┌─────────────────────┐  │
+│   │  Memory  │  │  Tools   │  │  Retrieval (RAG)     │  │
+│   │ 对话历史  │  │ API/函数  │  │ 向量检索+增强生成     │  │
+│   └──────────┘  └──────────┘  └─────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+    </pre>
+  </div>
+</div>
+
+<!-- ── Case 1: 最简 LLM 调用 ── -->
+<div class="section">
+  <h2> 案例一：最简 LLM 调用</h2>
+  <p>三行代码让 GPT-4 帮你写估值分析报告开头。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.schema <span class="keyword">import</span> HumanMessage
+
+<span class="comment"># 初始化模型</span>
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>, temperature=<span class="number">0.7</span>)
+
+<span class="comment"># 直接问</span>
+response = llm.invoke([
+    HumanMessage(content=<span class="string">"请用中文写一段贵州茅台 DCF 估值分析的开场白"</span>)
+])
+
+<span class="comment"># response.content 就是答案</span>
+<span class="keyword">print</span>(response.content)
+
+<span class="comment"># 输出示例:</span>
+<span class="comment"># "贵州茅台作为中国白酒行业龙头，其护城河深度和现金流稳定性</span>
+<span class="comment">#  使得 DCF 估值方法具有较高的适用性。本次分析基于以下核心假设..."</span></pre>
+  </div>
+  <div class="tip">
+    <strong> 实战要点：</strong><code>temperature</code> 控制创造性：0=严谨/金融分析，0.7=创意/文案；<code>model</code> 可按 Agent 分层（复杂推理用 GPT-4，简单格式化用 GPT-3.5）
+  </div>
+</div>
+
+<!-- ── Case 2: Prompt 模板 + Chain ── -->
+<div class="section">
+  <h2> 案例二：Prompt 模板 + 链式调用</h2>
+  <p>金融场景：自动生成多情景估值摘要。模板保证格式一致，Chain 负责串联。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.prompts <span class="keyword">import</span> ChatPromptTemplate
+<span class="keyword">from</span> langchain.schema <span class="keyword">import</span> StrOutputParser
+
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>, temperature=<span class="number">0</span>)
+
+<span class="comment"># 定义模板 —— 输入变量用 { } 标记</span>
+prompt = ChatPromptTemplate.from_messages([
+    (<span class="string">"system"</span>, <span class="string">"你是一位资深估值分析师，输出使用中文。"</span>),
+    (<span class="string">"human"</span>, <span class="string">"""请对 {company} 做 DCF 估值摘要：
+
+核心假设：
+- 预测期: {forecast_years} 年
+- WACC: {wacc}%
+- 永续增长率: {growth_rate}%
+
+请输出：合理股价区间、关键变量敏感性、一句话结论。"""</span>)
+])
+
+<span class="comment"># 构建 Chain: Prompt → LLM → 文本输出</span>
+chain = prompt | llm | StrOutputParser()
+
+<span class="comment"># 一口气跑不同公司</span>
+companies = [
+    {<span class="string">"company"</span>: <span class="string">"宁德时代"</span>, <span class="string">"forecast_years"</span>: <span class="number">10</span>, <span class="string">"wacc"</span>: <span class="number">8.5</span>, <span class="string">"growth_rate"</span>: <span class="number">3.0</span>},
+    {<span class="string">"company"</span>: <span class="string">"比亚迪"</span>,   <span class="string">"forecast_years"</span>: <span class="number">10</span>, <span class="string">"wacc"</span>: <span class="number">9.0</span>, <span class="string">"growth_rate"</span>: <span class="number">3.5</span>},
+]
+
+<span class="keyword">for</span> params <span class="keyword">in</span> companies:
+    result = chain.invoke(params)
+    <span class="keyword">print</span>(<span class="string">f"\n=== {params['company']} ===\n{result}"</span>)</pre>
+  </div>
+  <p>
+    <span class="tag tag-lc">核心概念</span>
+    <strong>LCEL (LangChain Expression Language)</strong>：用 <code>|</code> 管道符串联组件，比旧版 <code>LLMChain</code> 更简洁、支持流式、可组合。
+  </p>
+</div>
+
+<!-- ── Case 3: RAG 检索增强生成 ── -->
+<div class="section">
+  <h2> 案例三：RAG — 让 LLM 读你的研报库</h2>
+  <p>问题：GPT 不知道你公司的内部估值模型参数。方案：把 PDF 研报向量化，让 LLM 检索后回答。</p>
+  <div class="diag">
+    <pre>
+┌───────┐    ┌───────────┐    ┌───────────┐    ┌────────────┐
+│ 用户   │──→│ 检索系统    │──→│ 增强 Prompt│──→│  LLM 回答   │
+│ 提问   │    │ (向量检索)  │    │ (上下文注入)│    │            │
+└───────┘    └───────────┘    └───────────┘    └────────────┘
+                  ↑
+          ┌──────────────┐
+          │ 你的 PDF 研报 │ → Chunk → Embed → VectorStore
+          └──────────────┘
+    </pre>
+  </div>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langchain.document_loaders <span class="keyword">import</span> PyPDFLoader
+<span class="keyword">from</span> langchain.text_splitter <span class="keyword">import</span> RecursiveCharacterTextSplitter
+<span class="keyword">from</span> langchain.embeddings <span class="keyword">import</span> OpenAIEmbeddings
+<span class="keyword">from</span> langchain.vectorstores <span class="keyword">import</span> Chroma
+<span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.chains <span class="keyword">import</span> RetrievalQA
+
+<span class="comment"># 1. 加载 PDF 研报 → 切块</span>
+loader = PyPDFLoader(<span class="string">"茅台2025年Q1业绩分析.pdf"</span>)
+docs = loader.load()
+splitter = RecursiveCharacterTextSplitter(chunk_size=<span class="number">500</span>, chunk_overlap=<span class="number">50</span>)
+chunks = splitter.split_documents(docs)
+
+<span class="comment"># 2. 向量化 → 存入 Chroma</span>
+embeddings = OpenAIEmbeddings()
+vectorstore = Chroma.from_documents(chunks, embeddings)
+
+<span class="comment"># 3. 构建 RAG 检索链</span>
+qa_chain = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model=<span class="string">"gpt-4"</span>),
+    chain_type=<span class="string">"stuff"</span>,
+    retriever=vectorstore.as_retriever(search_kwargs={<span class="string">"k"</span>: <span class="number">3</span>})
+)
+
+<span class="comment"># 4. 提问 —— LLM 会基于检索到的研报片段回答</span>
+answer = qa_chain.run(<span class="string">"茅台Q1营收增速和毛利率是多少？"</span>)
+<span class="keyword">print</span>(answer)
+
+<span class="comment"># 也可以问跨文档问题：</span>
+answer2 = qa_chain.run(<span class="string">"对比茅台、五粮液Q1的净利润率和增速"</span>)</pre>
+  </div>
+  <div class="tip">
+    <strong> 避坑指南：</strong>chunk_size 要平衡，太大检索不准、太小语义丢失；embedding 模型推荐 <code>text-embedding-3-small</code>（性价比最高）；检索 top-k 建议 3~5 个；如果答案"跑偏"说明 chunk 切太碎。
+  </div>
+</div>
+
+<!-- ── Case 4: Tool Calling ── -->
+<div class="section">
+  <h2> 案例四：Agent + Tool Calling — 让 AI 查实时股价</h2>
+  <p>LangChain Agent 可以根据用户意图自动选择调用哪个工具（函数）。这里演示：AI 自动决定查股价还是算估值。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.agents <span class="keyword">import</span> AgentExecutor, create_openai_tools_agent
+<span class="keyword">from</span> langchain.tools <span class="keyword">import</span> tool
+<span class="keyword">from</span> langchain.prompts <span class="keyword">import</span> ChatPromptTemplate, MessagesPlaceholder
+
+<span class="comment"># ── 定义工具（普通函数 + @tool 装饰器）──</span>
+<span class="decorator">@tool</span>
+<span class="keyword">def</span> <span class="func">get_stock_price</span>(symbol: <span class="type">str</span>) -> <span class="type">str</span>:
+    <span class="string">"""获取A股实时股价。symbol: 股票代码如 '600519'（茅台）"""</span>
+    <span class="comment"># 模拟数据，实际接东方财富 API</span>
+    prices = {<span class="string">"600519"</span>: <span class="string">"1680.00元"</span>, <span class="string">"000858"</span>: <span class="string">"142.50元"</span>, <span class="string">"300750"</span>: <span class="string">"218.00元"</span>}
+    <span class="keyword">return</span> prices.get(symbol, <span class="string">"未找到该股票"</span>)
+
+<span class="decorator">@tool</span>
+<span class="keyword">def</span> <span class="func">quick_dcf</span>(fcf: <span class="type">float</span>, wacc: <span class="type">float</span>, growth: <span class="type">float</span>) -> <span class="type">str</span>:
+    <span class="string">"""快速 DCF 估值。fcf: 自由现金流(亿), wacc: 折现率(%), growth: 永续增长率(%)"""</span>
+    terminal_value = fcf * (<span class="number">1</span> + growth/<span class="number">100</span>) / (wacc/<span class="number">100</span> - growth/<span class="number">100</span>)
+    <span class="keyword">return</span> <span class="string">f"永续终值: {terminal_value:.1f}亿"</span>
+
+<span class="comment"># ── 构建 Agent ──</span>
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>)
+tools = [get_stock_price, quick_dcf]
+prompt = ChatPromptTemplate.from_messages([
+    (<span class="string">"system"</span>, <span class="string">"你是量化分析助手，能用工具查股价或快速估算。"</span>),
+    (<span class="string">"human"</span>, <span class="string">"{input}"</span>),
+    MessagesPlaceholder(variable_name=<span class="string">"agent_scratchpad"</span>),
+])
+agent = create_openai_tools_agent(llm, tools, prompt)
+executor = AgentExecutor(agent=agent, tools=tools, verbose=<span class="keyword">True</span>)
+
+<span class="comment"># Agent 会自动选工具！</span>
+executor.invoke({<span class="string">"input"</span>: <span class="string">"茅台现在多少钱？"</span>})
+<span class="comment"># → 自动调用 get_stock_price(symbol="600519")</span>
+
+executor.invoke({<span class="string">"input"</span>: <span class="string">"宁德时代 WACC 8.5%、永续增长3%、自由现金流500亿，估一下"</span>})
+<span class="comment"># → 自动调用 quick_dcf(fcf=500, wacc=8.5, growth=3)</span></pre>
+  </div>
+  <div class="tip">
+    <strong> 设计原则：</strong>工具的 docstring 就是 Agent 的"使用说明书"——写清楚什么时候用、参数什么含义。如果不写 docstring，Agent 不知道这个工具能干嘛。
+  </div>
+</div>
+
+<!-- ── Case 5: Memory ── -->
+<div class="section">
+  <h2> 案例五：Memory — 让 AI 记住对话上下文</h2>
+  <p>默认每次调用是"失忆"的。加了 Memory，AI 会带着之前的对话历史回答。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.memory <span class="keyword">import</span> ConversationBufferMemory
+<span class="keyword">from</span> langchain.chains <span class="keyword">import</span> ConversationChain
+
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>)
+memory = ConversationBufferMemory()
+chain = ConversationChain(llm=llm, memory=memory)
+
+<span class="comment"># 第一轮：设定上下文</span>
+chain.run(<span class="string">"我叫七智，我重仓茅台成本1500元"</span>)
+<span class="comment"># AI: "你好七智！茅台1500建仓成本不错..."</span>
+
+<span class="comment"># 第二轮：AI 记得上下文</span>
+chain.run(<span class="string">"如果明天涨5%我浮盈多少？"</span>)
+<span class="comment"># AI: "按1500成本、涨5%到1575，每手浮盈7500元..."</span>
+
+<span class="comment"># 没有 Memory 的话，第二轮AI会问"你是谁？什么成本？"</span></pre>
+  </div>
+  <table>
+    <tr><th>Memory 类型</th><th>适用场景</th><th>特点</th></tr>
+    <tr><td><code>ConversationBufferMemory</code></td><td>短对话</td><td>存全部历史，Token 消耗线性增长</td></tr>
+    <tr><td><code>ConversationSummaryMemory</code></td><td>长对话</td><td>对历史做摘要压缩，省 Token</td></tr>
+    <tr><td><code>ConversationBufferWindowMemory</code></td><td>固定窗口</td><td>只保留最近 K 轮，成本可控</td></tr>
+    <tr><td><code>VectorStoreRetrieverMemory</code></td><td>知识持久化</td><td>向量检索相关历史片段</td></tr>
+  </table>
+</div>
+
+</div><!-- /langchain -->
+
+<!-- ════════════════════════════════════════════════ -->
+<!--              LANGGRAPH 面板                       -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-langgraph">
+
+<div class="section">
+  <h2> LangGraph 是什么？</h2>
+  <p>
+    LangGraph 是 LangChain 生态的<strong>状态机 + 图编排引擎</strong>。
+    如果说 LangChain 解决"怎么调 LLM"，LangGraph 解决"<strong>怎么控制多个 LLM 调用的流向和循环</strong>"。
+  </p>
+  <div class="card-grid">
+    <div class="card">
+      <h4> 核心概念</h4>
+      <ul>
+        <li><strong>State（状态）</strong>：在整个图执行过程中传递的共享字典</li>
+        <li><strong>Node（节点）</strong>：执行单元，可以是 LLM 调用、工具调用、条件判断</li>
+        <li><strong>Edge（边）</strong>：定义节点间的流转方向</li>
+        <li><strong>Conditional Edge（条件边）</strong>：根据状态动态决定下一跳</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4> 相比 LangChain Agent 的优势</h4>
+      <ul>
+        <li>更<strong>可控</strong>：图的每个分叉都是你显式定义的</li>
+        <li>更<strong>透明</strong>：执行路径可追踪，方便调试</li>
+        <li>支持<strong>循环</strong>：Agent 可以反复思考 → 调用工具 → 检查 → 再思考</li>
+        <li>原生支持 <strong>Human-in-the-Loop</strong>：可中断等人工审批</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── Case 1: DCF 多步骤状态机 ── -->
+<div class="section">
+  <h2> 案例一：DCF 估值多步骤状态机</h2>
+  <p>金融实战：把 DCF 估值拆成 4 步 → 采集数据 → 计算 WACC → 跑 DCF → 输出 Excel，LangGraph 管理流转。</p>
+  <div class="diag">
+    <pre>
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│  collect  │──→│calc_wacc │──→│ run_dcf  │──→│  export  │
+│ 采集数据   │    │ 计算WACC │    │ DCF建模  │    │ Excel导出│
+└──────────┘    └──────────┘    └──────────┘    └──────────┘
+       ↑                                              │
+       └──────────── 数据不全，回头重采 ───────────────┘
+    </pre>
+  </div>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict, Literal
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, END
+
+<span class="comment"># 1. 定义 State —— 图里流转的共享数据结构</span>
+<span class="keyword">class</span> <span class="type">DCFState</span>(TypedDict):
+    ticker: <span class="type">str</span>              <span class="comment"># 股票代码</span>
+    fcf: <span class="type">float</span>             <span class="comment"># 自由现金流</span>
+    wacc: <span class="type">float</span>            <span class="comment"># 加权平均资本成本</span>
+    growth_rate: <span class="type">float</span>     <span class="comment"># 永续增长率</span>
+    intrinsic_value: <span class="type">float</span>  <span class="comment"># 内在价值</span>
+    report: <span class="type">str</span>            <span class="comment"># 最终报告</span>
+
+<span class="comment"># 2. 定义每个 Node（节点=执行步骤）</span>
+<span class="keyword">def</span> <span class="func">collect_data</span>(state: DCFState) -> DCFState:
+    <span class="string">"""从数据库/API 采集财务数据"""</span>
+    <span class="comment"># 模拟采集结果</span>
+    state[<span class="string">"fcf"</span>] = <span class="number">500.0</span>   <span class="comment"># 亿</span>
+    state[<span class="string">"wacc"</span>] = <span class="number">0.085</span>  <span class="comment"># 8.5%</span>
+    state[<span class="string">"growth_rate"</span>] = <span class="number">0.03</span>  <span class="comment"># 3%</span>
+    <span class="keyword">return</span> state
+
+<span class="keyword">def</span> <span class="func">calculate_wacc</span>(state: DCFState) -> DCFState:
+    <span class="string">"""计算/校验 WACC"""</span>
+    <span class="comment"># 这里可以调用 LLM 做参数合理性检查</span>
+    <span class="keyword">if</span> state[<span class="string">"wacc"</span>] < <span class="number">0.05</span> <span class="keyword">or</span> state[<span class="string">"wacc"</span>] > <span class="number">0.15</span>:
+        state[<span class="string">"wacc"</span>] = <span class="number">0.09</span>  <span class="comment"># 默认合理值</span>
+    <span class="keyword">return</span> state
+
+<span class="keyword">def</span> <span class="func">run_dcf</span>(state: DCFState) -> DCFState:
+    <span class="string">"""执行 DCF 计算"""</span>
+    fcf, wacc, g = state[<span class="string">"fcf"</span>], state[<span class="string">"wacc"</span>], state[<span class="string">"growth_rate"</span>]
+    terminal = fcf * (<span class="number">1</span> + g) / (wacc - g)
+    state[<span class="string">"intrinsic_value"</span>] = <span class="keyword">round</span>(terminal, <span class="number">2</span>)
+    <span class="keyword">return</span> state
+
+<span class="keyword">def</span> <span class="func">export_report</span>(state: DCFState) -> DCFState:
+    <span class="string">"""生成报告"""</span>
+    state[<span class="string">"report"</span>] = (
+        <span class="string">f"【{state['ticker']} DCF估值报告】\n"</span>
+        <span class="string">f"自由现金流: {state['fcf']}亿\n"</span>
+        <span class="string">f"WACC: {state['wacc']*100:.1f}%\n"</span>
+        <span class="string">f"内在价值: {state['intrinsic_value']}亿"</span>
+    )
+    <span class="keyword">return</span> state
+
+<span class="comment"># 3. 构建图</span>
+graph = StateGraph(DCFState)
+graph.add_node(<span class="string">"collect"</span>, collect_data)
+graph.add_node(<span class="string">"calc_wacc"</span>, calculate_wacc)
+graph.add_node(<span class="string">"run_dcf"</span>, run_dcf)
+graph.add_node(<span class="string">"export"</span>, export_report)
+
+<span class="comment"># 4. 定义边（流转方向）</span>
+graph.set_entry_point(<span class="string">"collect"</span>)
+graph.add_edge(<span class="string">"collect"</span>, <span class="string">"calc_wacc"</span>)
+graph.add_edge(<span class="string">"calc_wacc"</span>, <span class="string">"run_dcf"</span>)
+graph.add_edge(<span class="string">"run_dcf"</span>, <span class="string">"export"</span>)
+graph.add_edge(<span class="string">"export"</span>, END)
+
+<span class="comment"># 5. 编译 & 运行</span>
+app = graph.compile()
+result = app.invoke({<span class="string">"ticker"</span>: <span class="string">"600519"</span>})
+<span class="keyword">print</span>(result[<span class="string">"report"</span>])
+
+<span class="comment"># 输出:</span>
+<span class="comment"># 【600519 DCF估值报告】</span>
+<span class="comment"># 自由现金流: 500.0亿</span>
+<span class="comment"># WACC: 8.5%</span>
+<span class="comment"># 内在价值: 9363.64亿</span></pre>
+  </div>
+</div>
+
+<!-- ── Case 2: Agent 循环 ── -->
+<div class="section">
+  <h2> 案例二：Agent 自主循环 — 思考→行动→观察</h2>
+  <p>这是 LangGraph 最经典的 ReAct 模式：Agent 反复在 Think（思考）→ Act（调工具）→ Observe（看结果）之间循环，直到得出结论。</p>
+  <div class="diag">
+    <pre>
+        ┌──────────────────────────────┐
+        │         ReAct Agent           │
+        │                               │
+        │   ┌──────┐   ┌──────┐        │
+   START──→│ agent │──→│tools?│──YES──┐ │
+        │   └──────┘   └──────┘       │ │
+        │       ↑          │ NO        │ │
+        │       │          ↓           │ │
+        │       └──── END ←┘          │ │
+        │               ↑              │ │
+        │   ┌──────┐    │              │ │
+        │   │tools │────┘              │ │
+        │   └──────┘                   │ │
+        └──────────────────────────────┘
+    </pre>
+  </div>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict, Annotated, Literal
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, END
+<span class="keyword">from</span> langgraph.prebuilt <span class="keyword">import</span> ToolNode
+<span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.tools <span class="keyword">import</span> tool
+<span class="keyword">from</span> langchain.schema <span class="keyword">import</span> HumanMessage
+<span class="keyword">import</span> json
+
+<span class="comment"># ── 工具 ──</span>
+<span class="decorator">@tool</span>
+<span class="keyword">def</span> <span class="func">get_balance_sheet</span>(ticker: <span class="type">str</span>) -> <span class="type">str</span>:
+    <span class="string">"""获取资产负债表摘要。ticker: 股票代码"""</span>
+    data = {<span class="string">"600519"</span>: {<span class="string">"现金"</span>: <span class="string">"1200亿"</span>, <span class="string">"总负债"</span>: <span class="string">"350亿"</span>, <span class="string">"ROE"</span>: <span class="string">"32%"</span>}}
+    <span class="keyword">return</span> json.dumps(data.get(ticker, {}), ensure_ascii=<span class="keyword">False</span>)
+
+<span class="decorator">@tool</span>
+<span class="keyword">def</span> <span class="func">get_industry_pe</span>(industry: <span class="type">str</span>) -> <span class="type">str</span>:
+    <span class="string">"""获取行业平均PE。industry: 行业名称"""</span>
+    pe = {<span class="string">"白酒"</span>: <span class="string">"25.3x"</span>, <span class="string">"新能源"</span>: <span class="string">"35.7x"</span>, <span class="string">"银行"</span>: <span class="string">"5.8x"</span>}
+    <span class="keyword">return</span> pe.get(industry, <span class="string">"暂无数据"</span>)
+
+tools = [get_balance_sheet, get_industry_pe]
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>).bind_tools(tools)
+
+<span class="comment"># ── State ──</span>
+<span class="keyword">class</span> <span class="type">AgentState</span>(TypedDict):
+    messages: <span class="type">list</span>
+
+<span class="comment"># ── Node ──</span>
+<span class="keyword">def</span> <span class="func">call_agent</span>(state: AgentState):
+    response = llm.invoke(state[<span class="string">"messages"</span>])
+    <span class="keyword">return</span> {<span class="string">"messages"</span>: [response]}
+
+<span class="comment"># 条件路由: 如果需要调工具 → tools 节点; 否则 → END</span>
+<span class="keyword">def</span> <span class="func">should_continue</span>(state: AgentState) -> Literal[<span class="string">"tools"</span>, <span class="string">"__end__"</span>]:
+    last = state[<span class="string">"messages"</span>][-<span class="number">1</span>]
+    <span class="keyword">if</span> hasattr(last, <span class="string">"tool_calls"</span>) <span class="keyword">and</span> last.tool_calls:
+        <span class="keyword">return</span> <span class="string">"tools"</span>
+    <span class="keyword">return</span> <span class="string">"__end__"</span>
+
+<span class="comment"># ── 构建图 ──</span>
+workflow = StateGraph(AgentState)
+workflow.add_node(<span class="string">"agent"</span>, call_agent)
+workflow.add_node(<span class="string">"tools"</span>, ToolNode(tools))
+workflow.set_entry_point(<span class="string">"agent"</span>)
+workflow.add_conditional_edges(<span class="string">"agent"</span>, should_continue)
+workflow.add_edge(<span class="string">"tools"</span>, <span class="string">"agent"</span>)  <span class="comment"># 工具结果返回给agent重新思考</span>
+
+app = workflow.compile()
+
+<span class="comment"># 问一个问题，Agent 会自动查工具 → 思考 → 回答</span>
+result = app.invoke({
+    <span class="string">"messages"</span>: [HumanMessage(content=<span class="string">"茅台资产负债表怎么样？白酒行业PE多少？"</span>)]
+})
+<span class="keyword">print</span>(result[<span class="string">"messages"</span>][-<span class="number">1</span>].content)</pre>
+  </div>
+</div>
+
+<!-- ── Case 3: 并行分支 ── -->
+<div class="section">
+  <h2> 案例三：并行分支 — 同时分析多家公司</h2>
+  <p>LangGraph 支持并行执行：同时跑茅台、五粮液、宁德的估值，结果汇总比较。</p>
+  <div class="diag">
+    <pre>
+                    ┌─────────────┐
+                    │  split_tasks │ (分发)
+                    └──┬───┬───┬──┘
+                       │   │   │
+                  ┌────↓ ┌─↓ ┌─↓────┐
+                  │茅台  │五粮│ 宁德  │  (三个节点并行)
+                  └──┬───┴─┬─┴──┬───┘
+                     │     │    │
+                    ┌↓─────↓────↓──┐
+                    │   compare    │ (汇总比对)
+                    └──────────────┘
+    </pre>
+  </div>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, END
+<span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict
+<span class="keyword">import</span> operator
+
+<span class="keyword">class</span> <span class="type">ParallelState</span>(TypedDict):
+    tickers: <span class="type">list</span>
+    results: <span class="type">dict</span>   <span class="comment"># {ticker: value}</span>
+    comparison: <span class="type">str</span>
+
+<span class="comment"># 并行节点: 每个 ticker 独立估值</span>
+<span class="keyword">def</span> <span class="func">valuation_node</span>(state: ParallelState, ticker: <span class="type">str</span>) -> <span class="type">dict</span>:
+    <span class="comment"># 模拟: 实际可以调 LLM 或 API</span>
+    values = {<span class="string">"600519"</span>: <span class="number">1680</span>, <span class="string">"000858"</span>: <span class="number">142</span>, <span class="string">"300750"</span>: <span class="number">218</span>}
+    <span class="keyword">return</span> {<span class="string">"results"</span>: {ticker: values.get(ticker, <span class="number">0</span>)}}
+
+<span class="keyword">def</span> <span class="func">compare_results</span>(state: ParallelState) -> ParallelState:
+    r = state[<span class="string">"results"</span>]
+    best = <span class="keyword">max</span>(r, key=r.get)
+    state[<span class="string">"comparison"</span>] = (
+        <span class="string">f"估值对比: 茅台 {r.get('600519')}元 | "</span>
+        <span class="string">f"五粮液 {r.get('000858')}元 | "</span>
+        <span class="string">f"宁德时代 {r.get('300750')}元\n"</span>
+        <span class="string">f"股价最高: {best}"</span>
+    )
+    <span class="keyword">return</span> state
+
+<span class="comment"># 构建并行图（简化示意，实际需要 Send API）</span>
+<span class="comment"># LangGraph 的 Send API 可以实现动态并行 fan-out</span>
+<span class="comment"># 更多详见: langgraph docs / how-tos / map-reduce</span></pre>
+  </div>
+  <div class="tip">
+    <strong> 提示：</strong>LangGraph 的 <code>Send</code> API 支持动态并行分发（fan-out）→ 并行执行 → 汇聚（fan-in），非常适合批量估值、批量报告生成等场景。
+  </div>
+</div>
+
+<!-- ── Case 4: Human-in-the-Loop ── -->
+<div class="section">
+  <h2> 案例四：Human-in-the-Loop — 估值结果人工审批</h2>
+  <p>金融场景的核心需求：AI 算完估值不是直接输出，而是先"暂停等审批"。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, END
+<span class="keyword">from</span> langgraph.checkpoint <span class="keyword">import</span> MemorySaver
+<span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict
+
+<span class="keyword">class</span> <span class="type">ApprovalState</span>(TypedDict):
+    valuation: <span class="type">dict</span>
+    status: <span class="type">str</span>        <span class="comment"># "pending" | "approved" | "rejected"</span>
+    final_report: <span class="type">str</span>
+
+<span class="keyword">def</span> <span class="func">do_valuation</span>(state: ApprovalState) -> ApprovalState:
+    state[<span class="string">"valuation"</span>] = {<span class="string">"price"</span>: <span class="number">1680</span>, <span class="string">"upside"</span>: <span class="string">"+12%"</span>, <span class="string">"risk"</span>: <span class="string">"中等"</span>}
+    state[<span class="string">"status"</span>] = <span class="string">"pending"</span>
+    <span class="keyword">return</span> state
+
+<span class="comment"># ── 中断节点: 执行到这里会暂停，等人类批准 ──</span>
+<span class="keyword">def</span> <span class="func">human_approval</span>(state: ApprovalState) -> ApprovalState:
+    <span class="string">"""此处由人类决定 approve/reject"""</span>
+    <span class="keyword">return</span> state
+
+<span class="keyword">def</span> <span class="func">on_approved</span>(state: ApprovalState) -> ApprovalState:
+    state[<span class="string">"final_report"</span>] = <span class="string">f"报告已生成。估值: {state['valuation']}"</span>
+    <span class="keyword">return</span> state
+
+<span class="keyword">def</span> <span class="func">on_rejected</span>(state: ApprovalState) -> ApprovalState:
+    state[<span class="string">"final_report"</span>] = <span class="string">"审批未通过。请调整参数后重新估值。"</span>
+    <span class="keyword">return</span> state
+
+<span class="comment"># 构建审批图</span>
+workflow = StateGraph(ApprovalState)
+workflow.add_node(<span class="string">"valuation"</span>, do_valuation)
+workflow.add_node(<span class="string">"approval"</span>, human_approval)
+workflow.add_node(<span class="string">"approved"</span>, on_approved)
+workflow.add_node(<span class="string">"rejected"</span>, on_rejected)
+
+workflow.set_entry_point(<span class="string">"valuation"</span>)
+workflow.add_edge(<span class="string">"valuation"</span>, <span class="string">"approval"</span>)
+workflow.add_conditional_edges(<span class="string">"approval"</span>,
+    <span class="keyword">lambda</span> s: <span class="string">"approved"</span> <span class="keyword">if</span> s[<span class="string">"status"</span>]==<span class="string">"approved"</span> <span class="keyword">else</span> <span class="string">"rejected"</span>,
+    {<span class="string">"approved"</span>: <span class="string">"approved"</span>, <span class="string">"rejected"</span>: <span class="string">"rejected"</span>}
+)
+workflow.add_edge(<span class="string">"approved"</span>, END)
+workflow.add_edge(<span class="string">"rejected"</span>, END)
+
+<span class="comment"># interrupt_before=["approval"] → 在 approval 之前暂停</span>
+app = workflow.compile(
+    checkpointer=MemorySaver(),
+    interrupt_before=[<span class="string">"approval"</span>]
+)
+
+<span class="comment"># 第一轮: 执行到 approval 前自动暂停</span>
+config = {<span class="string">"configurable"</span>: {<span class="string">"thread_id"</span>: <span class="string">"1"</span>}}
+result = app.invoke({}, config)
+<span class="keyword">print</span>(result[<span class="string">"status"</span>])  <span class="comment"># "pending" — 等待人类点击</span>
+
+<span class="comment"># 人类审核后继续:</span>
+app.update_state(config, {<span class="string">"status"</span>: <span class="string">"approved"</span>})
+final = app.invoke(<span class="keyword">None</span>, config)
+<span class="keyword">print</span>(final[<span class="string">"final_report"</span>])</pre>
+  </div>
+</div>
+
+</div><!-- /langgraph -->
+
+<!-- ════════════════════════════════════════════════ -->
+<!--              PYTHON 面板                         -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-python">
+
+<div class="section">
+  <h2> Python — AI 开发的基石</h2>
+  <p>
+    上面 LangChain 和 LangGraph 全是用 Python 写的。掌握 Python 的异步、类型注解、装饰器、Pydantic 数据模型
+    是写好 AI 应用的前提。以下聚焦 <strong>AI 开发中最常用的 6 个核心技能</strong>。
+  </p>
+</div>
+
+<!-- ── Case 1: 异步 ── -->
+<div class="section">
+  <h2> 案例一：asyncio — AI 调用的生命线</h2>
+  <p>LLM API 调用是 I/O 密集型（等网络返回），必须用异步才能不阻塞。LangChain/LangGraph 内部全是 async。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">import</span> asyncio
+
+<span class="comment"># 同步写法（串行，慢）—— 不推荐</span>
+<span class="comment"># r1 = llm.invoke("问题1")  # 等3秒</span>
+<span class="comment"># r2 = llm.invoke("问题2")  # 又等3秒 → 总计6秒</span>
+
+<span class="comment"># 异步写法（并发，快）—— 推荐</span>
+<span class="keyword">async def</span> <span class="func">batch_analyze</span>(tickers):
+    <span class="string">"""同时分析多只股票，互不阻塞"""</span>
+    tasks = []
+    <span class="keyword">for</span> t <span class="keyword">in</span> tickers:
+        <span class="comment"># 创建协程任务</span>
+        task = analyze_one_stock(t)
+        tasks.append(task)
+
+    <span class="comment"># 全部并发执行！3只股票也是3秒，不是9秒</span>
+    results = <span class="keyword">await</span> asyncio.gather(*tasks)
+    <span class="keyword">return</span> results
+
+<span class="keyword">async def</span> <span class="func">analyze_one_stock</span>(ticker: <span class="type">str</span>) -> <span class="type">dict</span>:
+    <span class="string">"""模拟 LLM 调用（实际替换为 llm.ainvoke）"""</span>
+    <span class="keyword">await</span> asyncio.sleep(<span class="number">1</span>)  <span class="comment"># 模拟网络延迟</span>
+    <span class="keyword">return</span> {<span class="string">"ticker"</span>: ticker, <span class="string">"score"</span>: <span class="string">"A"</span>}
+
+<span class="comment"># 运行</span>
+result = asyncio.run(batch_analyze([<span class="string">"600519"</span>, <span class="string">"000858"</span>, <span class="string">"300750"</span>]))
+<span class="keyword">print</span>(result)
+<span class="comment"># 输出: 3条结果，总耗时约1秒（不是3秒）</span></pre>
+  </div>
+  <div class="tip">
+    <strong> 记住：</strong>所有 LangChain 方法都有 async 版本——<code>llm.ainvoke()</code>、<code>chain.ainvoke()</code>、<code>graph.ainvoke()</code>。写 AI 应用，<strong>凡是 I/O 都用 async</strong>。
+  </div>
+</div>
+
+<!-- ── Case 2: Pydantic ── -->
+<div class="section">
+  <h2> 案例二：Pydantic — AI 输出的结构化保证</h2>
+  <p>LLM 返回的是自然语言文本，但你的程序需要结构化数据。Pydantic 是 LangChain/LangGraph 的默认数据验证层。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel, Field
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Optional
+<span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain.prompts <span class="keyword">import</span> ChatPromptTemplate
+
+<span class="comment"># 1. 定义输出结构 — 这就是你和LLM的"合同"</span>
+<span class="keyword">class</span> <span class="type">StockAnalysis</span>(BaseModel):
+    ticker: <span class="type">str</span> = Field(description=<span class="string">"股票代码"</span>)
+    valuation: <span class="type">str</span> = Field(description=<span class="string">"估值判断: 低估/合理/高估"</span>)
+    fair_price: <span class="type">float</span> = Field(description=<span class="string">"合理股价"</span>)
+    confidence: <span class="type">float</span> = Field(ge=<span class="number">0</span>, le=<span class="number">1</span>, description=<span class="string">"置信度 0~1"</span>)
+    key_risks: List[<span class="type">str</span>] = Field(description=<span class="string">"核心风险列表"</span>)
+    summary: <span class="type">str</span> = Field(max_length=<span class="number">200</span>, description=<span class="string">"一句话总结"</span>)
+
+<span class="comment"># 2. 让 LLM 直接输出这个结构</span>
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>)
+structured_llm = llm.with_structured_output(StockAnalysis)
+
+<span class="comment"># 3. 调用 — 返回的是 Pydantic 对象，不是字符串！</span>
+result = structured_llm.invoke(<span class="string">"分析茅台当前的估值水平"</span>)
+
+<span class="comment"># 类型安全: IDE 可以自动补全 result.ticker, result.fair_price</span>
+<span class="keyword">print</span>(<span class="string">f"股票: {result.ticker}"</span>)
+<span class="keyword">print</span>(<span class="string">f"估值: {result.valuation}"</span>)
+<span class="keyword">print</span>(<span class="string">f"合理价: {result.fair_price}"</span>)
+<span class="keyword">print</span>(<span class="string">f"置信度: {result.confidence:.0%}"</span>)
+<span class="keyword">print</span>(<span class="string">f"风险: {', '.join(result.key_risks)}"</span>)
+
+<span class="comment"># 4. 一键转 dict/JSON，直接存数据库</span>
+data = result.model_dump()
+<span class="comment"># {"ticker": "600519", "valuation": "合理", "fair_price": 1700.0, ...}</span></pre>
+  </div>
+  <div class="tip">
+    <strong> 关键技巧：</strong>用 <code>with_structured_output()</code> 让 LLM 直接返回 Pydantic 对象，省去正则解析的麻烦。Field 的 <code>description</code> 会被注入到 Prompt 里指导 LLM 输出格式。
+  </div>
+</div>
+
+<!-- ── Case 3: 装饰器 ── -->
+<div class="section">
+  <h2> 案例三：装饰器 — LangChain Tool 的定义核心</h2>
+  <p>LangChain 的 <code>@tool</code> 装饰器把普通函数变成 Agent 可调用的工具，背后的原理就是 Python 装饰器。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">import</span> time
+<span class="keyword">from</span> functools <span class="keyword">import</span> wraps
+
+<span class="comment"># ── 理解装饰器本质 ──</span>
+<span class="decorator">@decorator_name</span>
+<span class="keyword">def</span> <span class="func">func</span>(): ...
+<span class="comment"># 等价于: func = decorator_name(func)</span>
+
+<span class="comment"># ── 实战: 给估值函数加日志和计时 ──</span>
+<span class="keyword">def</span> <span class="func">log_execution</span>(func):
+    <span class="string">"""装饰器: 自动记录任何函数的执行日志"""</span>
+    <span class="decorator">@wraps</span>(func)
+    <span class="keyword">def</span> <span class="func">wrapper</span>(*args, **kwargs):
+        start = time.time()
+        <span class="keyword">print</span>(<span class="string">f"[LOG] 开始执行 {func.__name__}"</span>)
+        <span class="keyword">try</span>:
+            result = func(*args, **kwargs)
+            elapsed = time.time() - start
+            <span class="keyword">print</span>(<span class="string">f"[LOG] {func.__name__} 完成, 耗时 {elapsed:.2f}s"</span>)
+            <span class="keyword">return</span> result
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            <span class="keyword">print</span>(<span class="string">f"[ERROR] {func.__name__} 失败: {e}"</span>)
+            <span class="keyword">raise</span>
+    <span class="keyword">return</span> wrapper
+
+<span class="comment"># 使用装饰器 — 零侵入，函数本身不改一行</span>
+<span class="decorator">@log_execution</span>
+<span class="keyword">def</span> <span class="func">dcf_valuation</span>(fcf, wacc, growth):
+    terminal = fcf * (<span class="number">1</span> + growth) / (wacc - growth)
+    <span class="keyword">return</span> terminal
+
+<span class="decorator">@log_execution</span>
+<span class="keyword">def</span> <span class="func">pe_valuation</span>(earnings, pe):
+    <span class="keyword">return</span> earnings * pe
+
+<span class="comment"># 调用 — 自动打印日志</span>
+v1 = dcf_valuation(<span class="number">500</span>, <span class="number">0.085</span>, <span class="number">0.03</span>)
+v2 = pe_valuation(<span class="number">80</span>, <span class="number">25</span>)
+
+<span class="comment"># [LOG] 开始执行 dcf_valuation</span>
+<span class="comment"># [LOG] dcf_valuation 完成, 耗时 0.00s</span>
+<span class="comment"># [LOG] 开始执行 pe_valuation</span>
+<span class="comment"># [LOG] pe_valuation 完成, 耗时 0.00s</span></pre>
+  </div>
+</div>
+
+<!-- ── Case 4: 生成器 ── -->
+<div class="section">
+  <h2> 案例四：yield — LLM 流式输出的背后</h2>
+  <p>ChatGPT 那种一个字一个字往外蹦的效果，底层就是 Python 生成器 + Streaming。LangChain 的 <code>.stream()</code> 方法返回的就是生成器。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> langchain.chat_models <span class="keyword">import</span> ChatOpenAI
+
+llm = ChatOpenAI(model=<span class="string">"gpt-4"</span>, streaming=<span class="keyword">True</span>)
+
+<span class="comment"># 流式输出——一个字一个字打印，像ChatGPT</span>
+<span class="keyword">for</span> chunk <span class="keyword">in</span> llm.stream(<span class="string">"用200字概括DCF估值法的核心逻辑"</span>):
+    <span class="keyword">print</span>(chunk.content, end=<span class="string">""</span>, flush=<span class="keyword">True</span>)
+
+<span class="comment"># ── 理解 yield 本质 ──</span>
+<span class="keyword">def</span> <span class="func">read_large_portfolio</span>(filepath):
+    <span class="string">"""用生成器逐行读取大型持仓文件，不爆内存"""</span>
+    <span class="keyword">with</span> <span class="keyword">open</span>(filepath, <span class="string">"r"</span>) <span class="keyword">as</span> f:
+        <span class="keyword">for</span> line <span class="keyword">in</span> f:
+            <span class="keyword">yield</span> line.strip().split(<span class="string">","</span>)
+
+<span class="comment"># 10GB 持仓文件也能处理——每次只加载一行到内存</span>
+<span class="keyword">for</span> ticker, shares, cost <span class="keyword">in</span> read_large_portfolio(<span class="string">"portfolio_10gb.csv"</span>):
+    process_one_stock(ticker, shares, cost)</pre>
+  </div>
+</div>
+
+<!-- ── Case 5: 类型注解 ── -->
+<div class="section">
+  <h2> 案例五：Type Hints — LangGraph State 的基石</h2>
+  <p>LangGraph 的 State 定义全部依赖 TypedDict + 类型注解。写得越好，IDE 提示越好，bug 越少。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict, List, Optional, Literal, Union
+<span class="keyword">from</span> typing <span class="keyword">import</span> Annotated    <span class="comment"># LangGraph State 的核心!</span>
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph
+<span class="keyword">import</span> operator
+
+<span class="comment"># ── 最佳实践: TypedDict 定义 LangGraph State ──</span>
+<span class="keyword">class</span> <span class="type">ValuationState</span>(TypedDict):
+    <span class="string">"""DCF 估值流水线的完整状态定义"""</span>
+    ticker: <span class="type">str</span>
+    model_type: Literal[<span class="string">"DCF"</span>, <span class="string">"PE"</span>, <span class="string">"DDM"</span>]  <span class="comment"># 限定可选值</span>
+
+    <span class="comment"># 用 Annotated 控制合并策略</span>
+    assumptions: Annotated[<span class="type">dict</span>, <span class="string">"merge_assumptions"</span>]
+    <span class="comment">#  ↑ 多个节点返回 assumptions 时，用 merge_assumptions 合并</span>
+
+    fcf_forecast: List[<span class="type">float</span>]      <span class="comment"># 未来10年现金流预测</span>
+    wacc: <span class="type">float</span>
+    terminal_growth: <span class="type">float</span>
+    intrinsic_value: Optional[<span class="type">float</span>] = <span class="keyword">None</span>  <span class="comment"># 可能为空</span>
+    peers: List[<span class="type">str</span>] = []                   <span class="comment"># 默认空列表</span>
+
+<span class="comment"># IDE 自动补全: state["ticker"] → 知道是 str!</span>
+<span class="comment"># IDE 类型检查: state["wacc"] = "hello" → 报错!</span></pre>
+  </div>
+</div>
+
+<!-- ── Case 6: 上下文管理器 ── -->
+<div class="section">
+  <h2> 案例六：上下文管理器 — 资源安全与实验追踪</h2>
+  <p>AI 开发中最常见的坑：数据库连接没关、文件句柄泄露、向量库没释放。<code>with</code> 语句保平安。</p>
+  <div class="code-block">
+    <span class="code-lang">Python</span>
+<pre><span class="keyword">from</span> contextlib <span class="keyword">import</span> contextmanager
+<span class="keyword">import</span> time
+
+<span class="comment"># ── 实战: 估值实验上下文管理器 ──</span>
+<span class="decorator">@contextmanager</span>
+<span class="keyword">def</span> <span class="func">valuation_experiment</span>(name: <span class="type">str</span>):
+    <span class="string">"""自动计时 + 错误捕获的估值实验包装器"""</span>
+    start = time.time()
+    <span class="keyword">print</span>(<span class="string">f"\n {'='*40}"</span>)
+    <span class="keyword">print</span>(<span class="string">f" 实验: {name}"</span>)
+    <span class="keyword">print</span>(<span class="string">f" {'='*40}"</span>)
+    <span class="keyword">try</span>:
+        <span class="keyword">yield</span>  <span class="comment"># ← 这里执行 with 块里的代码</span>
+        elapsed = time.time() - start
+        <span class="keyword">print</span>(<span class="string">f"   状态: 成功 ✅ | 耗时: {elapsed:.2f}s"</span>)
+    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+        elapsed = time.time() - start
+        <span class="keyword">print</span>(<span class="string">f"   状态: 失败 ❌ | 耗时: {elapsed:.2f}s | 错误: {e}"</span>)
+
+<span class="comment"># 用法 —— with 块结束自动打印时间</span>
+<span class="keyword">with</span> valuation_experiment(<span class="string">"茅台 DCF WACC=8.5%"</span>):
+    result = dcf_valuation(<span class="number">500</span>, <span class="number">0.085</span>, <span class="number">0.03</span>)
+
+<span class="keyword">with</span> valuation_experiment(<span class="string">"宁德 DCF WACC=10%"</span>):
+    result = dcf_valuation(<span class="number">400</span>, <span class="number">0.10</span>, <span class="number">0.035</span>)
+
+<span class="comment"># 输出:</span>
+<span class="comment"># ========================================</span>
+<span class="comment">#  实验: 茅台 DCF WACC=8.5%</span>
+<span class="comment"># ========================================</span>
+<span class="comment">#    状态: 成功 ✅ | 耗时: 0.00s</span>
+<span class="comment"># ========================================</span>
+<span class="comment">#  实验: 宁德 DCF WACC=10%</span>
+<span class="comment"># ========================================</span>
+<span class="comment">#    状态: 成功 ✅ | 耗时: 0.00s</span></pre>
+  </div>
+</div>
+
+</div><!-- /python -->
+
+</div><!-- .container -->
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<div class="footer">
+  <p>LangChain · LangGraph · Python 实战教程 | 案例覆盖金融估值、Agent 开发、多智能体协作场景</p>
+  <p style="margin-top:4px">需要深入学习某个模块？每个案例都可以直接复制运行修改</p>
+</div>
+
+<!-- ═══════════ SCRIPT ═══════════ -->
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector(`[onclick="switchTab('${name}')"]`).classList.add('active');
+}
+
+// Copy button
+document.querySelectorAll('.code-block').forEach(block => {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = '复制';
+  btn.onclick = function() {
+    const text = block.querySelector('pre').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '已复制!';
+      setTimeout(() => { btn.textContent = '复制'; }, 1500);
+    });
+  };
+  block.appendChild(btn);
+});
+</script>
+
+</body>
+</html>
