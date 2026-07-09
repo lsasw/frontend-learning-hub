@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java JVM 虚拟机 · 完整教学指南</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --surface: #fff; --border: #e2e6ed;
+    --text: #1a1a2e; --text2: #5a6170; --text3: #8b92a3;
+    --blue: #2563eb; --blue-light: #dbeafe;
+    --green: #059669; --green-light: #d1fae5;
+    --orange: #ea580c; --orange-light: #fed7aa;
+    --purple: #7c3aed; --purple-light: #ede9fe;
+    --red: #dc2626; --red-light: #fee2e2;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --pink: #db2777; --pink-light: #fce7f3;
+    --code-bg: #1e1e2e;
+    --radius: 12px; --radius-sm: 8px;
+    --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+    --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,.1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+  .hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 40%,#4338ca 100%);color:#fff;padding:56px 40px 44px;text-align:center}
+  .hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-1px}
+  .hero .sub{font-size:1.02rem;opacity:.85;margin-top:10px;max-width:700px;margin-inline:auto}
+  .hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:4px 14px;border-radius:20px;font-size:.78rem;border:1px solid rgba(255,255,255,.2)}
+
+  .wrap{max-width:1140px;margin:0 auto;padding:32px 20px 64px}
+
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:28px}
+  .toc h3{margin-bottom:12px;font-size:.95rem}
+  .toc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 20px}
+  .toc-grid a{color:var(--blue);text-decoration:none;font-size:.84rem;transition:.15s}
+  .toc-grid a:hover{color:var(--purple);text-decoration:underline}
+
+  .sec-title{font-size:1.7rem;font-weight:800;margin:48px 0 20px;padding-bottom:10px;border-bottom:3px solid var(--blue);display:inline-block}
+  .sec-title .n{background:var(--blue);color:#fff;width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;margin-right:10px;vertical-align:middle}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 30px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .25s}
+  .card:hover{box-shadow:var(--shadow-hover)}
+  .card h3{font-size:1.12rem;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .card h3 .ic{width:36px;height:36px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+  .card p{font-size:.9rem;color:var(--text2);margin-bottom:10px}
+
+  .ic-arch{background:var(--blue-light);color:var(--blue)}
+  .ic-load{background:var(--purple-light);color:var(--purple)}
+  .ic-mem{background:var(--green-light);color:var(--green)}
+  .ic-gc{background:var(--red-light);color:var(--red)}
+  .ic-byte{background:var(--orange-light);color:var(--orange)}
+  .ic-jit{background:var(--teal-light);color:var(--teal)}
+
+  .svg-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin:16px 0;text-align:center;overflow-x:auto}
+  .svg-box svg{max-width:100%;height:auto}
+
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+  .tab-btn{flex:1;min-width:100px;padding:12px 16px;border:none;background:transparent;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text2);font-family:var(--sans);transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tab-btn:hover{color:var(--text);background:var(--blue-light)}
+  .tab-btn.active{border-bottom-color:var(--blue);color:var(--blue)}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+
+  .flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:16px;background:#f0f2f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.82rem;overflow-x:auto}
+  .flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.8rem}
+  .flow-node.n1{border-color:var(--blue);background:var(--blue-light)}
+  .flow-node.n2{border-color:var(--green);background:var(--green-light)}
+  .flow-node.n3{border-color:var(--orange);background:var(--orange-light)}
+  .flow-node.n4{border-color:var(--purple);background:var(--purple-light)}
+  .flow-node.n5{border-color:var(--red);background:var(--red-light)}
+  .flow-node.n6{border-color:var(--teal);background:var(--teal-light)}
+  .flow-arrow{color:var(--text3);font-size:1.1rem;font-weight:700}
+
+  .code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+  .code .lang{position:absolute;top:8px;right:16px;font-size:.66rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+  .code pre{font-family:var(--mono);font-size:.8rem;color:#cdd6f4;white-space:pre;line-height:1.65}
+  .kw{color:#cba6f7} .str{color:#a6e3a1} .cmt{color:#6c7086;font-style:italic}
+  .fn{color:#89b4fa} .num{color:#fab387} .typ{color:#f9e2af} .anno{color:#f38ba8}
+  .copy-btn{position:absolute;top:8px;right:16px;background:rgba(255,255,255,.1);border:none;color:#a0a0b0;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:.7rem;font-family:var(--sans);transition:.2s;z-index:1}
+  .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+  .tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+  .tip.info{background:var(--blue-light);border-left:4px solid var(--blue)}
+  .tip.warn{background:#fef3c7;border-left:4px solid var(--orange)}
+  .tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+
+  .tbl-wrap{overflow-x:auto;margin:12px 0}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{background:#f0f2f8;padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--border);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:hover td{background:#fafbfc}
+
+  .pill{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.7rem;font-weight:600}
+  .pill.blue{background:var(--blue-light);color:var(--blue)}
+  .pill.green{background:var(--green-light);color:var(--green)}
+  .pill.red{background:var(--red-light);color:var(--red)}
+  .pill.purple{background:var(--purple-light);color:var(--purple)}
+
+  .gc-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:20px;transition:all .25s}
+  .gc-card:hover{border-color:var(--red);box-shadow:0 2px 12px rgba(220,38,38,.08)}
+  .gc-card h4{font-size:.95rem;margin-bottom:8px}
+  .gc-card .steps{font-size:.82rem;color:var(--text2)}
+  .gc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:12px 0}
+
+  .mem-interactive{cursor:pointer;transition:all .25s}
+  .mem-interactive:hover rect{filter:brightness(.92)}
+  .mem-tooltip{display:none;position:absolute;background:#1a1a2e;color:#fff;padding:8px 14px;border-radius:6px;font-size:.78rem;pointer-events:none;white-space:nowrap;z-index:10}
+
+  .accordion{margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+  .acc-head{display:flex;align-items:center;gap:12px;padding:16px 22px;cursor:pointer;user-select:none;transition:background .15s}
+  .acc-head:hover{background:#f8f9fc}
+  .acc-head .chev{transition:transform .3s;font-size:1.05rem;color:var(--text3)}
+  .accordion.open .chev{transform:rotate(90deg)}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .accordion.open .acc-body{max-height:5000px}
+  .acc-inner{padding:0 22px 22px}
+
+  .footer{text-align:center;padding:40px 0 20px;color:var(--text3);font-size:.78rem}
+
+  @media(max-width:768px){
+    .hero{padding:32px 16px 24px}.hero h1{font-size:1.5rem}
+    .card{padding:18px 16px}
+    .tabs{flex-direction:column}.tab-btn{flex:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Java JVM 虚拟机</h1>
+  <p class="sub">从架构全景到内存管理、从类加载到字节码执行、从 GC 算法到 JIT 编译 —— 一条龙吃透 JVM</p>
+  <div class="tags">
+    <span class="tag">HotSpot VM</span><span class="tag">类加载机制</span><span class="tag">运行时数据区</span>
+    <span class="tag">GC 算法 & 收集器</span><span class="tag">字节码执行</span><span class="tag">JIT 编译</span>
+    <span class="tag">jps/jstat/jmap/jstack</span><span class="tag">MAT & Arthas</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- TOC -->
+<div class="toc">
+  <h3>📑 内容导航</h3>
+  <div class="toc-grid">
+    <a href="#s1">1. JVM 整体架构</a><a href="#s2">2. 类加载机制</a>
+    <a href="#s3">3. 运行时数据区</a><a href="#s4">4. 垃圾回收算法</a>
+    <a href="#s5">5. GC 收集器对比</a><a href="#s6">6. 字节码执行流程</a>
+    <a href="#s7">7. JIT 编译原理</a><a href="#s8">8. 调优实践</a>
+    <a href="#s9">9. 命令行诊断工具</a><a href="#s10">10. 快照分析工具</a>
+  </div>
+</div>
+
+<!-- ==================== 1. JVM 整体架构 ==================== -->
+<h2 class="sec-title" id="s1"><span class="n">1</span>JVM 整体架构</h2>
+
+<div class="card">
+  <h3><span class="ic ic-arch">🏛️</span>JVM 架构全景图</h3>
+  <p>JVM 由三大子系统构成：<strong>类加载子系统</strong>（负责加载字节码）、<strong>运行时数据区</strong>（内存模型，所有数据存放处）、<strong>执行引擎</strong>（解释执行 + JIT 编译 + GC）。三者协作完成「加载 → 链接 → 初始化 → 执行 → 回收」的完整生命周期。</p>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="sd"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/></filter>
+        <marker id="ar" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <!-- Title -->
+      <text x="480" y="28" text-anchor="middle" font-size="15" font-weight="800" fill="#1a1a2e">JVM 架构全景（HotSpot VM）</text>
+
+      <!-- === CLASS LOADER SUBSYSTEM (top) === -->
+      <rect x="20" y="44" width="920" height="80" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" filter="url(#sd)"/>
+      <text x="480" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#4c1d95">📦 类加载子系统 Class Loader Subsystem</text>
+      <rect x="40" y="80" width="180" height="32" rx="6" fill="#7c3aed" opacity="0.12"/>
+      <text x="130" y="100" text-anchor="middle" font-size="11" font-weight="600" fill="#4c1d95">Bootstrap ClassLoader</text>
+      <rect x="240" y="80" width="180" height="32" rx="6" fill="#7c3aed" opacity="0.10"/>
+      <text x="330" y="100" text-anchor="middle" font-size="11" fill="#4c1d95">Extension ClassLoader</text>
+      <rect x="440" y="80" width="180" height="32" rx="6" fill="#7c3aed" opacity="0.08"/>
+      <text x="530" y="100" text-anchor="middle" font-size="11" fill="#4c1d95">Application ClassLoader</text>
+      <text x="730" y="100" font-size="10" fill="#7c3aed">加载 → 链接（验证/准备/解析）→ 初始化</text>
+
+      <!-- Arrow down -->
+      <line x1="480" y1="125" x2="480" y2="155" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- === RUNTIME DATA AREA (middle) === -->
+      <rect x="20" y="160" width="920" height="200" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#sd)"/>
+      <text x="480" y="187" text-anchor="middle" font-size="14" font-weight="700" fill="#064e3b">💾 运行时数据区 Runtime Data Areas</text>
+      <text x="480" y="204" text-anchor="middle" font-size="10" fill="#059669">线程共享区域</text>
+
+      <!-- Shared area: Method Area + Heap -->
+      <rect x="40" y="216" width="560" height="130" rx="8" fill="#059669" opacity="0.08" stroke="#059669" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="320" y="234" text-anchor="middle" font-size="10" font-weight="600" fill="#059669">线程共享 · Thread Shared</text>
+
+      <!-- Method Area -->
+      <rect x="60" y="245" width="250" height="90" rx="7" fill="#fff" stroke="#059669" stroke-width="1.5" filter="url(#sd)"/>
+      <text x="185" y="268" text-anchor="middle" font-size="12" font-weight="700" fill="#064e3b">📚 Method Area（方法区）</text>
+      <text x="185" y="286" text-anchor="middle" font-size="9" fill="#059669">运行时常量池 · 类元数据 · 静态变量</text>
+      <text x="185" y="300" text-anchor="middle" font-size="9" fill="#059669">JDK8+ → Metaspace（本地内存）</text>
+      <text x="185" y="318" text-anchor="middle" font-size="9" fill="#059669">参数：-XX:MetaspaceSize / MaxMetaspaceSize</text>
+
+      <!-- Heap -->
+      <rect x="330" y="245" width="250" height="90" rx="7" fill="#fff" stroke="#059669" stroke-width="1.5" filter="url(#sd)"/>
+      <text x="455" y="268" text-anchor="middle" font-size="12" font-weight="700" fill="#064e3b">🗂️ Heap（堆）</text>
+      <text x="455" y="286" text-anchor="middle" font-size="9" fill="#059669">新生代 · 老年代 · 字符串常量池</text>
+      <text x="455" y="300" text-anchor="middle" font-size="9" fill="#059669">对象实例 · 数组 · GC 主战场</text>
+      <text x="455" y="318" text-anchor="middle" font-size="9" fill="#059669">参数：-Xms / -Xmx</text>
+
+      <!-- Thread-private area -->
+      <rect x="620" y="216" width="300" height="130" rx="8" fill="#059669" opacity="0.05" stroke="#059669" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="770" y="234" text-anchor="middle" font-size="10" font-weight="600" fill="#059669">线程私有 · Thread Private</text>
+
+      <rect x="635" y="245" width="130" height="45" rx="6" fill="#fff" stroke="#10b981" stroke-width="1" filter="url(#sd)"/>
+      <text x="700" y="262" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">VM Stack</text>
+      <text x="700" y="278" text-anchor="middle" font-size="8.5" fill="#059669">栈帧 · 局部变量表</text>
+
+      <rect x="635" y="296" width="130" height="40" rx="6" fill="#fff" stroke="#10b981" stroke-width="1" filter="url(#sd)"/>
+      <text x="700" y="312" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">Native Stack</text>
+      <text x="700" y="326" text-anchor="middle" font-size="8.5" fill="#059669">Native 方法栈</text>
+
+      <rect x="780" y="245" width="125" height="90" rx="6" fill="#fff" stroke="#10b981" stroke-width="1" filter="url(#sd)"/>
+      <text x="842" y="270" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">PC Register</text>
+      <text x="842" y="290" text-anchor="middle" font-size="8.5" fill="#059669">程序计数器</text>
+      <text x="842" y="306" text-anchor="middle" font-size="8.5" fill="#059669">当前字节码地址</text>
+      <text x="842" y="322" text-anchor="middle" font-size="8.5" fill="#059669">唯一无 OOM</text>
+
+      <!-- Arrow down -->
+      <line x1="480" y1="360" x2="480" y2="390" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- === EXECUTION ENGINE (bottom) === -->
+      <rect x="20" y="396" width="920" height="105" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#sd)"/>
+      <text x="480" y="422" text-anchor="middle" font-size="14" font-weight="700" fill="#1e40af">⚙️ 执行引擎 Execution Engine</text>
+
+      <rect x="40" y="435" width="190" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1" filter="url(#sd)"/>
+      <text x="135" y="455" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">🔤 Interpreter</text>
+      <text x="135" y="472" text-anchor="middle" font-size="9" fill="#3b82f6">逐条解释字节码</text>
+
+      <rect x="250" y="435" width="190" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1" filter="url(#sd)"/>
+      <text x="345" y="455" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">⚡ JIT Compiler</text>
+      <text x="345" y="472" text-anchor="middle" font-size="9" fill="#3b82f6">C1(Client) / C2(Server)</text>
+
+      <rect x="460" y="435" width="190" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1" filter="url(#sd)"/>
+      <text x="555" y="455" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">🧹 GC</text>
+      <text x="555" y="472" text-anchor="middle" font-size="9" fill="#3b82f6">自动垃圾回收</text>
+
+      <rect x="670" y="435" width="250" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1" filter="url(#sd)"/>
+      <text x="795" y="455" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">🖥️ Native Interface (JNI)</text>
+      <text x="795" y="472" text-anchor="middle" font-size="9" fill="#3b82f6">调用本地 C/C++ 方法库</text>
+
+      <!-- Legend footer -->
+      <text x="480" y="515" text-anchor="middle" font-size="9" fill="#94a3b8">⬇ 类加载子系统加载字节码 → 运行时数据区存储数据 → 执行引擎解释/编译/回收</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ==================== 2. 类加载机制 ==================== -->
+<h2 class="sec-title" id="s2"><span class="n">2</span>类加载机制</h2>
+
+<div class="card">
+  <h3><span class="ic ic-load">🧬</span>类生命周期与双亲委派模型</h3>
+  <p>类从被加载到卸载，经历 <strong>7 个阶段</strong>。加载 → 验证 → 准备 → 解析 → 初始化 → 使用 → 卸载。其中验证/准备/解析统称为「链接」阶段。</p>
+
+  <div class="flow-row">
+    <span class="flow-node n1">📥 加载<br><small>读 .class 入内存</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n2">✅ 验证<br><small>格式/语义校验</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n3">📋 准备<br><small>分配内存/零值</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n4">🔗 解析<br><small>符号→直接引用</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n5">🚀 初始化<br><small>执行 &lt;clinit&gt;</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n6">▶️ 使用</span><span class="flow-arrow">→</span>
+    <span class="flow-node n1">🗑️ 卸载</span>
+  </div>
+
+  <h4 style="margin-top:20px;">双亲委派模型（Parents Delegation Model）</h4>
+  <p>类加载器收到加载请求后，不自己加载，而是<strong>逐级向上委托</strong>，直到 Bootstrap ClassLoader。父加载器找不到才由子加载器尝试。这保证了核心类库的唯一性和安全性。</p>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+      <rect x="250" y="15" width="200" height="45" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+      <text x="350" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Bootstrap ClassLoader</text>
+      <text x="350" y="50" text-anchor="middle" font-size="9" fill="#db2777">rt.jar / jmods · C++ 实现</text>
+
+      <rect x="250" y="80" width="200" height="45" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="350" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">Extension / Platform ClassLoader</text>
+      <text x="350" y="115" text-anchor="middle" font-size="9" fill="#7c3aed">jre/lib/ext · JDK9+ PlatformClassLoader</text>
+
+      <rect x="250" y="145" width="200" height="45" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+      <text x="350" y="165" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Application ClassLoader</text>
+      <text x="350" y="180" text-anchor="middle" font-size="9" fill="#3b82f6">classpath 下的类</text>
+
+      <text x="350" y="220" text-anchor="middle" font-size="10" font-weight="600" fill="#5a6170">自定义 ClassLoader（继承 ClassLoader）</text>
+
+      <!-- Arrows showing delegation -->
+      <line x1="425" y1="102" x2="425" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+      <text x="438" y="86" font-size="8" fill="#94a3b8">委派 ↑</text>
+
+      <line x1="425" y1="167" x2="425" y2="125" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+      <text x="438" y="151" font-size="8" fill="#94a3b8">委派 ↑</text>
+
+      <text x="480" y="220" font-size="9" fill="#94a3b8">委派 ↑</text>
+
+      <!-- Right-hand annotation -->
+      <text x="490" y="50" font-size="10" fill="#db2777">← 先看有无缓存</text>
+      <text x="490" y="75" font-size="10" fill="#db2777">← 没有才尝试加载</text>
+      <text x="490" y="115" font-size="10" fill="#7c3aed">← 父没找到才自加载</text>
+
+      <text x="60" y="130" font-size="11" font-weight="700" fill="#1a1a2e">优势：</text>
+      <text x="60" y="148" font-size="10" fill="#5a6170">1. 避免核心类被篡改</text>
+      <text x="60" y="163" font-size="10" fill="#5a6170">2. 同一类只加载一次</text>
+      <text x="60" y="178" font-size="10" fill="#5a6170">3. 不同层次隔离</text>
+    </svg>
+  </div>
+</div>
+
+<div class="accordion">
+  <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="ic ic-load" style="width:32px;height:32px;font-size:.95rem">🔬</span>
+    <strong style="flex:1">类加载阶段详解</strong>
+    <span class="chev">▶</span>
+  </div>
+  <div class="acc-body"><div class="acc-inner">
+    <table>
+      <tr><th>阶段</th><th>做什么</th><th>关键细节</th></tr>
+      <tr><td><strong>1. 加载</strong></td><td>通过全限定名获取 .class 字节流 → 转为方法区数据结构 → 生成 Class 对象</td><td>可来自 jar/网络/动态代理；数组类由 JVM 直接创建</td></tr>
+      <tr><td><strong>2. 验证</strong></td><td>文件格式验证 / 元数据验证 / 字节码验证 / 符号引用验证</td><td>-Xverify:none 可关闭（不推荐）</td></tr>
+      <tr><td><strong>3. 准备</strong></td><td>为 static 变量分配内存并设零值（不执行赋值语句）</td><td>static int a=123 → 此时 a=0；final static 编译期确定的值会直接赋初始值</td></tr>
+      <tr><td><strong>4. 解析</strong></td><td>将常量池中符号引用替换为直接引用（内存地址）</td><td>类/方法/字段的解析，可能触发其他类加载</td></tr>
+      <tr><td><strong>5. 初始化</strong></td><td>执行类构造器 &lt;clinit&gt;()（static 块 + static 变量赋值）</td><td>线程安全（JVM 加锁）· 父类优先 · 接口不要求父接口先初始化</td></tr>
+    </table>
+
+    <div class="code">
+      <span class="lang">Java</span>
+<pre><span class="cmt">// 类初始化触发时机</span>
+<span class="kw">public class</span> <span class="typ">InitDemo</span> {
+    <span class="kw">static int</span> a = <span class="num">1</span>;
+    <span class="kw">static</span> { System.out.<span class="fn">println</span>(<span class="str">"clinit 执行"</span>); }
+
+    <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+        <span class="cmt">// 以下操作均触发初始化：</span>
+        <span class="typ">InitDemo</span> obj = <span class="kw">new</span> <span class="typ">InitDemo</span>();  <span class="cmt">// new 实例</span>
+        <span class="typ">Class</span>.forName(<span class="str">"InitDemo"</span>);       <span class="cmt">// 反射</span>
+        <span class="kw">int</span> x = InitDemo.a;                <span class="cmt">// 访问 static 变量</span>
+        <span class="cmt">// 以下不触发：</span>
+        <span class="typ">Class</span>&lt;?&gt; c = InitDemo.<span class="kw">class</span>;        <span class="cmt">// 只获取 Class 对象</span>
+        <span class="typ">InitDemo</span>[] arr = <span class="kw">new</span> <span class="typ">InitDemo</span>[<span class="num">10</span>]; <span class="cmt">// 数组只创建数组类</span>
+    }
+}</pre>
+    </div>
+  </div></div>
+</div>
+
+<!-- ==================== 3. 运行时数据区 ==================== -->
+<h2 class="sec-title" id="s3"><span class="n">3</span>运行时数据区</h2>
+
+<div class="card">
+  <h3><span class="ic ic-mem">💾</span>内存结构交互式图示</h3>
+  <p>鼠标悬停各区域查看详情。下表是完整对比：</p>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 920 380" id="memSvg" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="sdm"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/></filter>
+      </defs>
+
+      <text x="460" y="24" text-anchor="middle" font-size="14" font-weight="800" fill="#1a1a2e">JVM 内存结构 · 交互式图示（鼠标悬停看详情）</text>
+
+      <!-- HEAP (large left area) -->
+      <rect x="20" y="40" width="560" height="240" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#sdm)" class="mem-interactive" onmouseover="showTooltip(event,'堆 Heap · 线程共享\n存放：对象实例、数组\nGC 主战场（分新生代/老年代）\n参数：-Xms128m -Xmx1024m\nOOM：java.lang.OutOfMemoryError: Java heap space')" onmouseout="hideTooltip()"/>
+      <text x="300" y="70" text-anchor="middle" font-size="15" font-weight="800" fill="#064e3b">🗂️ Heap（堆）—— 线程共享</text>
+
+      <!-- Young Gen -->
+      <rect x="40" y="85" width="330" height="175" rx="7" fill="#fff" stroke="#34d399" stroke-width="1.5" stroke-dasharray="5,3" class="mem-interactive" onmouseover="showTooltip(event,'新生代 Young Generation\n占堆约 1/3\nEden : S0 : S1 = 8 : 1 : 1\nMinor GC（复制算法）\n参数：-Xmn / -XX:NewRatio')" onmouseout="hideTooltip()"/>
+      <text x="205" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#047857">新生代 Young Gen（1/3）</text>
+      <rect x="55" y="115" width="200" height="130" rx="5" fill="#ecfdf5" stroke="#10b981" stroke-width="1" class="mem-interactive" onmouseover="showTooltip(event,'Eden 区（伊甸园）\n新对象在此分配\nMinor GC 时存活对象 → S0/S1\nTLAB(线程本地分配缓冲) 加速分配\n参数：-XX:SurvivorRatio 默认 8')" onmouseout="hideTooltip()"/>
+      <text x="155" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">Eden</text>
+      <text x="155" y="190" text-anchor="middle" font-size="9" fill="#059669">默认占新生代 8/10</text>
+      <text x="155" y="205" text-anchor="middle" font-size="9" fill="#059669">新对象诞生之地</text>
+      <text x="155" y="220" text-anchor="middle" font-size="9" fill="#059669">含 TLAB | 频繁 Minor GC</text>
+      <rect x="270" y="115" width="85" height="55" rx="5" fill="#ecfdf5" stroke="#34d399" stroke-width="1" class="mem-interactive" onmouseover="showTooltip(event,'Survivor 0（S0 / From）\nEden GC 后存活对象复制到此\n与 S1 交替使用（总有一个为空）\n参数：-XX:SurvivorRatio')" onmouseout="hideTooltip()"/>
+      <text x="312" y="140" text-anchor="middle" font-size="10" font-weight="700" fill="#047857">S0 (From)</text>
+      <text x="312" y="156" text-anchor="middle" font-size="8" fill="#059669">1/10</text>
+      <rect x="270" y="180" width="85" height="55" rx="5" fill="#ecfdf5" stroke="#34d399" stroke-width="1" class="mem-interactive" onmouseover="showTooltip(event,'Survivor 1（S1 / To）\n与 S0 交替使用\nGC 时存活对象复制到这里\n总有一块为空（保证复制算法）')" onmouseout="hideTooltip()"/>
+      <text x="312" y="205" text-anchor="middle" font-size="10" font-weight="700" fill="#047857">S1 (To)</text>
+      <text x="312" y="221" text-anchor="middle" font-size="8" fill="#059669">1/10</text>
+
+      <!-- Old Gen -->
+      <rect x="390" y="85" width="170" height="175" rx="7" fill="#fff" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3" class="mem-interactive" onmouseover="showTooltip(event,'老年代 Old Generation\n占堆约 2/3\n存放长期存活对象 & 大对象\nMajor GC / Full GC（标记-清除/整理）\n参数：-XX:NewRatio（默认 2 → 老:新=2:1）')" onmouseout="hideTooltip()"/>
+      <text x="475" y="105" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">老年代 Old（2/3）</text>
+      <text x="475" y="140" text-anchor="middle" font-size="9" fill="#d97706">晋升阈值：MaxTenuringThreshold</text>
+      <text x="475" y="158" text-anchor="middle" font-size="9" fill="#d97706">默认 15 次 GC 后晋升</text>
+      <text x="475" y="176" text-anchor="middle" font-size="9" fill="#d97706">大对象直接入老年代</text>
+      <text x="475" y="194" text-anchor="middle" font-size="9" fill="#d97706">Major GC 频率低但耗时长</text>
+
+      <!-- Metaspace (right) -->
+      <rect x="600" y="40" width="300" height="130" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" filter="url(#sdm)" class="mem-interactive" onmouseover="showTooltip(event,'Metaspace（方法区实现 · JDK8+）\n存放：类元数据、运行时常量池\n使用本地内存（非 JVM 堆）\n参数：-XX:MetaspaceSize\n     -XX:MaxMetaspaceSize\nOOM：java.lang.OutOfMemoryError: Metaspace')" onmouseout="hideTooltip()"/>
+      <text x="750" y="70" text-anchor="middle" font-size="14" font-weight="800" fill="#4c1d95">📚 Metaspace</text>
+      <text x="750" y="90" text-anchor="middle" font-size="10" fill="#7c3aed">物理内存(非堆) · 默认无上限</text>
+      <text x="750" y="110" text-anchor="middle" font-size="9" fill="#7c3aed">存 Class 元数据 · 运行时常量池</text>
+      <text x="750" y="126" text-anchor="middle" font-size="9" fill="#7c3aed">JDK7 之前叫 PermGen（永久代）</text>
+      <text x="750" y="142" text-anchor="middle" font-size="9" fill="#7c3aed">JDK8+ 移除永久代，改 Metaspace</text>
+
+      <!-- Thread-private area (right middle) -->
+      <rect x="600" y="185" width="300" height="95" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#sdm)" class="mem-interactive" onmouseover="showTooltip(event,'线程私有区域\n每条线程独享一份\nStackOverflowError（递归过深）\nOOM（创建过多线程 · 栈无法分配）\n参数：-Xss（默认 1M）')" onmouseout="hideTooltip()"/>
+      <text x="750" y="210" text-anchor="middle" font-size="12" font-weight="800" fill="#1e40af">🧵 线程私有区域</text>
+      <text x="640" y="235" text-anchor="middle" font-size="10" fill="#3b82f6">VM Stack</text>
+      <text x="750" y="235" text-anchor="middle" font-size="10" fill="#3b82f6">Native Stack</text>
+      <text x="860" y="235" text-anchor="middle" font-size="10" fill="#3b82f6">PC Register</text>
+      <text x="640" y="255" text-anchor="middle" font-size="8" fill="#3b82f6">栈帧·局部变量</text>
+      <text x="750" y="255" text-anchor="middle" font-size="8" fill="#3b82f6">Native 方法</text>
+      <text x="860" y="255" text-anchor="middle" font-size="8" fill="#3b82f6">下条指令地址</text>
+
+      <!-- Tooltip overlay -->
+      <foreignObject x="0" y="0" width="920" height="380" style="pointer-events:none">
+        <div xmlns="http://www.w3.org/1999/xhtml" id="memTooltip" style="display:none;position:absolute;background:#1a1a2e;color:#fff;padding:10px 14px;border-radius:8px;font-size:.78rem;white-space:pre-line;line-height:1.5;z-index:100;max-width:260px;box-shadow:0 4px 20px rgba(0,0,0,.3);pointer-events:none;"></div>
+      </foreignObject>
+
+      <!-- Legend -->
+      <text x="460" y="310" text-anchor="middle" font-size="9" fill="#94a3b8">悬停各区域 → 查看详细说明和 JVM 参数</text>
+
+      <!-- Bottom comparison labels -->
+      <text x="60" y="350" font-size="10" font-weight="700" fill="#059669">▲ GC 主导区域（堆）</text>
+      <text x="750" y="350" font-size="10" font-weight="700" fill="#7c3aed">▲ 类元数据（Metaspace）</text>
+    </svg>
+  </div>
+
+  <div class="tbl-wrap" style="margin-top:16px">
+    <table>
+      <tr><th>区域</th><th>线程</th><th>存储内容</th><th>异常</th><th>参数</th></tr>
+      <tr><td><strong>堆 Heap</strong></td><td>共享</td><td>对象实例、数组</td><td>OutOfMemoryError</td><td>-Xms / -Xmx</td></tr>
+      <tr><td><strong>方法区 / Metaspace</strong></td><td>共享</td><td>类元数据、常量池、静态变量</td><td>OutOfMemoryError</td><td>-XX:MetaspaceSize / -XX:MaxMetaspaceSize</td></tr>
+      <tr><td><strong>虚拟机栈 VM Stack</strong></td><td>私有</td><td>栈帧（局部变量表、操作数栈、方法出口）</td><td>StackOverflowError / OOM</td><td>-Xss</td></tr>
+      <tr><td><strong>本地方法栈</strong></td><td>私有</td><td>Native 方法（HotSpot 与 VM Stack 合二为一）</td><td>StackOverflowError / OOM</td><td>-Xss</td></tr>
+      <tr><td><strong>程序计数器</strong></td><td>私有</td><td>当前线程执行的字节码行号</td><td>唯一无 OOM</td><td>—</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 4. 垃圾回收算法 ==================== -->
+<h2 class="sec-title" id="s4"><span class="n">4</span>垃圾回收算法</h2>
+
+<div class="card" style="padding-bottom:8px">
+  <h3><span class="ic ic-gc">🧹</span>四大基础 GC 算法 · Tab 切换对比</h3>
+
+  <!-- TAB BUTTONS -->
+  <div class="tabs" id="gcTabs">
+    <button class="tab-btn active" onclick="switchGcTab(0)">🏷️ 标记-清除</button>
+    <button class="tab-btn" onclick="switchGcTab(1)">📋 复制算法</button>
+    <button class="tab-btn" onclick="switchGcTab(2)">🧹 标记-整理</button>
+    <button class="tab-btn" onclick="switchGcTab(3)">📊 分代收集</button>
+  </div>
+
+  <!-- TAB 1: Mark-Sweep -->
+  <div class="tab-panel active" id="gcPanel0">
+    <div class="gc-grid">
+      <div class="gc-card" style="grid-column: span 2">
+        <h4>标记-清除 (Mark-Sweep)</h4>
+        <p class="steps"><strong>流程：</strong>① 从 GC Roots 出发标记所有可达对象 ② 统一清除未标记的对象</p>
+        <p>最基础的 GC 算法，后续算法均基于其改进。</p>
+      </div>
+      <div class="gc-card"><strong>✅ 优点</strong><br>实现简单 · 无需移动对象</div>
+      <div class="gc-card"><strong>❌ 缺点</strong><br>内存碎片严重 · 标记和清除效率都不高</div>
+      <div class="gc-card"><strong>🎯 适用场景</strong><br>老年代（CMS 收集器使用）</div>
+      <div class="gc-card"><strong>⚠️ 关键问题</strong><br>碎片导致大对象分配失败 → 提前 Full GC</div>
+    </div>
+
+    <div class="svg-box">
+      <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+        <text x="80" y="30" font-size="12" font-weight="700" fill="#1a1a2e">回收前：</text>
+        <rect x="80" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="90" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="122" y="40" width="40" height="30" fill="#fee2e2" stroke="#dc2626"/><text x="128" y="62" font-size="9" fill="#dc2626">死</text>
+        <rect x="164" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="174" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="206" y="40" width="40" height="30" fill="#fee2e2" stroke="#dc2626"/><text x="212" y="62" font-size="9" fill="#dc2626">死</text>
+        <rect x="248" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="258" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="290" y="40" width="40" height="30" fill="#fee2e2" stroke="#dc2626"/><text x="296" y="62" font-size="9" fill="#dc2626">死</text>
+        <rect x="332" y="40" width="40" height="30" fill="#fee2e2" stroke="#dc2626"/><text x="338" y="62" font-size="9" fill="#dc2626">死</text>
+        <text x="420" y="62" font-size="20" fill="#94a3b8">→</text>
+        <text x="480" y="30" font-size="12" font-weight="700" fill="#1a1a2e">回收后：</text>
+        <rect x="480" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="490" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="522" y="40" width="40" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-dasharray="3,2"/><text x="530" y="62" font-size="8" fill="#94a3b8">碎片</text>
+        <rect x="564" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="574" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="606" y="40" width="40" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-dasharray="3,2"/>
+        <rect x="648" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="658" y="62" font-size="9" fill="#059669">活</text>
+        <text x="380" y="120" text-anchor="middle" font-size="9" fill="#dc2626">⚠ 碎片化：存活对象不连续</text>
+        <text x="380" y="140" text-anchor="middle" font-size="9" fill="#94a3b8">无法利用的空隙 = 内存碎片</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- TAB 2: Copy -->
+  <div class="tab-panel" id="gcPanel1">
+    <div class="gc-grid">
+      <div class="gc-card" style="grid-column: span 2">
+        <h4>复制算法 (Copying)</h4>
+        <p class="steps"><strong>流程：</strong>① 内存分为两块（From + To）② GC 时将存活对象复制到 To 区 ③ 回收 From 整块</p>
+        <p>新生代默认算法（Eden + S0 + S1），<strong>S0 和 S1 总有一块为空</strong>。</p>
+      </div>
+      <div class="gc-card"><strong>✅ 优点</strong><br>无碎片 · 分配高效（指针碰撞） · 实现简单</div>
+      <div class="gc-card"><strong>❌ 缺点</strong><br>内存利用率只有 50%（实际 90%） · 存活对象多时复制开销大</div>
+      <div class="gc-card"><strong>🎯 适用场景</strong><br>新生代（对象朝生夕灭，存活率低）</div>
+      <div class="gc-card"><strong>🎯 核心参数</strong><br>-XX:SurvivorRatio=8 → Eden:S0:S1=8:1:1</div>
+    </div>
+
+    <div class="svg-box">
+      <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+        <text x="40" y="30" font-size="11" font-weight="700" fill="#1a1a2e">From 区（回收前）：</text>
+        <rect x="40" y="40" width="220" height="50" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+        <rect x="50" y="48" width="25" height="14" fill="#d1fae5" stroke="#059669"/><text x="58" y="59" font-size="8" fill="#059669">活</text>
+        <rect x="80" y="48" width="25" height="14" fill="#d1fae5" stroke="#059669"/><text x="88" y="59" font-size="8" fill="#059669">活</text>
+        <rect x="130" y="48" width="25" height="14" fill="#fee2e2" stroke="#dc2626"/>
+        <rect x="180" y="48" width="25" height="14" fill="#fee2e2" stroke="#dc2626"/>
+        <rect x="50" y="68" width="25" height="14" fill="#fee2e2" stroke="#dc2626"/>
+        <rect x="100" y="68" width="25" height="14" fill="#fee2e2" stroke="#dc2626"/>
+        <rect x="150" y="68" width="25" height="14" fill="#d1fae5" stroke="#059669"/><text x="158" y="79" font-size="8" fill="#059669">活</text>
+        <text x="150" y="112" text-anchor="middle" font-size="9" fill="#dc2626">全部清除!!!</text>
+
+        <text x="280" y="65" font-size="20" fill="#94a3b8">→</text>
+
+        <text x="390" y="30" font-size="11" font-weight="700" fill="#1a1a2e">To 区（回收后）：</text>
+        <rect x="390" y="40" width="220" height="50" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+        <rect x="400" y="48" width="25" height="14" fill="#059669"/><text x="407" y="59" font-size="8" fill="#fff">活</text>
+        <rect x="428" y="48" width="25" height="14" fill="#059669"/><text x="435" y="59" font-size="8" fill="#fff">活</text>
+        <rect x="456" y="48" width="25" height="14" fill="#059669"/><text x="463" y="59" font-size="8" fill="#fff">活</text>
+        <text x="500" y="92" text-anchor="middle" font-size="9" fill="#059669">紧凑排列，无碎片</text>
+        <text x="500" y="110" text-anchor="middle" font-size="9" fill="#059669">剩余空间连续可用</text>
+
+        <text x="350" y="160" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">存活对象复制到 To 区 → From 区全部回收 → 交换 From/To 角色</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- TAB 3: Mark-Compact -->
+  <div class="tab-panel" id="gcPanel2">
+    <div class="gc-grid">
+      <div class="gc-card" style="grid-column: span 2">
+        <h4>标记-整理 (Mark-Compact)</h4>
+        <p class="steps"><strong>流程：</strong>① 从 GC Roots 标记存活对象 ② 将存活对象向一端移动 ③ 清理边界外的内存</p>
+        <p>解决标记-清除的碎片问题，但移动对象需要 STW（Stop The World）。</p>
+      </div>
+      <div class="gc-card"><strong>✅ 优点</strong><br>无碎片 · 内存利用率高</div>
+      <div class="gc-card"><strong>❌ 缺点</strong><br>STW 停顿长 · 移动对象 + 更新引用开销大</div>
+      <div class="gc-card"><strong>🎯 适用场景</strong><br>老年代（Serial Old、Parallel Old 收集器）</div>
+      <div class="gc-card"><strong>🏷️ 变体</strong><br>滑动整理、双指针整理</div>
+    </div>
+
+    <div class="svg-box">
+      <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+        <text x="80" y="30" font-size="12" font-weight="700" fill="#1a1a2e">整理前（碎片状态）：</text>
+        <rect x="80" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="90" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="122" y="40" width="40" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-dasharray="3,2"/>
+        <rect x="164" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="174" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="206" y="40" width="40" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-dasharray="3,2"/>
+        <rect x="248" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="258" y="62" font-size="9" fill="#059669">活</text>
+        <text x="420" y="62" font-size="20" fill="#94a3b8">→</text>
+        <text x="480" y="30" font-size="12" font-weight="700" fill="#1a1a2e">整理后（紧凑排列）：</text>
+        <rect x="480" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="490" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="522" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="532" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="564" y="40" width="40" height="30" fill="#d1fae5" stroke="#059669"/><text x="574" y="62" font-size="9" fill="#059669">活</text>
+        <rect x="606" y="40" width="120" height="30" rx="0" fill="#d1fae5" fill-opacity="0.3" stroke="#10b981" stroke-width="1"/>
+        <text x="666" y="62" text-anchor="middle" font-size="8" fill="#059669">连续空闲</text>
+        <text x="380" y="120" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">存活对象向一端滑动 → 边界外全是连续空闲内存</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- TAB 4: Generational -->
+  <div class="tab-panel" id="gcPanel3">
+    <div class="gc-grid">
+      <div class="gc-card" style="grid-column: span 2">
+        <h4>分代收集 (Generational Collection) —— 当前 JVM 默认策略</h4>
+        <p class="steps"><strong>假设：</strong>绝大多数对象朝生夕灭 → 按对象年龄分代，不同代用不同算法。</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>代</th><th>GC 类型</th><th>算法</th><th>特点</th></tr>
+        <tr><td><strong>新生代</strong></td><td>Minor GC / Young GC</td><td>复制算法</td><td>频繁触发（几十秒一次）· 停顿短 · 回收大量对象</td></tr>
+        <tr><td><strong>老年代</strong></td><td>Major GC / Full GC</td><td>标记-清除 或 标记-整理</td><td>触发少 · 停顿长 · 回收<strong>整个堆+方法区</strong></td></tr>
+      </table>
+    </div>
+
+    <div class="flow-row">
+      <span class="flow-node n1">new 对象</span><span class="flow-arrow">→</span>
+      <span class="flow-node n2">Eden 分配</span><span class="flow-arrow">→</span>
+      <span class="flow-node n3">Minor GC<br>存活→S0/S1</span><span class="flow-arrow">→</span>
+      <span class="flow-node n4">年龄+1<br>来回切换</span><span class="flow-arrow">→</span>
+      <span class="flow-node n5">≥15 或<br>S区放不下</span><span class="flow-arrow">→</span>
+      <span class="flow-node n6">晋升老年代</span>
+    </div>
+
+    <div class="tip info">
+      <span>💡</span><span><strong>晋升规则：</strong>① 年龄计数器（Age）达到 MaxTenuringThreshold（默认 15）→ 晋升 · ② 动态年龄判断：同年龄对象大小超过 Survivor 区一半 → 大于等于该年龄的对象直接晋升 · ③ 大对象（如长数组）直接进入老年代（-XX:PretenureSizeThreshold）</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 5. GC 收集器对比 ==================== -->
+<h2 class="sec-title" id="s5"><span class="n">5</span>GC 收集器对比</h2>
+
+<div class="card">
+  <h3><span class="ic ic-gc">🔄</span>HotSpot 7 大经典 GC 收集器</h3>
+  <p>收集器是 GC 算法的实现，不同收集器适合不同场景。下表按<strong>分代</strong>排列：</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th>收集器</th><th>位置</th><th>算法</th><th>线程</th><th>STW</th><th>适用场景</th></tr>
+      <tr><td><strong>Serial</strong></td><td>新生代</td><td>复制</td><td>单线程</td><td>全程 STW</td><td>客户端 · 单核 · 小堆（< 100M）</td></tr>
+      <tr><td><strong>ParNew</strong></td><td>新生代</td><td>复制</td><td>多线程</td><td>全程 STW</td><td>配合 CMS 使用 · 多核服务器</td></tr>
+      <tr><td><strong>Parallel Scavenge</strong></td><td>新生代</td><td>复制</td><td>多线程</td><td>全程 STW</td><td>吞吐量优先 · 后台批处理</td></tr>
+      <tr><td><strong>Serial Old</strong></td><td>老年代</td><td>标记-整理</td><td>单线程</td><td>全程 STW</td><td>客户端 · CMS 后备方案</td></tr>
+      <tr><td><strong>Parallel Old</strong></td><td>老年代</td><td>标记-整理</td><td>多线程</td><td>全程 STW</td><td>配合 Parallel Scavenge</td></tr>
+      <tr><td><strong>CMS</strong></td><td>老年代</td><td>标记-清除</td><td>多线程</td><td>部分并发</td><td>低延迟 · 互联网应用 (已弃用 JDK14+)</td></tr>
+      <tr><td><strong>G1</strong></td><td>全堆</td><td>标记-整理+复制</td><td>多线程</td><td>可控停顿</td><td>大堆（4G+）· JDK9+ 默认 · 服务端</td></tr>
+      <tr><td><strong>ZGC</strong></td><td>全堆</td><td>染色指针+复制</td><td>多线程</td><td>&lt; 1ms</td><td>超大堆（TB级）· 极低延迟 · JDK15+</td></tr>
+    </table>
+  </div>
+
+  <h4 style="margin-top:20px">CMS 工作流程（老年代并发收集）</h4>
+  <div class="flow-row">
+    <span class="flow-node n1">① 初始标记<br><small>STW · 标记 GC Roots</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n2">② 并发标记<br><small>并发 · 从 Roots 追踪</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n3">③ 重新标记<br><small>STW · 修正并发变化</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n4">④ 并发清除<br><small>并发 · 回收垃圾</small></span>
+  </div>
+  <p style="font-size:.82rem;color:var(--text2)">CMS 追求最短 STW，但存在碎片问题 + 浮动垃圾（并发标记期间新产生的垃圾本次无法回收）。JDK14 已移除。</p>
+
+  <div class="tip info">
+    <span>💡</span><span><strong>选型口诀：</strong>小堆串行 Serial · 吞吐优先 Parallel · 低延迟 CMS/G1 · 大堆超低延迟 ZGC。JDK9+ 默认 G1，JDK21+ 默认 ZGC（部分发行版）。</span>
+  </div>
+</div>
+
+<div class="accordion">
+  <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="ic ic-gc" style="width:32px;height:32px;font-size:.95rem">🔥</span>
+    <strong style="flex:1">G1 (Garbage First) 收集器详解 · JDK9+ 默认</strong>
+    <span class="chev">▶</span>
+  </div>
+  <div class="acc-body"><div class="acc-inner">
+    <p>G1 抛弃了传统物理分代，改用 <strong>Region</strong>（1~32MB 的逻辑分区）将堆划分为多个大小相等的区域。每个 Region 可扮演 Eden、Survivor 或 Old 角色，动态切换。</p>
+
+    <div class="svg-box">
+      <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg">
+        <text x="340" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a2e">G1 Region 分块示意图</text>
+        <rect x="10" y="35" width="50" height="30" rx="4" fill="#d1fae5" stroke="#059669"/><text x="35" y="55" text-anchor="middle" font-size="8">E</text>
+        <rect x="62" y="35" width="50" height="30" rx="4" fill="#d1fae5" stroke="#059669"/><text x="87" y="55" text-anchor="middle" font-size="8">E</text>
+        <rect x="114" y="35" width="50" height="30" rx="4" fill="#ccfbf1" stroke="#0d9488"/><text x="139" y="55" text-anchor="middle" font-size="8">S</text>
+        <rect x="166" y="35" width="50" height="30" rx="4" fill="#fed7aa" stroke="#ea580c"/><text x="191" y="55" text-anchor="middle" font-size="8">O</text>
+        <rect x="218" y="35" width="50" height="30" rx="4" fill="#fed7aa" stroke="#ea580c"/><text x="243" y="55" text-anchor="middle" font-size="8">O</text>
+        <rect x="270" y="35" width="50" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8"/><text x="295" y="55" text-anchor="middle" font-size="8">空</text>
+        <rect x="322" y="35" width="50" height="30" rx="4" fill="#d1fae5" stroke="#059669"/><text x="347" y="55" text-anchor="middle" font-size="8">E</text>
+        <rect x="374" y="35" width="50" height="30" rx="4" fill="#fed7aa" stroke="#ea580c"/><text x="399" y="55" text-anchor="middle" font-size="8">O</text>
+        <rect x="426" y="35" width="50" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8"/><text x="451" y="55" text-anchor="middle" font-size="8">空</text>
+        <rect x="478" y="35" width="50" height="30" rx="4" fill="#fee2e2" stroke="#dc2626"/><text x="503" y="55" text-anchor="middle" font-size="8">H</text>
+        <rect x="530" y="35" width="50" height="30" rx="4" fill="#d1fae5" stroke="#059669"/><text x="555" y="55" text-anchor="middle" font-size="8">E</text>
+        <rect x="582" y="35" width="50" height="30" rx="4" fill="#ccfbf1" stroke="#0d9488"/><text x="607" y="55" text-anchor="middle" font-size="8">S</text>
+        <text x="35" y="105" font-size="9" fill="#059669">E=Eden</text>
+        <text x="110" y="105" font-size="9" fill="#0d9488">S=Survivor</text>
+        <text x="200" y="105" font-size="9" fill="#ea580c">O=Old</text>
+        <text x="265" y="105" font-size="9" fill="#94a3b8">空=Free</text>
+        <text x="478" y="105" font-size="9" fill="#dc2626">H=Humongous(大对象)</text>
+        <text x="340" y="130" text-anchor="middle" font-size="9" fill="#5a6170">Eden/Survivor/Old/Free 角色动态切换 · 不要求连续</text>
+      </svg>
+    </div>
+
+    <p><strong>核心机制：</strong>G1 追踪每个 Region 的垃圾堆积量，优先回收<strong>垃圾最多的 Region</strong>（Garbage First）。通过 <strong>Remembered Set</strong> 解决跨 Region 引用问题。用户可设置期望停顿时间 <code>-XX:MaxGCPauseMillis=200</code>，G1 自动调整。</p>
+
+    <div class="code">
+      <span class="lang">bash</span>
+<pre><span class="cmt"># G1 常用参数</span>
+-XX:+UseG1GC                     <span class="cmt"># 启用 G1</span>
+-XX:MaxGCPauseMillis=<span class="num">200</span>         <span class="cmt"># 期望最大停顿 200ms</span>
+-XX:G1HeapRegionSize=<span class="num">4</span>M          <span class="cmt"># Region 大小（1~32M，2 的次方）</span>
+-XX:InitiatingHeapOccupancyPercent=<span class="num">45</span>  <span class="cmt"># 堆占用 45% 触发并发标记</span></pre>
+    </div>
+  </div></div>
+</div>
+
+<!-- ==================== 6. 字节码执行流程 ==================== -->
+<h2 class="sec-title" id="s6"><span class="n">6</span>字节码执行流程</h2>
+
+<div class="card">
+  <h3><span class="ic ic-byte">🔧</span>从 .java 到机器码</h3>
+
+  <div class="flow-row">
+    <span class="flow-node n1">📝 .java<br><small>源代码</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n2">🔨 javac<br><small>前端编译</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n3">📦 .class<br><small>字节码</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n4">📥 类加载器<br><small>加载验证</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n5">⚙️ 执行引擎</span><span class="flow-arrow">→</span>
+    <span class="flow-node n6">🖥️ 机器码</span>
+  </div>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg">
+      <text x="440" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a2e">JVM 执行引擎：解释执行 + JIT 编译（混合模式）</text>
+
+      <!-- Class file -->
+      <rect x="30" y="45" width="160" height="70" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="110" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">.class 字节码</text>
+      <text x="110" y="90" text-anchor="middle" font-size="9" fill="#7c3aed">iconst_1 · iload · invokevirtual</text>
+      <text x="110" y="105" text-anchor="middle" font-size="9" fill="#7c3aed">基于栈的指令集架构</text>
+
+      <!-- Arrow -->
+      <line x1="190" y1="80" x2="225" y2="80" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- Branch: Interpreter + JIT -->
+      <rect x="230" y="45" width="400" height="70" rx="8" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+
+      <!-- Interpreter path -->
+      <rect x="245" y="55" width="170" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="330" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">🔤 解释执行</text>
+      <text x="330" y="93" text-anchor="middle" font-size="8" fill="#3b82f6">逐条解释 → 立即执行</text>
+
+      <!-- JIT path -->
+      <rect x="440" y="55" width="170" height="50" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="1"/>
+      <text x="525" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#134e4a">⚡ JIT 编译</text>
+      <text x="525" y="93" text-anchor="middle" font-size="8" fill="#0d9488">热点方法 → 编译缓存</text>
+
+      <!-- Arrow -->
+      <line x1="630" y1="80" x2="660" y2="80" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- Native Code -->
+      <rect x="665" y="45" width="180" height="70" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="755" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#064e3b">🖥️ 机器码执行</text>
+      <text x="755" y="90" text-anchor="middle" font-size="9" fill="#059669">解释器入口 + CodeCache 缓存</text>
+      <text x="755" y="105" text-anchor="middle" font-size="9" fill="#059669">OS 硬件直接跑机器码</text>
+
+      <!-- Bottom explanation -->
+      <text x="440" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#1a1a2e">热点代码探测：方法调用计数器 + 回边计数器 → 超过阈值触发 JIT</text>
+
+      <rect x="80" y="175" width="180" height="55" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="170" y="195" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">C1 编译器 (Client)</text>
+      <text x="170" y="212" text-anchor="middle" font-size="8.5" fill="#3b82f6">快速编译 · 轻度优化 · 低启动延时</text>
+
+      <rect x="300" y="175" width="180" height="55" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+      <text x="390" y="195" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">C2 编译器 (Server)</text>
+      <text x="390" y="212" text-anchor="middle" font-size="8.5" fill="#059669">激进优化 · 逃逸分析 · 内联 · 标量替换</text>
+
+      <rect x="520" y="175" width="180" height="55" rx="6" fill="#fce7f3" stroke="#db2777" stroke-width="1"/>
+      <text x="610" y="195" text-anchor="middle" font-size="10" font-weight="700" fill="#9d174d">分层编译 (Tiered)</text>
+      <text x="610" y="212" text-anchor="middle" font-size="8.5" fill="#db2777">Level 0-4 · C1+C2 协作 · JDK8+ 默认</text>
+
+      <text x="440" y="245" text-anchor="middle" font-size="9" fill="#94a3b8">编译阈值：-XX:CompileThreshold=10000（方法调用 10000 次或回边 10700 次）· 分层编译 JDK8 默认开启</text>
+    </svg>
+  </div>
+</div>
+
+<div class="accordion">
+  <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="ic ic-byte" style="width:32px;height:32px;font-size:.95rem">🔬</span>
+    <strong style="flex:1">字节码示例：看看 javac 编译结果</strong>
+    <span class="chev">▶</span>
+  </div>
+  <div class="acc-body"><div class="acc-inner">
+    <div class="code">
+      <span class="lang">Java 源码</span>
+<pre><span class="kw">public class</span> <span class="typ">SimpleCalc</span> {
+    <span class="kw">public int</span> <span class="fn">add</span>(<span class="typ">int</span> a, <span class="typ">int</span> b) {
+        <span class="kw">return</span> a + b;
+    }
+}</pre>
+    </div>
+
+    <div class="code">
+      <span class="lang">字节码 (javap -c SimpleCalc)</span>
+<pre><span class="kw">public int</span> <span class="fn">add</span>(<span class="typ">int</span>, <span class="typ">int</span>);
+  Code:
+     <span class="num">0</span>: iload_1        <span class="cmt">// 从局部变量表位置 1 加载 int (a)</span>
+     <span class="num">1</span>: iload_2        <span class="cmt">// 从局部变量表位置 2 加载 int (b)</span>
+     <span class="num">2</span>: iadd           <span class="cmt">// 栈顶两 int 相加，结果压栈</span>
+     <span class="num">3</span>: ireturn        <span class="cmt">// 返回栈顶 int</span></pre>
+    </div>
+    <p style="font-size:.84rem;color:var(--text2)">JVM 基于<strong>栈的指令集</strong>（与 x86 的寄存器架构不同），操作数在操作数栈上传递。每行字节码指令只占 1 字节（操作码）+ 若干操作数。</p>
+  </div></div>
+</div>
+
+<!-- ==================== 7. JIT 编译原理 ==================== -->
+<h2 class="sec-title" id="s7"><span class="n">7</span>JIT 编译原理</h2>
+
+<div class="card">
+  <h3><span class="ic ic-jit">⚡</span>Just-In-Time 编译：热点代码 → 机器码缓存</h3>
+  <p>JVM 先解释执行，同时监控方法调用频率。当某个方法被调用超过阈值（默认 10,000 次），JIT 编译器将其编译为<strong>本地机器码</strong>存入 CodeCache，后续调用直接执行机器码，跳过解释环节。</p>
+
+  <div class="gc-grid">
+    <div class="gc-card"><strong>🎯 分层编译（Tiered Compilation）</strong><br>JDK8+ 默认模式，5 个编译层级：
+      <br>L0: 解释执行
+      <br>L1: C1 无 profiling
+      <br>L2: C1 + 简单 profiling
+      <br>L3: C1 + 完整 profiling
+      <br>L4: C2 激进优化</div>
+    <div class="gc-card"><strong>🔧 C2 核心优化</strong><br>· 方法内联（Inlining）
+      <br>· 逃逸分析（Escape Analysis）
+      <br>· 锁消除（Lock Elision）
+      <br>· 标量替换（Scalar Replacement）
+      <br>· 去虚拟化（Devirtualization）</div>
+    <div class="gc-card"><strong>📐 内联实战</strong><br>小方法内联到大方法中，消除方法调用开销（栈帧创建、参数传递）。-XX:MaxInlineSize=35（默认 35 字节以内的方法直接内联）</div>
+    <div class="gc-card"><strong>🔄 逆优化</strong><br>C2 的激进假设（如"该引用永远指向 A 类"）若被打破，则回退到解释执行重新收集 profiling → 再编译。这就是 JVM "热得更热"的原因。</div>
+  </div>
+
+  <div class="code">
+    <span class="lang">bash</span>
+<pre><span class="cmt"># 查看 JIT 编译情况</span>
+java -XX:+PrintCompilation -XX:+UnlockDiagnosticVMOptions \
+     -XX:+PrintInlining YourApp
+
+<span class="cmt"># 输出示例：</span>
+<span class="num">  169   1    3</span>  <span class="str">java.lang.String::hashCode</span> (<span class="num">55</span> bytes)
+<span class="num">  170   2    4</span>  <span class="str">com.example.Task::process</span> (<span class="num">132</span> bytes)
+<span class="cmt"># 列1=编译ID  列2=编译层级(3=C1,4=C2)  列3=方法名</span>
+<span class="cmt"># 字节数=方法大小（后面的55/132）</span></pre>
+  </div>
+
+  <div class="tip good">
+    <span>🎯</span><span><strong>逃逸分析经典案例：</strong>对象只在方法内部使用（未逃逸），C2 可以消除堆分配，对象直接拆散为栈上变量（标量替换）。例如 <code>new Point(x,y)</code> 如果 Point 不逃逸 → 直接优化成两个局部变量，无需在堆上分配。</span>
+  </div>
+</div>
+
+<!-- ==================== 8. 调优实践 ==================== -->
+<h2 class="sec-title" id="s8"><span class="n">8</span>JVM 调优实践</h2>
+
+<div class="card">
+  <h3><span class="ic ic-mem">🎯</span>常用 JVM 参数速查</h3>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:18%">分类</th><th style="width:35%">参数</th><th>说明</th></tr>
+      <tr><td rowspan="3"><strong>堆内存</strong></td><td><code>-Xms2g -Xmx2g</code></td><td>初始堆 = 最大堆（避免动态扩容开销，生产建议相等）</td></tr>
+      <tr><td><code>-Xmn1g</code></td><td>新生代大小</td></tr>
+      <tr><td><code>-XX:NewRatio=2</code></td><td>老:新 = 2:1</td></tr>
+      <tr><td rowspan="3"><strong>Metaspace</strong></td><td><code>-XX:MetaspaceSize=256m</code></td><td>Metaspace 初始大小</td></tr>
+      <tr><td><code>-XX:MaxMetaspaceSize=512m</code></td><td>Metaspace 上限（生产必设！）</td></tr>
+      <tr><td><code>-XX:+UseCompressedOops</code></td><td>压缩对象指针（64 位 JVM 节省内存）</td></tr>
+      <tr><td rowspan="3"><strong>GC 日志</strong></td><td><code>-Xlog:gc*:file=gc.log:time</code></td><td>JDK9+ GC 日志</td></tr>
+      <tr><td><code>-XX:+PrintGCDetails</code></td><td>JDK8 GC 详细日志</td></tr>
+      <tr><td><code>-XX:+HeapDumpOnOutOfMemoryError</code></td><td>OOM 时 dump 堆快照（必开！）</td></tr>
+      <tr><td rowspan="2"><strong>线程</strong></td><td><code>-Xss256k</code></td><td>线程栈大小（默认 1M，可适当减小）</td></tr>
+      <tr><td><code>-XX:MaxDirectMemorySize=512m</code></td><td>堆外内存上限（NIO 必设）</td></tr>
+    </table>
+  </div>
+
+  <div class="tip warn">
+    <span>⚠️</span><span><strong>生产环境黄金参数：</strong><code>-Xms2g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/</code> —— 这 7 个参数覆盖了 90% 的调优场景。</span>
+  </div>
+</div>
+
+<!-- ==================== 9. 命令行诊断工具 ==================== -->
+<h2 class="sec-title" id="s9"><span class="n">9</span>命令行诊断工具</h2>
+
+<div class="card">
+  <h3><span class="ic ic-arch">🛠️</span>六大核心诊断命令</h3>
+  <p>JDK 自带的 <code>bin</code> 目录下有丰富的命令行诊断工具，无需额外安装，生产环境排查首选。每个工具聚焦一个维度：进程、统计、内存、线程、配置、综合。</p>
+
+  <!-- Tool accordions -->
+  <div class="accordion open">
+    <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+      <strong style="color:var(--blue)">📋 jps — JVM 进程状态工具</strong><span class="pill blue">进程</span><span class="chev" style="margin-left:auto">▶</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p>功能最基础的工具，列出所有正在运行的 Java 进程及其主类名。通常作为其他工具的「第一步」——获取进程 PID。</p>
+      <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 列出本地所有 Java 进程</span>
+<span class="fn">jps</span> -l
+<span class="cmt"># 输出：</span>
+<span class="num">12345</span> com.example.BootApplication    <span class="cmt"># -l: 显示完整主类名</span>
+<span class="num">12346</span> org.eclipse.jetty.start.Main
+<span class="num">12389</span> sun.tools.jps.Jps
+
+<span class="cmt"># 常用参数</span>
+<span class="fn">jps</span> -v        <span class="cmt"># 打印启动时的 JVM 参数</span>
+<span class="fn">jps</span> -m        <span class="cmt"># 打印传递给 main 方法的参数</span>
+<span class="fn">jps</span> -lvm      <span class="cmt"># 三合一：全类名 + 参数 + JVM 参数</span></pre>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+      <strong style="color:var(--green)">📊 jstat — 统计监控工具</strong><span class="pill green">监控</span><span class="chev" style="margin-left:auto">▶</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p>实时查看 JVM 的运行数据：类加载、GC 统计、编译统计。最常用于监控 GC 频率和耗时，判断是否需要调优。</p>
+      <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 格式：jstat -&lt;option&gt; &lt;pid&gt; &lt;间隔ms&gt; &lt;次数&gt;</span>
+<span class="cmt"># 监控 GC：每 1 秒输出一次，共 10 次</span>
+<span class="fn">jstat</span> -gc <span class="num">12345</span> <span class="num">1000</span> <span class="num">10</span>
+
+<span class="cmt"># 输出列解读（关键列）：</span>
+<span class="cmt"># S0C/S1C: Survivor 0/1 容量    S0U/S1U: Survivor 使用量</span>
+<span class="cmt"># EC: Eden 容量    EU: Eden 使用量    OC: Old 容量    OU: Old 使用量</span>
+<span class="cmt"># MC: Metaspace 容量    MU: Metaspace 使用量</span>
+<span class="cmt"># YGC: Young GC 次数    YGCT: Young GC 耗时</span>
+<span class="cmt"># FGC: Full GC 次数     FGCT: Full GC 耗时     GCT: GC 总耗时</span>
+
+<span class="cmt"># 其他常用 option：</span>
+<span class="fn">jstat</span> -class <span class="num">12345</span>    <span class="cmt"># 类加载统计（装载/卸载数量+耗时）</span>
+<span class="fn">jstat</span> -compiler <span class="num">12345</span> <span class="cmt"># JIT 编译统计（编译方法数+耗时）</span>
+<span class="fn">jstat</span> -gcutil <span class="num">12345</span> <span class="num">1000</span>  <span class="cmt"># GC 使用率百分比（更直观）</span></pre>
+      </div>
+      <div class="tip info">
+        <span>💡</span><span><strong>实战用法：</strong>发布新版本后跑 <code>jstat -gcutil PID 1000 100</code> 观察 100 秒。如果 FGC 在增长 → 可能内存泄漏；如果 EU/OU 持续接近 100% → 需要调大堆。</span>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+      <strong style="color:var(--red)">🗺️ jmap — 内存映像工具</strong><span class="pill red">内存</span><span class="chev" style="margin-left:auto">▶</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p>查看堆内存中的对象统计信息，导出 heap dump 二进制快照文件，供 MAT 等工具离线分析。OOM 排查的核心入口。</p>
+      <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 查看堆中对象统计（按占用空间降序）</span>
+<span class="fn">jmap</span> -histo:live <span class="num">12345</span> | head -20
+<span class="cmt"># 输出： num  #instances  #bytes  class name</span>
+<span class="cmt">#        1:    500000   40000000  [C (char 数组，注意看大小)</span>
+<span class="cmt">#        2:    120000   28000000  java.lang.String</span>
+<span class="cmt">#        3:     80000   16000000  com.example.User</span>
+
+<span class="cmt"># 导出 heap dump（生产慎用，会触发 Full GC）</span>
+<span class="fn">jmap</span> -dump:live,format=b,file=heap.hprof <span class="num">12345</span>
+
+<span class="cmt"># 查看堆内存配置</span>
+<span class="fn">jmap</span> -heap <span class="num">12345</span>
+<span class="cmt"># 输出：各代大小、使用率、GC 算法配置</span>
+
+<span class="cmt"># JDK 9+ 替代方案（推荐）</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> GC.heap_dump heap.hprof</pre>
+      </div>
+      <div class="tip warn">
+        <span>⚠️</span><span><strong>生产注意事项：</strong><code>jmap -dump:live</code> 会先触发 Full GC（回收死对象），然后导出。大堆（>4G）可能卡顿数秒到数分钟。线上优先用 <code>-XX:+HeapDumpOnOutOfMemoryError</code> 自动 dump，或 JDK 9+ 的 <code>jcmd GC.heap_dump</code>。</span>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+      <strong style="color:var(--orange)">🧵 jstack — 线程快照工具</strong><span class="pill" style="background:var(--orange-light);color:var(--orange)">线程</span><span class="chev" style="margin-left:auto">▶</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p>打印 JVM 中所有线程的堆栈轨迹（thread dump），是排查死锁、线程饥饿、CPU 飙升问题的利器。</p>
+      <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 打印线程快照</span>
+<span class="fn">jstack</span> <span class="num">12345</span> > thread_dump.txt
+
+<span class="cmt"># 关键信息解读：</span>
+<span class="cmt"># "http-nio-8080-exec-1" #25 daemon prio=5  → 线程名+守护状态+优先级</span>
+<span class="cmt">#   java.lang.Thread.State: WAITING (parking) → 线程状态</span>
+<span class="cmt">#   at sun.misc.Unsafe.park(Native Method)</span>
+<span class="cmt">#   at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)</span>
+
+<span class="cmt"># 快速排查步骤：</span>
+<span class="cmt"># 1. top -Hp PID       → 找到 CPU 最高的线程 nid（十六进制）</span>
+<span class="cmt"># 2. jstack PID|grep nid → 定位到具体代码行</span>
+<span class="cmt"># 3. jstack -l PID      → -l 输出锁的额外信息</span>
+<span class="cmt"># 4. 看末尾 "Found 1 deadlock" → 死锁检测</span></pre>
+      </div>
+      <div class="tip info">
+        <span>💡</span><span><strong>死锁自动检测：</strong><code>jstack -l PID</code> 的输出末尾会明确标注 <code>Found one Java-level deadlock</code> 并列出死锁涉及的线程和锁。连续执行 2-3 次 jstack 间隔 5 秒可以排除瞬时状态。</span>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+      <strong style="color:var(--purple)">⚙️ jinfo — 配置信息工具</strong><span class="pill purple">配置</span><span class="chev" style="margin-left:auto">▶</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p>查看和动态修改 JVM 运行参数。排查「这个参数到底生效了没有」的神器。</p>
+      <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 查看所有 JVM 参数（含默认值）</span>
+<span class="fn">jinfo</span> -flags <span class="num">12345</span>
+<span class="cmt"># -XX:MaxHeapSize=4294967296  -XX:+UseG1GC ...</span>
+
+<span class="cmt"># 查看单个参数</span>
+<span class="fn">jinfo</span> -flag MaxHeapSize <span class="num">12345</span>    <span class="cmt"># 输出：-XX:MaxHeapSize=4294967296</span>
+<span class="fn">jinfo</span> -flag UseG1GC <span class="num">12345</span>        <span class="cmt"># 输出：-XX:+UseG1GC（+ 表示开启）</span>
+
+<span class="cmt"># 动态修改参数（只能改 manageable 标志位）</span>
+<span class="fn">jinfo</span> -flag +PrintGC <span class="num">12345</span>       <span class="cmt"># 打开 GC 日志（动态生效！）</span>
+<span class="fn">jinfo</span> -flag -PrintGC <span class="num">12345</span>       <span class="cmt"># 关闭 GC 日志</span></pre>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="accordion">
+    <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+      <strong style="color:var(--teal)">🎯 jcmd — 综合诊断命令</strong><span class="pill" style="background:var(--teal-light);color:var(--teal)">推荐</span><span class="chev" style="margin-left:auto">▶</span>
+    </div>
+    <div class="acc-body"><div class="acc-inner">
+      <p>JDK 7+ 推出的全能工具，目标是「一个命令取代 jmap/jstack/jinfo 的大部分功能」。功能最全且对进程影响最小。</p>
+      <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 列出所有 Java 进程</span>
+<span class="fn">jcmd</span> -l
+
+<span class="cmt"># 列出该进程支持的所有诊断命令</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> help
+
+<span class="cmt"># 常用诊断命令</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> VM.version      <span class="cmt"># JVM 版本信息</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> VM.flags        <span class="cmt"># 所有 JVM 参数（同 jinfo -flags）</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> VM.uptime       <span class="cmt"># 运行时长</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> Thread.print    <span class="cmt"># 线程快照（同 jstack）</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> GC.class_histogram <span class="cmt"># 类统计（同 jmap -histo）</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> GC.heap_dump /tmp/heap.hprof  <span class="cmt"># 堆转储</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> VM.system_properties   <span class="cmt"># 系统属性</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> GC.run         <span class="cmt"># 触发 Full GC</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> VM.native_memory summary  <span class="cmt"># 堆外内存统计</span></pre>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="ic ic-mem">📋</span>工具速查对照表</h3>
+  <p style="margin-bottom:16px">六大工具各司其职，按诊断场景快速定位：</p>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:12%">工具</th><th style="width:14%">场景</th><th style="width:30%">核心命令</th><th>典型输出</th></tr>
+      <tr>
+        <td><strong>jps</strong></td>
+        <td><span class="pill blue">进程发现</span></td>
+        <td><code>jps -lvm</code></td>
+        <td>PID + 主类名 + JVM 参数</td>
+      </tr>
+      <tr>
+        <td><strong>jstat</strong></td>
+        <td><span class="pill green">实时监控</span></td>
+        <td><code>jstat -gcutil PID 1000</code></td>
+        <td>Eden/Old/Meta 使用率 + GC 次数/耗时</td>
+      </tr>
+      <tr>
+        <td><strong>jmap</strong></td>
+        <td><span class="pill red">内存分析</span></td>
+        <td><code>jmap -dump:live,file=heap.hprof PID</code></td>
+        <td>二进制 heap dump（MAT 分析）</td>
+      </tr>
+      <tr>
+        <td><strong>jstack</strong></td>
+        <td><span class="pill" style="background:var(--orange-light);color:var(--orange)">线程排查</span></td>
+        <td><code>jstack PID > thread.dump</code></td>
+        <td>线程堆栈 + 死锁检测</td>
+      </tr>
+      <tr>
+        <td><strong>jinfo</strong></td>
+        <td><span class="pill purple">参数管理</span></td>
+        <td><code>jinfo -flags PID</code></td>
+        <td>全部 JVM 参数及值</td>
+      </tr>
+      <tr>
+        <td><strong>jcmd</strong></td>
+        <td><span class="pill" style="background:var(--teal-light);color:var(--teal)">全能入口</span></td>
+        <td><code>jcmd PID help</code></td>
+        <td>以上所有功能 + Native Memory</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 10. 快照分析工具 ==================== -->
+<h2 class="sec-title" id="s10"><span class="n">10</span>快照分析工具</h2>
+
+<div class="card">
+  <h3><span class="ic ic-gc">🔬</span>Heap Dump 分析：MAT / JProfiler / VisualVM</h3>
+  <p>将 <code>jmap</code> 或 <code>-XX:+HeapDumpOnOutOfMemoryError</code> 生成的 .hprof 文件进行离线分析，定位内存泄漏、大对象、重复对象。</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTool(0)">MAT (Eclipse)</button>
+    <button class="tab-btn" onclick="switchTool(1)">JProfiler</button>
+    <button class="tab-btn" onclick="switchTool(2)">VisualVM</button>
+  </div>
+
+  <!-- MAT -->
+  <div class="tab-panel active" id="toolPanel0">
+    <div class="tbl-wrap">
+      <table>
+        <tr><th style="width:18%">功能</th><th>说明</th></tr>
+        <tr><td><strong>Leak Suspects</strong></td><td>自动分析内存泄漏嫌疑点，按占用空间排序给出嫌疑报告，会指出哪个类/哪条引用链导致泄漏。</td></tr>
+        <tr><td><strong>Histogram</strong></td><td>按类统计对象数量和占用空间，快速定位「哪个类实例最多/占用最大」。</td></tr>
+        <tr><td><strong>Dominator Tree</strong></td><td>支配树分析：显示每个对象「支配」了多少内存（即它被 GC 后能释放多少空间），比 Histogram 更准确。</td></tr>
+        <tr><td><strong>Path to GC Roots</strong></td><td>追踪对象到 GC Root 的引用路径，找出「为什么这个对象没有被回收」的根本原因。</td></tr>
+        <tr><td><strong>OQL</strong></td><td>类 SQL 的对象查询语言，精确检索堆中满足条件的对象。如 <code>SELECT * FROM com.example.User WHERE age > 30</code></td></tr>
+      </table>
+    </div>
+    <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># MAT 使用流程</span>
+<span class="cmt"># 1. 获取 heap dump</span>
+jmap -dump:live,format=b,file=heap.hprof <span class="num">12345</span>
+<span class="cmt"># 2. 用 MAT 打开 heap.hprof</span>
+<span class="cmt"># 3. 选择 "Leak Suspects Report" 自动分析</span>
+<span class="cmt"># 4. 进入 Dominator Tree 找占用最大的对象</span>
+<span class="cmt"># 5. Path to GC Roots → 定位引用链 → 修复代码</span>
+<span class="cmt"># 提示：大堆(>4G)需调 MAT 启动参数 MemoryAnalyzer.ini 中 -Xmx</span></pre>
+    </div>
+  </div>
+
+  <!-- JProfiler -->
+  <div class="tab-panel" id="toolPanel1">
+    <div class="tbl-wrap">
+      <table>
+        <tr><th style="width:18%">功能</th><th>说明</th></tr>
+        <tr><td><strong>Live Memory</strong></td><td>实时查看堆中所有对象及其引用关系，可按类/包过滤，支持录制对象分配。</td></tr>
+        <tr><td><strong>CPU Profiler</strong></td><td>采样或插桩分析 CPU 热点方法，定位性能瓶颈。支持按线程/调用树展示。</td></tr>
+        <tr><td><strong>Thread Profiler</strong></td><td>监控线程状态变化，检测死锁和线程阻塞，按时间线可视化展示。</td></tr>
+        <tr><td><strong>DB/JDBC Profiler</strong></td><td>追踪数据库调用：SQL 语句、执行耗时、调用次数，定位慢 SQL。</td></tr>
+        <tr><td><strong>Heap Walker</strong></td><td>堆快照离线分析，支持按最大对象/最大保留集合/类统计等多种视图。</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- VisualVM -->
+  <div class="tab-panel" id="toolPanel2">
+    <div class="tbl-wrap">
+      <table>
+        <tr><th style="width:18%">功能</th><th>说明</th></tr>
+        <tr><td><strong>Monitor</strong></td><td>CPU、堆内存、Metaspace、线程数、已加载类数的实时曲线图。即开即用无需配置。</td></tr>
+        <tr><td><strong>Threads</strong></td><td>线程列表 + 时间线视图，一键生成 Thread Dump，可视化检测死锁。</td></tr>
+        <tr><td><strong>Sampler</strong></td><td>低开销 CPU 采样 + 内存采样，无需重启 JVM，适合生产环境临时排查。</td></tr>
+        <tr><td><strong>Profiler</strong></td><td>CPU/内存插桩 Profiler，数据更精确但开销较大，适合测试环境。</td></tr>
+        <tr><td><strong>Plugins</strong></td><td>插件生态：GC Viewer（GC 日志可视化）、BTrace（动态字节码注入）等。</td></tr>
+      </table>
+    </div>
+    <div class="tip info">
+      <span>💡</span><span><strong>JDK 9+ 注意：</strong>VisualVM 从 JDK 9 起不再随 JDK 分发。需要从 <a href="https://visualvm.github.io/" style="color:var(--blue)">visualvm.github.io</a> 单独下载。替代方案：JDK 自带的 JMC（JDK Mission Control）或 IDEA Ultimate 内置的 Profiler。</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="ic ic-load">🦾</span>Arthas — 阿里开源在线诊断神器</h3>
+  <p>无需重启、无需修改代码、无需预先埋点 —— <strong>在线诊断 JVM 的瑞士军刀</strong>。在生产环境定位问题的最佳选择。</p>
+
+  <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 一键安装启动（下载 arthas-boot.jar 并 attach 到目标进程）</span>
+curl -O https://arthas.aliyun.com/arthas-boot.jar
+java -jar arthas-boot.jar
+
+<span class="cmt"># === 核心命令 ===</span>
+
+<span class="cmt"># 1. dashboard — 实时仪表盘（类似 jstat + top 的可视化版）</span>
+<span class="fn">dashboard</span>
+<span class="cmt"># 显示：线程列表(按CPU排序) + 堆内存非堆内存 + GC + 运行时信息</span>
+
+<span class="cmt"># 2. thread — 线程诊断</span>
+<span class="fn">thread</span>                        <span class="cmt"># 显示所有线程（按 CPU 排序）</span>
+<span class="fn">thread</span> -n <span class="num">3</span>                   <span class="cmt"># 显示 CPU 最高的 3 个线程</span>
+<span class="fn">thread</span> -b                     <span class="cmt"># 检测死锁（自动找出死锁线程）</span>
+<span class="fn">thread</span> <span class="num">42</span>                    <span class="cmt"># 显示指定线程 ID 的堆栈</span>
+
+<span class="cmt"># 3. watch — 方法调用观测（在线"断点"）</span>
+<span class="fn">watch</span> com.example.UserService getUser <span class="str">'{params,returnObj}'</span> -x <span class="num">3</span>
+<span class="cmt"># 实时打印 getUser 方法的入参(params)和返回值(returnObj)，展开3层</span>
+
+<span class="cmt"># 4. trace — 方法调用链路追踪</span>
+<span class="fn">trace</span> com.example.UserService getUser
+<span class="cmt"># 打印整个调用链及各环节耗时，快速定位慢方法</span>
+
+<span class="cmt"># 5. jad — 在线反编译</span>
+<span class="fn">jad</span> com.example.UserService
+<span class="cmt"># 反编译运行中的类，验证线上代码是否是最新版本</span>
+
+<span class="cmt"># 6. stack — 查看方法调用路径</span>
+<span class="fn">stack</span> com.example.UserService getUser
+<span class="cmt"># 当某个方法被调用时打印调用它的完整堆栈</span>
+
+<span class="cmt"># 7. vmoption — 查看/修改 JVM 参数</span>
+<span class="fn">vmoption</span> PrintGC <span class="kw">true</span>             <span class="cmt"># 动态打开 GC 日志</span>
+
+<span class="cmt"># 8. heapdump — 导出堆快照</span>
+<span class="fn">heapdump</span> /tmp/heap.hprof       <span class="cmt"># 同 jmap 但不会卡顿</span></pre>
+  </div>
+
+  <div class="flow-row">
+    <span class="flow-node n1">dashboard<br><small>实时仪表盘</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n2">thread -n 3<br><small>找 CPU 热门线程</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n3">thread 42<br><small>查看堆栈</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n4">trace / watch<br><small>定位慢方法</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n5">jad 反编译<br><small>确认代码版本</small></span><span class="flow-arrow">→</span>
+    <span class="flow-node n6">heapdump<br><small>内存分析</small></span>
+  </div>
+  <p style="text-align:center;font-size:.78rem;color:var(--text3);margin-top:8px">典型线上排查路径：dashboard 全局 → thread 找热点 → trace 定位 → watch 验证 → jad 确认</p>
+
+  <div class="tip good">
+    <span>✅</span><span><strong>Arthas 三大优势：</strong>① 零侵入——不修改启动参数、不重启进程；② 交互式——类似调试器的 REPL 体验；③ 生产安全——单个命令执行完即退出，不留 Agent 常驻。Classloader 隔离保证不会污染应用的类加载。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="ic ic-jit">🖥️</span>JFR + JMC：JDK 内置性能分析套装</h3>
+  <p>JDK Flight Recorder (JFR) 是 HotSpot 内置的低开销事件记录引擎，JMission Control (JMC) 是配套的可视化分析客户端。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:20%">特性</th><th>说明</th></tr>
+      <tr><td><strong>开销</strong></td><td>默认配置下 <strong>CPU 开销 < 1%</strong>，极致优化，生产环境可持续开启。</td></tr>
+      <tr><td><strong>事件类型</strong></td><td>涵盖 GC、类加载、方法采样、线程、IO、网络、锁竞争等 150+ 种事件。</td></tr>
+      <tr><td><strong>启动方式</strong></td><td><code>-XX:StartFlightRecording=filename=rec.jfr</code>（JVM 参数）或 <code>jcmd PID JFR.start</code>（动态开启）</td></tr>
+      <tr><td><strong>分析维度</strong></td><td>热点方法、GC 详细时间线、线程延迟、锁竞争、Socket IO、异常统计、内存分配速率。</td></tr>
+      <tr><td><strong>JDK 版本</strong></td><td>JDK 8u262+ 内置；JDK 11+ 默认开启。JMC 需单独下载。</td></tr>
+    </table>
+  </div>
+
+  <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 方式一：启动时开启（JVM 参数）</span>
+java -XX:StartFlightRecording:duration=60s,filename=recording.jfr -jar app.jar
+
+<span class="cmt"># 方式二：运行时动态开启（jcmd）</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> JFR.start name=myrec duration=60s filename=/tmp/rec.jfr
+
+<span class="cmt"># 方式三：持续录制（生产推荐）</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> JFR.start name=prod settings=profile maxsize=100m
+<span class="cmt"># ... 问题复现后 dump 最近 1 小时的数据</span>
+<span class="fn">jcmd</span> <span class="num">12345</span> JFR.dump name=prod filename=issue.jfr
+<span class="fn">jcmd</span> <span class="num">12345</span> JFR.stop name=prod</pre>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="ic ic-byte">📊</span>GC 日志分析：GCViewer & GCEasy</h3>
+  <p>将 GC 日志可视化，直观判断 GC 频率、暂停时间分布、内存回收趋势。</p>
+
+  <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div>
+      <h4 style="font-size:.92rem;margin-bottom:8px">GCViewer</h4>
+      <ul style="font-size:.83rem;color:var(--text2);padding-left:18px;line-height:1.8">
+        <li>开源桌面工具，直接打开 GC 日志文件</li>
+        <li>展示 GC 事件时间线、暂停耗时分布</li>
+        <li>支持多文件对比（优化前后对比）</li>
+        <li>CSV/图表导出</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="font-size:.92rem;margin-bottom:8px">GCEasy (在线)</h4>
+      <ul style="font-size:.83rem;color:var(--text2);padding-left:18px;line-height:1.8">
+        <li><a href="https://gceasy.io" style="color:var(--blue)">gceasy.io</a> 上传日志即可分析</li>
+        <li>自动生成 GC 健康报告 + 调优建议</li>
+        <li>可视化图表：暂停时间、回收量、内存趋势</li>
+        <li>支持所有 GC 收集器的日志格式</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code"><span class="lang">bash</span>
+<pre><span class="cmt"># 开启 GC 日志（JDK 8）</span>
+-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:gc.log
+
+<span class="cmt"># 开启 GC 日志（JDK 9+）</span>
+-Xlog:gc*:file=gc.log:time,level,tags
+
+<span class="cmt"># 然后用 GCViewer 或上传 gceasy.io 分析 gc.log</span></pre>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="ic ic-arch">🧰</span>诊断工具全景速查表</h3>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:12%">工具</th><th style="width:10%">类型</th><th style="width:15%">核心用途</th><th>适用场景</th><th style="width:12%">开销</th></tr>
+      <tr>
+        <td><strong>MAT</strong></td><td>离线分析</td><td>堆 dump 泄漏分析</td><td>OOM 后离线定位内存泄漏根因</td><td><span class="pill green">无</span></td>
+      </tr>
+      <tr>
+        <td><strong>JProfiler</strong></td><td>商业 Profiler</td><td>CPU/内存/线程/DB 全维度</td><td>开发/测试环境深度性能剖析</td><td><span class="pill" style="background:var(--orange-light);color:var(--orange)">中</span></td>
+      </tr>
+      <tr>
+        <td><strong>VisualVM</strong></td><td>免费 GUI</td><td>轻量监控 + 采样</td><td>快速查看 JVM 运行状态</td><td><span class="pill green">低</span></td>
+      </tr>
+      <tr>
+        <td><strong>Arthas</strong></td><td>在线诊断</td><td>watch/trace/jad/thread</td><td>生产环境不重启排查</td><td><span class="pill green">极低</span></td>
+      </tr>
+      <tr>
+        <td><strong>JFR + JMC</strong></td><td>内置事件</td><td>低开销录制 + 离线回放</td><td>生产持续监控 + 事后分析</td><td><span class="pill green">极低</span></td>
+      </tr>
+      <tr>
+        <td><strong>GCViewer</strong></td><td>日志分析</td><td>GC 日志可视化</td><td>GC 调优前后效果对比</td><td><span class="pill green">无</span></td>
+      </tr>
+      <tr>
+        <td><strong>Async Profiler</strong></td><td>采样 Profiler</td><td>CPU/Alloc/Wall-Clock</td><td>火焰图 + 低开销 CPU Profiling</td><td><span class="pill green">极低</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Java JVM 虚拟机 · 完整教学指南 · 架构 / 类加载 / 内存 / GC / 字节码 / JIT / 调优 / 诊断工具</p>
+  <p style="margin-top:4px">悬停交互图示探索内存结构 · Tab 切换对比 GC 算法 · 折叠展开学习诊断命令</p>
+</div>
+
+</div><!-- end wrap -->
+
+<script>
+// ===== GC Tab Switch =====
+function switchGcTab(idx) {
+  document.querySelectorAll('#gcTabs .tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab-panel').forEach((p,i) => {
+    if (p.id.startsWith('gcPanel')) p.classList.toggle('active', p.id === 'gcPanel'+idx);
+  });
+}
+
+// ===== S10 Tool Tabs (MAT/JProfiler/VisualVM) =====
+function switchTool(idx) {
+  document.querySelectorAll('#s10 .tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll('#s10 .tab-panel').forEach((p, i) => {
+    if (p.id.startsWith('toolPanel')) p.classList.toggle('active', p.id === 'toolPanel' + idx);
+  });
+}
+
+// ===== Memory Interactive Tooltip =====
+function showTooltip(event, text) {
+  const tt = document.getElementById('memTooltip');
+  if (!tt) return;
+  tt.style.display = 'block';
+  tt.textContent = text;
+  const svgRect = document.getElementById('memSvg').getBoundingClientRect();
+  const x = event.clientX - svgRect.left + 15;
+  const y = event.clientY - svgRect.top - 10;
+  tt.style.left = Math.min(x, 640) + 'px';
+  tt.style.top = Math.min(y, 280) + 'px';
+}
+function hideTooltip() {
+  const tt = document.getElementById('memTooltip');
+  if (tt) tt.style.display = 'none';
+}
+
+// ===== Copy Code =====
+document.querySelectorAll('.code').forEach(block => {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = '复制';
+  btn.onclick = function() {
+    const code = block.querySelector('pre');
+    if (code) {
+      navigator.clipboard.writeText(code.innerText).then(() => {
+        btn.textContent = '已复制!';
+        setTimeout(() => btn.textContent = '复制', 1500);
+      });
+    }
+  };
+  block.appendChild(btn);
+});
+
+// ===== Smooth Scroll =====
+document.querySelectorAll('.toc-grid a').forEach(a => {
+  a.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+});
+
+// ===== SVG Arrow Marker Injection =====
+document.querySelectorAll('svg').forEach(svg => {
+  if (!svg.querySelector('#ar')) {
+    const defs = svg.querySelector('defs') || (()=>{const d=document.createElementNS('http://www.w3.org/2000/svg','defs');svg.prepend(d);return d})();
+    if (!defs.querySelector('#ar')) {
+      const m = document.createElementNS('http://www.w3.org/2000/svg','marker');
+      m.setAttribute('id','ar'); m.setAttribute('markerWidth','8'); m.setAttribute('markerHeight','8');
+      m.setAttribute('refX','8'); m.setAttribute('refY','4'); m.setAttribute('orient','auto');
+      const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d','M0,0 L8,4 L0,8 Z'); p.setAttribute('fill','#94a3b8');
+      m.appendChild(p); defs.appendChild(m);
+    }
+  }
+});
+</script>
+
+</body>
+</html>
