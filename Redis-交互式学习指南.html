@@ -148,6 +148,11 @@ td code{background:var(--redis-light);color:var(--redis);padding:1px 6px;border-
   <a href="#s4">缓存策略</a>
   <a href="#s5">分布式</a>
   <a href="#s6">模拟器</a>
+  <a href="#s7">集群架构</a>
+  <a href="#s8">数据分片</a>
+  <a href="#s9">节点通信</a>
+  <a href="#s10">故障转移</a>
+  <a href="#s11">最佳实践</a>
 </nav>
 
 <!-- ====== HERO ====== -->
@@ -159,7 +164,9 @@ td code{background:var(--redis-light);color:var(--redis);padding:1px 6px;border-
     <span class="tag">RDB vs AOF</span>
     <span class="tag">缓存穿透·雪崩·击穿</span>
     <span class="tag">分布式锁</span>
-    <span class="tag">消息队列</span>
+    <span class="tag">集群 · Sentinel · Cluster</span>
+    <span class="tag">哈希槽 · Gossip</span>
+    <span class="tag">故障转移 · MOVED/ASK</span>
   </div>
 </header>
 
@@ -672,8 +679,491 @@ ZADD rank 100 <span style="color:#a6e3a1">"player1"</span> 200 <span style="colo
 </div>
 </div>
 
+<!-- ====== SECTION 7: CLUSTER ARCHITECTURE ====== -->
+<div class="sec" id="s7">
+<h2 class="sec-title"><span class="n">7</span>集群架构演进</h2>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🏗️ 三阶段架构演进</h3>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="sca"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.06"/></filter>
+        <marker id="car" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+      <text x="450" y="22" text-anchor="middle" font-size="13" font-weight="800" fill="#1a1a2e">Redis 集群架构演进：主从 → 哨兵 → Cluster</text>
+      
+      <!-- Phase 1: Master-Slave -->
+      <rect x="20" y="45" width="270" height="125" rx="10" fill="#fef0ef" stroke="#DC382D" stroke-width="2" filter="url(#sca)"/>
+      <text x="155" y="68" text-anchor="middle" font-size="11" font-weight="800" fill="#a82820">📀 主从复制 (Master-Slave)</text>
+      <text x="155" y="88" text-anchor="middle" font-size="8" fill="#DC382D">读写分离·数据备份</text>
+      <rect x="60" y="98" width="80" height="30" rx="5" fill="#fff" stroke="#DC382D" stroke-width="1.5"/>
+      <text x="100" y="117" text-anchor="middle" font-size="9" font-weight="700" fill="#DC382D">Master</text>
+      <rect x="180" y="98" width="70" height="30" rx="5" fill="#fff" stroke="#ea580c" stroke-width="1.5"/>
+      <text x="215" y="117" text-anchor="middle" font-size="8" fill="#ea580c">Slave</text>
+      <line x1="140" y1="113" x2="178" y2="113" stroke="#ea580c" stroke-width="1.5" marker-end="url(#car)"/>
+      <text x="159" y="108" text-anchor="middle" font-size="6" fill="#ea580c">sync</text>
+      <text x="155" y="155" text-anchor="middle" font-size="8" fill="#6b7280">✅ 读写分离 · 数据冗余</text>
+      <text x="155" y="167" text-anchor="middle" font-size="7" fill="#DC382D">❌ 无自动故障转移</text>
+
+      <!-- Arrow 1→2 -->
+      <line x1="290" y1="108" x2="330" y2="108" stroke="#94a3b8" stroke-width="2" marker-end="url(#car)"/>
+      <text x="310" y="102" text-anchor="middle" font-size="8" fill="#94a3b8">演进</text>
+
+      <!-- Phase 2: Sentinel -->
+      <rect x="335" y="45" width="270" height="125" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#sca)"/>
+      <text x="470" y="68" text-anchor="middle" font-size="11" font-weight="800" fill="#064e3b">📡 哨兵模式 (Sentinel)</text>
+      <text x="470" y="88" text-anchor="middle" font-size="8" fill="#059669">监控·通知·自动故障转移</text>
+      <rect x="355" y="98" width="50" height="26" rx="4" fill="#fff" stroke="#DC382D" stroke-width="1.2"/>
+      <text x="380" y="115" text-anchor="middle" font-size="7" font-weight="700" fill="#DC382D">M</text>
+      <rect x="415" y="106" width="35" height="20" rx="3" fill="#fff" stroke="#ea580c" stroke-width="1"/>
+      <text x="432" y="119" text-anchor="middle" font-size="6" fill="#ea580c">S</text>
+      <rect x="460" y="98" width="35" height="20" rx="3" fill="#fff" stroke="#ea580c" stroke-width="1"/>
+      <text x="477" y="111" text-anchor="middle" font-size="6" fill="#ea580c">S</text>
+      <rect x="505" y="98" width="70" height="30" rx="5" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="540" y="117" text-anchor="middle" font-size="8" fill="#7c3aed">Sentinel</text>
+      <text x="470" y="155" text-anchor="middle" font-size="8" fill="#6b7280">✅ 自动故障转移·通知</text>
+      <text x="470" y="167" text-anchor="middle" font-size="7" fill="#059669">❌ 单节点写·水平扩展有限</text>
+
+      <!-- Arrow 2→3 -->
+      <line x1="605" y1="108" x2="645" y2="108" stroke="#94a3b8" stroke-width="2" marker-end="url(#car)"/>
+      <text x="625" y="102" text-anchor="middle" font-size="8" fill="#94a3b8">演进</text>
+
+      <!-- Phase 3: Cluster -->
+      <rect x="650" y="45" width="230" height="125" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" filter="url(#sca)"/>
+      <text x="765" y="68" text-anchor="middle" font-size="11" font-weight="800" fill="#4c1d95">🧩 Redis Cluster</text>
+      <text x="765" y="88" text-anchor="middle" font-size="8" fill="#7c3aed">分片·去中心化·自动故障转移</text>
+      <rect x="668" y="100" width="45" height="28" rx="4" fill="#fff" stroke="#DC382D" stroke-width="1.2"/>
+      <text x="690" y="118" text-anchor="middle" font-size="7" fill="#DC382D">M1</text>
+      <rect x="718" y="100" width="45" height="28" rx="4" fill="#fff" stroke="#DC382D" stroke-width="1.2"/>
+      <text x="740" y="118" text-anchor="middle" font-size="7" fill="#DC382D">M2</text>
+      <rect x="788" y="100" width="45" height="28" rx="4" fill="#fff" stroke="#DC382D" stroke-width="1.2"/>
+      <text x="810" y="118" text-anchor="middle" font-size="7" fill="#DC382D">M3</text>
+      <rect x="688" y="132" width="40" height="18" rx="3" fill="#fff" stroke="#ea580c" stroke-width="1"/>
+      <text x="708" y="144" text-anchor="middle" font-size="5" fill="#ea580c">S1</text>
+      <rect x="743" y="132" width="40" height="18" rx="3" fill="#fff" stroke="#ea580c" stroke-width="1"/>
+      <text x="763" y="144" text-anchor="middle" font-size="5" fill="#ea580c">S2</text>
+      <rect x="798" y="132" width="40" height="18" rx="3" fill="#fff" stroke="#ea580c" stroke-width="1"/>
+      <text x="818" y="144" text-anchor="middle" font-size="5" fill="#ea580c">S3</text>
+      <text x="765" y="163" text-anchor="middle" font-size="7" fill="#7c3aed">✅ 水平扩展·去中心化</text>
+
+      <!-- Bottom: Comparison Table -->
+      <text x="450" y="205" text-anchor="middle" font-size="10" font-weight="700" fill="#1a1a2e">三种架构对比</text>
+      <rect x="40" y="215" width="820" height="120" rx="6" fill="#f8f9fc" stroke="#e5e7eb" stroke-width="1"/>
+      <!-- Table headers -->
+      <text x="130" y="235" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a2e">主从复制</text>
+      <text x="450" y="235" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a2e">哨兵 Sentinel</text>
+      <text x="780" y="235" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a2e">Cluster</text>
+      <!-- Row: 故障转移 -->
+      <text x="130" y="256" text-anchor="middle" font-size="8" fill="#DC382D">❌ 手动切换</text>
+      <text x="450" y="256" text-anchor="middle" font-size="8" fill="#059669">✅ 自动 (Sentinel 投票)</text>
+      <text x="780" y="256" text-anchor="middle" font-size="8" fill="#059669">✅ 自动 (Gossip + 投票)</text>
+      <!-- Row: 水平扩展 -->
+      <text x="130" y="274" text-anchor="middle" font-size="8" fill="#DC382D">❌ 只读扩展</text>
+      <text x="450" y="274" text-anchor="middle" font-size="8" fill="#ea580c">❌ 只读扩展</text>
+      <text x="780" y="274" text-anchor="middle" font-size="8" fill="#059669">✅ 16384 槽分片</text>
+      <!-- Row: 多 Key 操作 -->
+      <text x="130" y="292" text-anchor="middle" font-size="8" fill="#059669">✅ 任意 key</text>
+      <text x="450" y="292" text-anchor="middle" font-size="8" fill="#059669">✅ 任意 key</text>
+      <text x="780" y="292" text-anchor="middle" font-size="8" fill="#ea580c">⚠️ 需同槽位</text>
+      <!-- Row: 架构复杂度 -->
+      <text x="130" y="310" text-anchor="middle" font-size="8" fill="#059669">低</text>
+      <text x="450" y="310" text-anchor="middle" font-size="8" fill="#ea580c">中</text>
+      <text x="780" y="310" text-anchor="middle" font-size="8" fill="#DC382D">高</text>
+    </svg>
+  </div>
+
+  <div class="tip blue">
+    <span class="ti">💡</span>
+    <span><strong>演进路径：</strong>主从复制 → 哨兵 → 集群，就像单机 → 高可用 → 分布式。Redis 6.0 前哨兵是官方推荐的高可用方案；Redis 3.0+ 的 Cluster 实现了真正的水平扩展，是当前生产环境的首选。</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 8: DATA SHARDING ====== -->
+<div class="sec" id="s8">
+<h2 class="sec-title"><span class="n">8</span>数据分片：哈希槽</h2>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🎯 16384 个哈希槽</h3>
+  <p style="font-size:.9rem;color:var(--text2)">Redis Cluster 将整个键空间划分为 <strong>16384</strong> 个哈希槽（slot），每个 Master 节点负责一部分槽。键通过 <strong>CRC16(key) % 16384</strong> 映射到具体槽位。</p>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <text x="450" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a2e">哈希槽分配示意图</text>
+      <!-- Key → CRC16 → Slot → Node flow -->
+      <rect x="30" y="40" width="120" height="36" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="90" y="62" text-anchor="middle" font-size="9" font-weight="600" fill="#064e3b">user:10086</text>
+      <line x1="150" y1="58" x2="190" y2="58" stroke="#94a3b8" stroke-width="2" marker-end="url(#car)"/>
+      
+      <rect x="195" y="40" width="120" height="36" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="255" y="54" text-anchor="middle" font-size="7" fill="#4c1d95">CRC16("user:10086")</text>
+      <text x="255" y="66" text-anchor="middle" font-size="7" fill="#7c3aed">= 7519</text>
+      <line x1="315" y1="58" x2="355" y2="58" stroke="#94a3b8" stroke-width="2" marker-end="url(#car)"/>
+      
+      <rect x="360" y="40" width="120" height="36" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="420" y="54" text-anchor="middle" font-size="7" fill="#1e40af">7519 % 16384</text>
+      <text x="420" y="66" text-anchor="middle" font-size="7" fill="#2563eb">= slot 7519</text>
+      <line x1="480" y1="58" x2="520" y2="58" stroke="#94a3b8" stroke-width="2" marker-end="url(#car)"/>
+      
+      <rect x="525" y="40" width="150" height="36" rx="6" fill="#fef0ef" stroke="#DC382D" stroke-width="2"/>
+      <text x="600" y="54" text-anchor="middle" font-size="9" font-weight="700" fill="#DC382D">Master Node 2</text>
+      <text x="600" y="66" text-anchor="middle" font-size="7" fill="#a82820">(slot 5461-10922)</text>
+
+      <!-- Slot visualization bar -->
+      <text x="36" y="110" font-size="8" font-weight="600" fill="#1a1a2e">槽位分布：</text>
+      <rect x="36" y="118" width="828" height="24" rx="4" fill="#f0f2f8"/>
+      <!-- Node1: slot 0-5460 -->
+      <rect x="36" y="118" width="276" height="24" rx="4" fill="rgba(220,56,45,0.2)" stroke="#DC382D" stroke-width="1"/>
+      <text x="174" y="134" text-anchor="middle" font-size="8" fill="#DC382D">Master-1 (0-5460)</text>
+      <!-- Node2: slot 5461-10922 -->
+      <rect x="312" y="118" width="276" height="24" rx="0" fill="rgba(234,88,12,0.15)" stroke="#ea580c" stroke-width="1"/>
+      <text x="450" y="134" text-anchor="middle" font-size="8" fill="#ea580c">Master-2 (5461-10922)</text>
+      <!-- Node3: slot 10923-16383 -->
+      <rect x="588" y="118" width="276" height="24" rx="4" fill="rgba(5,150,105,0.15)" stroke="#059669" stroke-width="1"/>
+      <text x="726" y="134" text-anchor="middle" font-size="8" fill="#059669">Master-3 (10923-16383)</text>
+
+      <!-- Connection arrows at bottom -->
+      <text x="450" y="175" text-anchor="middle" font-size="8" fill="#6b7280">每节点负责约 5461 个槽 · 三节点集群各担 1/3 · 槽迁移时逐槽移动</text>
+      <text x="450" y="195" text-anchor="middle" font-size="7" fill="#94a3b8">CLUSTER ADDSLOTS / CLUSTER DELSLOTS / CLUSTER SETSLOT NODE</text>
+    </svg>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">📌</span>
+    <span><strong>为什么是 16384？</strong>槽位信息通过 Gossip 协议的心跳包传播。16384 个槽的位图占用 2KB（16384/8=2048 bytes），刚好适配心跳包大小（约 8KB）限制。如果像 Couchbase 一样用 1024 个 vBucket，粒度太粗；如果用 65536 个槽，心跳包放不下全部槽信息。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🏷️ 哈希标签 (Hash Tag)</h3>
+  <p style="font-size:.9rem;color:var(--text2)">多键操作（MGET、事务、Lua 脚本）要求所有键在同一槽位。通过 <strong>{} 哈希标签</strong> 可以强制相关键落到同一个槽。</p>
+  
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:.9rem">原理</h4>
+      <p style="font-size:.83rem;color:var(--text2);line-height:1.8">
+        Hash Tag 只对大括号 <code>{...}</code> 内的内容计算 CRC16。<br>
+        如果 key 中包含 <code>{...}</code> 模式，只对花括号内的字符串计算哈希。<br>
+        花括号必须匹配，且内部不能为空：<code>{user:1001}:name</code> 和 <code>{user:1001}:age</code> 会落入同一槽。
+      </p>
+    </div>
+    <div>
+      <div class="code"><span class="lang">Redis Cluster</span>
+<pre><span class="cmt"># 无 Hash Tag — 不同槽位，MGET 报错</span>
+<span class="fn">MGET</span> user:1001:name user:1001:age
+<span class="cmt"># → (error) CROSSSLOT Keys don't hash to the same slot</span>
+
+<span class="cmt"># 使用 Hash Tag — 强制同一槽位 ✅</span>
+<span class="fn">MGET</span> {user:1001}:name {user:1001}:age
+<span class="cmt"># → 1) "张三"  2) "28"</span>
+
+<span class="cmt"># 事务中必须用 Hash Tag</span>
+<span class="fn">MULTI</span>
+<span class="fn">HSET</span> {order:2001} status <span class="str">"paid"</span>
+<span class="fn">INCRBY</span> {order:2001} total <span class="num">99</span>
+<span class="fn">EXEC</span></pre></div>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <span><strong>注意：</strong>Hash Tag 会导致数据倾斜——如果某个 tag 值对应的 key 过多（如热门用户），该槽所在节点会成为热点。需要结合业务合理设计 tag 粒度。</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 9: NODE COMMUNICATION ====== -->
+<div class="sec" id="s9">
+<h2 class="sec-title"><span class="n">9</span>Gossip 节点通信</h2>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🌐 Gossip 协议原理</h3>
+  <p style="font-size:.9rem;color:var(--text2)">Redis Cluster 采用去中心化的 <strong>Gossip 协议</strong> 进行节点间元数据交换。每个节点通过 Cluster Bus（端口 = 普通端口 + 10000）与其他节点通信，无需中心协调器。</p>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg">
+      <defs><filter id="sg"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.06"/></filter></defs>
+      <text x="450" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a2e">Gossip 消息类型与传播流程</text>
+
+      <!-- 5 nodes in pentagon -->
+      <circle cx="450" cy="200" r="16" fill="#fff" stroke="#DC382D" stroke-width="2.5" filter="url(#sg)"/>
+      <text x="450" y="204" text-anchor="middle" font-size="8" font-weight="700" fill="#DC382D">A</text>
+
+      <circle cx="340" cy="148" r="16" fill="#fff" stroke="#ea580c" stroke-width="2" filter="url(#sg)"/>
+      <text x="340" y="152" text-anchor="middle" font-size="8" font-weight="700" fill="#ea580c">B</text>
+
+      <circle cx="560" cy="148" r="16" fill="#fff" stroke="#ea580c" stroke-width="2" filter="url(#sg)"/>
+      <text x="560" y="152" text-anchor="middle" font-size="8" font-weight="700" fill="#ea580c">C</text>
+
+      <circle cx="310" cy="234" r="16" fill="#fff" stroke="#ea580c" stroke-width="2" filter="url(#sg)"/>
+      <text x="310" y="238" text-anchor="middle" font-size="8" font-weight="700" fill="#ea580c">D</text>
+
+      <circle cx="590" cy="234" r="16" fill="#fff" stroke="#ea580c" stroke-width="2" filter="url(#sg)"/>
+      <text x="590" y="238" text-anchor="middle" font-size="8" font-weight="700" fill="#ea580c">E</text>
+
+      <!-- Gossip edges -->
+      <line x1="340" y1="148" x2="450" y2="200" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="560" y1="148" x2="450" y2="200" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="310" y1="234" x2="340" y2="148" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="590" y1="234" x2="560" y2="148" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="310" y1="234" x2="590" y2="234" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="450" y="175" text-anchor="middle" font-size="7" fill="#94a3b8">双工加密 TCP</text>
+      <text x="450" y="270" text-anchor="middle" font-size="7" fill="#94a3b8">每 100ms 随机选择节点发送 PING</text>
+
+      <!-- Message types box -->
+      <rect x="700" y="92" width="175" height="80" rx="8" fill="#f8f9fc" stroke="#e5e7eb" stroke-width="1"/>
+      <text x="787" y="110" text-anchor="middle" font-size="9" font-weight="700" fill="#1a1a2e">📨 消息类型</text>
+      <text x="715" y="128" font-size="7" fill="#2563eb">🟦 MEET: 加入集群</text>
+      <text x="715" y="144" font-size="7" fill="#059669">🟩 PING/PONG: 心跳</text>
+      <text x="715" y="160" font-size="7" fill="#DC382D">🟥 FAIL: 节点下线</text>
+    </svg>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:12%">消息</th><th style="width:18%">发送时机</th><th style="width:40%">携带信息</th><th>作用</th></tr>
+      <tr>
+        <td><code>MEET</code></td>
+        <td>新节点加入</td>
+        <td>发送者基本信息（ID、IP、Port、epoch）</td>
+        <td>请求加入集群</td>
+      </tr>
+      <tr>
+        <td><code>PING</code></td>
+        <td>每 100ms 随机选节点</td>
+        <td>自身状态 + 已知的其他节点信息（Gossip 段）</td>
+        <td>心跳检测 + 传播元数据</td>
+      </tr>
+      <tr>
+        <td><code>PONG</code></td>
+        <td>收到 PING/MEET 后</td>
+        <td>响应节点状态 + Gossip 段</td>
+        <td>确认存活 + 回传元数据</td>
+      </tr>
+      <tr>
+        <td><code>FAIL</code></td>
+        <td>PFAIL → FAIL</td>
+        <td>故障节点 ID</td>
+        <td>广播节点下线</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="tip blue">
+    <span class="ti">🔬</span>
+    <span><strong>Gossip 段：</strong>每个 PING/PONG 消息中携带了发送者已知的随机几个其他节点的状态（而非全部），通过"一传十、十传百"的方式，最终整个集群都能达成一致。这类似于流行病传播模型，收敛速度与节点数对数成正比。</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 10: FAILOVER ====== -->
+<div class="sec" id="s10">
+<h2 class="sec-title"><span class="n">10</span>故障转移</h2>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🚨 PFAIL → FAIL → 自动切换</h3>
+  <p style="font-size:.9rem;color:var(--text2)">Redis Cluster 的故障检测采用 <strong>两阶段判定</strong>：主观下线（PFAIL）和客观下线（FAIL），防止误判。</p>
+
+  <div class="flow" style="flex-direction:column;align-items:flex-start;gap:10px;padding:16px">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span class="flow-node red">① 心跳超时</span><span class="flow-arrow">→</span>
+      <span class="flow-node orange">② PFAIL<br><small>本节点判定</small></span><span class="flow-arrow">→</span>
+      <span class="flow-node red">③ Gossip 广播 PFAIL</span><span class="flow-arrow">→</span>
+      <span class="flow-node">④ 超半确认</span><span class="flow-arrow">→</span>
+      <span class="flow-node red" style="border-color:var(--red);background:#fff5f5;color:#a82820">⑤ FAIL<br><small>客观下线</small></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+      <span class="flow-node green">⑥ Slave 发起选举</span><span class="flow-arrow">→</span>
+      <span class="flow-node green">⑦ 请求投票<br><small>超半赞成</small></span><span class="flow-arrow">→</span>
+      <span class="flow-node green">⑧ Slave→Master<br><small>接管槽位</small></span><span class="flow-arrow">→</span>
+      <span class="flow-node">⑨ 广播新配置</span>
+    </div>
+  </div>
+
+  <div class="code" style="margin-top:16px"><span class="lang">关键参数</span>
+<pre><span class="cmt"># PFAIL 超时时间（毫秒）— 默认 5 秒无响应判定 PFAIL</span>
+cluster-node-timeout <span class="num">5000</span>
+
+<span class="cmt"># 故障转移触发条件 — Master 被多数主节点标记为 FAIL</span>
+<span class="cmt"># 公式：N/2 + 1 个主节点一致同意（含自身）</span>
+
+<span class="cmt"># 选举延迟 — Slave 的延迟排名（越小越先发起）</span>
+<span class="cmt"># delay = 500ms + random(0, 500ms) + SLAVE_RANK * 1000ms</span>
+<span class="cmt"># Slave Rank = 复制偏移量越大排名越小，数据越新的优先级越高</span></pre>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <span><strong>选举优先级：</strong>数据最新的 Slave 优先当选（复制偏移量最大 → 延迟最小 → 最先发起选举）。这确保了切换后数据丢失最少。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--redis)">⚠️ 一致性保证</h3>
+  <p style="font-size:.9rem;color:var(--text2)">Redis 集群的复制是<span style="color:var(--orange)"><strong>异步</strong></span>的，存在 <strong>数据丢失窗口</strong>——Master 写入后、同步到 Slave 前宕机，该写操作将丢失。</p>
+
+  <div class="grid3">
+    <div class="cache-card">
+      <h4 style="font-size:.85rem">🟡 异步复制风险</h4>
+      <p style="font-size:.8rem;color:var(--text2)">Master 确认写入后异步复制给 Slave。<br>若 Master 在复制前宕机，已确认的写入会丢失。</p>
+    </div>
+    <div class="cache-card">
+      <h4 style="font-size:.85rem">🟠 脑裂丢失</h4>
+      <p style="font-size:.8rem;color:var(--text2)">网络分区时旧 Master 收不到票数仍可接受写入，新 Master 当选后，旧 Master 上的写入丢失。</p>
+    </div>
+    <div class="cache-card">
+      <h4 style="font-size:.85rem">🟢 min-replicas-to-write</h4>
+      <p style="font-size:.8rem;color:var(--text2)">设置 <code>min-replicas-to-write 1</code> 和 <code>min-replicas-max-lag 10</code>：若至少 1 个 Slave 延迟＞10s，Master 拒绝写入，防止脑裂丢失。</p>
+    </div>
+  </div>
+
+  <div class="code"><span class="lang">redis.conf</span>
+<pre><span class="cmt"># 至少 1 个 Slave，复制延迟不超过 10 秒，Master 才接受写入</span>
+min-replicas-to-write <span class="num">1</span>
+min-replicas-max-lag <span class="num">10</span>
+
+<span class="cmt"># 脑裂恢复后，旧 Master 自动同步新 Master 数据</span>
+<span class="cmt"># cluster-replica-validity-factor 10</span></pre>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 11: BEST PRACTICES ====== -->
+<div class="sec" id="s11">
+<h2 class="sec-title"><span class="n">11</span>集群最佳实践</h2>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🔑 大 Key 与热 Key</h3>
+  <div class="grid2">
+    <div class="cache-card">
+      <h4>🐘 大 Key 问题</h4>
+      <p style="font-size:.8rem;color:var(--text2)">单个 key 的 value 过大（String > 10KB / 集合 > 10000 元素）</p>
+      <ul style="font-size:.78rem;color:var(--text2);padding-left:16px;margin-top:6px">
+        <li><strong>危害：</strong>网络带宽打满、主从同步延迟、DEL 阻塞（用 UNLINK 异步删除）</li>
+        <li><strong>拆分：</strong>拆成多个小 key，如 <code>user:1:info:0</code>、<code>user:1:info:1</code></li>
+        <li><strong>检测：</strong><code>redis-cli --bigkeys</code> 扫描大 key</li>
+      </ul>
+    </div>
+    <div class="cache-card">
+      <h4>🔥 热 Key 问题</h4>
+      <p style="font-size:.8rem;color:var(--text2)">某个 key 被极高频率访问（如秒杀商品、热点新闻）</p>
+      <ul style="font-size:.78rem;color:var(--text2);padding-left:16px;margin-top:6px">
+        <li><strong>危害：</strong>单节点 CPU 打满、该槽位所在节点过载</li>
+        <li><strong>多副本：</strong>在多个节点创建热点 key 副本，使用随机 key 读取</li>
+        <li><strong>本地缓存：</strong>应用层加 Caffeine/Guava Cache 短TTL 本地缓存</li>
+        <li><strong>检测：</strong><code>redis-cli --hotkeys</code> 扫描热 key</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🔀 扩缩容：槽迁移</h3>
+  <p style="font-size:.9rem;color:var(--text2)">集群扩缩容的本质是 <strong>槽在节点间迁移</strong>，Redis 提供 <code>redis-cli --cluster reshard</code> 命令自动化这个过程。</p>
+  
+  <div class="svg-box">
+    <svg viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg">
+      <text x="450" y="18" text-anchor="middle" font-size="10" font-weight="700" fill="#1a1a2e">槽迁移过程 (MIGRATING → IMPORTING)</text>
+      
+      <!-- Before -->
+      <rect x="30" y="35" width="380" height="50" rx="6" fill="#fff" stroke="#DC382D" stroke-width="1.5"/>
+      <text x="220" y="56" text-anchor="middle" font-size="9" font-weight="700" fill="#DC382D">迁移前：Node A (slot 1000-5000)</text>
+      <text x="220" y="72" text-anchor="middle" font-size="7" fill="#6b7280">MIGRATING: 源节点标记槽为迁移中，返回 ASK 重定向</text>
+      <line x1="410" y1="60" x2="480" y2="60" stroke="#94a3b8" stroke-width="2" marker-end="url(#car)"/>
+      
+      <!-- After -->
+      <rect x="485" y="35" width="380" height="50" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+      <text x="675" y="56" text-anchor="middle" font-size="9" font-weight="700" fill="#059669">迁移后：Node B (slot 1000-5000)</text>
+      <text x="675" y="72" text-anchor="middle" font-size="7" fill="#6b7280">IMPORTING: 目标节点标记槽为导入中</text>
+
+      <!-- Bottom note -->
+      <text x="450" y="120" text-anchor="middle" font-size="9" fill="#ea580c">⚠️ 槽迁移期间该槽的请求会增加一次 ASK 重定向开销</text>
+      <text x="450" y="140" text-anchor="middle" font-size="8" fill="#6b7280">建议低峰期操作 · 逐槽迁移避免影响过大 · redis-cli --cluster reshard 自动执行</text>
+    </svg>
+  </div>
+
+  <div class="code"><span class="lang">扩缩容命令</span>
+<pre><span class="cmt"># 添加新 Master 节点</span>
+redis-cli --cluster add-node <span class="str">new-node:6379</span> <span class="str">existing-node:6379</span>
+
+<span class="cmt"># 重新分配槽位（交互式）</span>
+redis-cli --cluster reshard <span class="str">existing-node:6379</span>
+<span class="cmt"># 输入：要迁移多少槽 → 目标节点 ID → 源节点 ID → done</span>
+
+<span class="cmt"># 添加 Slave 节点</span>
+redis-cli --cluster add-node <span class="str">new-slave:6379</span> <span class="str">existing-node:6379</span> --cluster-slave
+
+<span class="cmt"># 删除节点（需先迁移其槽位）</span>
+redis-cli --cluster del-node <span class="str">existing-node:6379</span> &lt;node-id&gt;</pre>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="color:var(--redis)">🔄 MOVED / ASK 重定向</h3>
+  <p style="font-size:.9rem;color:var(--text2)">当客户端请求的 key 不在当前节点时，Redis Cluster 返回重定向信息。客户端需要 <strong>更新路由表</strong> 并重试请求。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:10%">类型</th><th style="width:15%">触发场景</th><th style="width:20%">响应格式</th><th>客户端行为</th></tr>
+      <tr>
+        <td><span class="tag" style="background:rgba(220,56,45,.12);color:#DC382D">MOVED</span></td>
+        <td>槽已永久迁移到其他节点</td>
+        <td><code>-MOVED 3999 127.0.0.1:6381</code></td>
+        <td><strong>永久更新</strong>本地槽映射表，后续请求直连新节点</td>
+      </tr>
+      <tr>
+        <td><span class="tag" style="background:rgba(234,88,12,.12);color:#ea580c">ASK</span></td>
+        <td>槽正在迁移中（部分 key 已迁移）</td>
+        <td><code>-ASK 3999 127.0.0.1:6381</code></td>
+        <td><strong>临时重定向</strong>：先发送 ASKING 命令到目标节点，再重发原命令。不更新槽映射表</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="code"><span class="lang">客户端处理流程</span>
+<pre><span class="kw">try</span> {
+  result = client.execute(key);
+} <span class="kw">catch</span> (MOVED_REDIRECT e) {
+  <span class="cmt">// MOVED: 永久更新槽→节点映射</span>
+  slotMap.put(e.slot, e.targetNode);
+  <span class="kw">return</span> retry(e.targetNode, key);
+} <span class="kw">catch</span> (ASK_REDIRECT e) {
+  <span class="cmt">// ASK: 临时重定向（迁移中的槽）</span>
+  conn = getConnection(e.targetNode);
+  conn.send(<span class="str">"ASKING"</span>);        <span class="cmt">// 必须先发 ASKING</span>
+  <span class="kw">return</span> conn.execute(key);   <span class="cmt">// 再发原命令</span>
+}</pre>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">💡</span>
+    <span><strong>Smart Client 推荐：</strong>生产环境务必使用支持 Cluster 模式的客户端（如 JedisCluster、Lettuce、redis-py-cluster、go-redis），它们内置了槽映射表缓存、MOVED/ASK 自动重定向、连接池管理等能力，大幅减少重定向开销。避免使用普通单机客户端连接集群。</span>
+  </div>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,#fef0ef 0%,#f8f9fc 100%);border:2px solid var(--redis)">
+  <h3 style="color:var(--redis)">📋 集群配置速查清单</h3>
+  <div class="tbl-wrap">
+    <table>
+      <tr><th style="width:28%">配置项</th><th style="width:18%">推荐值</th><th>说明</th></tr>
+      <tr><td><code>cluster-enabled yes</code></td><td>yes</td><td>开启集群模式</td></tr>
+      <tr><td><code>cluster-node-timeout</code></td><td>5000</td><td>节点超时判定 PFAIL 的毫秒数</td></tr>
+      <tr><td><code>cluster-migration-barrier</code></td><td>1</td><td>Master 至少有几个 Slave 才允许故障转移</td></tr>
+      <tr><td><code>cluster-require-full-coverage</code></td><td>yes</td><td>有槽未分配时是否拒绝写入（生产建议 yes）</td></tr>
+      <tr><td><code>min-replicas-to-write</code></td><td>1</td><td>最少健康 Slave 数才接受写入</td></tr>
+      <tr><td><code>min-replicas-max-lag</code></td><td>10</td><td>Slave 复制延迟超过此秒数不计入健康</td></tr>
+      <tr><td><code>repl-diskless-sync</code></td><td>yes</td><td>无盘复制（直接网络传输 RDB，减少磁盘 IO）</td></tr>
+      <tr><td><code>repl-backlog-size</code></td><td>64mb</td><td>复制积压缓冲区大小（建议调大）</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+
 <div class="footer">
-  <p>Redis 从入门到精通 · 交互式学习指南 · 数据类型 / 命令 / 持久化 / 缓存策略 / 分布式场景</p>
+  <p>Redis 从入门到精通 · 交互式学习指南 · 数据类型 / 命令 / 持久化 / 缓存策略 / 分布式场景 / 集群架构</p>
 </div>
 
 </div><!-- end wrap -->
