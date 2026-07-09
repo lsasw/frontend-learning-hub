@@ -12,6 +12,7 @@
 | [Java-JUC-并发工具包教程.html](./Java-JUC-并发工具包教程.html) | Java JUC 并发工具包系统学习 | Java 并发编程 |
 | [Java-JVM-虚拟机教程.html](./Java-JVM-虚拟机教程.html) | JVM 虚拟机架构 + GC + 调优 | Java 虚拟机 |
 | [Redis-交互式学习指南.html](./Redis-交互式学习指南.html) | Redis 数据类型 / 持久化 / 缓存策略 / 分布式 | 缓存 & NoSQL |
+| [消息队列系统-综合演示平台.html](./消息队列系统-综合演示平台.html) | Kafka / RabbitMQ / RocketMQ / Pulsar 综合对比 | 消息队列 |
 
 ## 🚀 使用方式
 
@@ -37,4 +38,4 @@ open Java-JUC-并发工具包教程.html
 ## 📝 更新日志
 
 - 2026-07-08: 新增 MetaGPT-CrewAI 分析报告、LangChain/LangGraph/Python 教程、Dify/n8n 实战教程
-- 2026-07-09: 新增 Java JUC 并发工具包教程、Java JVM 虚拟机教程、Redis 交互式学习指南
+- 2026-07-09: 新增 Java JUC 并发工具包教程、Java JVM 虚拟机教程、Redis 交互式学习指南、消息队列系统综合演示平台
