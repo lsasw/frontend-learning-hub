@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG 检索增强生成 · 从原理到优化全指南</title>
+<style>
+:root {
+  --rag: #2563eb; --rag-dark: #1d4ed8; --rag-light: #dbeafe; --rag-lighter: #eff6ff;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb; --border-light: #f1f5f9;
+  --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+  --green: #059669; --green-light: #d1fae5;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --teal: #0d9488; --teal-light: #ccfbf1;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --code-bg: #1e293b;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* === NAV === */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--rag);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--rag-light);color:var(--rag)}
+
+/* === HERO === */
+.hero{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 40%,#7c3aed 100%);color:#fff;padding:70px 40px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-40%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,.15) 0%,transparent 70%);border-radius:50%}
+.hero h1{font-size:2.8rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2;position:relative;z-index:1}
+.hero .sub{font-size:1.08rem;opacity:.88;margin-top:12px;max-width:640px;margin-inline:auto;position:relative;z-index:1}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px;position:relative;z-index:1}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 60px}
+
+/* === SECTION === */
+.sec{margin-top:40px;scroll-margin-top:64px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--rag);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--rag);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 30px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+
+/* === TABS === */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-wrap:wrap}
+.tab{flex:1;min-width:90px;padding:12px 10px;border:none;background:transparent;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text2);font-family:var(--sans);transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab:hover{color:var(--text);background:var(--rag-lighter)}
+.tab.active{border-bottom-color:var(--rag);color:var(--rag)}
+.tab-panel{display:none;animation:fadeIn .3s}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* === CODE === */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.66rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.8rem;color:#e2e8f0;white-space:pre;line-height:1.7}
+.kw{color:#c4b5fd}.str{color:#86efac}.cmt{color:#64748b;font-style:italic}
+.fn{color:#93c5fd}.num{color:#fdba74}.typ{color:#fde68a}
+
+/* === TIP === */
+.tip{padding:14px 18px;border-radius:var(--radius-sm);margin:14px 0;font-size:.85rem;display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.tip .ti{flex-shrink:0;font-size:1.1rem}
+.tip.info{background:var(--rag-light);border-left:4px solid var(--rag)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.purple{background:var(--purple-light);border-left:4px solid var(--purple)}
+
+/* === TABLE === */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:var(--rag-lighter);padding:12px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--rag);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--rag-lighter)}
+td code{background:var(--rag-light);color:var(--rag);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.78rem}
+
+/* === FLOW === */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:16px;background:#f0f4f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.78rem;text-align:center;transition:all .2s}
+.flow-node.blue{border-color:var(--rag);background:var(--rag-light);color:var(--rag-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#064e3b}
+.flow-node.orange{border-color:var(--orange);background:var(--orange-light);color:#7c2d12}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.teal{border-color:var(--teal);background:var(--teal-light);color:#115e59}
+.flow-arrow{color:var(--text3);font-size:1.1rem;font-weight:700;flex-shrink:0}
+
+/* === SVG BOX === */
+.svg-box{text-align:center;overflow-x:auto;padding:16px 0}
+.svg-box svg{max-width:100%;height:auto}
+
+/* === GRID === */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+
+/* === OPT CARD === */
+.opt-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:20px;transition:all .25s}
+.opt-card:hover{border-color:var(--rag);box-shadow:0 2px 12px rgba(37,99,235,.08)}
+.opt-card h4{font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.opt-card .ic{font-size:1.3rem}
+
+/* === ACCORDION === */
+.acc{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden;transition:box-shadow .2s}
+.acc:hover{box-shadow:var(--shadow)}
+.acc-header{cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px;user-select:none;background:var(--surface);transition:background .2s}
+.acc-header:hover{background:var(--rag-lighter)}
+.acc-header .acc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.acc-header .acc-title{flex:1;font-weight:700;font-size:.9rem}
+.acc-header .acc-meta{font-size:.75rem;color:var(--text3);margin-right:8px}
+.acc-header .chev{transition:transform .3s;color:var(--text3);font-size:.9rem;flex-shrink:0}
+.acc.open .chev{transform:rotate(180deg)}
+.acc.open .acc-header{border-bottom:1px solid var(--border)}
+.acc-body{display:none;padding:18px 20px;background:#fcfcfd}
+.acc.open .acc-body{display:block;animation:fadeIn .3s}
+.acc-body p{font-size:.84rem;color:var(--text2);margin-bottom:10px;line-height:1.8}
+.acc-body ul{font-size:.84rem;color:var(--text2);padding-left:20px;line-height:1.8}
+.acc-body ul li{margin-bottom:4px}
+
+/* === BADGE === */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600}
+.badge.high{background:var(--green-light);color:#064e3b}
+.badge.mid{background:var(--amber-light);color:#92400e}
+.badge.low{background:#fee2e2;color:#991b1b}
+.badge.info{background:var(--rag-light);color:var(--rag-dark)}
+
+/* === COMPARISON TABLE === */
+.cmp-table th:nth-child(1){width:160px}
+.cmp-table th:nth-child(2){width:100px}
+.cmp-row-impact{text-align:center}
+
+/* === PROGRESS BAR === */
+.pbar{height:8px;border-radius:4px;background:var(--border-light);overflow:hidden;margin-top:4px}
+.pbar .fill{height:100%;border-radius:4px;transition:width .8s ease}
+
+/* === STAT BOX === */
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;transition:all .2s}
+.stat-box:hover{border-color:var(--rag);box-shadow:var(--shadow)}
+.stat-box .num{font-size:2rem;font-weight:900;font-family:var(--mono);color:var(--rag);line-height:1}
+.stat-box .lbl{font-size:.78rem;color:var(--text3);margin-top:6px}
+
+/* === TIMELINE === */
+.timeline{position:relative;padding-left:32px}
+.timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;padding-bottom:24px}
+.tl-item::before{content:'';position:absolute;left:-28px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--rag);border:2px solid #fff;box-shadow:0 0 0 2px var(--rag)}
+.tl-item .tl-title{font-weight:700;font-size:.9rem;margin-bottom:4px}
+.tl-item .tl-desc{font-size:.82rem;color:var(--text2)}
+
+/* === CHUNK VIZ === */
+.chunk-viz{display:flex;flex-direction:column;gap:6px;padding:16px;background:#f8fafc;border-radius:var(--radius-sm);margin:12px 0}
+.chunk-block{padding:8px 14px;border-radius:6px;font-size:.78rem;font-family:var(--mono);line-height:1.6;position:relative}
+.chunk-block.fixed{background:var(--rag-light);border-left:3px solid var(--rag);color:var(--rag-dark)}
+.chunk-block.semantic{background:var(--green-light);border-left:3px solid var(--green);color:#064e3b}
+.chunk-block.overlap{background:var(--purple-light);border-left:3px solid var(--purple);color:#5b21b6}
+.chunk-block .lbl{position:absolute;right:8px;top:4px;font-size:.62rem;font-weight:700;text-transform:uppercase;opacity:.6}
+
+/* === RANKING DEMO === */
+.rank-demo{display:flex;flex-direction:column;gap:8px;padding:16px;background:#f8fafc;border-radius:var(--radius-sm);margin:12px 0}
+.rank-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:all .3s}
+.rank-item.top{border-color:var(--green);background:var(--green-light)}
+.rank-item .rank-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;background:var(--border)}
+.rank-item.top .rank-num{background:var(--green);color:#fff}
+.rank-item .rank-content{flex:1;font-size:.82rem}
+.rank-item .rank-score{font-family:var(--mono);font-weight:700;font-size:.82rem;color:var(--text3)}
+.rank-item.top .rank-score{color:var(--green)}
+
+.footer{text-align:center;padding:40px 0 20px;color:var(--text3);font-size:.78rem}
+
+@media(max-width:768px){
+  .hero{padding:48px 16px 36px}.hero h1{font-size:1.7rem}
+  .card{padding:18px 16px}
+  .tabs{flex-direction:column}.tab{flex:none;text-align:center}
+  .nav a{padding:8px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ====== NAV ====== -->
+<nav class="nav" id="navbar">
+  <span class="logo">
+    <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#2563eb"/><path d="M7 22V10l5 7 5-7v12M21 10v8a4 4 0 0 0 4-4" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    RAG
+  </span>
+  <a href="#s0" class="active">总览</a>
+  <a href="#s1">基本概念</a>
+  <a href="#s2">架构流程</a>
+  <a href="#s3">嵌入模型</a>
+  <a href="#s4">Chunk 分割</a>
+  <a href="#s5">检索优化</a>
+  <a href="#s6">重排序</a>
+  <a href="#s7">策略对比</a>
+  <a href="#s8">最佳实践</a>
+</nav>
+
+<!-- ====== HERO ====== -->
+<header class="hero">
+  <h1>RAG 检索增强生成</h1>
+  <p class="sub">从原理到优化的完整指南 — 嵌入模型 · Chunk 分割 · 检索策略 · 重排序机制，系统掌握 RAG 全链路调优</p>
+  <div class="tags">
+    <span class="tag">Retrieval-Augmented Generation</span>
+    <span class="tag">Embedding · Vector Search</span>
+    <span class="tag">Chunking · Reranking</span>
+    <span class="tag">Hybrid Retrieval</span>
+    <span class="tag">8 大优化维度</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ====== SECTION 0: OVERVIEW ====== -->
+<div class="sec" id="s0">
+<div class="card">
+  <h2 class="sec-title" style="margin-top:0"><span class="n">0</span>RAG 全景总览</h2>
+
+  <p style="font-size:.9rem;color:var(--text2);margin-bottom:20px">RAG（Retrieval-Augmented Generation，检索增强生成）是一种将<strong>外部知识检索</strong>与<strong>大语言模型生成</strong>相结合的技术架构。它通过在推理时从外部知识库中检索相关信息，将检索到的上下文注入到 Prompt 中，从而增强 LLM 的回答质量，减少幻觉，实现知识的动态更新。</p>
+
+  <div class="grid4" style="margin-bottom:20px">
+    <div class="stat-box"><div class="num">3</div><div class="lbl">核心阶段</div></div>
+    <div class="stat-box"><div class="num">8</div><div class="lbl">优化维度</div></div>
+    <div class="stat-box"><div class="num">↓80%</div><div class="lbl">幻觉率降低</div></div>
+    <div class="stat-box"><div class="num">↑45%</div><div class="lbl">准确率提升</div></div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:20px 0 12px">为什么需要 RAG？</h3>
+  <div class="grid3">
+    <div class="opt-card">
+      <h4><span class="ic">🧠</span>LLM 的固有局限</h4>
+      <p style="font-size:.82rem;color:var(--text2)">知识截止日期后的事件一无所知；训练数据中未覆盖的私有领域知识无法回答；参数化知识无法实时更新。</p>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">✨</span>RAG 的核心价值</h4>
+      <p style="font-size:.82rem;color:var(--text2)">外部知识库可实时更新无需重新训练；回答有据可查可溯源引用；私有数据不出本地保证安全。</p>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">📊</span>vs Fine-tuning</h4>
+      <p style="font-size:.82rem;color:var(--text2)">RAG 适合事实性知识更新，成本低见效快；Fine-tuning 适合风格/格式调整。二者可互补而非互斥。</p>
+    </div>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><strong>一句话理解 RAG：</strong>给 LLM 配一个「开卷考试」的资料库。模型不再仅凭记忆答题，而是先查阅资料再组织答案 —— 这就是 RAG 的本质。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 1: BASIC CONCEPTS ====== -->
+<div class="sec" id="s1">
+<div class="card">
+  <h2 class="sec-title"><span class="n">1</span>RAG 基本概念与工作原理</h2>
+
+  <h3 style="font-size:1.05rem;margin-bottom:14px">1.1 核心定义</h3>
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:20px">RAG = <strong>Retrieval</strong>（检索）+ <strong>Augmented</strong>（增强）+ <strong>Generation</strong>（生成）。它不修改 LLM 的参数，而是在推理阶段动态注入外部知识，使模型基于检索到的上下文生成回答。</p>
+
+  <div class="tabs" id="tabs1">
+    <button class="tab active" data-tab="t1-1">三个阶段</button>
+    <button class="tab" data-tab="t1-2">关键组件</button>
+    <button class="tab" data-tab="t1-3">vs 纯 LLM</button>
+  </div>
+
+  <!-- Tab 1: Three Phases -->
+  <div class="tab-panel active" id="t1-1">
+    <h4 style="font-size:.92rem;margin-bottom:12px;color:var(--rag)">📌 阶段一：Indexing（索引构建）</h4>
+    <p style="font-size:.84rem;color:var(--text2);margin-bottom:16px">在离线阶段完成，将原始文档转化为可检索的向量索引。</p>
+    <div class="flow">
+      <div class="flow-node blue">原始文档</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node teal">文档解析</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">Chunk 分割</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">Embedding</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">向量数据库</div>
+    </div>
+
+    <h4 style="font-size:.92rem;margin:20px 0 12px;color:var(--rag)">📌 阶段二：Retrieval（检索）</h4>
+    <p style="font-size:.84rem;color:var(--text2);margin-bottom:16px">在线实时进行，根据用户提问从向量库中召回最相关的文本块。</p>
+    <div class="flow">
+      <div class="flow-node blue">用户提问</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node green">Query Embedding</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">向量相似度搜索</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">Top-K 召回</div>
+    </div>
+
+    <h4 style="font-size:.92rem;margin:20px 0 12px;color:var(--rag)">📌 阶段三：Generation（生成）</h4>
+    <p style="font-size:.84rem;color:var(--text2);margin-bottom:16px">将检索到的上下文与用户提问拼接，送入 LLM 生成最终回答。</p>
+    <div class="flow">
+      <div class="flow-node blue">用户提问</div>
+      <span class="flow-arrow">+</span>
+      <div class="flow-node green">检索上下文</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node purple">Prompt 组装</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node orange">LLM 生成</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node blue">最终回答</div>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">✅</span>
+      <div><strong>关键洞察：</strong>三个阶段中，Indexing 是一次性投入（文档更新时重建），Retrieval 和 Generation 在每次查询时实时执行。优化的核心在于让检索结果「准」且「精」，让生成结果「忠」且「全」。</div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Key Components -->
+  <div class="tab-panel" id="t1-2">
+    <table>
+      <thead>
+        <tr><th>组件</th><th>作用</th><th>常见选型</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>文档加载器</strong></td><td>解析 PDF/Word/HTML/Markdown 等格式</td><td>Unstructured / PyMuPDF / Docling</td></tr>
+        <tr><td><strong>Text Splitter</strong></td><td>将长文档切分为合适大小的 Chunk</td><td>RecursiveCharacterTextSplitter / SemanticChunker</td></tr>
+        <tr><td><strong>Embedding 模型</strong></td><td>将文本转为高维向量表示</td><td>OpenAI text-embedding-3 / BGE / E5 / GTE</td></tr>
+        <tr><td><strong>向量数据库</strong></td><td>存储向量并支持高效相似度搜索</td><td>Milvus / Pinecone / Weaviate / Qdrant / Chroma</td></tr>
+        <tr><td><strong>检索器</strong></td><td>根据 Query 向量召回相关 Chunk</td><td>向量检索 / BM25 / 混合检索</td></tr>
+        <tr><td><strong>Reranker</strong></td><td>对召回结果二次精排</td><td>Cohere Rerank / BGE-Reranker / Cross-Encoder</td></tr>
+        <tr><td><strong>LLM</strong></td><td>基于上下文生成最终回答</td><td>GPT-4o / Claude / Qwen / DeepSeek</td></tr>
+        <tr><td><strong>编排框架</strong></td><td>串联各组件的 RAG Pipeline</td><td>LangChain / LlamaIndex / Haystack</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tab 3: vs Pure LLM -->
+  <div class="tab-panel" id="t1-3">
+    <table>
+      <thead>
+        <tr><th>维度</th><th>纯 LLM</th><th>RAG</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>知识时效性</strong></td><td>受训练截止日期限制</td><td><span class="badge high">实时更新</span> 知识库变更即时生效</td></tr>
+        <tr><td><strong>私有数据</strong></td><td>需 Fine-tune 注入</td><td><span class="badge high">直接检索</span> 无需训练</td></tr>
+        <tr><td><strong>幻觉控制</strong></td><td>容易编造事实</td><td><span class="badge high">有据可查</span> 引用来源可追溯</td></tr>
+        <tr><td><strong>更新成本</strong></td><td>重新训练（高）</td><td><span class="badge high">更新索引（低）</span></td></tr>
+        <tr><td><strong>回答延迟</strong></td><td>低（仅生成）</td><td><span class="badge mid">较高</span> 多了检索步骤</td></tr>
+        <tr><td><strong>知识容量</strong></td><td>受模型参数限制</td><td><span class="badge high">无限</span> 取决于向量库大小</td></tr>
+        <tr><td><strong>风格/格式控制</strong></td><td><span class="badge high">原生支持</span></td><td>需配合 Prompt 工程</td></tr>
+        <tr><td><strong>推理能力</strong></td><td><span class="badge high">强</span> 模型自身能力</td><td>不变（RAG 不增强推理）</td></tr>
+      </tbody>
+    </table>
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <div><strong>注意：</strong>RAG 增强的是「知识」而非「推理」。如果任务需要复杂的多步推理（如数学证明、逻辑推演），RAG 的帮助有限，应考虑 CoT（Chain-of-Thought）或 ReAct 等推理框架。</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 2: ARCHITECTURE FLOW ====== -->
+<div class="sec" id="s2">
+<div class="card">
+  <h2 class="sec-title"><span class="n">2</span>RAG 典型架构流程图解</h2>
+
+  <h3 style="font-size:1.05rem;margin-bottom:14px">2.1 标准 RAG 架构图</h3>
+  <div class="svg-box">
+    <svg viewBox="0 0 960 520" style="font-family:var(--sans)">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/>
+        </marker>
+        <marker id="arrowB" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/>
+        </marker>
+        <linearGradient id="gIndex" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/>
+        </linearGradient>
+        <linearGradient id="gQuery" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ccfbf1"/><stop offset="100%" stop-color="#99f6e4"/>
+        </linearGradient>
+        <linearGradient id="gRetrieve" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ede9fe"/><stop offset="100%" stop-color="#ddd6fe"/>
+        </linearGradient>
+        <linearGradient id="gGenerate" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d1fae5"/><stop offset="100%" stop-color="#a7f3d0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Phase Labels -->
+      <text x="120" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Phase 1: Indexing（离线）</text>
+      <text x="560" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">Phase 2: Retrieval（在线）</text>
+      <text x="840" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#059669">Phase 3: Generation</text>
+
+      <!-- Phase 1: Indexing -->
+      <rect x="20" y="50" width="220" height="300" rx="12" fill="none" stroke="#bfdbfe" stroke-width="2" stroke-dasharray="6,4"/>
+      <rect x="50" y="70" width="160" height="48" rx="10" fill="url(#gIndex)" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="130" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">📄 原始文档</text>
+      <text x="130" y="108" text-anchor="middle" font-size="10" fill="#64748b">PDF / Word / HTML / MD</text>
+
+      <line x1="130" y1="122" x2="130" y2="148" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="50" y="152" width="160" height="48" rx="10" fill="url(#gIndex)" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="130" y="174" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">✂️ 文档解析与分块</text>
+      <text x="130" y="190" text-anchor="middle" font-size="10" fill="#64748b">Text Splitting → Chunks</text>
+
+      <line x1="130" y1="202" x2="130" y2="228" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="50" y="232" width="160" height="48" rx="10" fill="url(#gIndex)" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="130" y="254" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">🔢 Embedding 编码</text>
+      <text x="130" y="270" text-anchor="middle" font-size="10" fill="#64748b">Text → Vector [1536d]</text>
+
+      <line x1="130" y1="282" x2="130" y2="308" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="50" y="312" width="160" height="48" rx="10" fill="url(#gIndex)" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="130" y="334" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">🗄️ 向量数据库</text>
+      <text x="130" y="350" text-anchor="middle" font-size="10" fill="#64748b">Milvus / Pinecone / Qdrant</text>
+
+      <!-- Connection: Vector DB to Retrieval -->
+      <path d="M210 336 L 340 336 L 340 200 L 380 200" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowB)"/>
+      <text x="300" y="270" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="600">存储/查询</text>
+
+      <!-- Phase 2: Retrieval -->
+      <rect x="380" y="50" width="360" height="300" rx="12" fill="none" stroke="#ddd6fe" stroke-width="2" stroke-dasharray="6,4"/>
+
+      <rect x="440" y="70" width="240" height="48" rx="10" fill="url(#gQuery)" stroke="#0d9488" stroke-width="1.5"/>
+      <text x="560" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="#115e59">❓ 用户提问 (Query)</text>
+      <text x="560" y="108" text-anchor="middle" font-size="10" fill="#64748b">"什么是 WACC？"</text>
+
+      <line x1="560" y1="122" x2="560" y2="148" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="440" y="152" width="240" height="48" rx="10" fill="url(#gQuery)" stroke="#0d9488" stroke-width="1.5"/>
+      <text x="560" y="174" text-anchor="middle" font-size="13" font-weight="600" fill="#115e59">🔢 Query Embedding</text>
+      <text x="560" y="190" text-anchor="middle" font-size="10" fill="#64748b">用户提问 → 向量表示</text>
+
+      <line x1="560" y1="202" x2="560" y2="228" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="440" y="232" width="240" height="48" rx="10" fill="url(#gRetrieve)" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="560" y="254" text-anchor="middle" font-size="13" font-weight="600" fill="#5b21b6">🔍 向量相似度检索</text>
+      <text x="560" y="270" text-anchor="middle" font-size="10" fill="#64748b">Cosine / Dot Product / Top-K</text>
+
+      <line x1="560" y1="282" x2="560" y2="308" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="440" y="312" width="240" height="48" rx="10" fill="url(#gRetrieve)" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="560" y="334" text-anchor="middle" font-size="13" font-weight="600" fill="#5b21b6">🏆 Rerank 精排（可选）</text>
+      <text x="560" y="350" text-anchor="middle" font-size="10" fill="#64748b">Cross-Encoder → Top-N</text>
+
+      <!-- Connection: Retrieval to Generation -->
+      <path d="M680 336 L 760 336 L 760 200 L 780 200" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="755" y="270" text-anchor="middle" font-size="10" fill="#059669" font-weight="600">上下文</text>
+
+      <!-- Phase 3: Generation -->
+      <rect x="780" y="50" width="160" height="300" rx="12" fill="none" stroke="#a7f3d0" stroke-width="2" stroke-dasharray="6,4"/>
+
+      <rect x="800" y="90" width="120" height="44" rx="10" fill="url(#gGenerate)" stroke="#059669" stroke-width="1.5"/>
+      <text x="860" y="110" text-anchor="middle" font-size="12" font-weight="600" fill="#064e3b">📝 Prompt 组装</text>
+      <text x="860" y="125" text-anchor="middle" font-size="10" fill="#64748b">Query + Context</text>
+
+      <line x1="860" y1="138" x2="860" y2="164" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="800" y="168" width="120" height="44" rx="10" fill="url(#gGenerate)" stroke="#059669" stroke-width="1.5"/>
+      <text x="860" y="188" text-anchor="middle" font-size="12" font-weight="600" fill="#064e3b">🤖 LLM 生成</text>
+      <text x="860" y="203" text-anchor="middle" font-size="10" fill="#64748b">GPT-4o / Claude</text>
+
+      <line x1="860" y1="216" x2="860" y2="242" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <rect x="800" y="246" width="120" height="44" rx="10" fill="url(#gGenerate)" stroke="#059669" stroke-width="1.5"/>
+      <text x="860" y="266" text-anchor="middle" font-size="12" font-weight="600" fill="#064e3b">✅ 最终回答</text>
+      <text x="860" y="281" text-anchor="middle" font-size="10" fill="#64748b">含引用来源</text>
+
+      <!-- Bottom: Advanced Flow -->
+      <rect x="20" y="380" width="920" height="120" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="480" y="404" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">🔄 Advanced RAG：扩展流程</text>
+
+      <rect x="40" y="420" width="110" height="36" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+      <text x="95" y="442" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">Query 改写</text>
+
+      <rect x="170" y="420" width="110" height="36" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="1"/>
+      <text x="225" y="442" text-anchor="middle" font-size="11" fill="#7c2d12" font-weight="600">多路召回</text>
+
+      <rect x="300" y="420" width="110" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+      <text x="355" y="442" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="600">混合检索</text>
+
+      <rect x="430" y="420" width="110" height="36" rx="8" fill="#ccfbf1" stroke="#0d9488" stroke-width="1"/>
+      <text x="485" y="442" text-anchor="middle" font-size="11" fill="#115e59" font-weight="600">上下文压缩</text>
+
+      <rect x="560" y="420" width="110" height="36" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+      <text x="615" y="442" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600">Rerank 精排</text>
+
+      <rect x="690" y="420" width="110" height="36" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+      <text x="745" y="442" text-anchor="middle" font-size="11" fill="#064e3b" font-weight="600">引用溯源</text>
+
+      <rect x="820" y="420" width="110" height="36" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="1"/>
+      <text x="875" y="442" text-anchor="middle" font-size="11" fill="#9d174d" font-weight="600">自评估</text>
+
+      <line x1="150" y1="438" x2="170" y2="438" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="280" y1="438" x2="300" y2="438" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="410" y1="438" x2="430" y2="438" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="540" y1="438" x2="560" y2="438" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="670" y1="438" x2="690" y2="438" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="800" y1="438" x2="820" y2="438" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <text x="480" y="482" text-anchor="middle" font-size="10" fill="#94a3b8">在标准 RAG 基础上，增加查询改写、多路召回、上下文压缩等高级优化环节</text>
+    </svg>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">2.2 三种 RAG 范式对比</h3>
+  <div class="grid3">
+    <div class="opt-card">
+      <h4><span class="ic">📦</span>Naive RAG</h4>
+      <p style="font-size:.8rem;color:var(--text2)"><strong>标准三步走：</strong>Index → Retrieve → Generate。结构简单，开发快，但检索质量依赖原始 Chunk 和 Embedding 质量，容易召回噪声。</p>
+      <div style="margin-top:10px"><span class="badge low">入门级</span></div>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">🔧</span>Advanced RAG</h4>
+      <p style="font-size:.8rem;color:var(--text2)"><strong>三阶段优化：</strong>检索前（Query 改写）、检索中（混合检索）、检索后（Rerank + 压缩）。系统性地提升每个环节质量。</p>
+      <div style="margin-top:10px"><span class="badge mid">生产级</span></div>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">🧩</span>Modular RAG</h4>
+      <p style="font-size:.8rem;color:var(--text2)"><strong>模块化编排：</strong>检索可跳过、可迭代（Self-RAG）、可路由（Router RAG）。支持多轮检索、反思纠错等复杂模式。</p>
+      <div style="margin-top:10px"><span class="badge high">研究级</span></div>
+    </div>
+  </div>
+
+  <div class="tip purple">
+    <span class="ti">🔬</span>
+    <div><strong>RAG 发展趋势：</strong>从 Naive → Advanced → Modular，核心趋势是从「一次性检索」走向「自适应检索」。Self-RAG 让模型自行判断是否需要检索，CRAG 在检索质量差时触发网络搜索兜底，这些都在模糊 RAG 与 Agent 的边界。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 3: EMBEDDING MODEL ====== -->
+<div class="sec" id="s3">
+<div class="card">
+  <h2 class="sec-title"><span class="n">3</span>嵌入模型改进</h2>
+
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:20px">Embedding 模型是 RAG 的「理解引擎」—— 它将文本映射到向量空间，直接决定了检索的质量上限。模型不行，后面的检索、重排再怎么优化都是亡羊补牢。</p>
+
+  <!-- Accordion: Embedding Optimizations -->
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--rag-light)">🔢</div>
+      <div class="acc-title">选择更强的 Embedding 模型</div>
+      <span class="acc-meta">基础 · 影响大</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>核心思路：</strong>在 MTEB 榜单上选择适合任务的模型，平衡效果、维度、速度和成本。</p>
+      <ul>
+        <li><strong>闭源 API：</strong>OpenAI <code>text-embedding-3-large</code>（3072d）、Voyage AI <code>voyage-3</code>（1024d）、Cohere <code>embed-v3</code>（1024d）</li>
+        <li><strong>开源中文：</strong>BGE-M3（多语言/多功能）、bge-large-zh-v1.5、GTE-large-zh、E5-mistral-7b</li>
+        <li><strong>选择维度：</strong>语言（中/英/多语言）、维度（768/1024/1536/3072）、场景（通用/代码/金融）、是否支持稀疏向量</li>
+        <li><strong>验证方法：</strong>构建领域 QA 测试集，计算 Recall@K（K=1,3,5,10）对比模型表现</li>
+      </ul>
+      <div class="tip info" style="margin-top:10px">
+        <span class="ti">💡</span>
+        <div><strong>实践建议：</strong>中文场景首推 <strong>BGE-M3</strong>（同时输出 dense + sparse + multi-vector），它支持最长 8192 tokens 输入，多语言效果接近商业模型。英文场景推荐 <strong>voyage-3</strong> 或 <strong>text-embedding-3-large</code>。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--green-light)">🎯</div>
+      <div class="acc-title">领域微调（Domain Fine-tuning）</div>
+      <span class="acc-meta">进阶 · 影响大</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>核心思路：</strong>通用 Embedding 模型在垂直领域（医疗、法律、金融）可能表现不佳，使用领域数据微调可以让向量空间更贴合业务语义。</p>
+      <ul>
+        <li><strong>方法一：对比学习微调</strong> — 构建 (Query, 正例, 负例) 三元组，拉近正例推远负例</li>
+        <li><strong>方法二：LLM2Vec</strong> — 用 LLM 作为 Encoder，通过适配层转化为句向量模型</li>
+        <li><strong>数据构建：</strong>从业务 FAQ / 人工标注 / LLM 合成 获取训练对</li>
+        <li><strong>框架推荐：</strong>FlagEmbedding（BGE 官方微调框架）、Sentence-Transformers</li>
+      </ul>
+      <div class="code">
+        <span class="lang">python</span>
+        <pre><span class="cmt"># FlagEmbedding 微调示例</span>
+<span class="kw">from</span> FlagEmbedding <span class="kw">import</span> FlagModel
+
+model = FlagModel(<span class="str">"BAAI/bge-large-zh-v1.5"</span>,
+                  use_fp16=<span class="kw">True</span>)
+
+<span class="cmt"># 使用领域数据微调</span>
+model.fit(
+    train_data=<span class="str">"domain_finetune.jsonl"</span>,
+    output_dir=<span class="str">"./finetuned_bge"</span>,
+    epoch=<span class="num">3</span>,
+    batch_size=<span class="num">32</span>,
+    learning_rate=<span class="num">2e-5</span>,
+)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--purple-light)">⚡</div>
+      <div class="acc-title">Matryoshka Representation（嵌套维度）</div>
+      <span class="acc-meta">高级 · 省存储</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>核心思路：</strong>Matryoshka Embedding 在训练时让向量的前 N 维就能保持较好区分度。这样可以在存储时截断到更低维度，牺牲少量精度换取大幅存储和检索加速。</p>
+      <ul>
+        <li><strong>原理：</strong>类似俄罗斯套娃，外层维度编码粗粒度语义，内层逐步细化</li>
+        <li><strong>效果：</strong>3072d → 768d 截断后，检索精度仅下降 2-3%，但存储减少 75%</li>
+        <li><strong>适用场景：</strong>大规模向量库（亿级以上）、边缘设备部署</li>
+        <li><strong>支持模型：</strong>OpenAI text-embedding-3 系列、Nomic-Embed-Text</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--orange-light)">🔀</div>
+      <div class="acc-title">指令化 Embedding（Instruction-Tuned）</div>
+      <span class="acc-meta">高级 · 提升精度</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>核心思路：</strong>在 Embedding 输入前添加任务指令前缀，让同一个模型适应不同检索场景（如问答、相似度匹配、聚类）。</p>
+      <div class="code">
+        <span class="lang">python</span>
+        <pre><span class="cmt"># E5 / BGE 指令前缀</span>
+query = <span class="str">"Represent this sentence for retrieving relevant documents: "</span> + query
+passage = <span class="str">"Represent this sentence for searching relevant passages: "</span> + passage
+
+<span class="cmt"># BGE-M3 不需要指令前缀，但 BGE-large 需要</span>
+<span class="cmt"># E5 模型也需要 "query: " 和 "passage: " 前缀</span>
+
+embedding = model.encode([query, passage])</pre>
+      </div>
+      <p style="margin-top:10px"><strong>效果：</strong>正确使用指令前缀可以提升 5-15% 的检索准确率，但用错前缀（如对称任务用了非对称前缀）反而会降低效果。</p>
+    </div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <div><strong>选型建议：</strong>不要上来就微调。先用 MTEB 榜单上的强基座模型跑通 Pipeline，构建领域评测集量化基线效果。只有在通用模型确实不达标时，才值得投入微调成本。模型选择 > 数据质量 > 微调方法。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 4: CHUNK SPLITTING ====== -->
+<div class="sec" id="s4">
+<div class="card">
+  <h2 class="sec-title"><span class="n">4</span>Chunk 分割策略</h2>
+
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:20px">Chunk 分割是 Indexing 阶段最关键的决策之一。分块太大 → 噪声多、语义稀释；分块太小 → 上下文断裂、信息碎片化。好的 Chunk 策略要在「语义完整性」和「检索精度」之间找平衡。</p>
+
+  <h3 style="font-size:1.05rem;margin-bottom:14px">4.1 分割策略可视化对比</h3>
+
+  <div class="chunk-viz">
+    <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:4px">📌 固定长度分割（Fixed-Size）— 500 chars, no overlap</div>
+    <div class="chunk-block fixed"><span class="lbl">Chunk 1</span>...WACC（加权平均资本成本）是企业为筹集资金所支付的加权平均成本，反映了企业所有资本来源的综合成本。它将股权资本成本和债务资本成本按各自的市场价值权重进行加权平均。计算公式为：WACC = E/V × Re + D/V × Rd × (1-Tc)，其中 E 是股权市场价值，D 是债务市场价值，V 是总价值，Re 是股权成本，</div>
+    <div class="chunk-block fixed"><span class="lbl">Chunk 2</span>Rd 是债务成本，Tc 是企业所得税税率。在 DCF 估值模型中，WACC 作为折现率将未来现金流折算为现值。WACC 的准确性直接影响估值结果的可靠性...</div>
+  </div>
+
+  <div class="chunk-viz">
+    <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:4px">📌 递归字符分割（Recursive）— 按段落 → 句子 → 字符层级</div>
+    <div class="chunk-block semantic"><span class="lbl">Chunk 1</span>WACC（加权平均资本成本）是企业为筹集资金所支付的加权平均成本，反映了企业所有资本来源的综合成本。它将股权资本成本和债务资本成本按各自的市场价值权重进行加权平均。计算公式为：WACC = E/V × Re + D/V × Rd × (1-Tc)，其中 E 是股权市场价值，D 是债务市场价值，V 是总价值，Re 是股权成本，Rd 是债务成本，Tc 是企业所得税税率。</div>
+    <div class="chunk-block semantic"><span class="lbl">Chunk 2</span>在 DCF 估值模型中，WACC 作为折现率将未来现金流折算为现值。WACC 的准确性直接影响估值结果的可靠性。通常需要根据企业资本结构变化进行动态调整，同时考虑市场利率环境的影响。</div>
+  </div>
+
+  <div class="chunk-viz">
+    <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:4px">📌 重叠分割（Overlap）— 500 chars, 100 overlap</div>
+    <div class="chunk-block overlap"><span class="lbl">Chunk 1</span>...WACC = E/V × Re + D/V × Rd × (1-Tc)，其中 E 是股权市场价值，D 是债务市场价值，V 是总价值，Re 是股权成本，Rd 是债务成本，Tc 是企业所得税税率。<strong style="color:#7c3aed">在 DCF 估值模型中，WACC 作为折现率将未来现金流折算为现值。</strong></div>
+    <div class="chunk-block overlap"><span class="lbl">Chunk 2</span><strong style="color:#7c3aed">在 DCF 估值模型中，WACC 作为折现率将未来现金流折算为现值。</strong>WACC 的准确性直接影响估值结果的可靠性。通常需要根据企业资本结构变化进行动态调整...</div>
+    <div style="font-size:.7rem;color:var(--purple);text-align:center;margin-top:4px">↑ 紫色文字为重叠部分，确保跨块语义不断裂</div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">4.2 六大 Chunk 策略详解</h3>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--rag-light)">📏</div>
+      <div class="acc-title">固定长度分割（Fixed-Size Chunking）</div>
+      <span class="acc-meta">最简单</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>原理：</strong>按固定字符数（如 500/1000 chars）或 Token 数（如 256/512 tokens）切分。</p>
+      <ul>
+        <li><strong>优点：</strong>实现极简，速度快，不需要理解文档结构</li>
+        <li><strong>缺点：</strong>可能在句子/段落中间截断，破坏语义完整性</li>
+        <li><strong>适用：</strong>快速原型验证、格式统一的短文本</li>
+        <li><strong>典型参数：</strong>chunk_size=500, chunk_overlap=50</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--green-light)">🔄</div>
+      <div class="acc-title">递归字符分割（Recursive Character Splitting）</div>
+      <span class="acc-meta">LangChain 默认</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>原理：</strong>按分隔符优先级递归切分：段落（\n\n）→ 句子（\n）→ 空格 → 字符。优先在自然边界处切割。</p>
+      <ul>
+        <li><strong>优点：</strong>兼顾语义边界和长度限制，是 LangChain 的默认策略</li>
+        <li><strong>缺点：</strong>对非结构化文本（表格、代码）效果一般</li>
+        <li><strong>适用：</strong>大多数文本文档（文章、报告、文档）</li>
+        <li><strong>典型参数：</strong>chunk_size=1000, chunk_overlap=200, separators=["\n\n","\n"," ",""]</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--purple-light)">🧠</div>
+      <div class="acc-title">语义分割（Semantic Chunking）</div>
+      <span class="acc-meta">效果最好</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>原理：</strong>先按句子切分，计算相邻句子的 Embedding 相似度。当相似度骤降（语义转折点）时切分，保证每个 Chunk 内语义连贯。</p>
+      <ul>
+        <li><strong>优点：</strong>Chunk 边界对齐语义变化，召回质量显著提升</li>
+        <li><strong>缺点：</strong>需要额外 Embedding 计算，处理速度慢，Chunk 大小不可控</li>
+        <li><strong>适用：</strong>对召回质量要求高的场景（问答系统、知识检索）</li>
+        <li><strong>工具：</strong>LangChain SemanticChunker、LlamaIndex SemanticSplitter</li>
+      </ul>
+      <div class="tip info" style="margin-top:10px">
+        <span class="ti">💡</span>
+        <div><strong>加速技巧：</strong>语义分割的瓶颈在 Embedding。可以用轻量模型（如 MiniLM）做分割判断，重模型做最终索引，实现两阶段加速。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--teal-light)">📊</div>
+      <div class="acc-title">结构感知分割（Structure-Aware）</div>
+      <span class="acc-meta">文档专用</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>原理：</strong>利用文档结构（Markdown 标题、HTML 标签、PDF 段落）进行层级化切分。先按 H1/H2/H3 分节，再在节内按段落切分。</p>
+      <ul>
+        <li><strong>优点：</strong>保留文档层级信息，可生成「父子 Chunk」做摘要+细节两级检索</li>
+        <li><strong>缺点：</strong>需要文档有清晰结构，纯文本无效</li>
+        <li><strong>适用：</strong>技术文档、API 文档、法律合同、学术论文</li>
+        <li><strong>典型工具：</strong>MarkdownHeaderTextSplitter、HTMLSectionSplitter</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--orange-light)">🔗</div>
+      <div class="acc-title">父子分块（Parent-Child / Small-to-Big）</div>
+      <span class="acc-meta">进阶推荐</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>原理：</strong>检索时用小 Chunk（精确匹配），生成时用大 Chunk（完整上下文）。小 Chunk 是大 Chunk 的子集，通过 ID 关联。</p>
+      <ul>
+        <li><strong>优点：</strong>兼顾检索精度和生成上下文完整性，解决「小 Chunk 上下文不足」问题</li>
+        <li><strong>缺点：</strong>需要额外存储父 Chunk，索引结构更复杂</li>
+        <li><strong>适用：</strong>长文档问答、需要完整段落的场景</li>
+        <li><strong>实现：</strong>LlamaIndex AutoMergingRetriever、LangChain ParentDocumentRetriever</li>
+      </ul>
+      <div class="flow" style="margin-top:10px">
+        <div class="flow-node blue">文档段落（Parent）</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node purple">小 Chunk（Child）→ 索引</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node orange">检索 Child</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node green">返回 Parent 给 LLM</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" data-acc>
+    <div class="acc-header">
+      <div class="acc-icon" style="background:var(--amber-light)">🤖</div>
+      <div class="acc-title">LLM 辅助分割（Agentic Chunking）</div>
+      <span class="acc-meta">前沿</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="acc-body">
+      <p><strong>原理：</strong>让 LLM 阅读文档，自主判断在哪里切分、如何命题每个 Chunk。甚至可以生成 Chunk 摘要和提问预设。</p>
+      <ul>
+        <li><strong>优点：</strong>语义理解最深，Chunk 质量最高</li>
+        <li><strong>缺点：</strong>成本极高（大量 LLM 调用）、速度慢、不可复现</li>
+        <li><strong>适用：</strong>高价值文档（核心知识库）、小规模精标数据</li>
+        <li><strong>趋势：</strong>Proposition-based Chunking — 让 LLM 将每段文档拆解为独立命题（proposition），每个命题自包含完整语义</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><strong>参数调优经验：</strong>chunk_size 没有万能值。经验起点是 <strong>256-512 tokens</strong>（约 400-800 中文字），配合 10-20% 的 overlap。关键是在你的领域评测集上做消融实验：固定其他变量，只改 chunk_size，看 Recall@5 曲线的拐点。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 5: RETRIEVAL OPTIMIZATION ====== -->
+<div class="sec" id="s5">
+<div class="card">
+  <h2 class="sec-title"><span class="n">5</span>检索优化策略</h2>
+
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:20px">检索是 RAG 的「瓶颈环节」—— 检索不到的，LLM 再强也生成不出来。优化检索的目标是提高 <strong>Recall（召回率）</strong>，让相关 Chunk 尽可能进入候选集。</p>
+
+  <h3 style="font-size:1.05rem;margin-bottom:14px">5.1 检索方式对比</h3>
+
+  <table>
+    <thead>
+      <tr><th>检索方式</th><th>原理</th><th>优势</th><th>劣势</th><th>适用场景</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>稠密向量检索</strong><br><code>Dense Retrieval</code></td>
+        <td>Embedding 后计算向量相似度（Cosine）</td>
+        <td>理解语义，能处理同义词/ paraphrase</td>
+        <td>对精确匹配（人名/编号）不敏感</td>
+        <td>语义问答、模糊匹配</td>
+      </tr>
+      <tr>
+        <td><strong>稀疏检索</strong><br><code>BM25 / TF-IDF</code></td>
+        <td>基于词频统计的关键词匹配</td>
+        <td>精确匹配强，无需训练，可解释</td>
+        <td>不理解语义，无法处理同义词</td>
+        <td>精确关键词、专有名词检索</td>
+      </tr>
+      <tr>
+        <td><strong>混合检索</strong><br><code>Hybrid Retrieval</code></td>
+        <td>同时执行 Dense + Sparse，结果融合</td>
+        <td><span class="badge high">兼具两者优势</span></td>
+        <td>需调权重，架构复杂度增加</td>
+        <td><strong>生产推荐</strong></td>
+      </tr>
+      <tr>
+        <td><strong>多向量检索</strong><br><code>Multi-Vector</code></td>
+        <td>对每个文档存储多个向量表示</td>
+        <td>摘要向量 + 细节向量，覆盖面广</td>
+        <td>存储成本翻倍</td>
+        <td>长文档、多视角检索</td>
+      </tr>
+      <tr>
+        <td><strong>图检索</strong><br><code>Graph RAG</code></td>
+        <td>构建知识图谱，沿关系边检索</td>
+        <td>擅长多跳推理和关系查询</td>
+        <td>图谱构建成本高</td>
+        <td>复杂关系推理、全局摘要</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">5.2 Query 侧优化（检索前）</h3>
+
+  <div class="grid2">
+    <div class="opt-card">
+      <h4><span class="ic">🔄</span>Query 改写（Rewriting）</h4>
+      <p style="font-size:.8rem;color:var(--text2)">用户提问可能模糊、口语化或含指代。用 LLM 改写为更利于检索的形式。</p>
+      <ul style="font-size:.78rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.8">
+        <li>指代消解：「它的价格」→「iPhone 15 Pro 的价格」</li>
+        <li>口语化转正式：「咋算 WACC」→「WACC 加权平均资本成本计算方法」</li>
+        <li>子问题拆解：复杂问题拆为多个可检索子问题</li>
+      </ul>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">🎯</span>HyDE（假设性文档嵌入）</h4>
+      <p style="font-size:.8rem;color:var(--text2)">先让 LLM 生成一个「假设答案」，用这个答案的 Embedding 去检索，而不是用原始 Query。</p>
+      <ul style="font-size:.78rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.8">
+        <li>Query 和 Document 在向量空间分布不同（不对称检索）</li>
+        <li>HyDE 让检索从 Query→Doc 变为 Doc→Doc（对称检索）</li>
+        <li>适合短 Query 长答案的场景</li>
+      </ul>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">🔀</span>多路召回（Multi-Query）</h4>
+      <p style="font-size:.8rem;color:var(--text2)">让 LLM 从不同角度生成多个 Query 变体，分别检索后合并去重。</p>
+      <ul style="font-size:.78rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.8">
+        <li>「WACC 怎么算」→「WACC 公式」「加权平均资本成本计算」「股权成本和债务成本加权」</li>
+        <li>用 RRF（Reciprocal Rank Fusion）合并排名</li>
+        <li>显著提升 Recall，代价是多倍检索调用</li>
+      </ul>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">🗺️</span>Step-back Prompting</h4>
+      <p style="font-size:.8rem;color:var(--text2)">让 LLM 先把具体问题抽象为更高层的问题，检索背景知识后再回答原问题。</p>
+      <ul style="font-size:.78rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.8">
+        <li>原问题：「2024 年 Apple 的 WACC 是多少」</li>
+        <li>退后问题：「如何计算科技公司的 WACC」</li>
+        <li>两者都检索，背景知识 + 具体数据组合</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">5.3 混合检索详解</h3>
+
+  <div class="svg-box">
+    <svg viewBox="0 0 720 280" style="font-family:var(--sans)">
+      <defs>
+        <marker id="arr2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3 z" fill="#64748b"/>
+        </marker>
+      </defs>
+      <!-- Query -->
+      <rect x="290" y="10" width="140" height="40" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="360" y="35" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">用户 Query</text>
+
+      <!-- Split arrows -->
+      <line x1="360" y1="52" x2="200" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <line x1="360" y1="52" x2="520" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+      <!-- Dense Path -->
+      <rect x="100" y="95" width="200" height="45" rx="10" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+      <text x="200" y="118" text-anchor="middle" font-size="12" font-weight="600" fill="#115e59">Dense 向量检索</text>
+      <text x="200" y="133" text-anchor="middle" font-size="10" fill="#64748b">Embedding + Cosine</text>
+
+      <!-- Sparse Path -->
+      <rect x="420" y="95" width="200" height="45" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5"/>
+      <text x="520" y="118" text-anchor="middle" font-size="12" font-weight="600" fill="#7c2d12">Sparse 关键词检索</text>
+      <text x="520" y="133" text-anchor="middle" font-size="10" fill="#64748b">BM25 / SPLADE</text>
+
+      <!-- Results -->
+      <rect x="100" y="160" width="200" height="35" rx="8" fill="#f0fdfa" stroke="#0d9488" stroke-width="1"/>
+      <text x="200" y="182" text-anchor="middle" font-size="11" fill="#115e59">Top-K 召回（语义匹配）</text>
+
+      <rect x="420" y="160" width="200" height="35" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1"/>
+      <text x="520" y="182" text-anchor="middle" font-size="11" fill="#7c2d12">Top-K 召回（关键词匹配）</text>
+
+      <!-- Merge -->
+      <line x1="200" y1="197" x2="340" y2="220" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <line x1="520" y1="197" x2="400" y2="220" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+      <rect x="280" y="225" width="180" height="42" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="370" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="#5b21b6">RRF 融合排序</text>
+      <text x="370" y="260" text-anchor="middle" font-size="10" fill="#64748b">Reciprocal Rank Fusion</text>
+    </svg>
+  </div>
+
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># RRF (Reciprocal Rank Fusion) 融合算法</span>
+<span class="kw">def</span> <span class="fn">rrf_fuse</span>(ranked_lists, k=<span class="num">60</span>):
+    <span class="str">"""k 是平滑常数，通常 60 是经验最优值"""</span>
+    scores = {}
+    <span class="kw">for</span> ranked_list <span class="kw">in</span> ranked_lists:
+        <span class="kw">for</span> rank, doc <span class="kw">in</span> <span class="fn">enumerate</span>(ranked_list, <span class="num">1</span>):
+            scores[doc] = scores.<span class="fn">get</span>(doc, <span class="num">0</span>) + <span class="num">1</span> / (k + rank)
+    <span class="cmt"># 按融合分数降序排列</span>
+    <span class="kw">return</span> <span class="fn">sorted</span>(scores, key=scores.get, reverse=<span class="kw">True</span>)
+
+<span class="cmt"># 使用示例：dense_results 和 sparse_results 各自 Top-10</span>
+fused = <span class="fn">rrf_fuse</span>([dense_results, sparse_results], k=<span class="num">60</span>)
+final_candidates = fused[:<span class="num">5</span>]  <span class="cmt"># 取融合后 Top-5</span></pre>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><strong>为什么 RRF 有效：</strong>RRF 不依赖原始分数（Dense 和 Sparse 的分数量纲不同），只看排名。一个文档在两个列表中都靠前，它的融合分数就高。k=60 的平滑常数避免 Top-1 过度主导。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 6: RERANKING ====== -->
+<div class="sec" id="s6">
+<div class="card">
+  <h2 class="sec-title"><span class="n">6</span>重排序机制（Reranking）</h2>
+
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:20px">检索阶段追求 Recall（不漏），召回 Top-K（如 K=20-50）会包含噪声。Rerank 阶段追求 Precision（不错），用更强的模型从候选集中精选 Top-N（如 N=3-5）给 LLM。</p>
+
+  <h3 style="font-size:1.05rem;margin-bottom:14px">6.1 为什么需要 Rerank？</h3>
+
+  <div class="rank-demo">
+    <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:4px">📌 检索阶段（Bi-Encoder）— Top-5 召回结果</div>
+    <div class="rank-item"><span class="rank-num">1</span><span class="rank-content">WACC 计算公式的完整推导过程</span><span class="rank-score">0.89</span></div>
+    <div class="rank-item"><span class="rank-num">2</span><span class="rank-content">资本成本的构成要素介绍</span><span class="rank-score">0.85</span></div>
+    <div class="rank-item"><span class="rank-num">3</span><span class="rank-content">DCF 估值模型的基本原理</span><span class="rank-score">0.83</span></div>
+    <div class="rank-item"><span class="rank-num">4</span><span class="rank-content">企业融资成本的税务影响</span><span class="rank-score">0.81</span></div>
+    <div class="rank-item"><span class="rank-num">5</span><span class="rank-content">WACC 在不同行业的差异分析</span><span class="rank-score">0.80</span></div>
+  </div>
+
+  <div style="text-align:center;font-size:1.5rem;color:var(--text3);margin:8px 0">⬇️ Rerank 精排</div>
+
+  <div class="rank-demo">
+    <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:4px">📌 重排序阶段（Cross-Encoder）— 精选 Top-3</div>
+    <div class="rank-item top"><span class="rank-num">1</span><span class="rank-content">WACC 计算公式的完整推导过程</span><span class="rank-score">0.97</span></div>
+    <div class="rank-item top"><span class="rank-num">2</span><span class="rank-content">WACC 在不同行业的差异分析</span><span class="rank-score">0.94</span></div>
+    <div class="rank-item top"><span class="rank-num">3</span><span class="rank-content">企业融资成本的税务影响</span><span class="rank-score">0.91</span></div>
+    <div style="font-size:.72rem;color:var(--green);text-align:center;margin-top:4px">↑ Cross-Encoder 重新评估 Query-Document 的深层相关性，顺序变化明显</div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">6.2 Bi-Encoder vs Cross-Encoder</h3>
+
+  <table>
+    <thead>
+      <tr><th>维度</th><th>Bi-Encoder（双塔）</th><th>Cross-Encoder（交叉编码）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>架构</strong></td><td>Query 和 Doc 各自编码，最后计算相似度</td><td>Query 和 Doc 拼接后联合编码</td></tr>
+      <tr><td><strong>交互层</strong></td><td>无（只在最后做点积/Cosine）</td><td>有（Transformer 各层全交互）</td></tr>
+      <tr><td><strong>速度</strong></td><td><span class="badge high">极快</span> Doc 可预编码</td><td><span class="badge low">慢</span> 每对都要实时计算</td></tr>
+      <tr><td><strong>精度</strong></td><td>中等</td><td><span class="badge high">高</span> 深层语义匹配</td></tr>
+      <tr><td><strong>用途</strong></td><td>第一阶段检索（召回 Top-K）</td><td>第二阶段精排（精选 Top-N）</td></tr>
+      <tr><td><strong>典型模型</strong></td><td>BGE / E5 / OpenAI Embedding</td><td>BGE-Reranker / Cohere Rerank / ms-marco-MiniLM</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <div><strong>两阶段检索范式：</strong>Bi-Encoder 做初筛（快但粗），Cross-Encoder 做精排（慢但准）。这是当前 RAG 系统的标准配置，效果比单独使用任一方案都好。先召回 50 条，再 Rerank 到 5 条，是常见的参数配置。</div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">6.3 Rerank 方法演进</h3>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-title">Cross-Encoder Rerank</div>
+      <div class="tl-desc">用 Cross-Encoder 逐对打分重排。经典方案，效果好但速度慢，适合候选集 ≤100 的场景。<strong>BGE-Reranker-Large</strong> 是中文场景首选。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-title">ColBERT（延迟交互）</div>
+      <div class="tl-desc">Token 级别的 Bi-Encoder。Doc 可预编码（保留所有 token 向量），Query 来了做 token-to-token 的 MaxSim 聚合。速度接近 Bi-Encoder，效果接近 Cross-Encoder。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-title">LLM-as-Reranker</div>
+      <div class="tl-desc">直接用 LLM 做 Rerank：给 LLM 看候选列表，让它输出排名。如 RankGPT（滑动窗口重排）、Cohere Rerank-3。效果好但成本高，适合候选集 ≤20 的小规模精排。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-title">Listwise Rerank</div>
+      <div class="tl-desc">不再逐对打分，而是让模型同时看所有候选，输出一个整体排序。比 Pointwise 方式更准，因为能感知候选间的相对优劣。</div>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># BGE-Reranker 使用示例</span>
+<span class="kw">from</span> FlagEmbedding <span class="kw">import</span> FlagReranker
+
+reranker = FlagReranker(<span class="str">'BAAI/bge-reranker-large'</span>,
+                        use_fp16=<span class="kw">True</span>)
+
+query = <span class="str">"如何计算 WACC？"</span>
+candidates = [
+    <span class="str">"WACC 计算公式的完整推导过程"</span>,
+    <span class="str">"资本成本的构成要素介绍"</span>,
+    <span class="str">"DCF 估值模型的基本原理"</span>,
+]
+
+pairs = [[query, c] <span class="kw">for</span> c <span class="kw">in</span> candidates]
+scores = reranker.compute_score(pairs)
+
+<span class="cmt"># 按分数降序排列，取 Top-3</span>
+ranked = <span class="fn">sorted</span>(<span class="fn">zip</span>(candidates, scores),
+               key=<span class="kw">lambda</span> x: x[<span class="num">1</span>], reverse=<span class="kw">True</span>)[:<span class="num">3</span>]</pre>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 7: COMPARISON ====== -->
+<div class="sec" id="s7">
+<div class="card">
+  <h2 class="sec-title"><span class="n">7</span>优化策略全景对比</h2>
+
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:20px">下表横向对比 8 大优化维度的投入产出比，帮助你在有限资源下做出优先级决策。</p>
+
+  <div class="tbl-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>优化策略</th>
+          <th>影响阶段</th>
+          <th>效果预期</th>
+          <th>实现难度</th>
+          <th>计算成本</th>
+          <th>推荐优先级</th>
+          <th>适用场景</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>选择强 Embedding</strong></td>
+          <td>Indexing</td>
+          <td><div class="pbar"><div class="fill" style="width:90%;background:var(--green)"></div></div><span class="badge high">高</span></td>
+          <td><span class="badge low">低</span></td>
+          <td>中（推理）</td>
+          <td><strong>P0</strong></td>
+          <td>所有场景，首选优化</td>
+        </tr>
+        <tr>
+          <td><strong>混合检索</strong></td>
+          <td>Retrieval</td>
+          <td><div class="pbar"><div class="fill" style="width:85%;background:var(--green)"></div></div><span class="badge high">高</span></td>
+          <td><span class="badge mid">中</span></td>
+          <td>中（双路检索）</td>
+          <td><strong>P0</strong></td>
+          <td>含专有名词的领域</td>
+        </tr>
+        <tr>
+          <td><strong>Rerank 精排</strong></td>
+          <td>Retrieval 后</td>
+          <td><div class="pbar"><div class="fill" style="width:88%;background:var(--green)"></div></div><span class="badge high">高</span></td>
+          <td><span class="badge low">低</span></td>
+          <td>中（候选集小）</td>
+          <td><strong>P0</strong></td>
+          <td>所有生产场景</td>
+        </tr>
+        <tr>
+          <td><strong>Chunk 策略优化</strong></td>
+          <td>Indexing</td>
+          <td><div class="pbar"><div class="fill" style="width:75%;background:var(--green)"></div></div><span class="badge high">高</span></td>
+          <td><span class="badge low">低</span></td>
+          <td>低</td>
+          <td><strong>P1</strong></td>
+          <td>长文档、结构化文档</td>
+        </tr>
+        <tr>
+          <td><strong>Query 改写</strong></td>
+          <td>Retrieval 前</td>
+          <td><div class="pbar"><div class="fill" style="width:70%;background:var(--amber)"></div></div><span class="badge mid">中</span></td>
+          <td><span class="badge mid">中</span></td>
+          <td>中（LLM 调用）</td>
+          <td><strong>P1</strong></td>
+          <td>对话式问答、模糊 Query</td>
+        </tr>
+        <tr>
+          <td><strong>领域微调 Embedding</strong></td>
+          <td>Indexing</td>
+          <td><div class="pbar"><div class="fill" style="width:80%;background:var(--green)"></div></div><span class="badge high">高</span></td>
+          <td><span class="badge high">高</span></td>
+          <td>高（训练+标注）</td>
+          <td><strong>P2</strong></td>
+          <td>垂直领域、通用模型不达标时</td>
+        </tr>
+        <tr>
+          <td><strong>父子分块</strong></td>
+          <td>Indexing + Retrieval</td>
+          <td><div class="pbar"><div class="fill" style="width:65%;background:var(--amber)"></div></div><span class="badge mid">中</span></td>
+          <td><span class="badge mid">中</span></td>
+          <td>中（额外存储）</td>
+          <td><strong>P2</strong></td>
+          <td>长文档、需要完整上下文</td>
+        </tr>
+        <tr>
+          <td><strong>Graph RAG</strong></td>
+          <td>Indexing + Retrieval</td>
+          <td><div class="pbar"><div class="fill" style="width:60%;background:var(--amber)"></div></div><span class="badge mid">中</span></td>
+          <td><span class="badge high">高</span></td>
+          <td>高（图谱构建）</td>
+          <td><strong>P3</strong></td>
+          <td>多跳推理、全局摘要</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">🎯</span>
+    <div><strong>优化路线图建议：</strong>先做 <strong>P0</strong>（选好 Embedding + 混合检索 + Rerank），这三步能覆盖 80% 的效果提升。然后做 <strong>P1</strong>（Chunk 策略 + Query 改写）再提升 10-15%。<strong>P2/P3</strong> 在 P0+P1 仍不满足时再投入，避免过早优化。</div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">7.2 效果提升预估</h3>
+  <div class="grid4">
+    <div class="stat-box">
+      <div class="num" style="font-size:1.6rem;color:var(--rag)">+15-25%</div>
+      <div class="lbl">强 Embedding vs 弱 Embedding</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="font-size:1.6rem;color:var(--green)">+10-20%</div>
+      <div class="lbl">混合检索 vs 纯向量检索</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="font-size:1.6rem;color:var(--purple)">+15-30%</div>
+      <div class="lbl">Rerank vs 无 Rerank</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="font-size:1.6rem;color:var(--orange)">+5-15%</div>
+      <div class="lbl">Query 改写 vs 原始 Query</div>
+    </div>
+  </div>
+  <p style="font-size:.76rem;color:var(--text3);text-align:center;margin-top:10px">* 数据为行业典型经验值，实际效果因数据集和评测指标而异。评测建议使用 Recall@K 和 Answer Faithfulness 两类指标。</p>
+</div>
+</div>
+
+<!-- ====== SECTION 8: BEST PRACTICES ====== -->
+<div class="sec" id="s8">
+<div class="card">
+  <h2 class="sec-title"><span class="n">8</span>最佳实践与评估</h2>
+
+  <h3 style="font-size:1.05rem;margin-bottom:14px">8.1 RAG 评估框架</h3>
+
+  <div class="grid2">
+    <div class="opt-card">
+      <h4><span class="ic">📊</span>检索质量评估</h4>
+      <ul style="font-size:.8rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.9">
+        <li><strong>Recall@K：</strong>Top-K 中包含正确答案的比例（最重要）</li>
+        <li><strong>Precision@K：</strong>Top-K 中相关文档的占比</li>
+        <li><strong>MRR：</strong>正确答案的倒数排名平均</li>
+        <li><strong>NDCG：</strong>考虑位置加权的排名质量</li>
+      </ul>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">📝</span>生成质量评估</h4>
+      <ul style="font-size:.8rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.9">
+        <li><strong>Faithfulness：</strong>回答是否忠于检索内容（防幻觉）</li>
+        <li><strong>Answer Relevance：</strong>回答与问题的相关度</li>
+        <li><strong>Context Relevance：</strong>检索上下文与问题的相关度</li>
+        <li><strong>工具：</strong>RAGAS / TruLens / DeepEval</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># RAGAS 评估示例</span>
+<span class="kw">from</span> ragas <span class="kw">import</span> evaluate
+<span class="kw">from</span> ragas.metrics <span class="kw">import</span> (
+    faithfulness,
+    answer_relevancy,
+    context_precision,
+    context_recall,
+)
+
+result = <span class="fn">evaluate</span>(
+    dataset=test_dataset,
+    metrics=[faithfulness, answer_relevancy,
+             context_precision, context_recall],
+)
+<span class="fn">print</span>(result)
+<span class="cmt"># {'faithfulness': 0.92, 'answer_relevancy': 0.88,
+<span class="cmt">#  'context_precision': 0.85, 'context_recall': 0.79}</span></span></pre>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">8.2 工程化最佳实践清单</h3>
+
+  <div class="grid2">
+    <div class="opt-card">
+      <h4><span class="ic">🏗️</span>架构层面</h4>
+      <ul style="font-size:.8rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.9">
+        <li>建立<strong>评测集</strong>再开发 —— 没有度量就没有优化</li>
+        <li>离线索引与在线检索<strong>解耦</strong></li>
+        <li>向量库支持<strong>增量更新</strong>而非全量重建</li>
+        <li>检索结果缓存（相同 Query 命中缓存）</li>
+        <li>多级索引：摘要索引 + 细节索引</li>
+      </ul>
+    </div>
+    <div class="opt-card">
+      <h4><span class="ic">🔧</span>调优层面</h4>
+      <ul style="font-size:.8rem;color:var(--text2);margin-top:8px;padding-left:18px;line-height:1.9">
+        <li>Chunk 大小在<strong>评测集上调参</strong>，不要拍脑袋</li>
+        <li>Top-K（召回）和 Top-N（Rerank）<strong>分开调</strong></li>
+        <li>混合检索权重按领域<strong>动态调整</strong></li>
+        <li>Prompt 中明确要求<strong>引用来源</strong></li>
+        <li>对低置信度回答触发<strong>兜底策略</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.05rem;margin:24px 0 14px">8.3 常见反模式</h3>
+
+  <table>
+    <thead>
+      <tr><th>反模式</th><th>问题</th><th>正确做法</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>盲目增大 Top-K</strong></td><td>更多噪声进入 Prompt，LLM 被干扰</td><td>先扩大召回，再用 Rerank 收窄</td></tr>
+      <tr><td><strong>Chunk 过大</strong></td><td>语义稀释，向量区分度下降</td><td>256-512 tokens 起步，评测集调参</td></tr>
+      <tr><td><strong>只看生成不看检索</strong></td><td>生成质量差但不知是检索还是 LLM 的问题</td><td>分层评估：先测 Recall@K 再测 Faithfulness</td></tr>
+      <tr><td><strong>过早微调</strong></td><td>投入大但效果可能不如换个强模型</td><td>先穷尽模型选型 + Prompt 优化</td></tr>
+      <tr><td><strong>忽视元数据</strong></td><td>无法按时间/来源/类型过滤</td><td>为 Chunk 打上 metadata 标签，支持过滤检索</td></tr>
+      <tr><td><strong>无引用溯源</strong></td><td>用户无法验证回答可靠性</td><td>Prompt 要求标注来源 Chunk ID</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip purple">
+    <span class="ti">🚀</span>
+    <div><strong>RAG 的未来方向：</strong>1）<strong>Agentic RAG</strong> — 将 RAG 嵌入 Agent 循环，模型自主决定何时检索、检索什么；2）<strong>Self-RAG</strong> — 模型自评估检索质量，低质量时触发重新检索或网络兜底；3）<strong>Long-context RAG</strong> — 利用百万 token 上下文窗口，减少分块需求。RAG 正从「固定 Pipeline」走向「自适应智能体」。</div>
+  </div>
+
+  <div class="footer">
+    <p>📚 RAG 检索增强生成 · 从原理到优化全指南</p>
+    <p>Frontend Learning Hub · 单文件 HTML 教程</p>
+  </div>
+</div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script>
+// === TABS ===
+document.querySelectorAll('.tabs').forEach(tabGroup => {
+  const tabs = tabGroup.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      // Find parent card
+      const card = tab.closest('.card');
+      card.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = card.querySelector('#' + target);
+      if (panel) panel.classList.add('active');
+    });
+  });
+});
+
+// === ACCORDION ===
+document.querySelectorAll('[data-acc] .acc-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const acc = header.parentElement;
+    acc.classList.toggle('open');
+  });
+});
+
+// === NAV SCROLL SPY ===
+const navLinks = document.querySelectorAll('.nav a');
+const sections = document.querySelectorAll('.sec');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.offsetTop - 80;
+    if (window.scrollY >= top) current = sec.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

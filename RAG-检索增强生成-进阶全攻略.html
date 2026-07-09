@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG 检索增强生成 · 全链路深度解析与避坑指南</title>
+<style>
+:root {
+  --pri: #4f46e5; --pri-dark: #4338ca; --pri-light: #e0e7ff; --pri-lighter: #eef2ff;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb; --border-light: #f1f5f9;
+  --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+  --green: #059669; --green-light: #d1fae5; --green-bg: #f0fdf4;
+  --orange: #ea580c; --orange-light: #fed7aa; --orange-bg: #fff7ed;
+  --purple: #7c3aed; --purple-light: #ede9fe; --purple-bg: #f5f3ff;
+  --red: #dc2626; --red-light: #fecaca; --red-bg: #fef2f2;
+  --teal: #0d9488; --teal-light: #ccfbf1; --teal-bg: #f0fdfa;
+  --amber: #d97706; --amber-light: #fef3c7; --amber-bg: #fffbeb;
+  --code-bg: #1e293b;
+  --radius: 14px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.78;-webkit-font-smoothing:antialiased}
+
+/* === NAV === */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.08rem;color:var(--pri);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0;text-decoration:none}
+.nav .logo svg{width:24px;height:24px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--pri-light);color:var(--pri)}
+
+/* === HERO === */
+.hero{background:linear-gradient(135deg,#4f46e5 0%,#4338ca 35%,#7c3aed 70%,#a855f7 100%);color:#fff;padding:76px 40px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40%;right:-15%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-35%;left:-12%;width:420px;height:420px;background:radial-gradient(circle,rgba(168,85,247,.18) 0%,transparent 70%);border-radius:50%}
+.hero h1{font-size:2.7rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2;position:relative;z-index:1}
+.hero .sub{font-size:1.06rem;opacity:.88;margin-top:12px;max-width:680px;margin-inline:auto;position:relative;z-index:1;line-height:1.7}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px;position:relative;z-index:1}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 18px;border-radius:20px;font-size:.78rem;border:1px solid rgba(255,255,255,.22)}
+
+/* === WRAP === */
+.wrap{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+
+/* === TOC === */
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 32px;margin-bottom:36px;box-shadow:var(--shadow)}
+.toc h3{font-size:1rem;font-weight:700;margin-bottom:14px;color:var(--pri)}
+.toc ol{list-style:none;counter-reset:toc;columns:2;column-gap:32px}
+.toc ol li{counter-increment:toc;margin-bottom:7px;break-inside:avoid}
+.toc ol li a{color:var(--text2);text-decoration:none;font-size:.84rem;display:flex;align-items:baseline;gap:8px;transition:color .2s;line-height:1.7}
+.toc ol li a:hover{color:var(--pri)}
+.toc ol li a::before{content:counter(toc);color:var(--pri);font-weight:700;font-size:.72rem;min-width:18px;text-align:right}
+
+/* === SECTION === */
+.sec{margin-top:48px;scroll-margin-top:64px}
+.sec-title{font-size:1.65rem;font-weight:800;margin-bottom:22px;padding-bottom:12px;border-bottom:3px solid var(--pri);display:flex;align-items:center;gap:14px}
+.sec-title .n{background:var(--pri);color:#fff;min-width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:.92rem;font-weight:700;flex-shrink:0}
+
+.subsec{margin-top:32px}
+.subsec-title{font-size:1.18rem;font-weight:700;margin-bottom:12px;padding-left:14px;border-left:4px solid var(--pri);color:var(--text);display:flex;align-items:center;gap:10px}
+.subsec-title .num{font-size:.72rem;color:var(--pri);font-weight:600;background:var(--pri-light);padding:2px 10px;border-radius:12px}
+
+/* === CARD === */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 30px;margin-bottom:20px;box-shadow:var(--shadow);transition:all .25s}
+.card:hover{box-shadow:var(--shadow-hover);border-color:var(--pri-light)}
+.card p{margin-bottom:10px;font-size:.92rem;color:var(--text);line-height:1.75}
+.card p:last-child{margin-bottom:0}
+
+/* === TIP BOXES === */
+.tip{padding:16px 20px;border-radius:var(--radius-sm);margin:16px 0;font-size:.88rem;line-height:1.7;position:relative;padding-left:48px}
+.tip::before{position:absolute;left:16px;top:17px;font-size:1.1rem;font-weight:700}
+.tip.info{background:var(--pri-lighter);border:1px solid #c7d2fe;color:#312e81}
+.tip.info::before{content:'💡';color:var(--pri)}
+.tip.warn{background:var(--orange-bg);border:1px solid var(--orange-light);color:#7c2d12}
+.tip.warn::before{content:'⚠️';color:var(--orange)}
+.tip.good{background:var(--green-bg);border:1px solid var(--green-light);color:#064e3b}
+.tip.good::before{content:'✅';color:var(--green)}
+.tip.bad{background:var(--red-bg);border:1px solid var(--red-light);color:#7f1d1d}
+.tip.bad::before{content:'❌';color:var(--red)}
+
+/* === CODE BLOCK === */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);margin:16px 0;overflow:hidden;position:relative;box-shadow:var(--shadow)}
+.code .lang{position:absolute;top:8px;left:16px;font-size:.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+.code .copy-btn{position:absolute;top:8px;right:12px;background:rgba(255,255,255,.1);border:none;color:#94a3b8;font-size:.72rem;padding:3px 10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#e2e8f0}
+.code pre{padding:36px 20px 20px;margin:0;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.65;color:#e2e8f0;tab-size:2}
+.code code{font-family:inherit}
+
+/* === TABLE === */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+thead{background:var(--pri-lighter)}
+th{font-weight:700;color:var(--pri-dark);padding:12px 16px;text-align:left;font-size:.8rem;border-bottom:2px solid var(--pri-light)}
+td{padding:10px 16px;border-bottom:1px solid var(--border-light);color:var(--text2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+
+/* === GRID === */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:768px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* === TIMELINE === */
+.timeline{position:relative;padding-left:36px;margin:20px 0}
+.timeline::before{content:'';position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:var(--pri-light)}
+.timeline-item{position:relative;margin-bottom:24px}
+.timeline-item::before{content:'';position:absolute;left:-29px;top:8px;width:14px;height:14px;border-radius:50%;background:var(--pri);border:3px solid var(--pri-light);box-shadow:0 0 0 4px #fff}
+.timeline-item .tl-year{font-size:.72rem;font-weight:700;color:var(--pri);margin-bottom:2px}
+.timeline-item .tl-title{font-size:.92rem;font-weight:700;color:var(--text)}
+.timeline-item .tl-desc{font-size:.82rem;color:var(--text2);line-height:1.65}
+
+/* === VARIANT CARD === */
+.var-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow);transition:all .25s;border-top:4px solid var(--pri)}
+.var-card:hover{box-shadow:var(--shadow-hover)}
+.var-card h4{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.var-card .var-tag{display:inline-block;font-size:.66rem;font-weight:600;padding:2px 10px;border-radius:10px;margin-bottom:10px}
+.var-card p{font-size:.84rem;color:var(--text2);line-height:1.68}
+.var-tag-core{background:var(--purple-light);color:var(--purple)}
+.var-tag-adv{background:var(--orange-light);color:var(--orange)}
+.var-tag-pro{background:var(--green-light);color:var(--green)}
+.var-tag-recent{background:var(--pri-light);color:var(--pri)}
+
+/* === PITFALL CARD === */
+.pit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:22px;box-shadow:var(--shadow)}
+.pit-card h4{font-size:1.02rem;font-weight:700;margin-bottom:6px;color:var(--text);display:flex;align-items:center;gap:10px}
+.pit-card h4 .pit-icon{font-size:1.2rem}
+.pit-card .pit-symptom{background:var(--red-bg);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:10px 0;font-size:.84rem;color:#7f1d1d}
+.pit-card .pit-symptom strong{display:block;margin-bottom:3px;font-size:.78rem}
+.pit-card .pit-fix{background:var(--green-bg);border-left:3px solid var(--green);padding:10px 14px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:10px 0;font-size:.84rem;color:#064e3b}
+.pit-card .pit-fix strong{display:block;margin-bottom:3px;font-size:.78rem}
+.pit-card .pit-detail{font-size:.86rem;color:var(--text2);line-height:1.7;margin-top:8px}
+.pit-card .pit-level{display:inline-block;font-size:.64rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:auto}
+.pit-high{background:var(--red-light);color:#991b1b}
+.pit-mid{background:var(--orange-light);color:#9a3412}
+.pit-low{background:var(--amber-light);color:#92400e}
+
+/* === SVG === */
+.viz{text-align:center;margin:20px 0;padding:16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border-light)}
+.viz svg{max-width:100%;height:auto}
+
+/* === FOOTER === */
+.footer{text-align:center;padding:40px 20px;border-top:1px solid var(--border);color:var(--text3);font-size:.78rem;margin-top:60px}
+.footer a{color:var(--pri);text-decoration:none}
+
+/* === RESPONSIVE === */
+@media(max-width:768px){
+  .hero{padding:50px 20px 40px}
+  .hero h1{font-size:1.9rem}
+  .hero .sub{font-size:.92rem}
+  .toc ol{columns:1}
+  .wrap{padding:20px 14px 40px}
+  .sec-title{font-size:1.35rem}
+  .card{padding:18px 20px}
+  .nav{padding:0 12px}
+  .nav a{padding:6px 10px;font-size:.78rem}
+  .pit-card{padding:18px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav class="nav" id="topNav">
+  <a href="index.html" class="logo">
+    <svg viewBox="0 0 28 28" fill="none"><rect x="2" y="2" width="24" height="24" rx="6" fill="#e0e7ff"/><path d="M8 19V9l6 5-6 5z" fill="#4f46e5"/><path d="M14 19v-4l4-2v6z" fill="#4338ca"/></svg>
+    返回门户
+  </a>
+  <a href="#toc">目录</a>
+  <a href="#sec1">基础概念</a>
+  <a href="#sec2">高级变体</a>
+  <a href="#sec3">实战避坑</a>
+  <a href="#sec4">选型建议</a>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="hero">
+  <h1>🧠 RAG 检索增强生成</h1>
+  <p class="sub">全链路深度解析 —— 从底层原理到高级变体架构，完整覆盖 Multi-hop / Agentic / Graph / Self-RAG / CRAG 演进脉络，附 7 大实战避坑指南</p>
+  <div class="tags">
+    <span class="tag">RAG</span><span class="tag">向量检索</span><span class="tag">语义搜索</span><span class="tag">LLM 增强</span><span class="tag">Agent</span><span class="tag">知识库</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ═══════════ TABLE OF CONTENTS ═══════════ -->
+<div class="toc" id="toc">
+  <h3>📑 全文目录</h3>
+  <ol>
+    <li><a href="#sec1-1">RAG 定义与核心思想</a></li>
+    <li><a href="#sec1-2">检索模块深度解析</a></li>
+    <li><a href="#sec1-3">生成模块</a></li>
+    <li><a href="#sec1-4">索引构建流程</a></li>
+    <li><a href="#sec1-5">检索 - 生成衔接机制</a></li>
+    <li><a href="#sec2-1">Multi-hop RAG</a></li>
+    <li><a href="#sec2-2">Agentic RAG</a></li>
+    <li><a href="#sec2-3">Graph RAG</a></li>
+    <li><a href="#sec2-4">Self-RAG（自反思）</a></li>
+    <li><a href="#sec2-5">Corrective RAG (CRAG)</a></li>
+    <li><a href="#sec2-6">变体架构演进脉络</a></li>
+    <li><a href="#sec3-1">坑 ①：检索质量不足 → 幻觉加剧</a></li>
+    <li><a href="#sec3-2">坑 ②：分块策略不当</a></li>
+    <li><a href="#sec3-3">坑 ③：相似度阈值调优陷阱</a></li>
+    <li><a href="#sec3-4">坑 ④：检索结果重排序失效</a></li>
+    <li><a href="#sec3-5">坑 ⑤：上下文窗口溢出</a></li>
+    <li><a href="#sec3-6">坑 ⑥：延迟与成本权衡</a></li>
+    <li><a href="#sec3-7">坑 ⑦：知识库更新滞后</a></li>
+    <li><a href="#sec4">场景化选型建议</a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PART 1: 基础概念
+     ═══════════════════════════════════════════ -->
+<section class="sec" id="sec1">
+  <div class="sec-title"><span class="n">1</span> 基础概念篇</div>
+
+  <!-- 1.1 -->
+  <div class="subsec" id="sec1-1">
+    <div class="subsec-title"><span class="num">1.1</span> RAG 定义与核心思想</div>
+    <div class="card">
+      <p><strong>RAG（Retrieval-Augmented Generation，检索增强生成）</strong>是一种将 <em>信息检索</em> 与 <em>大语言模型生成</em> 相结合的混合架构。它的核心思想很简单：<strong>让 LLM 在回答问题之前，先去外部知识库中"查资料"，然后把查到的相关内容作为上下文注入 Prompt，再让模型基于这些真实资料生成回答。</strong></p>
+
+      <p>传统 LLM 存在两个致命短板：</p>
+      <ul style="margin:8px 0 8px 24px;font-size:.9rem;color:var(--text2);line-height:1.8">
+        <li><strong>知识截止日期问题</strong>：模型训练数据有截止时间，无法回答训练后发生的事件</li>
+        <li><strong>幻觉（Hallucination）</strong>：模型在不确定时会凭空编造事实，看似合理实则错误</li>
+      </ul>
+
+      <p>RAG 通过"先检索、后生成"的方式，将 LLM 从封闭的知识黑盒转变为<strong>可接入外部知识源的开放系统</strong>。核心流程可以概括为三步：</p>
+
+      <div class="viz">
+        <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#4f46e5"/></marker></defs>
+          <rect x="10" y="40" width="160" height="80" rx="12" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+          <text x="90" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">用户 Query</text>
+          <text x="90" y="98" text-anchor="middle" font-size="11" fill="#6366f1">"什么是 RAG？"</text>
+
+          <line x1="170" y1="80" x2="238" y2="80" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <rect x="240" y="10" width="170" height="60" rx="10" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+          <text x="325" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">① 检索 Retrieval</text>
+          <text x="325" y="56" text-anchor="middle" font-size="10" fill="#8b5cf6">向量搜索 + 关键词匹配</text>
+
+          <rect x="240" y="90" width="170" height="60" rx="10" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.5"/>
+          <text x="325" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="#0f766e">② 增强 Augmentation</text>
+          <text x="325" y="136" text-anchor="middle" font-size="10" fill="#14b8a6">结果注入 Prompt 上下文</text>
+
+          <line x1="410" y1="40" x2="478" y2="70" stroke="#4f46e5" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="410" y1="120" x2="478" y2="110" stroke="#4f46e5" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <rect x="480" y="40" width="170" height="80" rx="12" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+          <text x="565" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">③ 生成 Generation</text>
+          <text x="565" y="90" text-anchor="middle" font-size="11" fill="#6366f1">LLM 基于资料回答</text>
+          <text x="565" y="108" text-anchor="middle" font-size="10" fill="#818cf8">输出可信回答</text>
+        </svg>
+      </div>
+
+      <div class="tip info">
+        <strong>核心公式：</strong>RAG = 检索（Retrieve）→ 增强（Augment）→ 生成（Generate）。检索负责"找对资料"，增强负责"喂对上下文"，生成负责"给出回答"。三步环环相扣，任何一环出问题都会影响最终效果。
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.2 -->
+  <div class="subsec" id="sec1-2">
+    <div class="subsec-title"><span class="num">1.2</span> 检索模块深度解析</div>
+    <div class="card">
+      <p>检索是 RAG 系统的<strong>第一道关口</strong>。检索质量直接决定了后续生成的"原材料"是否靠谱。现代 RAG 系统通常组合使用三类检索策略：</p>
+    </div>
+
+    <h4 style="margin:20px 0 10px;font-size:.95rem;color:var(--text);">📌 稀疏检索（Sparse Retrieval）</h4>
+    <div class="card">
+      <p>基于<strong>词项匹配</strong>的传统信息检索方法。不依赖神经网络，而是通过统计词频和文档频率来计算相关性。</p>
+
+      <div class="grid2">
+        <div style="background:var(--pri-lighter);padding:16px;border-radius:var(--radius-sm);">
+          <strong style="color:var(--pri-dark);font-size:.9rem;">BM25</strong>
+          <p style="margin-top:6px;font-size:.82rem;color:var(--text2);">Okapi BM25 是稀疏检索的事实标准。它综合考虑了<strong>词频 (TF)</strong>、<strong>逆文档频率 (IDF)</strong> 和<strong>文档长度归一化</strong>，对短文本查询效果尤其出色。</p>
+          <p style="font-size:.78rem;color:var(--text3);margin-top:4px;">适用：关键词明确的精确匹配场景（如代码搜索、法律条文检索）</p>
+        </div>
+        <div style="background:var(--pri-lighter);padding:16px;border-radius:var(--radius-sm);">
+          <strong style="color:var(--pri-dark);font-size:.9rem;">TF-IDF</strong>
+          <p style="margin-top:6px;font-size:.82rem;color:var(--text2);">最经典的文本特征表示方法。BM25 可视为 TF-IDF 的改进版，解决了 TF-IDF 中对高频词过度加权的问题。</p>
+          <p style="font-size:.78rem;color:var(--text3);margin-top:4px;">适用：轻量级关键词检索、快速原型验证</p>
+        </div>
+      </div>
+
+      <div class="tip good">
+        <strong>优势：</strong>不需要 GPU、不需要 Embedding 模型、可解释性强、对精确术语匹配极其可靠。
+      </div>
+      <div class="tip warn">
+        <strong>局限：</strong>无法理解语义相似性。"汽车"和"轿车"在 BM25 看来完全是两个词，不识别同义关系。
+      </div>
+    </div>
+
+    <h4 style="margin:20px 0 10px;font-size:.95rem;color:var(--text);">📌 稠密检索（Dense Retrieval）</h4>
+    <div class="card">
+      <p>使用<strong>预训练的 Embedding 模型</strong>将 Query 和文档分别映射到同一个高维向量空间，通过<strong>向量相似度</strong>（余弦相似度、点积、欧氏距离）来度量语义相关度。</p>
+
+      <div class="code">
+        <div class="lang">PYTHON</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre># 稠密检索核心流程
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+model = SentenceTransformer('BAAI/bge-large-zh-v1.5')
+
+query = "如何优化数据库查询性能"
+docs  = ["SQL 调优指南...", "Python 性能优化...", "索引设计原则..."]
+
+q_emb  = model.encode(query)                # [768] 维向量
+d_embs = model.encode(docs)                 # [N, 768]
+
+scores = np.dot(d_embs, q_emb)              # 点积相似度
+top_k  = np.argsort(scores)[-3:][::-1]      # Top-3 结果
+
+for idx in top_k:
+    print(f"[score={scores[idx]:.3f}] {docs[idx]}")</pre>
+      </div>
+
+      <div class="tip good">
+        <strong>优势：</strong>理解语义相似性 —— "如何调优数据库" 和 "SQL 性能优化方法" 在向量空间中距离很近，即使没有共享任何词项。
+      </div>
+      <div class="tip warn">
+        <strong>局限：</strong>依赖 Embedding 模型质量，对专有名词、数字、代码等结构化内容的语义泛化能力有限；计算成本高于稀疏检索。
+      </div>
+
+      <div style="margin-top:16px;">
+        <strong style="font-size:.88rem;color:var(--text);">常用 Embedding 模型选型：</strong>
+        <div class="tbl-wrap" style="margin-top:8px;">
+          <table>
+            <thead><tr><th>模型</th><th>维度</th><th>最大长度</th><th>语言</th><th>适用场景</th></tr></thead>
+            <tbody>
+              <tr><td>BAAI/bge-large-zh-v1.5</td><td>1024</td><td>512</td><td>中英</td><td>通用中文语义检索</td></tr>
+              <tr><td>text2vec-large-chinese</td><td>1024</td><td>512</td><td>中文</td><td>中文短文本匹配</td></tr>
+              <tr><td>text-embedding-3-large</td><td>3072</td><td>8191</td><td>多语言</td><td>OpenAI API 高精度方案</td></tr>
+              <tr><td>intfloat/e5-large-v2</td><td>1024</td><td>512</td><td>英文</td><td>英文文档检索基准</td></tr>
+              <tr><td>BAAI/bge-m3</td><td>1024</td><td>8192</td><td>多语言</td><td>长文档、混合检索</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h4 style="margin:20px 0 10px;font-size:.95rem;color:var(--text);">📌 混合检索（Hybrid Retrieval）</h4>
+    <div class="card">
+      <p>同时运行<strong>稀疏检索（BM25）</strong>和<strong>稠密检索（向量搜索）</strong>，然后将两者的结果通过<strong>融合算法</strong>合并排序。这是目前生产环境中最主流的方案。</p>
+
+      <div class="viz">
+        <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="240" y="8" width="200" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+          <text x="340" y="38" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">Input Query</text>
+
+          <line x1="340" y1="58" x2="140" y2="90" stroke="#6366f1" stroke-width="1.5" />
+          <line x1="340" y1="58" x2="540" y2="90" stroke="#6366f1" stroke-width="1.5" />
+
+          <rect x="20" y="90" width="240" height="60" rx="10" fill="#fdf2f8" stroke="#fbcfe8" stroke-width="1.5"/>
+          <text x="140" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#be185d">BM25 稀疏检索</text>
+          <text x="140" y="136" text-anchor="middle" font-size="10" fill="#db2777">关键词精确匹配</text>
+
+          <rect x="420" y="90" width="240" height="60" rx="10" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.5"/>
+          <text x="540" y="116" text-anchor="middle" font-size="12" font-weight="700" fill="#0f766e">Dense 稠密检索</text>
+          <text x="540" y="136" text-anchor="middle" font-size="10" fill="#14b8a6">向量语义匹配</text>
+
+          <line x1="140" y1="150" x2="300" y2="178" stroke="#6366f1" stroke-width="1.5" />
+          <line x1="540" y1="150" x2="380" y2="178" stroke="#6366f1" stroke-width="1.5" />
+
+          <rect x="240" y="168" width="200" height="30" rx="8" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+          <text x="340" y="188" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">RRF / 加权融合</text>
+        </svg>
+      </div>
+
+      <p><strong>融合算法常见选择：</strong></p>
+      <ul style="margin:8px 0 8px 24px;font-size:.86rem;color:var(--text2);line-height:1.8">
+        <li><strong>RRF（Reciprocal Rank Fusion）</strong>：对两份排名取倒数排名加权，简单有效，无需调参</li>
+        <li><strong>线性加权</strong>：<code>score = α × dense_score + (1-α) × sparse_score</code>，需调优 α 参数</li>
+        <li><strong>学习式融合</strong>：用小模型学习最优融合权重，效果最好但成本最高</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 1.3 -->
+  <div class="subsec" id="sec1-3">
+    <div class="subsec-title"><span class="num">1.3</span> 生成模块</div>
+    <div class="card">
+      <p>生成模块是 RAG 的输出端。检索到的文档片段被<strong>注入到 Prompt 上下文中</strong>，LLM 基于这些资料进行推理并生成最终回答。</p>
+
+      <div class="code">
+        <div class="lang">典型 RAG Prompt 模板</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre>你是一个基于给定资料回答问题的助手。请严格根据以下参考资料回答问题。
+如果参考资料中不包含答案，请明确说"根据已有资料无法回答"。
+
+参考资料：
+{retrieved_documents}
+
+问题：{user_query}
+
+回答：</pre>
+      </div>
+
+      <div class="tip info">
+        <strong>关键设计点：</strong>
+        <ul style="margin:6px 0 0 20px;line-height:1.8">
+          <li><strong>Citation（引用标注）</strong>：要求 LLM 在回答中标注信息来源，便于溯源验证</li>
+          <li><strong>Fallback 机制</strong>：当检索结果不相关时，应有明确的"无法回答"或"知识库未覆盖"策略，而非强行编造</li>
+          <li><strong>Temperature 控制</strong>：RAG 场景建议使用较低 temperature（0.1-0.3），减少创造性发挥空间，让模型更忠实于检索资料</li>
+          <li><strong>System Prompt 约束</strong>：明确告诉 LLM "你只能基于参考资料回答"，这是防止幻觉的第一道防线</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.4 -->
+  <div class="subsec" id="sec1-4">
+    <div class="subsec-title"><span class="num">1.4</span> 索引构建流程</div>
+    <div class="card">
+      <p>索引构建是 RAG 系统的<strong>前置工程</strong>。高质量索引 = 高质量检索的基础。一个完整的索引构建管线通常包含以下阶段：</p>
+
+      <div class="viz">
+        <svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6366f1"/></marker></defs>
+          <rect x="10" y="20" width="95" height="80" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+          <text x="57" y="58" text-anchor="middle" font-size="11" font-weight="600" fill="#3730a3">文档加载</text>
+          <text x="57" y="76" text-anchor="middle" font-size="9" fill="#818cf8">PDF/HTML/Wiki</text>
+
+          <line x1="105" y1="60" x2="145" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <rect x="148" y="20" width="95" height="80" rx="8" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1"/>
+          <text x="195" y="58" text-anchor="middle" font-size="11" font-weight="600" fill="#6d28d9">文本解析</text>
+          <text x="195" y="76" text-anchor="middle" font-size="9" fill="#a78bfa">清洗/分块</text>
+
+          <line x1="243" y1="60" x2="283" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <rect x="286" y="20" width="95" height="80" rx="8" fill="#fdf2f8" stroke="#fbcfe8" stroke-width="1"/>
+          <text x="333" y="58" text-anchor="middle" font-size="11" font-weight="600" fill="#be185d">向量化</text>
+          <text x="333" y="76" text-anchor="middle" font-size="9" fill="#ec4899">Embedding</text>
+
+          <line x1="381" y1="60" x2="421" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <rect x="424" y="20" width="115" height="80" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1"/>
+          <text x="481" y="58" text-anchor="middle" font-size="11" font-weight="600" fill="#0f766e">索引构建</text>
+          <text x="481" y="76" text-anchor="middle" font-size="9" fill="#14b8a6">向量库存入</text>
+
+          <line x1="539" y1="60" x2="579" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <rect x="582" y="20" width="88" height="80" rx="8" fill="#fffbeb" stroke="#fef3c7" stroke-width="1"/>
+          <text x="626" y="58" text-anchor="middle" font-size="11" font-weight="600" fill="#92400e">元数据</text>
+          <text x="626" y="76" text-anchor="middle" font-size="9" fill="#d97706">过滤/标签</text>
+        </svg>
+      </div>
+
+      <p><strong>关键决策点：</strong></p>
+      <ul style="margin:8px 0 8px 24px;font-size:.86rem;color:var(--text2);line-height:1.8">
+        <li><strong>分块大小</strong>：太小丢失上下文，太大稀释语义。中文推荐 256-512 tokens，英文 512-1024 tokens</li>
+        <li><strong>分块重叠</strong>：相邻 chunk 之间的重叠区域（overlap），推荐 chunk_size 的 10%-20%，避免关键信息被切割在 chunk 边界</li>
+        <li><strong>元数据过滤</strong>：为每个 chunk 标注来源、时间、作者等元数据，支持多维度过滤检索</li>
+        <li><strong>向量数据库选型</strong>：Chroma（轻量开发）、Milvus（大规模生产）、Qdrant（性能优先）、Weaviate（混合检索优先）、Pinecone（全托管）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 1.5 -->
+  <div class="subsec" id="sec1-5">
+    <div class="subsec-title"><span class="num">1.5</span> 检索 - 生成衔接机制</div>
+    <div class="card">
+      <p>检索到生成之间不是简单的"拼接 → 喂入"，中间存在多个关键衔接环节：</p>
+
+      <div class="tbl-wrap" style="margin-top:12px;">
+        <table>
+          <thead><tr><th>衔接环节</th><th>作用</th><th>常用方案</th><th>失效后果</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>相似度阈值过滤</strong></td>
+              <td>剔除低相关度检索结果</td>
+              <td>cosine ≥ 0.75（阈值可调）</td>
+              <td>噪声文档混入 Prompt，干扰 LLM 判断</td>
+            </tr>
+            <tr>
+              <td><strong>重排序 Rerank</strong></td>
+              <td>对初检结果精排，提升 Top-K 精度</td>
+              <td>bge-reranker / Cohere Rerank</td>
+              <td>关键文档排名靠后被截断，LLM 拿不到核心信息</td>
+            </tr>
+            <tr>
+              <td><strong>上下文压缩</strong></td>
+              <td>提取检索文档中的关键句，减少 Token 占用</td>
+              <td>LLMLingua / LongLLMLingua</td>
+              <td>超长上下文截断导致重要信息丢失</td>
+            </tr>
+            <tr>
+              <td><strong>去重与合并</strong></td>
+              <td>移除重复片段，合并相似内容</td>
+              <td>MinHash / SimHash / 文本去重</td>
+              <td>重复内容浪费 Token 预算，降低回答信息密度</td>
+            </tr>
+            <tr>
+              <td><strong>Prompt 编排</strong></td>
+              <td>将检索结果结构化为 LLM 可理解的格式</td>
+              <td>XML 标签 / Markdown 分隔 / JSON</td>
+              <td>格式混乱导致 LLM 误读文档边界</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip info">
+        <strong>实践中的关键认知：</strong>RAG 系统的瓶颈往往不在 LLM 本身，而在于"检索 → 增强"这中间的质量控制链路。一个优秀的 RAG 系统，检索模块的工程投入通常占到总工作量的 <strong>60%-70%</strong>。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 2: 高级变体架构
+     ═══════════════════════════════════════════ -->
+<section class="sec" id="sec2">
+  <div class="sec-title"><span class="n">2</span> 高级变体架构篇</div>
+  <div class="card">
+    <p>基础 RAG（Naive RAG）在简单场景下表现不错，但面对<strong>多跳推理、知识图谱关联、检索质量自纠</strong>等复杂需求时力不从心。学术界和工业界由此演进出了一系列 RAG 变体架构，各自针对特定的痛点进行优化。</p>
+  </div>
+
+  <!-- 2.1 Multi-hop RAG -->
+  <div class="subsec" id="sec2-1">
+    <div class="subsec-title"><span class="num">2.1</span> Multi-hop RAG</div>
+    <div class="var-card" style="border-top-color:#7c3aed;">
+      <span class="var-tag var-tag-adv">迭代检索</span>
+      <span class="var-tag var-tag-core" style="margin-left:6px;">多跳推理</span>
+      <h4>Multi-hop RAG — 多跳检索增强生成</h4>
+      <p><strong>核心问题：</strong>某些问题不能通过单次检索回答，需要"检索 A → 从 A 中发现线索 → 基于线索再检索 B → 综合 A+B 回答"。</p>
+      <p><strong>典型场景：</strong>"张三的父亲是谁？他的职业是什么？"—— 需要先检索到"张三的父亲是李四"，再基于这个结果检索"李四的职业"。</p>
+
+      <div class="viz">
+        <svg viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="15" width="140" height="50" rx="10" fill="#f5f3ff" stroke="#c7d2fe"/>
+          <text x="85" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="#6d28d9">Hop 1: 初次检索</text>
+          <text x="85" y="54" text-anchor="middle" font-size="9" fill="#a78bfa">Query → Doc A</text>
+
+          <rect x="195" y="15" width="140" height="50" rx="10" fill="#f5f3ff" stroke="#c7d2fe"/>
+          <text x="265" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="#6d28d9">Hop 2: 子问题生成</text>
+          <text x="265" y="54" text-anchor="middle" font-size="9" fill="#a78bfa">从 Doc A 提取线索</text>
+
+          <rect x="375" y="15" width="140" height="50" rx="10" fill="#f5f3ff" stroke="#c7d2fe"/>
+          <text x="445" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="#6d28d9">Hop 3: 再次检索</text>
+          <text x="445" y="54" text-anchor="middle" font-size="9" fill="#a78bfa">新 Query → Doc B</text>
+
+          <rect x="555" y="15" width="110" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="610" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="#3730a3">综合生成</text>
+          <text x="610" y="54" text-anchor="middle" font-size="9" fill="#818cf8">A + B → 最终答案</text>
+
+          <line x1="155" y1="40" x2="195" y2="40" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="335" y1="40" x2="375" y2="40" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="515" y1="40" x2="555" y2="40" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <rect x="80" y="85" width="520" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+          <text x="340" y="108" text-anchor="middle" font-size="10" fill="#64748b">实现方式：IRCoT（检索链式思维）、BALEEN（迭代检索生成）、ReAct 框架 + 工具调用</text>
+          <text x="340" y="124" text-anchor="middle" font-size="10" fill="#64748b">代表框架：LangChain MultiQueryRetriever · DSPy Multi-Hop Pipeline</text>
+        </svg>
+      </div>
+
+      <div class="tip warn">
+        <strong>主要挑战：</strong>多跳检索容易产生<strong>错误级联</strong>—— 如果 Hop 1 检索到错误信息，后续所有跳都会基于错误前提，导致最终答案完全偏离。需要引入验证机制或在每跳后进行相关性检查。
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.2 Agentic RAG -->
+  <div class="subsec" id="sec2-2">
+    <div class="subsec-title"><span class="num">2.2</span> Agentic RAG</div>
+    <div class="var-card" style="border-top-color:#ea580c;">
+      <span class="var-tag var-tag-pro">自主决策</span>
+      <span class="var-tag var-tag-adv" style="margin-left:6px;">工具调用</span>
+      <h4>Agentic RAG — 智能体驱动的检索增强</h4>
+      <p><strong>核心思想：</strong>将检索过程交由一个 <strong>AI Agent</strong> 自主决策。Agent 可以动态判断"是否需要检索"、"检索什么"、"检索结果够不够"，甚至"是否需要用不同的工具（数据库查询、API 调用、代码执行）来获取信息"。</p>
+      <p><strong>与基础 RAG 的本质区别：</strong>基础 RAG 是<strong>固定的检索-生成流水线</strong>，而 Agentic RAG 是<strong>动态的决策循环</strong>。Agent 可以在一次回答中多次检索、切换检索策略、甚至放弃检索直接回答简单问题。</p>
+
+      <div class="code">
+        <div class="lang">Agentic RAG — ReAct 模式示例</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre>User: "2024年诺贝尔物理学奖得主是谁？他之前的代表作是什么？"
+
+Agent Thought: 需要检索2024诺奖信息 → Action: search("2024 Nobel Prize Physics")
+Observation: [John Hopfield, Geoffrey Hinton... 因神经网络研究获奖]
+
+Agent Thought: 需要了解他们之前的代表作 → Action: search("John Hopfield代表作")
+Observation: [Hopfield Network (1982)...]
+
+Agent Thought: 还需要查Geoffrey Hinton → Action: search("Geoffrey Hinton代表作")
+Observation: [Backpropagation, Boltzmann Machine, Deep Learning...]
+
+Agent Thought: 信息已足够 → Final Answer: "2024年诺贝尔物理学奖得主是..."</pre>
+      </div>
+
+      <div class="tip good">
+        <strong>适用场景：</strong>需要多步推理和动态信息获取的复杂问答、需要跨多个知识源整合信息的研究型查询、用户问题表述模糊需要 Agent 自行分解的场景。
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.3 Graph RAG -->
+  <div class="subsec" id="sec2-3">
+    <div class="subsec-title"><span class="num">2.3</span> Graph RAG</div>
+    <div class="var-card" style="border-top-color:#059669;">
+      <span class="var-tag var-tag-pro">知识图谱</span>
+      <span class="var-tag var-tag-recent" style="margin-left:6px;">Microsoft 2024</span>
+      <h4>Graph RAG — 基于知识图谱的检索增强</h4>
+      <p><strong>核心创新：</strong>不直接将文档作为检索单元，而是先将文档转换为<strong>知识图谱</strong>（实体 + 关系），然后基于图结构进行检索。由 Microsoft Research 于 2024 年提出。</p>
+
+      <div class="viz">
+        <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- Community nodes -->
+          <circle cx="100" cy="50" r="35" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+          <text x="100" y="46" text-anchor="middle" font-size="9" fill="#065f46">社区1</text>
+          <text x="100" y="60" text-anchor="middle" font-size="8" fill="#059669">实体聚类</text>
+
+          <circle cx="240" cy="50" r="35" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+          <text x="240" y="46" text-anchor="middle" font-size="9" fill="#065f46">社区2</text>
+          <text x="240" y="60" text-anchor="middle" font-size="8" fill="#059669">关系密集</text>
+
+          <circle cx="170" cy="125" r="30" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+          <text x="170" y="122" text-anchor="middle" font-size="8" fill="#0f766e">跨社区</text>
+          <text x="170" y="136" text-anchor="middle" font-size="8" fill="#14b8a6">桥接查询</text>
+
+          <!-- Lines connecting communities -->
+          <line x1="130" y1="65" x2="210" y2="65" stroke="#059669" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="115" y1="80" x2="150" y2="108" stroke="#0d9488" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="225" y1="80" x2="190" y2="108" stroke="#0d9488" stroke-width="1" stroke-dasharray="4"/>
+
+          <!-- Right side: process -->
+          <rect x="340" y="12" width="320" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="500" y="30" text-anchor="middle" font-size="10" fill="#4f46e5">① 实体/关系提取 → 构建知识图谱</text>
+          <text x="500" y="44" text-anchor="middle" font-size="9" fill="#818cf8">LLM 抽取：人物/地点/事件/概念 + 关系边</text>
+
+          <rect x="340" y="62" width="320" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="500" y="80" text-anchor="middle" font-size="10" fill="#4f46e5">② Leiden 社区检测 → 摘要生成</text>
+          <text x="500" y="94" text-anchor="middle" font-size="9" fill="#818cf8">将相关实体聚类，为每个社区生成文本摘要</text>
+
+          <rect x="340" y="112" width="320" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="500" y="130" text-anchor="middle" font-size="10" fill="#4f46e5">③ 检索：Map（社区级）→ Reduce（全局）</text>
+          <text x="500" y="144" text-anchor="middle" font-size="9" fill="#818cf8">先定位相关社区摘要，再深入具体实体关系</text>
+        </svg>
+      </div>
+
+      <p><strong>优势：</strong>对需要"全局理解"的查询特别有效（如"总结这份财报的核心主题"），因为它通过社区摘要捕获了文档集的宏观结构。</p>
+      <p><strong>局限：</strong>构建知识图谱的前期成本高（LLM 提取实体关系），更新维护复杂，不适合高频更新的知识库。</p>
+
+      <div class="tip info">
+        <strong>Graph RAG vs 传统 RAG 核心差异：</strong>传统 RAG 是"点状检索"（找最相关的几个 chunk），Graph RAG 是"面状检索"（先找相关主题社区，再从社区中找到具体信息）。对于需要跨文档综合的查询（如数据聚合、趋势分析），Graph RAG 有显著优势。
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.4 Self-RAG -->
+  <div class="subsec" id="sec2-4">
+    <div class="subsec-title"><span class="num">2.4</span> Self-RAG（自反思 RAG）</div>
+    <div class="var-card" style="border-top-color:#0d9488;">
+      <span class="var-tag var-tag-core">自反思</span>
+      <span class="var-tag var-tag-adv" style="margin-left:6px;">按需检索</span>
+      <h4>Self-RAG — 训练模型学会"何时检索、检索什么、如何反思"</h4>
+      <p><strong>核心思想：</strong>在 LLM 生成过程中插入<strong>特殊的反思标记（Reflection Tokens）</strong>，让模型在训练阶段就学会：① 判断是否需要检索；② 评估检索结果的相关性；③ 判断生成内容是否得到检索结果的支持；④ 评估回答的整体有用性。</p>
+
+      <div class="code">
+        <div class="lang">Self-RAG 反思标记示例</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre>{Retrieve} 巴黎是哪个国家的首都？        ← 模型判定需要检索
+[检索结果: "巴黎是法国的首都和最大城市..."]
+
+{Relevant}                                  ← 模型评估检索结果相关
+{Supported} 巴黎是法国的首都。               ← 模型确认生成内容有据可查
+{Fully Supported}                           ← 最终评估：完全支持
+
+--- 不需要检索的情况 ---
+{No Retrieval} 你好！今天有什么可以帮助你的？  ← 聊天类问题不需要检索
+{Unsupported} 我认为... （触发重新检索）      ← 如果生成内容无据可查</pre>
+      </div>
+
+      <p><strong>关键反思标记：</strong></p>
+      <div class="grid2" style="margin-top:12px;">
+        <div style="background:var(--pri-lighter);padding:14px;border-radius:var(--radius-sm);">
+          <strong style="color:var(--pri-dark);">{Retrieve} / {No Retrieval}</strong>
+          <p style="margin-top:4px;font-size:.8rem;color:var(--text2);">判定当前是否需要触发检索。简单寒暄直接跳过，知识型问题触发检索。</p>
+        </div>
+        <div style="background:var(--green-bg);padding:14px;border-radius:var(--radius-sm);">
+          <strong style="color:var(--green);">{Relevant} / {Irrelevant}</strong>
+          <p style="margin-top:4px;font-size:.8rem;color:var(--text2);">评估检索到的文档片段与当前问题的相关性。</p>
+        </div>
+        <div style="background:var(--amber-bg);padding:14px;border-radius:var(--radius-sm);">
+          <strong style="color:var(--amber);">{Supported} / {Partially} / {Unsupported}</strong>
+          <p style="margin-top:4px;font-size:.8rem;color:var(--text2);">逐句检查生成内容是否有检索资料支撑。</p>
+        </div>
+        <div style="background:var(--purple-bg);padding:14px;border-radius:var(--radius-sm);">
+          <strong style="color:var(--purple);">{Fully / Partially / Not Useful}</strong>
+          <p style="margin-top:4px;font-size:.8rem;color:var(--text2);">整体回答有用性评估，可用于强化学习训练信号。</p>
+        </div>
+      </div>
+
+      <div class="tip warn">
+        <strong>落地挑战：</strong>Self-RAG 需要<strong>专门训练模型</strong>来理解反思标记，无法直接应用于任意 LLM。训练数据需要人工标注反思标记，数据成本高。对于已有 LLM 的 RAG 系统，迁移成本较大。
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.5 CRAG -->
+  <div class="subsec" id="sec2-5">
+    <div class="subsec-title"><span class="num">2.5</span> Corrective RAG（CRAG）</div>
+    <div class="var-card" style="border-top-color:#dc2626;">
+      <span class="var-tag var-tag-pro">自纠正</span>
+      <span class="var-tag var-tag-recent" style="margin-left:6px;">轻量级</span>
+      <h4>Corrective RAG (CRAG) — 检索结果不好？自动纠正重新检索</h4>
+      <p><strong>核心思想：</strong>在检索结果质量不佳时，<strong>自动触发纠正流程</strong>—— 改进查询词、扩大搜索范围、或切换到 Web 搜索。CRAG 的核心是引入一个<strong>检索评估器（Retrieval Evaluator）</strong>来判断检索结果的质量，然后根据评估结果触发不同的行动。</p>
+
+      <div class="viz">
+        <svg viewBox="0 0 680 180" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="10" width="110" height="45" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="70" y="30" text-anchor="middle" font-size="10" font-weight="600" fill="#4f46e5">用户查询</text>
+          <text x="70" y="45" text-anchor="middle" font-size="9" fill="#818cf8">Query</text>
+
+          <rect x="155" y="10" width="110" height="45" rx="10" fill="#f5f3ff" stroke="#ddd6fe"/>
+          <text x="210" y="30" text-anchor="middle" font-size="10" font-weight="600" fill="#7c3aed">初始检索</text>
+          <text x="210" y="45" text-anchor="middle" font-size="9" fill="#a78bfa">Retrieve docs</text>
+
+          <rect x="295" y="10" width="120" height="45" rx="10" fill="#ccfbf1" stroke="#0d9488"/>
+          <text x="355" y="30" text-anchor="middle" font-size="10" font-weight="600" fill="#0f766e">检索评估器</text>
+          <text x="355" y="45" text-anchor="middle" font-size="9" fill="#14b8a6">Score docs quality</text>
+
+          <!-- Branch: Correct -->
+          <line x1="355" y1="55" x2="355" y2="80" stroke="#059669" stroke-width="2"/>
+          <text x="320" y="72" font-size="9" fill="#059669" font-weight="600">置信度高</text>
+          <rect x="295" y="80" width="120" height="35" rx="8" fill="#d1fae5" stroke="#059669"/>
+          <text x="355" y="102" text-anchor="middle" font-size="10" fill="#065f46">→ 直接生成</text>
+
+          <!-- Branch: Incorrect -->
+          <line x1="415" y1="32" x2="460" y2="32" stroke="#dc2626" stroke-width="2"/>
+          <text x="437" y="24" font-size="9" fill="#dc2626" font-weight="600">置信度低</text>
+          <rect x="460" y="10" width="100" height="45" rx="8" fill="#fecaca" stroke="#dc2626"/>
+          <text x="510" y="30" text-anchor="middle" font-size="10" fill="#991b1b">触发纠正</text>
+          <text x="510" y="45" text-anchor="middle" font-size="9" fill="#dc2626">Re-write / Web</text>
+
+          <line x1="510" y1="55" x2="510" y2="80" stroke="#dc2626" stroke-width="2"/>
+          <rect x="445" y="80" width="130" height="35" rx="8" fill="#fff1f2" stroke="#e11d48"/>
+          <text x="510" y="102" text-anchor="middle" font-size="10" fill="#be123c">→ 重新检索</text>
+
+          <rect x="295" y="140" width="300" height="32" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="445" y="160" text-anchor="middle" font-size="10" fill="#4f46e5">纠正策略：① Query Rewrite ② Web Search ③ Knowledge Refinement</text>
+        </svg>
+      </div>
+
+      <p><strong>与 Self-RAG 的区别：</strong></p>
+      <ul style="margin:8px 0 8px 24px;font-size:.84rem;color:var(--text2);line-height:1.8">
+        <li><strong>Self-RAG</strong> 需要在训练阶段学习反思标记，是"训练时注入"的反思能力</li>
+        <li><strong>CRAG</strong> 通过外挂的评估器来实现纠正，是"推理时外挂"的纠正机制，<strong>更轻量、更易落地</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2.6 演进脉络 -->
+  <div class="subsec" id="sec2-6">
+    <div class="subsec-title"><span class="num">2.6</span> 变体架构演进脉络</div>
+    <div class="card">
+      <p>从 2020 年 RAG 概念提出至今，架构演进反映了学术界和工业界对 RAG 瓶颈的逐步攻克：</p>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="tl-year">2020</div>
+          <div class="tl-title">Naive RAG（原生 RAG）</div>
+          <div class="tl-desc">Lewis et al. 提出 RAG 概念。单次检索 + 单次生成，简单直接但缺乏质量控制。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-year">2021</div>
+          <div class="tl-title">Multi-hop RAG</div>
+          <div class="tl-desc">IRCoT 等方案引入多步检索链，解决需要多跳推理的复杂问题。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-year">2023</div>
+          <div class="tl-title">Agentic RAG（ReAct 等）</div>
+          <div class="tl-desc">将 LLM 作为 Agent，自主决策检索时机和策略。ReAct / Tool-use 范式成熟。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-year">2023</div>
+          <div class="tl-title">Self-RAG</div>
+          <div class="tl-desc">Asai et al. 提出反思标记训练，模型学会自我评估检索和生成质量。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-year">2024</div>
+          <div class="tl-title">CRAG（Corrective RAG）</div>
+          <div class="tl-desc">Yan et al. 提出外挂评估器 + 自动纠正，更轻量的质量控制方案。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-year">2024</div>
+          <div class="tl-title">Graph RAG</div>
+          <div class="tl-desc">Microsoft Research 发布 Graph RAG，将文档转为知识图谱进行社区级检索。</div>
+        </div>
+      </div>
+
+      <div class="tip info">
+        <strong>演进主线：</strong>从"能检索就行"（Naive）→"检索要精准"（Multi-hop / 混合检索）→"检索要自主"（Agentic）→"检索要对结果负责"（Self-RAG / CRAG）→"检索要理解全局"（Graph RAG）。每一代都在解决前一代的特定短板。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 3: 实战避坑指南
+     ═══════════════════════════════════════════ -->
+<section class="sec" id="sec3">
+  <div class="sec-title"><span class="n">3</span> 实战避坑指南</div>
+  <div class="card">
+    <p>以下 7 个坑点来源于真实生产环境中的 RAG 系统调优经验。每个坑点包含<strong>典型表现</strong>和<strong>排查思路</strong>，帮助你在遇到问题时快速定位根因。</p>
+  </div>
+
+  <!-- Pit 1 -->
+  <div class="subsec" id="sec3-1">
+    <div class="subsec-title"><span class="num">3.1</span> 坑 ①：检索质量不足 → 幻觉反而加剧</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">🔥</span> 检索质量不足导致幻觉加剧 <span class="pit-level pit-high">高频 · 严重</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        用户提问后，LLM 给出了看似合理但实际完全错误的回答。检查检索日志发现，Top-K 返回的文档与问题"看起来相关"但实际<strong>答非所问</strong>。更危险的情况是：LLM 因为拿到的文档不相关，反而"更努力地编造"了答案。
+      </div>
+      <div class="pit-detail">
+        <p><strong>根因分析：</strong>RAG 的"双刃剑效应"—— 检索提供了上下文，但<strong>错误的上下文比没有上下文更危险</strong>。没有上下文时 LLM 可能会说"我不知道"，但有了看起来相关实际上不相关的上下文后，LLM 会强行基于这些错误信息"推理"，产生看似有理有据的错误回答。</p>
+      </div>
+      <div class="pit-fix">
+        <strong>排查与修复：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>检查 Embedding 模型是否匹配领域</strong>：通用 Embedding 模型在垂直领域（医疗、法律、金融）的语义理解能力可能严重不足，需评估是否切换领域专用模型</li>
+          <li><strong>引入检索质量评分机制</strong>：对每次检索的 Top-1 相似度分数进行监控，当分数低于阈值时触发降级策略</li>
+          <li><strong>添加"无答案"Fallback</strong>：当检索结果的相似度分数普遍低于阈值时，直接返回"当前知识库未覆盖此问题"，而非强行生成</li>
+          <li><strong>使用 Rerank 模型</strong>：初检结果经过专门的 Cross-Encoder Reranker 精排，能显著提升 Top-K 的相关性</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pit 2 -->
+  <div class="subsec" id="sec3-2">
+    <div class="subsec-title"><span class="num">3.2</span> 坑 ②：分块策略不当</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">✂️</span> 分块策略不当 <span class="pit-level pit-high">高频 · 严重</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        检索到了"最相关的 chunk"，但这个 chunk 里缺少关键上下文（比如：chunk 中的代词"它""这种方案"不知道指代什么；或者一段结论被切成两半，用户拿到的是"前半段推理"却没有"后半段结论"）。
+      </div>
+      <div class="pit-detail">
+        <p><strong>四大常见分块错误：</strong></p>
+        <ul style="margin:6px 0 6px 20px;line-height:1.8;font-size:.84rem;color:var(--text2);">
+          <li><strong>按固定字符数硬切</strong>：不考虑句子/段落边界，把一段完整论述切成碎片</li>
+          <li><strong>Overlap 太小</strong>：相邻 chunk 没有重叠，边界信息完全丢失</li>
+          <li><strong>Chunk 过大</strong>：单个 chunk 超过 2000 tokens，检索时语义被稀释、且容易撑爆上下文窗口</li>
+          <li><strong>忽略文档结构</strong>：Markdown 标题层级、表格、代码块等结构化信息被当成纯文本摊平</li>
+        </ul>
+      </div>
+      <div class="pit-fix">
+        <strong>排查与修复：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>使用语义感知分块器</strong>：如 LangChain 的 <code>RecursiveCharacterTextSplitter</code> 按分隔符优先级逐级切分（段落 → 句子 → 词），或 <code>SemanticChunker</code> 基于 Embedding 相似度突变点自动确定分块边界</li>
+          <li><strong>保留文档结构</strong>：为每个 chunk 附带其所属的章节标题作为元数据，检索时一并返回给 LLM</li>
+          <li><strong>Overlap 设为 10%-20% chunk_size</strong>：对于中文文档，建议 chunk_size=512, overlap=80-100</li>
+          <li><strong>小文档检索（Parent Document Retriever）</strong>：检索用小 chunk（精准匹配），但返回时附加上下文段落或整个小节</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pit 3 -->
+  <div class="subsec" id="sec3-3">
+    <div class="subsec-title"><span class="num">3.3</span> 坑 ③：相似度阈值调优陷阱</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">🎚️</span> 相似度阈值调优陷阱 <span class="pit-level pit-mid">中频 · 需持续关注</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        阈值设太高（如 0.85）→ 大量相关文档被过滤掉，很多问题"找不到答案"。阈值设太低（如 0.5）→ 大量噪声文档混入，回答质量下降。换了一个 Embedding 模型后，之前调好的阈值完全失效。
+      </div>
+      <div class="pit-detail">
+        <p><strong>核心矛盾：</strong>余弦相似度的绝对值<strong>不具备跨模型、跨领域的可比性</strong>。不同 Embedding 模型输出的向量分布差异巨大：有的模型余弦相似度集中在 0.6-0.9，有的则集中在 0.3-0.7。用一个固定阈值"一刀切"必然出问题。</p>
+      </div>
+      <div class="pit-fix">
+        <strong>排查与修复：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>不要依赖绝对阈值</strong>：改用 <strong>Top-K + 最低分数</strong> 的组合策略（如取 Top-10 中分数 ≥ 均值-1σ 的文档）</li>
+          <li><strong>在目标数据集上标定阈值</strong>：用一批标注好"相关/不相关"的 Query-Doc 对，画出 PR 曲线，找到最佳阈值</li>
+          <li><strong>监控分数分布</strong>：在生产环境中持续追踪每次检索的 Top-K 分数分布，当分布发生显著偏移时自动告警</li>
+          <li><strong>考虑用 Reranker 替代硬阈值</strong>：先用宽松阈值（如 0.4）召回 Top-50，再通过 Cross-Encoder Reranker 精排 Top-5，避免阈值带来的召回-精度权衡困境</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pit 4 -->
+  <div class="subsec" id="sec3-4">
+    <div class="subsec-title"><span class="num">3.4</span> 坑 ④：检索结果重排序（Rerank）失效</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">📊</span> 重排序失效 <span class="pit-level pit-mid">中频 · 隐蔽性高</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        初检（向量搜索）的 Top-5 结果中，正确答案排在第 4 位。经过 Reranker 后... 正确答案竟然被排到了第 10 位。用户的 LLM 拿到的是错误文档，输出完全偏离。
+      </div>
+      <div class="pit-detail">
+        <p><strong>常见原因：</strong></p>
+        <ul style="margin:6px 0 6px 20px;line-height:1.8;font-size:.84rem;color:var(--text2);">
+          <li><strong>Reranker 与初检模型的"偏好差异"过大</strong>：比如 Bi-Encoder 初检偏好短文档，Cross-Encoder Reranker 却偏好长文档，导致 Reranker 把长但不相关的文档提上来</li>
+          <li><strong>Reranker 的输入截断</strong>：Cross-Encoder 通常有最大输入长度限制（如 512 tokens），超长 chunk 被截断后丢失关键信息</li>
+          <li><strong>Reranker 领域不匹配</strong>：用英文训练的 Reranker 处理中文文档，排序效果还不如不做重排</li>
+        </ul>
+      </div>
+      <div class="pit-fix">
+        <strong>排查与修复：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>A/B 测试 Reranker 效果</strong>：在评估集上分别测量"有 Reranker"和"无 Reranker"的 Recall@K 和 NDCG，确认 Reranker 确实带来正向收益</li>
+          <li><strong>确保 Reranker 语言匹配</strong>：中文场景使用 bge-reranker-v2-m3 或 m3e-reranker</li>
+          <li><strong>截断策略优化</strong>：对于超长文档，先提取与 Query 最相关的段落再送入 Reranker，而非直接截断全文</li>
+          <li><strong>监控 Rerank 前后排序变化</strong>：当发现 Reranker 频繁将初检 Top-3 排到 10 名以外时，检查 Reranker 是否存在上述问题</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pit 5 -->
+  <div class="subsec" id="sec3-5">
+    <div class="subsec-title"><span class="num">3.5</span> 坑 ⑤：上下文窗口溢出</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">📦</span> 上下文窗口溢出 <span class="pit-level pit-high">高频 · 严重</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        检索到了 5 个 chunk，每个 800 tokens，加上 System Prompt 和用户问题，总长度 5000+ tokens —— 看起来没超 8K 窗口。但 LLM 的输出中，<strong>对前 3 个 chunk 引用了大量细节，后 2 个 chunk 完全被忽略</strong>。这就是"Lost in the Middle"现象。
+      </div>
+      <div class="pit-detail">
+        <p><strong>根因：</strong>LLM 的注意力机制存在位置偏差 —— <strong>开头和结尾的内容被充分关注，中间的内容被大幅忽略</strong>。当你把多个检索文档按相似度降序排列时，排序靠后的文档（在 Prompt 中间位置）实际上被 LLM 选择性无视了。</p>
+      </div>
+      <div class="pit-fix">
+        <strong>排查与修复：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>控制检索文档数量</strong>：不是越多越好，3-5 个高质量文档通常优于 10+ 个中低质量文档</li>
+          <li><strong>调整文档排列顺序</strong>：将最重要的文档放在 Prompt 的开头或结尾（而非中间），或使用"重新排序 → 分散插入"策略</li>
+          <li><strong>使用上下文压缩</strong>：用 LLMLingua 等工具对检索文档进行关键句提取，将 5000 tokens 压缩到 1500 tokens</li>
+          <li><strong>考虑长上下文模型</strong>：如果确实需要大量检索文档，使用支持 128K+ 上下文的模型（如 GPT-4-turbo, Claude 3）</li>
+          <li><strong>评估"Lost in the Middle"影响</strong>：在测试集上轮换文档顺序，观察回答质量变化，量化位置偏差</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pit 6 -->
+  <div class="subsec" id="sec3-6">
+    <div class="subsec-title"><span class="num">3.6</span> 坑 ⑥：延迟与成本的权衡</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">⚡</span> 延迟与成本权衡 <span class="pit-level pit-mid">中频 · 架构决策</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        上线初期用户反馈"回复太慢了"—— 追踪链路发现：用户问题 → Embedding（80ms）→ 向量检索（50ms）→ BM25 检索（30ms）→ RRF 融合（5ms）→ Reranker（200ms）→ Prompt 构建 → LLM 生成（1500ms）→ 总耗时接近 <strong>2000ms</strong>。加上网络延迟，用户体验无法接受。
+      </div>
+      <div class="pit-detail">
+        <p><strong>延迟预算分析：</strong>对于交互式问答场景，用户能接受的总延迟通常在 2-3 秒以内。其中 LLM 生成通常占 60%-80%，留给检索链路的时间非常有限。</p>
+      </div>
+      <div class="pit-fix">
+        <strong>优化策略：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>并行化检索</strong>：Embedding + BM25 并行发起，不要串行等待</li>
+          <li><strong>缓存 Query Embedding</strong>：对常见查询的 Embedding 结果进行缓存（相似问题复用）</li>
+          <li><strong>轻量级 Reranker 优先</strong>：用 bge-reranker-base 替代 large 版本；或只在相似度分数在模糊区间（0.6-0.8）时才触发重排</li>
+          <li><strong>流式输出</strong>：LLM 使用 Streaming 模式，先输出检索到的文档引用，让用户感知到系统"在工作"</li>
+          <li><strong>分级服务</strong>：简单问题（如"什么是 X"）使用轻量管线，复杂问题（多跳推理）才启动完整管线</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pit 7 -->
+  <div class="subsec" id="sec3-7">
+    <div class="subsec-title"><span class="num">3.7</span> 坑 ⑦：知识库更新滞后</div>
+    <div class="pit-card">
+      <h4><span class="pit-icon">🔄</span> 知识库更新滞后 <span class="pit-level pit-mid">中频 · 运维挑战</span></h4>
+      <div class="pit-symptom">
+        <strong>典型表现：</strong>
+        知识库中某政策文档已于上月更新，但 RAG 系统仍然检索到旧版本内容，导致回答中包含<strong>已废止的条款</strong>。或者相反 —— 新文档已经入库，但旧的 Embedding 索引未刷新，用户完全搜不到最新信息。
+      </div>
+      <div class="pit-detail">
+        <p><strong>三大更新陷阱：</strong></p>
+        <ul style="margin:6px 0 6px 20px;line-height:1.8;font-size:.84rem;color:var(--text2);">
+          <li><strong>索引与文档不同步</strong>：文档更新了但向量索引未重建，旧版本向量仍在服务</li>
+          <li><strong>增量更新不一致</strong>：只增量添加新向量，却不删除/更新旧向量，导致同一份文档有多个版本的向量共存</li>
+          <li><strong>全量重建代价大</strong>：大知识库的全量重新 Embedding 可能需要数小时，期间服务降级</li>
+        </ul>
+      </div>
+      <div class="pit-fix">
+        <strong>排查与修复：</strong>
+        <ol style="margin:6px 0 0 20px;line-height:1.8;font-size:.82rem;">
+          <li><strong>实施版本化管理</strong>：每个 chunk 关联文档版本号，检索时按最新版本过滤</li>
+          <li><strong>时间戳元数据过滤</strong>：为文档标注生效时间，对时效性敏感的问题在检索时自动过滤过期文档</li>
+          <li><strong>增量更新 + 定期全量校验</strong>：日常通过增量更新维护索引，每周/每月做一次全量校验确保索引与源文档一致</li>
+          <li><strong>使用支持实时更新的向量数据库</strong>：Milvus / Qdrant / Weaviate 均支持对单条向量的增删改操作，避免"全量重建"</li>
+          <li><strong>建立文档-索引对账机制</strong>：定期比对源文档库与向量库的文档 ID，发现缺失或多余记录自动修复</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 4: 选型建议
+     ═══════════════════════════════════════════ -->
+<section class="sec" id="sec4">
+  <div class="sec-title"><span class="n">4</span> 场景化选型建议</div>
+
+  <div class="card">
+    <p>面对 Naive RAG / Multi-hop / Agentic / Graph / Self-RAG / CRAG 六种架构，如何根据实际场景做出选择？以下是根据<strong>查询复杂度</strong>和<strong>知识库规模</strong>整理的快速决策矩阵：</p>
+  </div>
+
+  <div class="tbl-wrap" style="margin-top:12px;">
+    <table>
+      <thead>
+        <tr><th>场景</th><th>查询类型</th><th>知识库特点</th><th>推荐架构</th><th>核心理由</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>企业文档问答</strong></td>
+          <td>单跳、事实型</td>
+          <td>结构化文档、中等规模</td>
+          <td>Naive RAG + Rerank</td>
+          <td>投入产出比最高，Rerank 解决精度问题</td>
+        </tr>
+        <tr>
+          <td><strong>客服系统</strong></td>
+          <td>FAQ 匹配、简单推理</td>
+          <td>FAQ 库 + 知识库</td>
+          <td>混合检索 + CRAG</td>
+          <td>关键词匹配 + 纠正机制，兜底 FAQ</td>
+        </tr>
+        <tr>
+          <td><strong>研究报告分析</strong></td>
+          <td>多跳推理、综合归纳</td>
+          <td>跨文档、信息分散</td>
+          <td>Multi-hop 或 Graph RAG</td>
+          <td>需要跨文档关联，Graph RAG 天然适合</td>
+        </tr>
+        <tr>
+          <td><strong>AI 编程助手</strong></td>
+          <td>代码搜索、上下文理解</td>
+          <td>代码仓库 + 文档</td>
+          <td>Agentic RAG</td>
+          <td>需要动态切换检索策略（代码/文档/API）</td>
+        </tr>
+        <tr>
+          <td><strong>医疗/法律问询</strong></td>
+          <td>高精度、零容忍幻觉</td>
+          <td>专业文献、法规</td>
+          <td>混合检索 + Self-RAG</td>
+          <td>需要逐句验证支撑，Self-RAG 提供引用校验</td>
+        </tr>
+        <tr>
+          <td><strong>通用知识问答</strong></td>
+          <td>混合类型</td>
+          <td>大规模、多领域</td>
+          <td>Agentic + 混合检索</td>
+          <td>Agent 自主判断检索策略，灵活性高</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip good" style="margin-top:20px;">
+    <strong>落地方案建议：</strong>对于大多数企业应用，推荐<strong>渐进式落地路径</strong>——① 先上线 Naive RAG + Rerank 验证基本效果；② 引入混合检索提升召回率；③ 根据实际痛点（幻觉/延迟/多跳需求）选配 CRAG 或 Agentic 模式。一次性上最复杂的架构往往是过度设计。
+  </div>
+</section>
+
+</div><!-- .wrap -->
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer">
+  <p>本教程由 Frontend Learning Hub 生成 · 内容基于 RAG 领域最新研究与实践经验</p>
+  <p style="margin-top:4px;">
+    参考文献：Lewis et al. (2020) RAG · Asai et al. (2023) Self-RAG · Yan et al. (2024) CRAG · Microsoft (2024) Graph RAG
+    · <a href="index.html">返回门户首页</a>
+  </p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Navigation & Interaction
+   ═══════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  // ── Copy Code Button ──
+  window.copyCode = function(btn){
+    const pre = btn.parentElement.querySelector('pre');
+    const text = pre ? pre.textContent : '';
+    navigator.clipboard.writeText(text).then(()=>{
+      const orig = btn.textContent;
+      btn.textContent = '已复制!';
+      btn.style.color = '#4ade80';
+      setTimeout(()=>{ btn.textContent = orig; btn.style.color = ''; }, 1500);
+    }).catch(()=>{
+      btn.textContent = '失败';
+      setTimeout(()=>{ btn.textContent = '复制'; }, 1500);
+    });
+  };
+
+  // ── Active Nav Highlight (IntersectionObserver) ──
+  const sections = document.querySelectorAll('.sec[id], .subsec[id]');
+  const navLinks = document.querySelectorAll('.nav a[href^="#"]');
+
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        navLinks.forEach(link=>{
+          link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 });
+
+  sections.forEach(s=>observer.observe(s));
+
+  // ── Smooth scroll for nav links ──
+  navLinks.forEach(link=>{
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if(target) target.scrollIntoView({ behavior:'smooth' });
+    });
+  });
+
+  // ── TOC links smooth scroll ──
+  document.querySelectorAll('.toc a[href^="#"]').forEach(link=>{
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if(target) target.scrollIntoView({ behavior:'smooth' });
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

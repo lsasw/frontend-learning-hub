@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型微调技术深度解析 · 从全量微调到 RLHF</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   CSS Variables & Reset
+   ═══════════════════════════════════════════════════ */
+:root {
+  --ft-blue: #2563eb; --ft-dark: #1d4ed8; --ft-light: #dbeafe; --ft-lighter: #eff6ff;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb; --border-light: #f1f5f9;
+  --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+  --green: #059669; --green-light: #d1fae5; --green-bg: #ecfdf5;
+  --orange: #ea580c; --orange-light: #fed7aa; --orange-bg: #fff7ed;
+  --purple: #7c3aed; --purple-light: #ede9fe; --purple-bg: #f5f3ff;
+  --teal: #0d9488; --teal-light: #ccfbf1; --teal-bg: #f0fdfa;
+  --amber: #d97706; --amber-light: #fef3c7; --amber-bg: #fffbeb;
+  --red: #dc2626; --red-light: #fee2e2; --red-bg: #fef2f2;
+  --cyan: #0891b2; --cyan-light: #cffafe; --cyan-bg: #ecfeff;
+  --pink: #db2777; --pink-light: #fce7f3;
+  --code-bg: #1e293b;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+/* ── Typography ── */
+h2{font-size:1.65rem;font-weight:800;margin:0 0 18px;display:flex;align-items:center;gap:12px}
+h3{font-size:1.2rem;font-weight:700;margin:20px 0 10px;color:var(--text)}
+h4{font-size:.98rem;font-weight:700;margin:12px 0 6px}
+p{margin:8px 0}
+a{color:var(--ft-blue);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.82rem;background:var(--ft-lighter);color:var(--ft-dark);padding:2px 6px;border-radius:4px}
+strong{font-weight:700;color:var(--text)}
+
+/* ═══════════════════════════════════════════════════
+   Sticky Navigation
+   ═══════════════════════════════════════════════════ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.05rem;color:var(--ft-blue);padding:14px 0;margin-right:14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px}
+.nav .sep{width:1px;height:22px;background:var(--border);margin:0 6px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.82rem;font-weight:500;padding:7px 12px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--ft-light);color:var(--ft-blue)}
+.nav a.sub-link{padding-left:24px;font-size:.76rem;color:var(--text3)}
+.nav a.sub-link.active{color:var(--ft-blue);font-weight:600}
+
+/* ═══════════════════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════════════════ */
+.hero{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 35%,#7c3aed 100%);color:#fff;padding:70px 40px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:560px;height:560px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-40%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,.2) 0%,transparent 70%);border-radius:50%}
+.hero h1{font-size:2.8rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2;position:relative;z-index:1}
+.hero .sub{font-size:1.08rem;opacity:.88;margin-top:12px;max-width:680px;margin-inline:auto;position:relative;z-index:1;line-height:1.7}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px;position:relative;z-index:1}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.78rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 60px}
+
+/* ═══════════════════════════════════════════════════
+   Section
+   ═══════════════════════════════════════════════════ */
+.sec{margin-top:40px;scroll-margin-top:64px}
+.sec-title{padding-bottom:10px;border-bottom:3px solid var(--ft-blue);margin-bottom:20px}
+.sec-title .n{background:var(--ft-blue);color:#fff;min-width:36px;height:36px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-title .n.green{background:var(--green)}
+.sec-title .n.purple{background:var(--purple)}
+.sec-title .n.orange{background:var(--orange)}
+.sec-title .n.teal{background:var(--teal)}
+.sec-title .n.amber{background:var(--amber)}
+.sec-title .n.cyan{background:var(--cyan)}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 30px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card.highlight{border-left:4px solid var(--ft-blue)}
+.card.highlight.green{border-left-color:var(--green)}
+.card.highlight.purple{border-left-color:var(--purple)}
+.card.highlight.orange{border-left-color:var(--orange)}
+.card.highlight.teal{border-left-color:var(--teal)}
+
+/* ── Tip Box ── */
+.tip{padding:14px 18px;border-radius:var(--radius-sm);margin:14px 0;font-size:.85rem;display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.tip .ti{flex-shrink:0;font-size:1.1rem}
+.tip.info{background:var(--ft-light);border-left:4px solid var(--ft-blue)}
+.tip.warn{background:var(--amber-bg);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-bg);border-left:4px solid var(--green)}
+.tip.purple{background:var(--purple-bg);border-left:4px solid var(--purple)}
+
+/* ── Code Block ── */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;position:relative;overflow-x:auto}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.64rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.78rem;color:#e2e8f0;white-space:pre;line-height:1.7}
+.code .kw{color:#c4b5fd}.code .str{color:#86efac}.code .cmt{color:#64748b;font-style:italic}
+.code .fn{color:#93c5fd}.code .num{color:#fdba74}.code .typ{color:#fde68a}.code .op{color:#f0a8b8}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:var(--ft-lighter);padding:12px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--ft-blue);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border-light);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--ft-lighter)}
+td code{font-size:.76rem}
+thead th{position:sticky;top:0;z-index:1}
+
+/* ── Grid ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+
+/* ── Stat Card ── */
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+.stat-card{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;text-align:center}
+.stat-card .val{font-size:1.6rem;font-weight:900;font-family:var(--mono)}
+.stat-card .lbl{font-size:.74rem;color:var(--text3);margin-top:2px}
+.stat-card.blue .val{color:var(--ft-blue)}
+.stat-card.green .val{color:var(--green)}
+.stat-card.purple .val{color:var(--purple)}
+.stat-card.orange .val{color:var(--orange)}
+
+/* ── Flow Diagram ── */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:18px;background:#f0f4f8;border-radius:var(--radius-sm);margin:14px 0;font-size:.8rem;overflow-x:auto}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:10px 16px;white-space:nowrap;font-weight:600;font-size:.78rem;text-align:center;transition:all .2s}
+.flow-node.blue{border-color:var(--ft-blue);background:var(--ft-light);color:var(--ft-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#064e3b}
+.flow-node.orange{border-color:var(--orange);background:var(--orange-light);color:#7c2d12}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.teal{border-color:var(--teal);background:var(--teal-light);color:#115e59}
+.flow-node.pink{border-color:var(--pink);background:var(--pink-light);color:#831843}
+.flow-arrow{color:var(--text3);font-size:1rem;font-weight:700;flex-shrink:0}
+
+/* ── Architecture Diagram ── */
+.arch{text-align:center;overflow-x:auto;padding:8px 0}
+.arch svg{max-width:100%;height:auto}
+
+/* ── Decision Flowchart ── */
+.decision-chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin:16px 0;overflow-x:auto}
+.decision-chart svg{display:block;max-width:100%;margin:0 auto}
+.decision-chart .clickable{cursor:pointer;transition:opacity .2s}
+.decision-chart .clickable:hover{opacity:.8}
+
+/* ── Badge / Pill ── */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:14px;font-size:.72rem;font-weight:600}
+.pill.blue{background:var(--ft-light);color:var(--ft-dark)}
+.pill.green{background:var(--green-light);color:#064e3b}
+.pill.purple{background:var(--purple-light);color:#5b21b6}
+.pill.orange{background:var(--orange-light);color:#7c2d12}
+.pill.teal{background:var(--teal-light);color:#115e59}
+.pill.red{background:var(--red-light);color:#991b1b}
+.pill.amber{background:var(--amber-light);color:#92400e}
+
+/* ── List ── */
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+li::marker{color:var(--ft-blue)}
+
+/* ── Method Card ── */
+.method-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:24px;transition:all .3s;position:relative;overflow:hidden}
+.method-card:hover{border-color:var(--ft-blue);box-shadow:0 4px 20px rgba(37,99,235,.1);transform:translateY(-2px)}
+.method-card .method-icon{font-size:2rem;margin-bottom:8px}
+.method-card h3{margin:0 0 8px;font-size:1.05rem}
+.method-card .method-badge{position:absolute;top:16px;right:16px}
+
+/* ── Accordion ── */
+.acc{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden;transition:box-shadow .2s}
+.acc:hover{box-shadow:var(--shadow)}
+.acc-header{cursor:pointer;display:flex;align-items:center;gap:10px;padding:15px 20px;user-select:none;background:var(--surface);transition:background .2s;font-weight:700;font-size:.9rem}
+.acc-header:hover{background:var(--ft-lighter)}
+.acc-header::after{content:'▸';margin-left:auto;transition:transform .25s;color:var(--text3);font-size:.85rem}
+.acc.open .acc-header{background:var(--ft-lighter)}
+.acc.open .acc-header::after{transform:rotate(90deg)}
+.acc-body{display:none;padding:0 20px 18px;font-size:.85rem;line-height:1.75}
+.acc.open .acc-body{display:block}
+
+/* ── Formula Box ── */
+.formula{background:var(--ft-lighter);border:1px solid var(--ft-light);border-radius:var(--radius-sm);padding:16px 20px;margin:14px 0;text-align:center;font-family:var(--mono);font-size:.9rem;font-weight:600;color:var(--ft-dark);overflow-x:auto;white-space:nowrap}
+
+/* ── Tooltip ── */
+.has-tip{border-bottom:1px dashed var(--ft-blue);cursor:help;position:relative}
+.has-tip:hover::after{content:attr(data-tip);position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:6px 12px;border-radius:6px;font-size:.76rem;white-space:nowrap;pointer-events:none;z-index:10}
+
+/* ═══════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════ */
+.footer{text-align:center;padding:40px 20px;border-top:1px solid var(--border);margin-top:40px;color:var(--text3);font-size:.8rem}
+.footer a{color:var(--ft-blue)}
+
+/* ═══════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════ */
+@media (max-width:768px){
+  .hero{padding:48px 20px 36px}
+  .hero h1{font-size:1.8rem}
+  .hero .sub{font-size:.9rem}
+  .nav{padding:0 10px;gap:2px}
+  .nav a{font-size:.74rem;padding:6px 8px}
+  .grid2{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr}
+  .wrap{padding:20px 14px 40px}
+  .card{padding:18px 16px}
+  .sec-title{font-size:1.3rem}
+  .code pre{font-size:.72rem}
+  table{font-size:.76rem}
+  th,td{padding:8px 10px}
+  .flow{gap:4px;padding:10px}
+  .flow-node{padding:6px 10px;font-size:.7rem}
+  .flow-arrow{font-size:.85rem}
+  .stat-row{flex-direction:column}
+}
+
+@media (max-width:480px){
+  .hero h1{font-size:1.5rem}
+  .nav .sep{display:none}
+  .nav a.sub-link{display:none}
+  .formula{font-size:.78rem;padding:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     Sticky Navigation / Table of Contents
+     ═══════════════════════════════════════════════════ -->
+<nav class="nav" id="topNav">
+  <a href="#overview" class="logo" title="LLM 微调技术">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#dbeafe"/><path d="M7 16V8l5 5-5 5z" fill="#2563eb"/><path d="M12 16v-3l3-2v5z" fill="#1d4ed8"/></svg>
+    微调技术解析
+  </a>
+  <span class="sep"></span>
+  <a href="#overview" class="active">概述</a>
+  <a href="#full-ft">全量微调</a>
+  <a href="#peft">PEFT</a>
+  <a href="#lora" class="sub-link">LoRA</a>
+  <a href="#qlora" class="sub-link">QLoRA</a>
+  <a href="#adapter" class="sub-link">Adapter</a>
+  <a href="#inst-tune">指令微调</a>
+  <a href="#rlhf">RLHF</a>
+  <a href="#compare">对比总结</a>
+  <a href="#decision">决策流程</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     Hero
+     ═══════════════════════════════════════════════════ -->
+<div class="hero">
+  <h1>🧬 大模型微调技术深度解析</h1>
+  <div class="sub">从全量微调、参数高效微调（PEFT）到指令微调与 RLHF —— 系统性理解 LLM 微调技术的原理、对比与实践</div>
+  <div class="tags">
+    <span class="tag">Full Fine-tuning</span>
+    <span class="tag">LoRA / QLoRA</span>
+    <span class="tag">Adapter</span>
+    <span class="tag">Instruction Tuning</span>
+    <span class="tag">RLHF</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ═══════════════════════════════════════════════════
+     1. 微调技术概述
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="overview">
+  <h2 class="sec-title"><span class="n">1</span> 微调技术全景概览</h2>
+
+  <div class="card highlight">
+    <p>大语言模型（LLM）的微调（Fine-tuning）是指在预训练基座模型的基础上，使用特定领域或任务的数据进行二次训练，使模型更好地适应下游任务。随着模型参数规模从数十亿扩展到数千亿，微调策略也在不断演进。</p>
+    
+    <div class="stat-row">
+      <div class="stat-card blue"><div class="val">175B+</div><div class="lbl">GPT-3 参数量</div></div>
+      <div class="stat-card purple"><div class="val">1.6T</div><div class="lbl">MoE 模型规模</div></div>
+      <div class="stat-card green"><div class="val">0.01%</div><div class="lbl">LoRA 可训练参数比</div></div>
+      <div class="stat-card orange"><div class="val">10x+</div><div class="lbl">QLoRA 显存节省</div></div>
+    </div>
+
+    <p>当前主流微调技术可分为四大范式，如下图所示：</p>
+
+    <div class="arch">
+      <svg viewBox="0 0 800 360" style="max-width:800px">
+        <!-- Background -->
+        <rect x="0" y="0" width="800" height="360" rx="12" fill="#f8fafc"/>
+        
+        <!-- Center: LLM Fine-tuning -->
+        <rect x="280" y="20" width="240" height="42" rx="10" fill="#2563eb"/>
+        <text x="400" y="47" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">LLM 微调技术</text>
+        
+        <!-- Branch lines -->
+        <line x1="400" y1="62" x2="400" y2="90" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="100" y1="90" x2="700" y2="90" stroke="#94a3b8" stroke-width="2"/>
+        
+        <!-- Branch 1: 全量微调 -->
+        <line x1="100" y1="90" x2="100" y2="118" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="25" y="118" width="150" height="40" rx="10" fill="#ea580c"/>
+        <text x="100" y="143" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">全量微调</text>
+        <text x="100" y="172" text-anchor="middle" fill="#475569" font-size="11">Full Fine-tuning</text>
+        <line x1="100" y1="185" x2="100" y2="200" stroke="#94a3b8" stroke-width="1.5"/>
+        <!-- Sub -->
+        <rect x="15" y="200" width="85" height="28" rx="6" fill="#fed7aa"/>
+        <text x="57" y="219" text-anchor="middle" fill="#9a3412" font-size="10" font-weight="600">更新全部参数</text>
+        <rect x="110" y="200" width="75" height="28" rx="6" fill="#fed7aa"/>
+        <text x="147" y="219" text-anchor="middle" fill="#9a3412" font-size="10" font-weight="600">最大资源消耗</text>
+
+        <!-- Branch 2: PEFT -->
+        <line x1="250" y1="90" x2="250" y2="118" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="165" y="118" width="170" height="40" rx="10" fill="#7c3aed"/>
+        <text x="250" y="143" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">参数高效微调 (PEFT)</text>
+        <text x="250" y="172" text-anchor="middle" fill="#475569" font-size="11">Parameter-Efficient FT</text>
+        <line x1="250" y1="185" x2="250" y2="200" stroke="#94a3b8" stroke-width="1.5"/>
+        <!-- Sub branches -->
+        <line x1="185" y1="200" x2="315" y2="200" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="185" y1="200" x2="185" y2="230" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="250" y1="200" x2="250" y2="230" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="315" y1="200" x2="315" y2="230" stroke="#94a3b8" stroke-width="1.5"/>
+        
+        <rect x="140" y="230" width="90" height="28" rx="6" fill="#ede9fe"/>
+        <text x="185" y="249" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">LoRA</text>
+        <rect x="205" y="230" width="90" height="28" rx="6" fill="#ede9fe"/>
+        <text x="250" y="249" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">QLoRA</text>
+        <rect x="270" y="230" width="90" height="28" rx="6" fill="#ede9fe"/>
+        <text x="315" y="249" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">Adapter</text>
+        <text x="250" y="272" text-anchor="middle" fill="#7c3aed" font-size="10">Prefix-tuning · Prompt-tuning · IA³</text>
+
+        <!-- Branch 3: 指令微调 -->
+        <line x1="460" y1="90" x2="460" y2="118" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="380" y="118" width="160" height="40" rx="10" fill="#059669"/>
+        <text x="460" y="143" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">指令微调</text>
+        <text x="460" y="172" text-anchor="middle" fill="#475569" font-size="11">Instruction Tuning</text>
+        <line x1="460" y1="185" x2="460" y2="200" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="385" y="200" width="75" height="28" rx="6" fill="#d1fae5"/>
+        <text x="422" y="219" text-anchor="middle" fill="#064e3b" font-size="10" font-weight="600">Prompt→Output</text>
+        <rect x="470" y="200" width="75" height="28" rx="6" fill="#d1fae5"/>
+        <text x="507" y="219" text-anchor="middle" fill="#064e3b" font-size="10" font-weight="600">指令遵循能力</text>
+
+        <!-- Branch 4: RLHF -->
+        <line x1="640" y1="90" x2="640" y2="118" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="555" y="118" width="170" height="40" rx="10" fill="#0891b2"/>
+        <text x="640" y="143" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">RLHF</text>
+        <text x="640" y="172" text-anchor="middle" fill="#475569" font-size="11">人类反馈强化学习</text>
+        <line x1="640" y1="185" x2="640" y2="200" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="560" y="200" width="85" height="28" rx="6" fill="#cffafe"/>
+        <text x="602" y="219" text-anchor="middle" fill="#155e75" font-size="10" font-weight="600">奖励模型 (RM)</text>
+        <rect x="655" y="200" width="85" height="28" rx="6" fill="#cffafe"/>
+        <text x="697" y="219" text-anchor="middle" fill="#155e75" font-size="10" font-weight="600">PPO / DPO</text>
+
+        <!-- Bottom note -->
+        <text x="400" y="330" text-anchor="middle" fill="#94a3b8" font-size="11">▲ 点击导航栏快速跳转各章节</text>
+      </svg>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">💡</span>
+      <span><strong>选型口诀：</strong>资源充足 → 全量微调；资源受限 → LoRA/QLoRA；追求对齐 → RLHF/DPO；提升指令遵循 → Instruction Tuning。实践中最常见的是 <strong>Instruction Tuning + LoRA</strong> 组合方案。</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     2. 全量微调 (Full Fine-tuning)
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="full-ft">
+  <h2 class="sec-title"><span class="n orange">2</span> 全量微调（Full Fine-tuning）</h2>
+
+  <div class="card highlight orange">
+    <h3>原理简述</h3>
+    <p>全量微调是指在预训练模型的<strong>所有参数</strong>上继续训练。每一轮反向传播都会更新模型中的每一个权重，使模型完全适配目标领域的数据分布。</p>
+    
+    <div class="arch">
+      <svg viewBox="0 0 680 130" style="max-width:680px">
+        <rect x="0" y="0" width="680" height="130" rx="10" fill="#fff7ed"/>
+        <!-- Input -->
+        <rect x="15" y="35" width="100" height="50" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="65" y="55" text-anchor="middle" fill="#7c2d12" font-size="11" font-weight="600">预训练模型</text>
+        <text x="65" y="73" text-anchor="middle" fill="#7c2d12" font-size="10">含全部参数 θ</text>
+        <text x="65" y="108" text-anchor="middle" fill="#9a3412" font-size="10">All Weights</text>
+        
+        <text x="135" y="62" font-size="20" fill="#ea580c">→</text>
+        
+        <!-- Process -->
+        <rect x="165" y="30" width="130" height="60" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="230" y="55" text-anchor="middle" fill="#7c2d12" font-size="11" font-weight="600">全量参数更新</text>
+        <text x="230" y="73" text-anchor="middle" fill="#7c2d12" font-size="10">∇θ = ∂L/∂θ</text>
+        <text x="230" y="108" text-anchor="middle" fill="#9a3412" font-size="10">Update All</text>
+
+        <text x="315" y="62" font-size="20" fill="#ea580c">→</text>
+        
+        <!-- Output -->
+        <rect x="345" y="35" width="120" height="50" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="405" y="55" text-anchor="middle" fill="#7c2d12" font-size="11" font-weight="600">微调后模型</text>
+        <text x="405" y="73" text-anchor="middle" fill="#7c2d12" font-size="10">参数 θ'</text>
+        <text x="405" y="108" text-anchor="middle" fill="#9a3412" font-size="10">Specialized</text>
+
+        <!-- Resource indicator -->
+        <rect x="500" y="20" width="160" height="80" rx="8" fill="#fff" stroke="#fca5a5" stroke-dasharray="4"/>
+        <text x="580" y="48" text-anchor="middle" fill="#dc2626" font-size="11" font-weight="700">⚠ 资源需求</text>
+        <text x="580" y="66" text-anchor="middle" fill="#475569" font-size="10">GPU 显存: ~16-24× 参数量</text>
+        <text x="580" y="83" text-anchor="middle" fill="#475569" font-size="10">例: 7B 模型 → ~112GB+ VRAM</text>
+      </svg>
+    </div>
+
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <span><strong>灾难性遗忘（Catastrophic Forgetting）：</strong>全量微调可能导致模型遗忘预训练阶段学到的通用知识。学习率设置和训练步数需要谨慎控制。</span>
+    </div>
+
+    <h3>典型配置示例</h3>
+    <div class="code">
+      <span class="lang">Python - Transformers</span>
+      <pre><span class="cmt"># 全量微调 Qwen2-7B 示例</span>
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM, TrainingArguments, Trainer
+<span class="kw">from</span> peft <span class="kw">import</span> get_peft_model <span class="cmt"># 这里演示全量微调，不使用 PEFT</span>
+
+model = AutoModelForCausalLM.from_pretrained(
+    <span class="str">"Qwen/Qwen2-7B"</span>,
+    torch_dtype=<span class="str">"auto"</span>,
+    device_map=<span class="str">"auto"</span>
+)
+
+training_args = TrainingArguments(
+    output_dir=<span class="str">"./qwen2-ft"</span>,
+    per_device_train_batch_size=<span class="num">1</span>,       <span class="cmt"># 全量微调 batch 很小</span>
+    gradient_accumulation_steps=<span class="num">16</span>,        <span class="cmt"># 梯度累积模拟大 batch</span>
+    learning_rate=<span class="num">2e-5</span>,                       <span class="cmt"># 1e-5 ~ 5e-5 常用</span>
+    warmup_ratio=<span class="num">0.03</span>,
+    num_train_epochs=<span class="num">3</span>,
+    logging_steps=<span class="num">10</span>,
+    save_strategy=<span class="str">"epoch"</span>,
+    bf16=<span class="kw">True</span>,                            <span class="cmt"># BF16 混合精度节省显存</span>
+    gradient_checkpointing=<span class="kw">True</span>,          <span class="cmt"># 梯度检查点，以时间换空间</span>
+    deepspeed=<span class="str">"ds_config_zero3.json"</span>      <span class="cmt"># DeepSpeed ZeRO-3</span>
+)
+
+trainer = Trainer(model=model, args=training_args, train_dataset=dataset)
+trainer.train()</pre>
+    </div>
+
+    <h3>资源需求估算</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>模型规模</th><th>参数量</th><th>最低 GPU 显存</th><th>推荐配置</th><th>预计训练时间</th></tr></thead>
+        <tbody>
+          <tr><td>小型</td><td>1B~3B</td><td>24GB</td><td>1× A10 / RTX 4090</td><td>数小时</td></tr>
+          <tr><td>中型</td><td>7B~13B</td><td>80GB</td><td>1× A100 80G / 4× A10</td><td>1~3 天</td></tr>
+          <tr><td>大型</td><td>30B~70B</td><td>320GB+</td><td>4~8× A100 80G</td><td>数天到数周</td></tr>
+          <tr><td>超大</td><td>100B+</td><td>1TB+</td><td>多节点集群</td><td>数周到数月</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pros/Cons -->
+  <div class="grid2">
+    <div class="card" style="border-left:4px solid var(--green)">
+      <h3>✅ 优点</h3>
+      <ul>
+        <li><strong>效果最好：</strong>所有参数参与调整，理论上能达到该任务的最优性能</li>
+        <li><strong>灵活度高：</strong>不受额外结构限制，模型可以完全自由地学习</li>
+        <li><strong>简单直接：</strong>标准训练流程，无需特殊技术改造</li>
+        <li><strong>生态成熟：</strong>DeepSpeed ZeRO、Megatron-LM 等工具链完善</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red)">
+      <h3>❌ 缺点</h3>
+      <ul>
+        <li><strong>资源开销巨大：</strong>需要保存完整模型副本、优化器状态、梯度</li>
+        <li><strong>灾难性遗忘：</strong>可能丢失预训练学到的通用能力</li>
+        <li><strong>存储成本高：</strong>每个下游任务都需要一份完整模型</li>
+        <li><strong>部署不灵活：</strong>多任务场景下需要维护多个全量模型</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <span><strong>适用场景：</strong>拥有充足 GPU 资源（A100 80G × 4+），追求极致性能的垂直领域特化任务，如医疗/法律/金融专有模型。训练数据量在 100K+ 条时效果最稳定。</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     3. 参数高效微调 (PEFT)
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="peft">
+  <h2 class="sec-title"><span class="n purple">3</span> 参数高效微调（PEFT）</h2>
+
+  <div class="card highlight purple">
+    <p>PEFT（Parameter-Efficient Fine-Tuning）的核心理念是：<strong>冻结原始模型参数，仅训练少量新增参数</strong>，从而大幅降低计算和存储开销。主流方法包括 LoRA、QLoRA、Adapter、Prefix-tuning 等。</p>
+
+    <h3>PEFT 方法对比总览</h3>
+    <div class="grid3">
+      <div class="method-card">
+        <div class="method-badge"><span class="pill purple">最流行</span></div>
+        <div class="method-icon">🔗</div>
+        <h3>LoRA</h3>
+        <p style="font-size:.82rem;color:var(--text2)">低秩分解，插入可训练旁路矩阵 A·B，训练参数量仅原始模型的 0.01%~1%</p>
+        <span class="pill purple">推理无延迟</span>
+      </div>
+      <div class="method-card">
+        <div class="method-badge"><span class="pill green">省显存</span></div>
+        <div class="method-icon">💰</div>
+        <h3>QLoRA</h3>
+        <p style="font-size:.82rem;color:var(--text2)">LoRA + 4-bit 量化 + 双重量化 + 分页优化器，单卡 48GB 微调 65B 模型</p>
+        <span class="pill green">显存友好</span>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">🔌</div>
+        <h3>Adapter</h3>
+        <p style="font-size:.82rem;color:var(--text2)">在 Transformer 层间插入小型瓶颈网络，仅训练 Adapter 层参数</p>
+        <span class="pill amber">增加推理延迟</span>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">🏷️</div>
+        <h3>Prefix-tuning</h3>
+        <p style="font-size:.82rem;color:var(--text2)">在输入前添加可学习的连续前缀向量，不修改模型本身</p>
+        <span class="pill teal">序列开销</span>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">📝</div>
+        <h3>Prompt-tuning</h3>
+        <p style="font-size:.82rem;color:var(--text2)">学习软提示（Soft Prompt），最适合超大规模模型（100B+）</p>
+        <span class="pill blue">超大模型专用</span>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">🔄</div>
+        <h3>IA³</h3>
+        <p style="font-size:.82rem;color:var(--text2)">通过可学习向量缩放激活值，超轻量级，T0 模型上效果出色</p>
+        <span class="pill orange">极致轻量</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     3.1 LoRA
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="lora">
+  <h2 class="sec-title"><span class="n purple">3.1</span> LoRA（Low-Rank Adaptation）</h2>
+
+  <div class="card highlight purple">
+    <h3>核心原理</h3>
+    <p>LoRA 的核心思想基于一个关键洞察：<strong>模型适配过程中的权重更新矩阵 ΔW 具有低"内在秩"（Intrinsic Rank）</strong>。因此可以用两个低秩矩阵 A 和 B 的乘积来近似 ΔW，而不需要更新原始权重 W。</p>
+
+    <div class="formula">
+      h = W₀x + ΔWx = W₀x + <span style="color:#7c3aed">BA</span>x
+    </div>
+    <p style="text-align:center;font-size:.82rem;color:var(--text3);margin-top:6px">
+      其中 W₀ ∈ ℝᵈˣᵏ（冻结），B ∈ ℝᵈˣʳ，A ∈ ℝʳˣᵏ，秩 r ≪ min(d,k)
+    </p>
+
+    <div class="arch">
+      <svg viewBox="0 0 680 160" style="max-width:680px">
+        <rect x="0" y="0" width="680" height="160" rx="10" fill="#f5f3ff"/>
+        
+        <!-- Input -->
+        <rect x="20" y="50" width="80" height="36" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="60" y="73" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="600">输入 x</text>
+        
+        <!-- Split -->
+        <text x="115" y="73" font-size="18" fill="#7c3aed">→</text>
+        
+        <!-- Original branch (frozen) -->
+        <rect x="140" y="20" width="120" height="94" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="200" y="45" text-anchor="middle" fill="#94a3b8" font-size="9">(冻结)</text>
+        <text x="200" y="65" text-anchor="middle" fill="#475569" font-size="12" font-weight="600">W₀ (d×k)</text>
+        <text x="200" y="83" text-anchor="middle" fill="#94a3b8" font-size="9">预训练权重</text>
+        <text x="200" y="105" text-anchor="middle" fill="#7c3aed" font-size="18">🔒</text>
+        
+        <text x="285" y="68" font-size="20" fill="#7c3aed">+</text>
+        
+        <!-- LoRA branch (trainable) -->
+        <rect x="320" y="24" width="160" height="86" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="400" y="43" text-anchor="middle" fill="#5b21b6" font-size="9">(可训练)</text>
+        <rect x="332" y="50" width="58" height="28" rx="4" fill="#c4b5fd"/>
+        <text x="361" y="69" text-anchor="middle" fill="#4c1d95" font-size="11" font-weight="700">A</text>
+        <text x="361" y="86" text-anchor="middle" fill="#5b21b6" font-size="8">r×k</text>
+        <text x="396" y="70" font-size="16" fill="#7c3aed">→</text>
+        <rect x="410" y="50" width="58" height="28" rx="4" fill="#c4b5fd"/>
+        <text x="439" y="69" text-anchor="middle" fill="#4c1d95" font-size="11" font-weight="700">B</text>
+        <text x="439" y="86" text-anchor="middle" fill="#5b21b6" font-size="8">d×r</text>
+        <text x="400" y="118" text-anchor="middle" fill="#7c3aed" font-size="10">ΔW = BA, rank r ≪ d,k</text>
+        
+        <!-- Output -->
+        <text x="500" y="68" font-size="18" fill="#7c3aed">→</text>
+        <rect x="520" y="50" width="80" height="36" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="560" y="73" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="600">输出 h</text>
+        
+        <!-- Key stats -->
+        <rect x="610" y="48" width="60" height="40" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+        <text x="640" y="63" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="700">r<<d</text>
+        <text x="640" y="78" text-anchor="middle" fill="#5b21b6" font-size="8">参数↓99%+</text>
+      </svg>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">🔑</span>
+      <span><strong>关键参数 rank (r)：</strong>常用的 r 取值 8、16、32、64。r 越大表达能力越强但参数也越多。r=16 在大多数场景下是性价比最优的选择。</span>
+    </div>
+
+    <h3>代码配置示例</h3>
+    <div class="code">
+      <span class="lang">Python - PEFT</span>
+      <pre><span class="kw">from</span> peft <span class="kw">import</span> LoraConfig, get_peft_model, TaskType
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained(
+    <span class="str">"Qwen/Qwen2-7B"</span>,
+    torch_dtype=<span class="str">"auto"</span>,
+    device_map=<span class="str">"auto"</span>
+)
+
+lora_config = LoraConfig(
+    task_type=TaskType.CAUSAL_LM,         <span class="cmt"># 因果语言模型</span>
+    r=<span class="num">16</span>,                                <span class="cmt"># LoRA 秩（核心超参）</span>
+    lora_alpha=<span class="num">32</span>,                         <span class="cmt"># 缩放因子，一般取 2×r</span>
+    lora_dropout=<span class="num">0.05</span>,                       <span class="cmt"># Dropout 防止过拟合</span>
+    target_modules=[                      <span class="cmt"># 应用 LoRA 的模块</span>
+        <span class="str">"q_proj"</span>, <span class="str">"k_proj"</span>, <span class="str">"v_proj"</span>,  <span class="cmt"># Attention QKV</span>
+        <span class="str">"o_proj"</span>,                         <span class="cmt"># Attention 输出投影</span>
+        <span class="str">"gate_proj"</span>, <span class="str">"up_proj"</span>,       <span class="cmt"># FFN 层</span>
+        <span class="str">"down_proj"</span>                       <span class="cmt"># FFN 输出</span>
+    ],
+    bias=<span class="str">"none"</span>,                        <span class="cmt"># 不训练 bias</span>
+)
+
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+<span class="cmt"># 输出: trainable params: 33,554,432 || all params: 7,077,441,536 || trainable%: 0.4741</span></pre>
+    </div>
+
+    <h3>关键超参数调优指南</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>参数</th><th>推荐值</th><th>作用</th><th>调优建议</th></tr></thead>
+        <tbody>
+          <tr><td><code>r</code></td><td>8~16</td><td>低秩矩阵的秩</td><td>简单任务 r=8 足够，复杂任务可升至 32~64</td></tr>
+          <tr><td><code>lora_alpha</code></td><td>16~32</td><td>LoRA 输出的缩放系数</td><td>通常设为 r 的 2 倍，调大 = 放大 LoRA 贡献</td></tr>
+          <tr><td><code>lora_dropout</code></td><td>0.05~0.1</td><td>防止过拟合</td><td>数据少时适当调大；数据多可设为 0</td></tr>
+          <tr><td><code>target_modules</code></td><td>QKV+FFN</td><td>应用 LoRA 的模块</td><td>覆盖越多效果越好但参数也越多</td></tr>
+          <tr><td><code>lr</code></td><td>1e-4~5e-4</td><td>学习率</td><td>通常比全量微调高一个数量级</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-left:4px solid var(--green)">
+      <h3>✅ LoRA 优点</h3>
+      <ul>
+        <li>可训练参数减少 <strong>99%+</strong>，显存大幅下降</li>
+        <li>训练速度提升 2~3 倍</li>
+        <li>推理时可以合并到原始权重，<strong>无推理延迟</strong></li>
+        <li>支持多 LoRA 热切换（切换 adapter 即可）</li>
+        <li>存储友好：每个 LoRA adapter 仅几 MB</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red)">
+      <h3>❌ LoRA 缺点</h3>
+      <ul>
+        <li>表达能力受限于 rank，复杂任务可能欠拟合</li>
+        <li>目标模块选择需要领域经验</li>
+        <li>与全量微调相比有轻微性能差距（通常 < 2%）</li>
+        <li>不适合需要大规模知识注入的场景</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">🎯</span>
+    <span><strong>最佳实践：</strong>先使用 r=16, alpha=32 进行实验；若效果不足再增加 r 到 32~64。始终对 QKV 和 FFN 层应用 LoRA。在 LoRA 训练完成后，可通过 <code>model.merge_and_unload()</code> 合并权重以消除推理延迟。</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     3.2 QLoRA
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="qlora">
+  <h2 class="sec-title"><span class="n green">3.2</span> QLoRA（Quantized LoRA）</h2>
+
+  <div class="card highlight green">
+    <p>QLoRA 是 LoRA 的量化版本，由华盛顿大学在 2023 年提出。它通过 <strong>4-bit NormalFloat (NF4) 量化 + 双重量化 + 分页优化器</strong> 三大技术，使得在单张消费级 GPU 上微调 65B 模型成为可能。</p>
+
+    <h3>核心技术组件</h3>
+    <div class="flow">
+      <span class="flow-node blue">原始模型 FP16</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node green">NF4 量化</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node teal">双重量化</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node purple">LoRA 训练</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node orange">分页优化器</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node green">合并/部署</span>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="background:var(--teal-bg);border-color:var(--teal-light)">
+        <h3>① NF4 量化 (4-bit NormalFloat)</h3>
+        <p style="font-size:.84rem">一种针对正态分布权重优化的 4-bit 数据类型。假设预训练权重服从 N(0,σ²)，将值域按分位数分成 16 个区间，每个区间映射到一个 4-bit 值。</p>
+      </div>
+      <div class="card" style="background:var(--purple-bg);border-color:var(--purple-light)">
+        <h3>② 双重量化 (Double Quantization)</h3>
+        <p style="font-size:.84rem">不仅量化模型权重，还对量化过程中产生的<strong>缩放因子</strong>（scaling factors）再次量化，进一步节省约 0.5 bit/参数的存储。</p>
+      </div>
+    </div>
+
+    <div class="code">
+      <span class="lang">Python - QLoRA</span>
+      <pre><span class="kw">from</span> transformers <span class="kw">import</span> BitsAndBytesConfig
+<span class="kw">from</span> peft <span class="kw">import</span> LoraConfig, get_peft_model
+
+<span class="cmt"># 4-bit 量化配置</span>
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=<span class="kw">True</span>,                          <span class="cmt"># 启用 4-bit 量化</span>
+    bnb_4bit_compute_dtype=torch.bfloat16,    <span class="cmt"># 计算时使用的精度</span>
+    bnb_4bit_quant_type=<span class="str">"nf4"</span>,                <span class="cmt"># NormalFloat4</span>
+    bnb_4bit_use_double_quant=<span class="kw">True</span>,            <span class="cmt"># 双重量化</span>
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+    <span class="str">"mistralai/Mixtral-8x7B-v0.1"</span>,
+    quantization_config=bnb_config,            <span class="cmt"># 应用量化</span>
+    device_map=<span class="str">"auto"</span>
+)
+
+<span class="cmt"># LoRA 配置 (与标准 LoRA 相同)</span>
+lora_config = LoraConfig(
+    r=<span class="num">16</span>, lora_alpha=<span class="num">32</span>,
+    target_modules=[<span class="str">"q_proj"</span>,<span class="str">"k_proj"</span>,<span class="str">"v_proj"</span>,<span class="str">"o_proj"</span>],
+    lora_dropout=<span class="num">0.05</span>, bias=<span class="str">"none"</span>,
+    task_type=<span class="str">"CAUSAL_LM"</span>
+)
+
+model = get_peft_model(model, lora_config)
+<span class="cmt"># Mixtral 8×7B 在单张 48GB GPU 上即可微调！</span></pre>
+    </div>
+
+    <h3>显存对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>模型</th><th>全量微调</th><th>LoRA (FP16)</th><th>QLoRA (4-bit)</th><th>节省倍数</th></tr></thead>
+        <tbody>
+          <tr><td>LLaMA 7B</td><td>~112 GB</td><td>~24 GB</td><td><strong>~10 GB</strong></td><td>11×</td></tr>
+          <tr><td>LLaMA 13B</td><td>~208 GB</td><td>~40 GB</td><td><strong>~16 GB</strong></td><td>13×</td></tr>
+          <tr><td>LLaMA 33B</td><td>~528 GB</td><td>~90 GB</td><td><strong>~32 GB</strong></td><td>16×</td></tr>
+          <tr><td>LLaMA 65B</td><td>~1040 GB</td><td>~180 GB</td><td><strong>~48 GB</strong></td><td>21×</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip warn">
+      <span class="ti">⚠️</span>
+      <span><strong>注意：</strong>QLoRA 训练速度比 LoRA 略慢（约 20~30%），因为需要在计算时反量化回 FP16/BF16。但显存优势使其成为<strong>消费级硬件上进行大模型微调的事实标准</strong>。</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     3.3 Adapter
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="adapter">
+  <h2 class="sec-title"><span class="n teal">3.3</span> Adapter 方法</h2>
+
+  <div class="card highlight teal">
+    <p>Adapter 方法在 Transformer 的每一层中<strong>插入小型瓶颈网络（Bottleneck）</strong>，训练时只更新这些 Adapter 的参数。这是最早被广泛研究的 PEFT 方法之一（Houlsby et al., 2019）。</p>
+
+    <div class="arch">
+      <svg viewBox="0 0 680 140" style="max-width:680px">
+        <rect x="0" y="0" width="680" height="140" rx="10" fill="#f0fdfa"/>
+        <!-- Transformer Block -->
+        <rect x="20" y="20" width="130" height="100" rx="8" fill="#fff" stroke="#0d9488" stroke-width="1.5"/>
+        <text x="85" y="43" text-anchor="middle" fill="#0f766e" font-size="11" font-weight="600">Attention</text>
+        <text x="85" y="60" text-anchor="middle" fill="#94a3b8" font-size="9">(冻结)</text>
+        <text x="85" y="80" text-anchor="middle" fill="#0f766e" font-size="11" font-weight="600">FFN</text>
+        <text x="85" y="97" text-anchor="middle" fill="#94a3b8" font-size="9">(冻结)</text>
+        <text x="85" y="115" text-anchor="middle" fill="#0d9488" font-size="16">🔒</text>
+        
+        <!-- Adapter 1 -->
+        <text x="165" y="45" font-size="18" fill="#0d9488">→</text>
+        <rect x="185" y="22" width="110" height="45" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+        <text x="240" y="40" text-anchor="middle" fill="#0f766e" font-size="10" font-weight="700">Adapter (可训练)</text>
+        <text x="240" y="58" text-anchor="middle" fill="#115e59" font-size="9">Down → Act → Up</text>
+        <text x="305" y="45" font-size="18" fill="#0d9488">→</text>
+        
+        <!-- Adapter 2 -->
+        <rect x="330" y="60" width="110" height="45" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+        <text x="385" y="78" text-anchor="middle" fill="#0f766e" font-size="10" font-weight="700">Adapter (可训练)</text>
+        <text x="385" y="96" text-anchor="middle" fill="#115e59" font-size="9">Down → Act → Up</text>
+        <text x="450" y="83" font-size="18" fill="#0d9488">→</text>
+        
+        <!-- Output -->
+        <rect x="470" y="50" width="80" height="36" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+        <text x="510" y="73" text-anchor="middle" fill="#0f766e" font-size="11" font-weight="600">输出</text>
+        
+        <!-- Annotation -->
+        <rect x="570" y="35" width="100" height="65" rx="6" fill="#fff" stroke="#0d9488" stroke-width="1"/>
+        <text x="620" y="53" text-anchor="middle" fill="#0f766e" font-size="9" font-weight="600">Bottleneck</text>
+        <text x="620" y="68" text-anchor="middle" fill="#0f766e" font-size="9">d → m → d</text>
+        <text x="620" y="83" text-anchor="middle" fill="#0f766e" font-size="9">m ≪ d</text>
+        <text x="620" y="98" text-anchor="middle" fill="#94a3b8" font-size="8">通常 m = 64~256</text>
+      </svg>
+    </div>
+
+    <h3>Adapter 类型对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>类型</th><th>插入位置</th><th>结构</th><th>特点</th><th>代表工作</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Serial Adapter</strong></td><td>每层 Attention + FFN 之后</td><td>Down-Proj → GeLU → Up-Proj</td><td>经典方案，结构简单</td><td>Houlsby 2019</td></tr>
+          <tr><td><strong>Parallel Adapter</strong></td><td>与 Attention/FFN 并行</td><td>同上，输出与主路径相加</td><td>减少推理延迟</td><td>He et al. 2021</td></tr>
+          <tr><td><strong>Compacter</strong></td><td>同上</td><td>Kronecker 积分解参数量</td><td>进一步减少参数</td><td>Mahabadi 2021</td></tr>
+          <tr><td><strong>LoRA</strong></td><td>替换 Attention QKV 投影</td><td>低秩矩阵 A·B</td><td>可合并无延迟</td><td>Hu et al. 2021</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip info">
+      <span class="ti">📌</span>
+      <span><strong>现状：</strong>Adapter 曾是 PEFT 的主流方案，但由于 LoRA 可以<strong>合并权重消除推理延迟</strong>，目前 LoRA 已成为事实标准。Adapter 在需要严格模块化多任务切换的场景中仍有价值。</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     4. 指令微调 (Instruction Tuning)
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="inst-tune">
+  <h2 class="sec-title"><span class="n green">4</span> 指令微调（Instruction Tuning）</h2>
+
+  <div class="card highlight green">
+    <h3>核心思想</h3>
+    <p>指令微调的核心在于<strong>训练数据格式</strong>的改变：将自然语言任务描述（指令）+ 输入映射到期望输出，使模型学会"理解并执行指令"，而非简单的补全文本。这是让基座模型变为"助手"的关键一步。</p>
+
+    <h3>数据格式对比</h3>
+    <div class="grid2">
+      <div class="card" style="background:var(--red-bg);border-color:var(--red-light)">
+        <h3>❌ 传统预训练格式</h3>
+        <div class="code" style="margin:8px 0">
+          <pre style="font-size:.74rem;white-space:pre-wrap">北京是中国的首都。上海是中国的经济中心。深圳是中国的...</pre>
+        </div>
+        <p style="font-size:.8rem;color:var(--text2)">模型学到的：预测下一个 token</p>
+      </div>
+      <div class="card" style="background:var(--green-bg);border-color:var(--green-light)">
+        <h3>✅ 指令微调格式</h3>
+        <div class="code" style="margin:8px 0">
+          <pre style="font-size:.74rem;white-space:pre-wrap"><span class="kw">### Instruction:</span>
+请解释"光合作用"的过程，并用一个比喻帮助理解。
+
+<span class="kw">### Response:</span>
+光合作用是植物利用光能将二氧化碳和水转化为...</pre>
+        </div>
+        <p style="font-size:.8rem;color:var(--text2)">模型学到的：理解指令 → 生成有帮助的回答</p>
+      </div>
+    </div>
+
+    <h3>常见数据格式</h3>
+    <div class="code">
+      <span class="lang">JSON - Alpaca 格式</span>
+      <pre>{
+  <span class="str">"instruction"</span>: <span class="str">"将以下中文翻译为英文"</span>,
+  <span class="str">"input"</span>: <span class="str">"人工智能正在改变世界"</span>,
+  <span class="str">"output"</span>: <span class="str">"Artificial intelligence is changing the world"</span>
+}</pre>
+    </div>
+
+    <div class="code">
+      <span class="lang">JSON - ShareGPT / ChatML 格式</span>
+      <pre>{
+  <span class="str">"conversations"</span>: [
+    {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"什么是量子计算？"</span>},
+    {<span class="str">"role"</span>: <span class="str">"assistant"</span>, <span class="str">"content"</span>: <span class="str">"量子计算是利用量子力学原理..."</span>}
+  ]
+}</pre>
+    </div>
+
+    <h3>指令微调三阶段流程</h3>
+    <div class="flow">
+      <span class="flow-node blue">阶段1<br/>数据收集</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node teal">阶段2<br/>格式标准化</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node green">阶段3<br/>监督微调 (SFT)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node purple">产出<br/>Instruction-tuned Model</span>
+    </div>
+
+    <div class="grid3">
+      <div class="card" style="background:var(--ft-lighter)">
+        <h4>📋 阶段1：数据收集</h4>
+        <ul style="font-size:.82rem;padding-left:16px">
+          <li>人工标注：高质量但成本高</li>
+          <li>Self-Instruct：用 GPT-4 生成指令数据</li>
+          <li>开源数据集：Alpaca / Dolly / OpenOrca</li>
+          <li>人工 + 合成混合：质量与成本平衡</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--teal-bg)">
+        <h4>📐 阶段2：格式标准化</h4>
+        <ul style="font-size:.82rem;padding-left:16px">
+          <li>ChatML 格式 (OpenAI)</li>
+          <li>Alpaca 格式 (Stanford)</li>
+          <li>ShareGPT 格式（多轮对话）</li>
+          <li>统一为 <code>&lt;s&gt;...&lt;/s&gt;</code> 模板</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--green-bg)">
+        <h4>🎯 阶段3：监督微调 (SFT)</h4>
+        <ul style="font-size:.82rem;padding-left:16px">
+          <li>仅在 assistant 部分计算 loss</li>
+          <li>使用 LoRA 可大幅节省资源</li>
+          <li>典型 epoch 数：2~5</li>
+          <li>学习率：1e-4 ~ 5e-4 (LoRA)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>训练时的关键技巧</h3>
+    <div class="code">
+      <span class="lang">Python - 仅计算 Assistant Loss</span>
+      <pre><span class="kw">def</span> <span class="fn">create_instruction_prompt</span>(example):
+    <span class="cmt"># 构建 ChatML 格式的 prompt</span>
+    messages = [
+        {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: example[<span class="str">"instruction"</span>]},
+        {<span class="str">"role"</span>: <span class="str">"assistant"</span>, <span class="str">"content"</span>: example[<span class="str">"output"</span>]}
+    ]
+    text = tokenizer.apply_chat_template(messages, tokenize=<span class="kw">False</span>)
+    <span class="kw">return</span> {<span class="str">"text"</span>: text}
+
+<span class="cmt"># DataCollator: 仅对 assistant 部分计算 loss</span>
+<span class="kw">class</span> <span class="typ">DataCollatorForCompletionOnlyLM</span>:
+    <span class="kw">def</span> <span class="fn">__call__</span>(self, examples):
+        <span class="cmt"># 将 user 部分的 labels 设为 -100（忽略）</span>
+        batch = tokenizer(examples, padding=<span class="kw">True</span>, ...)
+        labels = batch[<span class="str">"input_ids"</span>].clone()
+        <span class="kw">for</span> i, assistant_start <span class="kw">in</span> <span class="fn">enumerate</span>(assistant_positions):
+            labels[i, :assistant_start] = <span class="num">-100</span>  <span class="cmt"># 忽略 user 部分</span>
+        batch[<span class="str">"labels"</span>] = labels
+        <span class="kw">return</span> batch</pre>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">📊</span>
+      <span><strong>数据质量优于数量：</strong>研究表明，精选的 1K 高质量指令数据的微调效果往往优于 50K+ 低质量数据。数据多样性（覆盖不同任务类型）远比单纯的数量重要。</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     5. RLHF
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="rlhf">
+  <h2 class="sec-title"><span class="n cyan">5</span> RLHF（基于人类反馈的强化学习）</h2>
+
+  <div class="card highlight teal">
+    <p>RLHF（Reinforcement Learning from Human Feedback）是让大模型对齐人类偏好的关键技术。ChatGPT 的成功很大程度上归功于 RLHF。其核心流程分为三个阶段：</p>
+
+    <h3>三阶段流程</h3>
+    <div class="arch">
+      <svg viewBox="0 0 780 340" style="max-width:780px">
+        <rect x="0" y="0" width="780" height="340" rx="10" fill="#ecfeff"/>
+        
+        <!-- Phase 1 -->
+        <rect x="30" y="15" width="220" height="140" rx="10" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+        <text x="140" y="40" text-anchor="middle" fill="#155e75" font-size="13" font-weight="700">📋 阶段 1：监督微调 (SFT)</text>
+        <line x1="140" y1="50" x2="140" y2="55" stroke="#0891b2" stroke-width="1"/>
+        <text x="140" y="70" text-anchor="middle" fill="#0e7490" font-size="11">高质量人类标注数据</text>
+        <text x="140" y="88" text-anchor="middle" fill="#0e7490" font-size="10">(Prompt, Response) 对</text>
+        <text x="140" y="108" text-anchor="middle" fill="#0e7490" font-size="10">对基座模型进行 SFT</text>
+        <rect x="80" y="118" width="120" height="25" rx="6" fill="#fff" stroke="#0891b2" stroke-width="1"/>
+        <text x="140" y="136" text-anchor="middle" fill="#155e75" font-size="10" font-weight="600">产出: SFT 模型 π₀</text>
+
+        <text x="260" y="80" font-size="22" fill="#0891b2">→</text>
+
+        <!-- Phase 2 -->
+        <rect x="290" y="15" width="220" height="140" rx="10" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+        <text x="400" y="40" text-anchor="middle" fill="#155e75" font-size="13" font-weight="700">🏆 阶段 2：奖励模型 (RM)</text>
+        <line x1="400" y1="50" x2="400" y2="55" stroke="#0891b2" stroke-width="1"/>
+        <text x="400" y="70" text-anchor="middle" fill="#0e7490" font-size="11">人工对多个回答排序</text>
+        <text x="400" y="88" text-anchor="middle" fill="#0e7490" font-size="10">训练奖励模型 r(x,y)</text>
+        <text x="400" y="108" text-anchor="middle" fill="#0e7490" font-size="10">学习"什么是好回答"</text>
+        <rect x="345" y="118" width="110" height="25" rx="6" fill="#fff" stroke="#0891b2" stroke-width="1"/>
+        <text x="400" y="136" text-anchor="middle" fill="#155e75" font-size="10" font-weight="600">产出: 奖励模型 RM</text>
+
+        <text x="520" y="80" font-size="22" fill="#0891b2">→</text>
+
+        <!-- Phase 3 -->
+        <rect x="550" y="15" width="220" height="140" rx="10" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+        <text x="660" y="40" text-anchor="middle" fill="#155e75" font-size="13" font-weight="700">🎯 阶段 3：PPO 强化学习</text>
+        <line x1="660" y1="50" x2="660" y2="55" stroke="#0891b2" stroke-width="1"/>
+        <text x="660" y="70" text-anchor="middle" fill="#0e7490" font-size="11">用 RM 作为奖励信号</text>
+        <text x="660" y="88" text-anchor="middle" fill="#0e7490" font-size="10">PPO 优化 SFT 模型</text>
+        <text x="660" y="108" text-anchor="middle" fill="#0e7490" font-size="10">加入 KL 散度约束</text>
+        <rect x="600" y="118" width="120" height="25" rx="6" fill="#fff" stroke="#0891b2" stroke-width="1"/>
+        <text x="660" y="136" text-anchor="middle" fill="#155e75" font-size="10" font-weight="600">产出: 对齐模型 π*</text>
+
+        <!-- Arrow from RM to PPO -->
+        <path d="M480 140 Q560 200 640 140" fill="none" stroke="#0891b2" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+        <text x="555" y="188" text-anchor="middle" fill="#0e7490" font-size="10">RM 提供奖励信号</text>
+        
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#0891b2"/>
+          </marker>
+        </defs>
+
+        <!-- PPO Objective Formula -->
+        <rect x="80" y="180" width="620" height="60" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1"/>
+        <text x="390" y="205" text-anchor="middle" fill="#155e75" font-size="12" font-weight="700">PPO 优化目标</text>
+        <text x="390" y="228" text-anchor="middle" fill="#0e7490" font-size="11">max E[ r(x,y) - β · KL(π(y|x) || π₀(y|x)) ] &nbsp; ⬆奖励 &nbsp; ⬇防偏离太远</text>
+
+        <!-- Bottom comparison -->
+        <rect x="80" y="260" width="190" height="55" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+        <text x="175" y="283" text-anchor="middle" fill="#9a3412" font-size="11" font-weight="700">🔴 传统 RLHF 痛点</text>
+        <text x="175" y="300" text-anchor="middle" fill="#7c2d12" font-size="9">流程复杂 · 训练不稳定 · 成本高</text>
+
+        <rect x="290" y="260" width="190" height="55" rx="8" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.5"/>
+        <text x="385" y="283" text-anchor="middle" fill="#115e59" font-size="11" font-weight="700">🟢 DPO 替代方案</text>
+        <text x="385" y="300" text-anchor="middle" fill="#0f766e" font-size="9">跳过 RM · 直接优化偏好 · 更稳定</text>
+
+        <rect x="500" y="260" width="200" height="55" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="600" y="283" text-anchor="middle" fill="#5b21b6" font-size="11" font-weight="700">🟣 其他新兴方法</text>
+        <text x="600" y="300" text-anchor="middle" fill="#4c1d95" font-size="9">KTO · ORPO · SimPO · RLOO</text>
+      </svg>
+    </div>
+
+    <h3>DPO：RLHF 的简化替代方案</h3>
+    <p>Direct Preference Optimization (DPO) 省去了训练独立奖励模型的步骤，直接从人类偏好数据中优化策略。数学等价于 RLHF 但实现更简单、训练更稳定。</p>
+
+    <div class="code">
+      <span class="lang">Python - DPO Trainer</span>
+      <pre><span class="kw">from</span> trl <span class="kw">import</span> DPOTrainer, DPOConfig
+
+<span class="cmt"># DPO 数据格式: 每条包含 prompt, chosen (更好回答), rejected (更差回答)</span>
+train_dataset = [
+    {
+        <span class="str">"prompt"</span>: <span class="str">"解释什么是机器学习"</span>,
+        <span class="str">"chosen"</span>: <span class="str">"机器学习是人工智能的一个分支..."</span>,    <span class="cmt"># 人类更喜欢的回答</span>
+        <span class="str">"rejected"</span>: <span class="str">"机器学习就是让电脑学习东西。"</span>      <span class="cmt"># 人类不喜欢的回答</span>
+    },
+    <span class="cmt"># ...更多偏好对</span>
+]
+
+dpo_config = DPOConfig(
+    output_dir=<span class="str">"./dpo-model"</span>,
+    per_device_train_batch_size=<span class="num">1</span>,
+    gradient_accumulation_steps=<span class="num">8</span>,
+    learning_rate=<span class="num">5e-6</span>,                    <span class="cmt"># DPO 学习率通常较低</span>
+    beta=<span class="num">0.1</span>,                            <span class="cmt"># KL 散度约束系数</span>
+    num_train_epochs=<span class="num">1</span>,
+    max_prompt_length=<span class="num">512</span>,
+    max_length=<span class="num">1024</span>,
+    logging_steps=<span class="num">10</span>,
+)
+
+trainer = DPOTrainer(
+    model=model,                                       <span class="cmt"># SFT 后的模型</span>
+    ref_model=ref_model,                               <span class="cmt"># 参考模型 (通常是 SFT 模型本身)</span>
+    args=dpo_config,
+    train_dataset=train_dataset,
+    tokenizer=tokenizer,
+)
+
+trainer.train()
+<span class="cmt"># DPO 训练不需要独立的奖励模型，直接优化偏好</span></pre>
+    </div>
+
+    <h3>RLHF vs DPO 对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>维度</th><th>RLHF (PPO)</th><th>DPO</th></tr></thead>
+        <tbody>
+          <tr><td><strong>奖励模型</strong></td><td>需要单独训练 RM</td><td>不需要</td></tr>
+          <tr><td><strong>训练复杂度</strong></td><td>高（需同时维护 4 个模型）</td><td>低（2 个模型即可）</td></tr>
+          <tr><td><strong>训练稳定性</strong></td><td>较低（RL 训练抖动）</td><td>高（监督学习范式）</td></tr>
+          <tr><td><strong>在线数据收集</strong></td><td>需要（采样新回答）</td><td>不需要（离线偏好数据）</td></tr>
+          <tr><td><strong>效果上限</strong></td><td>理论上更高（在线探索）</td><td>受限于偏好数据覆盖</td></tr>
+          <tr><td><strong>适用场景</strong></td><td>资源充足、追求极致对齐</td><td>快速迭代、资源受限</td></tr>
+          <tr><td><strong>代表性模型</strong></td><td>ChatGPT, Claude</td><td>Zephyr, Llama 3 (后训练)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip purple">
+      <span class="ti">🔮</span>
+      <span><strong>趋势：</strong>DPO 及其变体（KTO, ORPO, SimPO）正在快速取代传统 RLHF。Meta 的 Llama 3 和 Mistral 的后训练流程都采用了 DPO/SimPO 路线。但在追求最强对齐效果的场景中，RLHF+PPO 仍是业界标杆。</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     6. 方法对比总结
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="compare">
+  <h2 class="sec-title"><span class="n amber">6</span> 微调方法全面对比</h2>
+
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>可训练参数比</th>
+            <th>显存需求</th>
+            <th>训练速度</th>
+            <th>推理延迟</th>
+            <th>多任务切换</th>
+            <th>效果</th>
+            <th>典型场景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>全量微调</strong></td>
+            <td>100%</td>
+            <td>极高</td>
+            <td>慢</td>
+            <td>无额外</td>
+            <td>需全量切换</td>
+            <td>⭐⭐⭐⭐⭐</td>
+            <td>垂直领域专有模型</td>
+          </tr>
+          <tr>
+            <td><strong>LoRA</strong></td>
+            <td>0.1%~1%</td>
+            <td>低</td>
+            <td>快</td>
+            <td>可消除</td>
+            <td>热切换</td>
+            <td>⭐⭐⭐⭐</td>
+            <td>通用微调首选</td>
+          </tr>
+          <tr>
+            <td><strong>QLoRA</strong></td>
+            <td>0.1%~1%</td>
+            <td>极低</td>
+            <td>中等</td>
+            <td>可消除</td>
+            <td>热切换</td>
+            <td>⭐⭐⭐⭐</td>
+            <td>消费级硬件微调</td>
+          </tr>
+          <tr>
+            <td><strong>Adapter</strong></td>
+            <td>1%~5%</td>
+            <td>低</td>
+            <td>中等</td>
+            <td>小幅增加</td>
+            <td>热切换</td>
+            <td>⭐⭐⭐</td>
+            <td>模块化多任务</td>
+          </tr>
+          <tr>
+            <td><strong>Prefix-tuning</strong></td>
+            <td>&lt;0.1%</td>
+            <td>极低</td>
+            <td>快</td>
+            <td>占用序列长度</td>
+            <td>热切换</td>
+            <td>⭐⭐⭐</td>
+            <td>超大模型轻量适配</td>
+          </tr>
+          <tr>
+            <td><strong>Prompt-tuning</strong></td>
+            <td>&lt;0.01%</td>
+            <td>极低</td>
+            <td>极快</td>
+            <td>占用序列长度</td>
+            <td>热切换</td>
+            <td>⭐⭐</td>
+            <td>100B+ 超大模型</td>
+          </tr>
+          <tr>
+            <td><strong>Instruction Tuning</strong></td>
+            <td>取决于底层方法</td>
+            <td>取决于底层方法</td>
+            <td>取决于底层方法</td>
+            <td>取决于底层方法</td>
+            <td>取决于底层方法</td>
+            <td>⭐⭐⭐⭐⭐</td>
+            <td>指令遵循能力提升</td>
+          </tr>
+          <tr>
+            <td><strong>RLHF / DPO</strong></td>
+            <td>取决于底层方法</td>
+            <td>取决于底层方法</td>
+            <td>慢（多阶段）</td>
+            <td>无额外</td>
+            <td>不适用</td>
+            <td>⭐⭐⭐⭐⭐</td>
+            <td>安全对齐</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>方法组合矩阵（推荐组合）</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>组合方案</th><th>资源要求</th><th>效果</th><th>典型用途</th><th>推荐指数</th></tr></thead>
+      <tbody>
+        <tr><td>SFT (全量) + RLHF</td><td>极高</td><td>最优</td><td>ChatGPT / Claude 级别对齐</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>SFT (LoRA) + DPO</td><td>低</td><td>优秀</td><td>中小企业定制助手</td><td>⭐⭐⭐⭐⭐</td></tr>
+        <tr><td>SFT (QLoRA) + DPO</td><td>极低</td><td>良好</td><td>个人/小团队快速实验</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>纯 SFT (LoRA)</td><td>低</td><td>良好</td><td>领域知识注入、格式控制</td><td>⭐⭐⭐⭐</td></tr>
+        <tr><td>纯 DPO (无 SFT)</td><td>低</td><td>中等</td><td>快速偏好对齐</td><td>⭐⭐⭐</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     7. 互动决策流程图
+     ═══════════════════════════════════════════════════ -->
+<section class="sec" id="decision">
+  <h2 class="sec-title"><span class="n">7</span> 技术选型互动决策流程</h2>
+
+  <div class="card">
+    <p>回答以下问题，跟随决策树找到最适合你的微调方案：</p>
+
+    <div class="decision-chart">
+      <svg viewBox="0 0 920 680" style="max-width:920px">
+        <style>
+          .dc-node{font-family:-apple-system,sans-serif;cursor:pointer;transition:all .2s}
+          .dc-node:hover{opacity:.85}
+        </style>
+
+        <!-- Start -->
+        <rect x="370" y="8" width="180" height="42" rx="21" fill="#2563eb" class="dc-node"/>
+        <text x="460" y="35" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">开始：选择微调方案</text>
+        <line x1="460" y1="50" x2="460" y2="72" stroke="#2563eb" stroke-width="2"/>
+
+        <!-- Q1: GPU -->
+        <polygon points="460,72 530,104 460,136 390,104" fill="#f8fafc" stroke="#2563eb" stroke-width="2" class="dc-node"/>
+        <text x="460" y="100" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="600">GPU 显存</text>
+        <text x="460" y="115" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="600">&ge; 80GB?</text>
+
+        <!-- Yes branch -->
+        <text x="555" y="108" fill="#059669" font-size="11" font-weight="700">是</text>
+        <line x1="530" y1="104" x2="580" y2="104" stroke="#059669" stroke-width="2"/>
+
+        <!-- Q2: need multi-task? -->
+        <polygon points="660,72 740,104 660,136 580,104" fill="#f8fafc" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="660" y="100" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">需要多任务</text>
+        <text x="660" y="115" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">快速切换?</text>
+
+        <!-- Q2 yes -->
+        <text x="760" y="108" fill="#059669" font-size="10" font-weight="700">是</text>
+        <line x1="740" y1="104" x2="780" y2="104" stroke="#059669" stroke-width="2"/>
+        <rect x="780" y="86" width="130" height="36" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="845" y="109" text-anchor="middle" fill="#064e3b" font-size="12" font-weight="700">Full FT + LoRA</text>
+
+        <!-- Q2 no -->
+        <text x="670" y="148" fill="#dc2626" font-size="10" font-weight="700">否</text>
+        <line x1="660" y1="136" x2="660" y2="192" stroke="#dc2626" stroke-width="2"/>
+        <!-- Q3: need alignment -->
+        <polygon points="660,192 740,220 660,248 580,220" fill="#f8fafc" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="660" y="216" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">需要人类对齐?</text>
+        <text x="660" y="231" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">(安全/偏好)</text>
+
+        <text x="760" y="224" fill="#059669" font-size="10" font-weight="700">是</text>
+        <line x1="740" y1="220" x2="780" y2="220" stroke="#059669" stroke-width="2"/>
+        <rect x="780" y="208" width="130" height="36" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="845" y="233" text-anchor="middle" fill="#064e3b" font-size="12" font-weight="700">Full FT + RLHF</text>
+
+        <text x="670" y="264" fill="#dc2626" font-size="10" font-weight="700">否</text>
+        <line x1="660" y1="248" x2="660" y2="340" stroke="#dc2626" stroke-width="2"/>
+        <rect x="595" y="340" width="130" height="36" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="660" y="363" text-anchor="middle" fill="#991b1b" font-size="12" font-weight="700">Full Fine-tuning</text>
+
+        <!-- No branch from Q1 -->
+        <text x="365" y="148" fill="#dc2626" font-size="11" font-weight="700">否</text>
+        <line x1="390" y1="104" x2="300" y2="152" stroke="#dc2626" stroke-width="2"/>
+
+        <!-- Q4: > 24GB? -->
+        <polygon points="300,152 380,180 300,208 220,180" fill="#f8fafc" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="300" y="176" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">显存 &ge; 24GB?</text>
+        <text x="300" y="191" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">(A10/4090)</text>
+
+        <text x="400" y="184" fill="#059669" font-size="10" font-weight="700">是</text>
+        <line x1="300" y1="208" x2="300" y2="252" stroke="#059669" stroke-width="2"/>
+
+        <!-- Q5: need zero latency? -->
+        <polygon points="300,252 380,280 300,308 220,280" fill="#f8fafc" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="300" y="284" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">推理零延迟?</text>
+
+        <text x="400" y="284" fill="#059669" font-size="10" font-weight="700">是</text>
+        <line x1="380" y1="280" x2="440" y2="280" stroke="#059669" stroke-width="2"/>
+        <rect x="440" y="268" width="110" height="36" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="495" y="291" text-anchor="middle" fill="#064e3b" font-size="12" font-weight="700">LoRA (r=16)</text>
+
+        <!-- Q5 no: need alignment -->
+        <text x="310" y="324" fill="#dc2626" font-size="10" font-weight="700">否</text>
+        <line x1="300" y1="308" x2="300" y2="372" stroke="#dc2626" stroke-width="2"/>
+        <polygon points="300,372 380,400 300,428 220,400" fill="#f8fafc" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="300" y="404" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">需要人类对齐?</text>
+
+        <text x="400" y="404" fill="#059669" font-size="10" font-weight="700">是</text>
+        <line x1="380" y1="400" x2="440" y2="400" stroke="#059669" stroke-width="2"/>
+        <rect x="440" y="388" width="130" height="36" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="505" y="411" text-anchor="middle" fill="#064e3b" font-size="12" font-weight="700">LoRA SFT + DPO</text>
+
+        <text x="310" y="444" fill="#dc2626" font-size="10" font-weight="700">否</text>
+        <line x1="300" y1="428" x2="300" y2="520" stroke="#dc2626" stroke-width="2"/>
+        <rect x="235" y="520" width="130" height="36" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="300" y="543" text-anchor="middle" fill="#991b1b" font-size="12" font-weight="700">LoRA SFT</text>
+
+        <!-- Q4 no -->
+        <text x="200" y="184" fill="#dc2626" font-size="10" font-weight="700">否</text>
+        <line x1="220" y1="180" x2="100" y2="152" stroke="#dc2626" stroke-width="2"/>
+
+        <!-- Q6: Consumer GPU -->
+        <polygon points="100,152 180,180 100,208 20,180" fill="#f8fafc" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="100" y="176" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">消费级 GPU?</text>
+        <text x="100" y="191" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="600">(8~16GB)</text>
+
+        <text x="200" y="184" fill="#059669" font-size="10" font-weight="700">是</text>
+        <line x1="180" y1="180" x2="180" y2="186" stroke="#059669" stroke-width="2"/>
+        <rect x="180" y="168" width="100" height="36" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="dc-node"/>
+        <text x="230" y="191" text-anchor="middle" fill="#064e3b" font-size="12" font-weight="700">QLoRA (NF4)</text>
+
+        <!-- Q6 no -->
+        <text x="50" y="224" fill="#dc2626" font-size="10" font-weight="700">否</text>
+        <line x1="100" y1="208" x2="100" y2="300" stroke="#dc2626" stroke-width="2"/>
+        <rect x="20" y="300" width="130" height="36" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2" class="dc-node"/>
+        <text x="85" y="323" text-anchor="middle" fill="#991b1b" font-size="12" font-weight="700">API 微调服务</text>
+
+        <!-- Legend -->
+        <rect x="10" y="600" width="12" height="12" rx="3" fill="#2563eb"/>
+        <text x="28" y="611" fill="#475569" font-size="11">决策节点</text>
+        <rect x="120" y="600" width="12" height="12" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+        <text x="138" y="611" fill="#475569" font-size="11">推荐方案</text>
+        <rect x="230" y="600" width="12" height="12" rx="3" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+        <text x="248" y="611" fill="#475569" font-size="11">最终建议</text>
+
+        <!-- Note -->
+        <text x="460" y="660" text-anchor="middle" fill="#94a3b8" font-size="12">
+          注：此决策流程为通用建议，实际选择需结合数据规模、任务类型、预算等因素综合考量
+        </text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     8. 实践建议
+     ═══════════════════════════════════════════════════ -->
+<section class="sec">
+  <h2 class="sec-title"><span class="n green">8</span> 实践建议与常见问题</h2>
+
+  <div class="card">
+    <h3>微调实战 Checklist</h3>
+    <div class="grid2">
+      <div class="card" style="background:var(--ft-lighter)">
+        <h4>🔍 数据准备</h4>
+        <ul style="font-size:.83rem">
+          <li>数据清洗：去除重复、低质量、格式错误样本</li>
+          <li>多样性检查：确保覆盖预期场景的全部类型</li>
+          <li>长度分布分析：避免过长样本占用过多显存</li>
+          <li>数据量建议：指令微调 1K~10K，领域微调 10K~100K</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--green-bg)">
+        <h4>⚙️ 训练配置</h4>
+        <ul style="font-size:.83rem">
+          <li>先小规模实验（100 条数据，1 epoch）验证流程</li>
+          <li>学习率从 2e-5（全量）或 2e-4（LoRA）起步</li>
+          <li>使用 warmup + cosine decay 学习率调度</li>
+          <li>BF16 混合精度 + 梯度检查点节省显存</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--amber-bg)">
+        <h4>📊 评估验证</h4>
+        <ul style="font-size:.83rem">
+          <li>保留 10%~20% 数据作为验证集</li>
+          <li>除 loss 外，添加任务特定指标（BLEU/ROUGE/准确率）</li>
+          <li>人工抽检：尤其关注安全性和幻觉问题</li>
+          <li>对比基座模型 baseline 确认微调收益</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--purple-bg)">
+        <h4>🚀 部署上线</h4>
+        <ul style="font-size:.83rem">
+          <li>LoRA: 使用 <code>merge_and_unload()</code> 消除推理延迟</li>
+          <li>量化部署：GPTQ / AWQ / GGUF 进一步压缩</li>
+          <li>A/B 测试：微调模型 vs 原始模型对比上线</li>
+          <li>持续监控：关注输出质量漂移和用户反馈</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>常见问题 FAQ</h3>
+    
+    <div class="acc" onclick="this.classList.toggle('open')">
+      <div class="acc-header">Q: LoRA 的 rank 设多大合适？</div>
+      <div class="acc-body">
+        <p><strong>A:</strong> 一般来说，简单任务（如文本分类、情感分析）<code>r=8</code> 即可；中等复杂度任务（如指令微调）<code>r=16</code> 是性价比较高的选择；复杂任务（如代码生成）可以尝试 <code>r=32~64</code>。建议先用 r=8 跑通流程，再根据验证集效果适当调大。</p>
+      </div>
+    </div>
+
+    <div class="acc" onclick="this.classList.toggle('open')">
+      <div class="acc-header">Q: 什么时候用全量微调，什么时候用 LoRA？</div>
+      <div class="acc-body">
+        <p><strong>A:</strong> 经验法则：如果 GPU 显存 &ge; 80GB 且数据量 &ge; 50K 条，可以尝试全量微调；否则首选 LoRA。全量微调主要优势在于极限性能，但在大多数场景下，LoRA 的效果差距不超过 2%，而成本只有 1/10 甚至更低。</p>
+      </div>
+    </div>
+
+    <div class="acc" onclick="this.classList.toggle('open')">
+      <div class="acc-header">Q: RAG 和微调应该如何选择？</div>
+      <div class="acc-body">
+        <p><strong>A:</strong> RAG 适合需要实时知识更新、引用溯源、知识库频繁变更的场景；微调适合改变模型行为风格、学习特定领域推理模式、减少 prompt 长度。二者不互斥 — 最佳实践往往是 <strong>RAG + 微调</strong> 组合：微调让模型"学会怎么用检索结果"，RAG 提供实时准确的知识。</p>
+      </div>
+    </div>
+
+    <div class="acc" onclick="this.classList.toggle('open')">
+      <div class="acc-header">Q: 如何避免微调后的"灾难性遗忘"？</div>
+      <div class="acc-body">
+        <p><strong>A:</strong> (1) 使用较低学习率（尤其是全量微调）；(2) 在训练数据中混入少量通用数据（5%~10%）；(3) 使用 LoRA 等 PEFT 方法天然减少遗忘风险；(4) 监控模型在通用 benchmark 上的表现，及时早停；(5) 考虑使用 Elastic Weight Consolidation (EWC) 等正则化技术。</p>
+      </div>
+    </div>
+
+    <div class="acc" onclick="this.classList.toggle('open')">
+      <div class="acc-header">Q: DPO 能完全替代 RLHF 吗？</div>
+      <div class="acc-body">
+        <p><strong>A:</strong> 在大多数应用场景中，DPO 已经足够好 — 训练更稳定、实现更简单、成本更低。但对于追求极致对齐效果（如 ChatGPT/Gemini 级别），传统 RLHF 的在线探索能力使其理论上限更高。当前趋势是 DPO 在快速普及，但 RLHF 在顶级产品中仍有不可替代的价值。</p>
+      </div>
+    </div>
+
+    <div class="acc" onclick="this.classList.toggle('open')">
+      <div class="acc-header">Q: 微调数据需要多少条才够？</div>
+      <div class="acc-body">
+        <p><strong>A:</strong> 质量远比数量重要。指令微调：500~5K 高质量样本即可看到明显效果；领域知识注入：10K~100K 样本；行为对齐 (DPO)：1K~10K 偏好对。建议从最小可用数据集开始（~500条），验证效果后再决定是否需要扩充数据。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     Footer
+     ═══════════════════════════════════════════════════ -->
+<footer class="footer">
+  <p>📚 本教程为 <a href="https://github.com/lsasw/frontend-learning-hub" target="_blank">Frontend Learning Hub</a> 系列之一</p>
+  <p style="margin-top:4px">内容涵盖大模型微调核心技术与实践 · 持续更新中</p>
+  <p style="margin-top:10px;font-size:.72rem">参考: LoRA (Hu et al., 2021) · QLoRA (Dettmers et al., 2023) · RLHF (Ouyang et al., 2022) · DPO (Rafailov et al., 2023)</p>
+</footer>
+
+</div><!-- .wrap -->
+
+<!-- ═══════════════════════════════════════════════════
+     Navigation Highlight on Scroll
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  // ── Scroll-based nav highlighting ──
+  const sections = document.querySelectorAll('.sec[id]');
+  const navLinks = document.querySelectorAll('.nav a[href^="#"]');
+
+  function updateActiveNav(){
+    let current = '';
+    sections.forEach(sec => {
+      const top = sec.getBoundingClientRect().top;
+      if(top <= 100) current = sec.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveNav, {passive:true});
+  updateActiveNav();
+
+  // ── Smooth accordion ──
+  // (handled by inline onclick, CSS controls the rest)
+})();
+</script>
+
+</body>
+</html>

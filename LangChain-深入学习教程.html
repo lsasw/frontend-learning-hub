@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain 深入学习教程 · 踩坑指南</title>
+<style>
+:root {
+  --pri: #059669; --pri-dark: #047857; --pri-light: #d1fae5; --pri-lighter: #ecfdf5;
+  --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --code-bg: #1a1a2e; --code-text: #e2e8f0;
+  --warn: #f59e0b; --warn-bg: #fffbeb; --warn-border: #fcd34d;
+  --danger: #dc2626; --danger-bg: #fef2f2; --danger-border: #fecaca;
+  --info: #2563eb; --info-bg: #eff6ff; --info-border: #bfdbfe;
+  --good: #059669; --good-bg: #ecfdf5; --good-border: #a7f3d0;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+
+/* ── Nav ── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:54px;gap:16px}
+.nav a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--pri);font-weight:700;font-size:.92rem}
+.nav a svg{width:24px;height:24px}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:4px;overflow-x:auto;font-size:.78rem}
+.nav .nav-toc a{color:var(--text2);font-weight:500;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.nav .nav-toc a:hover{background:var(--pri-lighter);color:var(--pri)}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,#064e3b 0%,#065f46 40%,#047857 100%);color:#fff;padding:56px 32px 48px;text-align:center}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.hero .sub{opacity:.8;max-width:680px;margin:0 auto;font-size:1rem;line-height:1.7}
+.hero .tags{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.78rem}
+
+/* ── Container ── */
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 60px}
+
+/* ── Section Title ── */
+.sec{margin-bottom:44px;scroll-margin-top:70px}
+.sec-title{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.sec-title .num{width:36px;height:36px;border-radius:8px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0}
+.sec-title h2{font-size:1.4rem;font-weight:700;border-bottom:2px solid var(--pri);padding-bottom:4px}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin:16px 0;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{font-size:1.08rem;margin-bottom:12px;color:var(--pri-dark)}
+.card p{margin:8px 0;color:var(--text2);font-size:.92rem}
+.card ul,.card ol{margin:8px 0;padding-left:20px;color:var(--text2);font-size:.9rem}
+.card li{margin:4px 0}
+
+/* ── Grid ── */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0}
+
+/* ── Code ── */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;position:relative}
+.code .lang{position:absolute;top:0;right:0;background:rgba(255,255,255,.08);color:var(--text3);font-size:.7rem;padding:3px 12px;border-radius:0 0 0 8px;font-family:var(--mono)}
+.code .copy-btn{position:absolute;top:6px;right:60px;background:rgba(255,255,255,.1);border:none;color:var(--text3);font-size:.7rem;padding:2px 10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.code pre{padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.7;color:var(--code-text);white-space:pre;tab-size:2}
+.code .kw{color:#f472b6}
+.code .str{color:#a5d6ff}
+.code .fn{color:#67e8f9}
+.code .num{color:#fbbf24}
+.code .cm{color:#94a3b8}
+.code .ty{color:#c084fc}
+
+/* ── Tip / Callout ── */
+.tip{padding:16px 20px;border-radius:var(--radius-sm);margin:16px 0;border-left:4px solid;font-size:.9rem;line-height:1.65;display:flex;gap:12px;align-items:flex-start}
+.tip .icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.tip .content{flex:1}
+.tip .content strong{display:block;margin-bottom:4px}
+.tip.info{background:var(--info-bg);border-color:var(--info)}
+.tip.warn{background:var(--warn-bg);border-color:var(--warn)}
+.tip.danger{background:var(--danger-bg);border-color:var(--danger)}
+.tip.good{background:var(--good-bg);border-color:var(--good)}
+
+/* ── Pitfall Card ── */
+.pitfall{background:linear-gradient(135deg,#fef2f2,#fff7ed);border:2px solid var(--danger-border);border-radius:var(--radius);padding:20px 24px;margin:20px 0;position:relative}
+.pitfall::before{content:'⚠️ 踩坑';position:absolute;top:-12px;left:20px;background:var(--danger);color:#fff;padding:2px 14px;border-radius:12px;font-size:.72rem;font-weight:700;letter-spacing:.5px}
+.pitfall h4{color:var(--danger);margin:6px 0 10px;font-size:1.02rem}
+.pitfall p,.pitfall li{color:var(--text2);font-size:.88rem;margin:4px 0}
+.pitfall ul{padding-left:18px}
+.pitfall .fix{background:var(--good-bg);border:1px solid var(--good-border);padding:10px 16px;border-radius:8px;margin-top:12px;font-size:.84rem}
+.pitfall .fix::before{content:'✅ 正确做法: ';font-weight:700;color:var(--good)}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:600px}
+.tbl-wrap th{background:#f1f5f9;padding:10px 14px;text-align:left;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl-wrap td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl-wrap tr:last-child td{border-bottom:none}
+.tbl-wrap tr:hover td{background:#f8fafc}
+
+/* ── Diagram ── */
+.viz{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin:16px 0;text-align:center;overflow-x:auto}
+.viz svg{max-width:100%;height:auto}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+  .hero{padding:40px 20px 32px}
+  .wrap{padding:20px 16px 40px}
+  .card{padding:18px 20px}
+  .nav .nav-toc{display:none}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .sec-title h2{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav">
+  <a href="index.html" title="返回门户">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#d1fae5"/><path d="M7 16V8l5 4-5 4z" fill="#059669"/><path d="M12 16v-3l3.5-2v5z" fill="#047857"/></svg>
+    Frontend Learning Hub
+  </a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">概述</a>
+    <a href="#s2">核心组件</a>
+    <a href="#s3">LCEL</a>
+    <a href="#s4">RAG</a>
+    <a href="#s5">Agent</a>
+    <a href="#s6">踩坑合集</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <h1>⛓️ LangChain 深入学习教程</h1>
+  <p class="sub">从核心组件到生产级 RAG + Agent 实战，全方位掌握 LangChain 生态。重点标记 10 个高频踩坑点。</p>
+  <div class="tags">
+    <span>LangChain</span><span>LLM</span><span>RAG</span><span>Agent</span><span>LCEL</span><span>Python</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ 1. 概述 ═══════════════════════════════════════ -->
+<div class="wrap">
+<section class="sec" id="s1">
+<div class="sec-title"><span class="num">1</span><h2>LangChain 是什么 —— 框架定位与核心设计哲学</h2></div>
+
+<div class="card">
+<h3>一句话定义</h3>
+<p>LangChain 是一个用于构建 <strong>LLM 驱动应用</strong> 的框架。它不是模型本身，而是一套"胶水代码"——帮你把 LLM 和数据源、工具、记忆、向量数据库等等串联起来，形成可运行的 Pipeline。</p>
+</div>
+
+<div class="grid2">
+<div class="card">
+  <h3>🎯 核心设计理念</h3>
+  <ul>
+    <li><strong>Composability（可组合性）</strong>：一切皆可链式组合（Chain）</li>
+    <li><strong>Model-agnostic（模型无关）</strong>：同一套代码切换 OpenAI / Claude / 本地模型</li>
+    <li><strong>Runnable 接口</strong>：统一抽象，所有组件都是 "Runnable"</li>
+  </ul>
+</div>
+<div class="card">
+  <h3>❌ LangChain 不是什么</h3>
+  <ul>
+    <li><strong>不是模型服务</strong>：不做推理托管，只做编排</li>
+    <li><strong>不是向量数据库</strong>：它是向量库的"客户端"，不是引擎</li>
+    <li><strong>不是一站式平台</strong>：你仍需要选择模型 / 数据库 / 部署方案</li>
+  </ul>
+</div>
+</div>
+
+<div class="viz">
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#059669"/></marker></defs><rect x="10" y="20" width="120" height="40" rx="6" fill="#d1fae5" stroke="#059669"/><text x="70" y="45" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">User Input</text><line x1="130" y1="40" x2="175" y2="40" stroke="#059669" stroke-width="2" marker-end="url(#arr1)"/><rect x="180" y="10" width="130" height="60" rx="8" fill="#ecfdf5" stroke="#059669"/><text x="245" y="33" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">LangChain</text><text x="245" y="52" text-anchor="middle" font-size="10" fill="#059669">Prompt + Chain + Memory</text><line x1="310" y1="40" x2="355" y2="40" stroke="#059669" stroke-width="2" marker-end="url(#arr1)"/><rect x="360" y="15" width="110" height="50" rx="6" fill="#d1fae5" stroke="#059669"/><text x="415" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">LLM</text><text x="415" y="54" text-anchor="middle" font-size="10" fill="#059669">GPT/Claude/...</text><line x1="470" y1="40" x2="515" y2="40" stroke="#059669" stroke-width="2" marker-end="url(#arr1)"/><rect x="520" y="15" width="130" height="50" rx="6" fill="#ecfdf5" stroke="#059669"/><text x="585" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Output Parser</text><text x="585" y="54" text-anchor="middle" font-size="10" fill="#059669">结构化输出</text><rect x="70" y="110" width="150" height="40" rx="6" fill="#f0fdf4" stroke="#10b981"/><text x="145" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Tools / APIs</text><line x1="220" y1="130" x2="260" y2="130" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4"/><rect x="265" y="100" width="140" height="60" rx="6" fill="#f0fdf4" stroke="#10b981"/><text x="335" y="123" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Vector Store</text><text x="335" y="142" text-anchor="middle" font-size="10" fill="#047857">Chroma / Pinecone</text><line x1="405" y1="130" x2="445" y2="130" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4"/><rect x="450" y="110" width="130" height="40" rx="6" fill="#f0fdf4" stroke="#10b981"/><text x="515" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Memory / Cache</text><text x="335" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">LangChain 生态架构简图</text></svg>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 2. 核心组件 ═══════════════════════════════════════ -->
+<section class="sec" id="s2">
+<div class="sec-title"><span class="num">2</span><h2>六大核心组件详解</h2></div>
+
+<div class="card">
+<h3>2.1 Model I/O —— 模型输入输出</h3>
+<p>LangChain 中最基础、最常用的组件。统一了 LLM（文本补全）和 Chat Model（对话接口）的调用方式。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 方式一：Chat Model（推荐）</span>
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage, SystemMessage
+
+llm = ChatOpenAI(model=<span class="str">"gpt-4o"</span>, temperature=<span class="num">0.3</span>)
+messages = [
+    SystemMessage(content=<span class="str">"你是一个 Python 专家。"</span>),
+    HumanMessage(content=<span class="str">"什么是 GIL？"</span>)
+]
+response = llm.invoke(messages)
+<span class="kw">print</span>(response.content)
+
+<span class="cm"># 方式二：Prompt Template + 链式调用</span>
+<span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_messages([
+    (<span class="str">"system"</span>, <span class="str">"你是 {role} 专家。"</span>),
+    (<span class="str">"user"</span>, <span class="str">"{question}"</span>)
+])
+chain = prompt | llm
+result = chain.invoke({<span class="str">"role"</span>: <span class="str">"Python"</span>, <span class="str">"question"</span>: <span class="str">"什么是 GIL？"</span>})
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #1：用错 model 类型导致输出格式错误</h4>
+<p>很多初学者分不清 <code>OpenAI()</code>（LLM, 返回纯文本）和 <code>ChatOpenAI()</code>（Chat Model, 返回 Message 对象）。Chat Model 返回的不是字符串，是 <code>AIMessage</code> 对象，需要 <code>.content</code> 才能拿到文本。</p>
+<div class="fix">始终用 <code>ChatOpenAI</code>（而不是 <code>OpenAI</code>），LangChain 0.3+ 已逐步弃用旧 LLM 接口。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>2.2 Prompt Templates —— 提示词模板</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> ChatPromptTemplate, MessagesPlaceholder
+
+<span class="cm"># 基础模板</span>
+prompt = ChatPromptTemplate.from_messages([
+    (<span class="str">"system"</span>, <span class="str">"你是 {expertise} 专家，回答不超过 {max_words} 字。"</span>),
+    MessagesPlaceholder(variable_name=<span class="str">"history"</span>),   <span class="cm"># 对话历史占位</span>
+    (<span class="str">"user"</span>, <span class="str">"{input}"</span>)
+])
+
+<span class="cm"># Few-shot 模板（带示例）</span>
+<span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> FewShotChatMessagePromptTemplate
+
+examples = [
+    {<span class="str">"input"</span>: <span class="str">"苹果的英文"</span>, <span class="str">"output"</span>: <span class="str">"Apple"</span>},
+    {<span class="str">"input"</span>: <span class="str">"香蕉的英文"</span>, <span class="str">"output"</span>: <span class="str">"Banana"</span>},
+]
+</pre></div>
+</div>
+
+<div class="card">
+<h3>2.3 Chains —— 链式编排</h3>
+<p>Chains 是 LangChain 的灵魂。把多个组件以管道方式串联，上一个的输出自动成为下一个的输入。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># LCEL 链式语法（推荐）</span>
+chain = (
+    prompt
+    | llm
+    | StrOutputParser()
+)
+
+<span class="cm"># 多条链组合</span>
+<span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnableParallel
+
+<span class="cm"># 两个分支并行执行</span>
+planner = ChatPromptTemplate.from_template(<span class="str">"为这个问题制定计划：{question}"</span>) | llm
+executor = ChatPromptTemplate.from_template(<span class="str">"根据计划回答问题：{question}"</span>) | llm
+
+parallel_chain = RunnableParallel(
+    plan=planner,
+    answer=lambda x: executor.invoke(x)
+)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #2：Chains 嵌套过深导致调试困难</h4>
+<p>旧版 LangChain（0.1.x）使用 <code>SequentialChain</code> / <code>LLMChain</code> 等类，嵌套 3 层以上就难以追踪数据流。LangChain 0.2+ 已用 LCEL 替代，但大量旧教程仍在使用旧 API。</p>
+<div class="fix">始终使用 <code>|</code> 管道运算符（LCEL），而非旧的 Chain 子类。LCEL 的 <code>.with_config()</code> 或 LangSmith Tracing 可以方便地可视化数据流。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>2.4 Memory —— 对话记忆</h3>
+<p>让 LLM 在多轮对话中记住上下文。有短期 (ConversationBufferMemory) 和长期 (VectorStore-backed) 两种策略。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> langchain_community.chat_message_histories <span class="kw">import</span> ChatMessageHistory
+<span class="kw">from</span> langchain_core.runnables.history <span class="kw">import</span> RunnableWithMessageHistory
+
+store = {}  <span class="cm"># 生产环境用 Redis/DB</span>
+
+<span class="kw">def</span> <span class="fn">get_session_history</span>(session_id: str):
+    <span class="kw">if</span> session_id <span class="kw">not</span> <span class="kw">in</span> store:
+        store[session_id] = ChatMessageHistory()
+    <span class="kw">return</span> store[session_id]
+
+chain_with_history = RunnableWithMessageHistory(
+    chain,
+    get_session_history,
+    input_messages_key=<span class="str">"input"</span>,
+    history_messages_key=<span class="str">"history"</span>,
+)
+<span class="cm"># 多轮对话自动管理</span>
+response = chain_with_history.invoke(
+    {<span class="str">"input"</span>: <span class="str">"我叫七智"</span>},
+    config={<span class="str">"configurable"</span>: {<span class="str">"session_id"</span>: <span class="str">"user-001"</span>}}
+)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #3：Memory 无限膨胀吃掉 Token</h4>
+<p><code>ConversationBufferMemory</code> 会把所有历史都塞进 Prompt，对话超过 20 轮就可能超 Token 上限（或费用暴涨）。</p>
+<div class="fix">使用 <code>ConversationSummaryMemory</code>（摘要压缩）或 <code>ConversationBufferWindowMemory</code>（只保留最近 K 轮）。RAG 场景可以考虑用向量存储做长期记忆。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>2.5 Retriever —— 检索器</h3>
+<p>把文档从向量数据库或其他存储中检索出来，是 RAG 的核心。LangChain 封装了 50+ 种 Retriever。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> TextLoader
+<span class="kw">from</span> langchain_text_splitters <span class="kw">import</span> RecursiveCharacterTextSplitter
+<span class="kw">from</span> langchain_chroma <span class="kw">import</span> Chroma
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> OpenAIEmbeddings
+
+<span class="cm"># 1. 加载文档</span>
+loader = TextLoader(<span class="str">"docs/readme.txt"</span>)
+docs = loader.load()
+
+<span class="cm"># 2. 分割</span>
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=<span class="num">500</span>,
+    chunk_overlap=<span class="num">100</span>
+)
+chunks = splitter.split_documents(docs)
+
+<span class="cm"># 3. 向量化 + 存储</span>
+vectorstore = Chroma.from_documents(
+    documents=chunks,
+    embedding=OpenAIEmbeddings(model=<span class="str">"text-embedding-3-small"</span>)
+)
+
+<span class="cm"># 4. 创建检索器</span>
+retriever = vectorstore.as_retriever(
+    search_type=<span class="str">"mmr"</span>,        <span class="cm"># MMR 避免相似冗余</span>
+    search_kwargs={<span class="str">"k"</span>: <span class="num">5</span>}
+)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #4：chunk_size 和 chunk_overlap 选错导致检索质量差</h4>
+<p><code>chunk_size=1000</code> 过大 → 检索精确度低、召回噪声大；<code>chunk_size=100</code> 过小 → 丢失上下文、无法回答完整问题。很多人默认用 1000，但不同文档类型需要不同策略。</p>
+<div class="fix">代码文档推荐 200-500，长文推荐 500-1000。始终保留 10%-20% 的 overlap。可以和 metadata filtering 配合，先用关键词粗筛再用向量检索。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>2.6 Tools & Agents —— 工具与智能体</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langgraph.prebuilt <span class="kw">import</span> create_react_agent
+
+<span class="cm"># 自定义工具</span>
+<span class="kw">@tool</span>
+<span class="kw">def</span> <span class="fn">get_weather</span>(city: str) -> str:
+    <span class="str">"""获取指定城市的天气。"""</span>
+    <span class="kw">return</span> <span class="str">f"{city} 今天晴，25°C"</span>
+
+<span class="kw">@tool</span>
+<span class="kw">def</span> <span class="fn">calculator</span>(expression: str) -> str:
+    <span class="str">"""计算数学表达式。"""</span>
+    <span class="kw">return</span> <span class="str">str(eval(expression))</span>
+
+tools = [get_weather, calculator]
+agent = create_react_agent(llm, tools)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #5：Agent 选了不合适的工具导致无限循环</h4>
+<p>Agent 可能在调用工具时陷入循环（调用 → 结果不对 → 再调用 → 仍然不对...），特别是工具描述不清晰时。默认的 ReAct Agent 最多尝试 15 次。</p>
+<div class="fix">工具描述（docstring）必须清晰说明功能、输入格式、返回值。设置 <code>max_iterations</code> 限制步数。对复杂场景考虑用 LangGraph 做精确的状态机控制。</div>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 3. LCEL ═══════════════════════════════════════ -->
+<section class="sec" id="s3">
+<div class="sec-title"><span class="num">3</span><h2>LCEL —— LangChain 表达式语言（现代写法）</h2></div>
+
+<div class="card">
+<h3>什么是 LCEL？</h3>
+<p>LangChain Expression Language 是 LangChain 0.2+ 的核心。用 <code>|</code> 管道符把组件串联起来，自动处理 streaming、async、并行等。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># LCEL 基础语法</span>
+chain = prompt | llm | output_parser
+
+<span class="cm"># 更复杂的例子：RAG with source</span>
+<span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnablePassthrough, RunnableLambda
+
+<span class="kw">def</span> <span class="fn">format_docs</span>(docs):
+    <span class="kw">return</span> <span class="str">"\n\n"</span>.join(doc.page_content <span class="kw">for</span> doc <span class="kw">in</span> docs)
+
+rag_chain = (
+    {<span class="str">"context"</span>: retriever | format_docs, <span class="str">"question"</span>: RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+<span class="cm"># Streaming</span>
+<span class="kw">async</span> <span class="kw">for</span> chunk <span class="kw">in</span> rag_chain.astream(<span class="str">"什么是 GIL？"</span>):
+    <span class="kw">print</span>(chunk, end=<span class="str">""</span>, flush=<span class="kw">True</span>)
+</pre></div>
+
+<div class="tip warn"><span class="icon">💡</span><div class="content"><strong>重点理解：LCEL 中的 RunnablePassthrough</strong><code>RunnablePassthrough()</code> 是 LCEL 中的"透传"操作。上面的例子中，用户问题既传给 retriever 去检索，又作为 question 传给 prompt。这种"一对多"分流是 LCEL 的核心模式。</div></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #6：RunnablePassthrough.assign() 误用导致属性覆盖</h4>
+<p><code>RunnablePassthrough.assign(foo=bar)</code> 会向 dict 中注入新字段，但如果 key 已存在会被覆盖。很多人在复杂链中不小心覆盖了上游传递的关键数据。</p>
+<div class="fix">在 assign 前先打印上游 dict 确认字段名不冲突。对复杂场景，优先使用 RunnableParallel 显式声明数据流。</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 4. RAG ═══════════════════════════════════════ -->
+<section class="sec" id="s4">
+<div class="sec-title"><span class="num">4</span><h2>RAG 全流程实战</h2></div>
+
+<div class="card">
+<h3>标准 RAG Pipeline</h3>
+<div class="viz">
+<svg viewBox="0 0 680 140" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ar2" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5 Z" fill="#059669"/></marker></defs><rect x="8" y="20" width="100" height="36" rx="6" fill="#d1fae5" stroke="#059669"/><text x="58" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Document Load</text><line x1="108" y1="38" x2="133" y2="38" stroke="#059669" stroke-width="1.5" marker-end="url(#ar2)"/><rect x="138" y="20" width="90" height="36" rx="6" fill="#ecfdf5" stroke="#059669"/><text x="183" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Text Split</text><line x1="228" y1="38" x2="253" y2="38" stroke="#059669" stroke-width="1.5" marker-end="url(#ar2)"/><rect x="258" y="20" width="90" height="36" rx="6" fill="#d1fae5" stroke="#059669"/><text x="303" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Embedding</text><line x1="348" y1="38" x2="373" y2="38" stroke="#059669" stroke-width="1.5" marker-end="url(#ar2)"/><rect x="378" y="20" width="110" height="36" rx="6" fill="#ecfdf5" stroke="#059669"/><text x="433" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Vector Store</text><line x1="488" y1="38" x2="513" y2="38" stroke="#059669" stroke-width="1.5" marker-end="url(#ar2)"/><rect x="518" y="20" width="90" height="36" rx="6" fill="#d1fae5" stroke="#059669"/><text x="563" y="43" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Retrieval</text><rect x="160" y="80" width="130" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b"/><text x="225" y="103" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">User Question</text><line x1="290" y1="98" x2="370" y2="55" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#ar2)"/><rect x="440" y="80" width="110" height="36" rx="6" fill="#d1fae5" stroke="#059669"/><text x="495" y="103" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">LLM + Answer</text><line x1="563" y1="55" x2="500" y2="80" stroke="#059669" stroke-width="1.5" marker-end="url(#ar2)"/></svg>
+</div>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 完整 RAG 实战</span>
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI, OpenAIEmbeddings
+<span class="kw">from</span> langchain_chroma <span class="kw">import</span> Chroma
+<span class="kw">from</span> langchain_text_splitters <span class="kw">import</span> RecursiveCharacterTextSplitter
+<span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> WebBaseLoader
+<span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> ChatPromptTemplate
+<span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnablePassthrough
+
+<span class="cm"># 1. 加载文档</span>
+loader = WebBaseLoader(<span class="str">"https://python.langchain.com/docs/introduction/"</span>)
+docs = loader.load()
+
+<span class="cm"># 2. 分块</span>
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=<span class="num">500</span>, chunk_overlap=<span class="num">100</span>,
+    separators=[<span class="str">"\n\n"</span>, <span class="str">"\n"</span>, <span class="str">" "</span>, <span class="str">""</span>]
+)
+splits = text_splitter.split_documents(docs)
+
+<span class="cm"># 3. 向量存储</span>
+vectorstore = Chroma.from_documents(
+    splits, OpenAIEmbeddings(model=<span class="str">"text-embedding-3-small"</span>)
+)
+retriever = vectorstore.as_retriever(search_kwargs={<span class="str">"k"</span>: <span class="num">3</span>})
+
+<span class="cm"># 4. Prompt 模板</span>
+template = <span class="str">"""基于以下上下文回答问题。如果上下文中没有答案，就说不知道。
+
+上下文：
+{context}
+
+问题：{question}
+
+回答："""</span>
+prompt = ChatPromptTemplate.from_template(template)
+llm = ChatOpenAI(model=<span class="str">"gpt-4o-mini"</span>)
+
+<span class="cm"># 5. 构建 RAG Chain</span>
+rag_chain = (
+    {<span class="str">"context"</span>: retriever | (lambda docs: <span class="str">"\n\n"</span>.join(d.page_content <span class="kw">for</span> d <span class="kw">in</span> docs)),
+     <span class="str">"question"</span>: RunnablePassthrough()}
+    | prompt | llm
+)
+
+<span class="kw">print</span>(rag_chain.invoke(<span class="str">"LangChain 的 core 模块包含哪些内容？"</span>).content)
+</pre></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #7：直接对 HTML 做 embedding 导致大量噪声</h4>
+<p>从网页爬取的 HTML 里含大量 CSS/JS/导航栏等噪声文本，直接做 chunk 和 embedding 会让检索结果满是垃圾信息。</p>
+<div class="fix">使用 <code>BSHTMLLoader</code> 或自行用 <code>beautifulsoup4</code> 提取主体内容后再 embedding。可以考虑先清洗（strip tags, remove scripts）再分块。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #8：Retriever 返回的文档和问题语义不匹配</h4>
+<p>这是 RAG 最常见的失败模式。用户问"怎么部署？"但文档写的是"部署指南"，语义向量距离不够近，导致检索结果不相关。</p>
+<div class="fix">使用 <strong>HyDE</strong>（假设性文档嵌入）、<strong>Multi-Query</strong>（生成多个查询变体）、或 <strong>重排序</strong>（reranker 二次排序）。对于专业领域，微调 embedding 模型效果提升显著。</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 5. Agent ═══════════════════════════════════════ -->
+<section class="sec" id="s5">
+<div class="sec-title"><span class="num">5</span><h2>Agent 智能体开发</h2></div>
+
+<div class="card">
+<h3>从 Tool 到 Agent 到多 Agent 协作</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 使用 LangGraph 创建 ReAct Agent（推荐，LangChain 0.3+）</span>
+<span class="kw">from</span> langgraph.prebuilt <span class="kw">import</span> create_react_agent
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+llm = ChatOpenAI(model=<span class="str">"gpt-4o"</span>)
+
+<span class="kw">@tool</span>
+<span class="kw">def</span> <span class="fn">search_knowledge_base</span>(query: str) -> str:
+    <span class="str">"""搜索内部知识库，返回相关文档内容。"""</span>
+    docs = retriever.invoke(query)
+    <span class="kw">return</span> <span class="str">"\n"</span>.join(d.page_content[:<span class="num">200</span>] <span class="kw">for</span> d <span class="kw">in</span> docs[:<span class="num">3</span>])
+
+<span class="kw">@tool</span>
+<span class="kw">def</span> <span class="fn">run_sql</span>(sql: str) -> str:
+    <span class="str">"""执行只读 SQL 查询。仅支持 SELECT 语句。"""</span>
+    <span class="kw">if</span> <span class="kw">not</span> sql.strip().upper().startswith(<span class="str">"SELECT"</span>):
+        <span class="kw">return</span> <span class="str">"错误：仅支持 SELECT 查询"</span>
+    <span class="kw">return</span> <span class="str">"查询结果: [{'id':1,'name':'test'}]"</span>  <span class="cm"># 示例</span>
+
+agent = create_react_agent(
+    llm, [search_knowledge_base, run_sql],
+    state_modifier=<span class="str">"你是数据分析助手，优先用 SQL 查数据。"</span>
+)
+
+<span class="cm"># 运行</span>
+result = agent.invoke({
+    <span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"帮我查一下最近一周的销售总额"</span>)]
+})
+</pre></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #9：@tool 装饰的函数没有类型注解</h4>
+<p>LangChain 依赖函数的类型注解和 docstring 来告诉 LLM 工具的输入输出格式。如果没写类型注解，LLM 可能传错参数格式导致调用失败。</p>
+<div class="fix">始终给 tool 函数加完整的 Python 类型注解（<code>str</code>, <code>int</code>, <code>float</code>）和清晰的 docstring。docstring 第一行是工具描述，会被 LLM 看到。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #10：在 Agent 工具中做有副作用的操作</h4>
+<p>Agent 可能在一次推理中多次调用同一个工具。如果你的 <code>send_email()</code> 或 <code>create_order()</code> 工具没有幂等保护，后果不堪设想。</p>
+<div class="fix">所有有副作用的工具必须设计成幂等的：用 <code>idempotency_key</code>、检查是否已执行、或用 <code>human_in_the_loop</code> 中断确认（见 LangGraph 教程）。</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 6. 踩坑合集 ═══════════════════════════════════════ -->
+<section class="sec" id="s6">
+<div class="sec-title"><span class="num">6</span><h2>十大踩坑速查表</h2></div>
+
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>#</th><th>坑</th><th>现象</th><th>解法</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>用错模型类型</td><td><code>AIMessage</code> 对象当成字符串输出</td><td>统一用 <code>ChatOpenAI</code> + <code>.content</code></td></tr>
+<tr><td>2</td><td>使用旧版 Chain API</td><td>代码冗长、调试困难</td><td>改用 LCEL 管道语法 <code>|</code></td></tr>
+<tr><td>3</td><td>Memory 无限膨胀</td><td>超 Token 上限 / 费用暴涨</td><td>用 SummaryMemory 或 WindowMemory</td></tr>
+<tr><td>4</td><td>chunk 大小不当</td><td>检索噪音大或丢失上下文</td><td>按文档类型调参：200-500（代码）500-1000（长文）</td></tr>
+<tr><td>5</td><td>Agent 无限循环</td><td>工具反复调、不收敛</td><td>清晰的 tool docstring + max_iterations</td></tr>
+<tr><td>6</td><td>RunnablePassthrough 覆盖</td><td>上游字段被意外覆盖</td><td>检查字段冲突，优先用 RunnableParallel</td></tr>
+<tr><td>7</td><td>HTML 噪声</td><td>检索结果全是网页导航栏文本</td><td>用 <code>BSHTMLLoader</code> 或自行清洗</td></tr>
+<tr><td>8</td><td>语义匹配失败</td><td>用户问题检索不到相关文档</td><td>HyDE / Multi-Query / Reranker / 微调 Embedding</td></tr>
+<tr><td>9</td><td>Tool 缺类型注解</td><td>参数传递错误、Agent 调用失败</td><td>完整的类型注解 + 清晰 docstring</td></tr>
+<tr><td>10</td><td>副作用工具无幂等</td><td>重复发邮件/重复下单</td><td>幂等键 / 执行前检查 / human_in_the_loop</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 附录 ═══════════════════════════════════════ -->
+<section class="sec">
+<div class="sec-title"><span class="num">📦</span><h2>推荐学习路径</h2></div>
+
+<div class="grid2">
+<div class="card">
+  <h3>🚀 快速入门路径</h3>
+  <ol>
+    <li>安装 <code>pip install langchain langchain-openai</code></li>
+    <li>跑通 ChatOpenAI + PromptTemplate 基础链</li>
+    <li>学习 LCEL 管道语法</li>
+    <li>搭建一个简单的 RAG 问答机器人</li>
+    <li>给 Agent 加 1-2 个工具试试</li>
+  </ol>
+</div>
+<div class="card">
+  <h3>📚 配套阅读</h3>
+  <ul>
+    <li><strong>LangGraph</strong>：复杂的 Agent 工作流控制 → 见本系列《LangGraph 状态图编排》</li>
+    <li><strong>LlamaIndex</strong>：数据密集型 RAG → 见本系列《LlamaIndex 数据框架》</li>
+    <li><strong>LangSmith</strong>：官方调试 & 监控平台</li>
+    <li><strong>LangServe</strong>：将 LangChain 应用部署为 REST API</li>
+  </ul>
+</div>
+</div>
+
+<div class="tip good"><span class="icon">✅</span><div class="content"><strong>最佳实践总结</strong>
+1. 始终用 LCEL，不用旧版 Chain 类<br>
+2. 模型调用加 <code>temperature</code> 控制随机性<br>
+3. 工具描述比工具实现更重要（LLM 无法看到代码）<br>
+4. 生产环境加 <code>fallbacks</code> 和 <code>rate_limiter</code><br>
+5. 善用 <code>.with_config({"tags":["prod"]})</code> 做监控追踪
+</div></div>
+</section>
+</div>
+
+<script>
+function copyCode(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='已复制';
+    setTimeout(()=>btn.textContent='复制',1500);
+  }).catch(()=>{
+    btn.textContent='失败';
+    setTimeout(()=>btn.textContent='复制',1500);
+  });
+}
+// Intersection Observer for TOC highlighting
+const sections = document.querySelectorAll('.sec[id]');
+const tocLinks = document.querySelectorAll('.nav-toc a');
+if(sections.length && tocLinks.length){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        tocLinks.forEach(a=>a.style.color='');
+        const link = document.querySelector(`.nav-toc a[href="#${e.target.id}"]`);
+        if(link){link.style.color='var(--pri)';link.style.fontWeight='700'}
+      }
+    });
+  },{rootMargin:'-80px 0px -60% 0px'});
+  sections.forEach(s=>observer.observe(s));
+}
+</script>
+</body>
+</html>

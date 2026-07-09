@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器学习与深度学习 · 理论基础全指南</title>
+
+<!-- KaTeX CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   CSS Variables & Reset
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#f8fafc;
+  --surface:#ffffff;
+  --border:#e2e8f0;
+  --border-light:#f1f5f9;
+  --text:#0f172a;
+  --text2:#475569;
+  --text3:#94a3b8;
+  --primary:#2563eb;
+  --primary-dark:#1d4ed8;
+  --primary-light:#dbeafe;
+  --primary-lighter:#eff6ff;
+  --purple:#7c3aed;
+  --purple-light:#ede9fe;
+  --green:#059669;
+  --green-light:#d1fae5;
+  --orange:#ea580c;
+  --orange-light:#fed7aa;
+  --red:#dc2626;
+  --red-light:#fee2e2;
+  --teal:#0891b2;
+  --teal-light:#cffafe;
+  --pink:#db2777;
+  --pink-light:#fce7f3;
+  --sidebar-w:280px;
+  --topbar-h:56px;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.10);
+  --font-mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Reading Progress Bar
+   ═══════════════════════════════════════════════════════════════ */
+.progress-bar{
+  position:fixed;top:0;left:0;right:0;
+  height:3px;background:transparent;
+  z-index:1000;
+}
+.progress-bar .fill{
+  height:100%;width:0;
+  background:linear-gradient(90deg,var(--primary),var(--purple));
+  transition:width .1s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Top Bar
+   ═══════════════════════════════════════════════════════════════ */
+.topbar{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--topbar-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 20px;gap:16px;
+  z-index:100;
+  box-shadow:var(--shadow-sm);
+}
+.topbar .logo{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:1.05rem;
+  color:var(--primary);text-decoration:none;
+  white-space:nowrap;
+}
+.topbar .logo .icon{
+  width:32px;height:32px;
+  background:linear-gradient(135deg,var(--primary),var(--purple));
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:1.1rem;flex-shrink:0;
+}
+.topbar .logo .sub{
+  font-weight:400;font-size:.72rem;
+  color:var(--text3);margin-left:2px;
+}
+.topbar .toggle{
+  display:none;
+  background:none;border:none;
+  font-size:1.4rem;color:var(--text2);
+  cursor:pointer;padding:4px;
+}
+.topbar .search-box{
+  margin-left:auto;
+  position:relative;
+}
+.topbar .search-box input{
+  width:240px;
+  padding:7px 14px 7px 36px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  font-size:.85rem;
+  background:var(--bg);
+  color:var(--text);
+  outline:none;
+  transition:var(--transition);
+}
+.topbar .search-box input:focus{
+  border-color:var(--primary);
+  background:var(--surface);
+  box-shadow:0 0 0 3px var(--primary-lighter);
+}
+.topbar .search-box .icon{
+  position:absolute;left:12px;top:50%;
+  transform:translateY(-50%);
+  color:var(--text3);font-size:.9rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Sidebar Navigation
+   ═══════════════════════════════════════════════════════════════ */
+.sidebar{
+  position:fixed;
+  top:var(--topbar-h);
+  left:0;bottom:0;
+  width:var(--sidebar-w);
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  z-index:90;
+  padding:16px 0;
+}
+.sidebar::-webkit-scrollbar{width:5px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.sidebar .toc-header{
+  padding:0 20px 12px;
+  font-size:.75rem;font-weight:700;
+  color:var(--text3);text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.sidebar .toc-section{margin-bottom:6px}
+.sidebar .toc-cat{
+  padding:10px 20px 6px;
+  font-size:.82rem;font-weight:700;
+  color:var(--primary);
+  display:flex;align-items:center;gap:6px;
+}
+.sidebar .toc-item{
+  display:block;
+  padding:6px 20px 6px 36px;
+  font-size:.84rem;
+  color:var(--text2);
+  text-decoration:none;
+  border-left:3px solid transparent;
+  transition:var(--transition);
+  line-height:1.5;
+}
+.sidebar .toc-item:hover{
+  background:var(--primary-lighter);
+  color:var(--primary);
+}
+.sidebar .toc-item.active{
+  background:var(--primary-lighter);
+  color:var(--primary-dark);
+  border-left-color:var(--primary);
+  font-weight:600;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Main Content
+   ═══════════════════════════════════════════════════════════════ */
+.main{
+  margin-left:var(--sidebar-w);
+  margin-top:var(--topbar-h);
+  padding:40px 48px 80px;
+  max-width:960px;
+}
+
+/* Hero Section */
+.hero{
+  background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 40%,#7c3aed 100%);
+  color:#fff;
+  border-radius:var(--radius);
+  padding:48px 40px;
+  margin-bottom:40px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;
+  top:-50%;right:-20%;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);
+  border-radius:50%;
+}
+.hero::after{
+  content:'';position:absolute;
+  bottom:-30%;left:-10%;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);
+  border-radius:50%;
+}
+.hero .badge{
+  display:inline-block;
+  padding:5px 14px;
+  background:rgba(255,255,255,.15);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:20px;
+  font-size:.78rem;font-weight:600;
+  margin-bottom:16px;
+  position:relative;z-index:1;
+}
+.hero h1{
+  font-size:2.2rem;font-weight:800;
+  margin-bottom:12px;
+  position:relative;z-index:1;
+  letter-spacing:-.02em;
+}
+.hero p{
+  font-size:1.05rem;
+  opacity:.9;
+  max-width:620px;
+  position:relative;z-index:1;
+}
+.hero .meta{
+  display:flex;gap:24px;
+  margin-top:24px;
+  position:relative;z-index:1;
+}
+.hero .meta-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:.85rem;opacity:.85;
+}
+.hero .meta-item .num{
+  font-weight:800;font-size:1.3rem;
+  color:#fff;opacity:1;
+}
+
+/* Section Styling */
+.section{
+  margin-bottom:56px;
+  scroll-margin-top:80px;
+}
+.section-title{
+  font-size:1.6rem;font-weight:800;
+  color:var(--text);
+  margin-bottom:8px;
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:12px;
+  border-bottom:2px solid var(--border);
+}
+.section-title .num{
+  display:inline-flex;
+  align-items:center;justify-content:center;
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  border-radius:10px;
+  font-size:1rem;
+  flex-shrink:0;
+}
+.section-desc{
+  color:var(--text2);
+  font-size:.95rem;
+  margin-bottom:28px;
+}
+
+/* Subsection */
+.subsection{
+  margin-bottom:36px;
+  scroll-margin-top:80px;
+}
+.subsection-title{
+  font-size:1.25rem;font-weight:700;
+  color:var(--text);
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.subsection-title .dot{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--primary);
+  flex-shrink:0;
+}
+
+/* Sub-subsection */
+h4.sub-sub{
+  font-size:1.05rem;font-weight:700;
+  color:var(--primary);
+  margin:20px 0 10px;
+}
+
+/* Paragraphs */
+p{margin-bottom:14px;color:var(--text);line-height:1.8}
+p .term{font-weight:600;color:var(--primary-dark)}
+
+/* Definition Box */
+.def-box{
+  background:var(--primary-lighter);
+  border-left:4px solid var(--primary);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:16px 20px;
+  margin:16px 0;
+}
+.def-box .label{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.75rem;font-weight:700;
+  color:var(--primary);
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:6px;
+}
+.def-box .term{
+  font-weight:700;font-size:1rem;
+  color:var(--text);
+  margin-bottom:4px;
+}
+.def-box p{
+  font-size:.9rem;color:var(--text2);
+  margin-bottom:0;
+}
+
+/* Info/Warn/Tip Boxes */
+.note-box{
+  border-radius:var(--radius-sm);
+  padding:14px 18px;
+  margin:16px 0;
+  font-size:.9rem;
+}
+.note-box.tip{
+  background:var(--green-light);
+  border-left:4px solid var(--green);
+}
+.note-box.warn{
+  background:var(--orange-light);
+  border-left:4px solid var(--orange);
+}
+.note-box.info{
+  background:var(--teal-light);
+  border-left:4px solid var(--teal);
+}
+.note-box .label{
+  font-weight:700;font-size:.8rem;
+  margin-bottom:4px;
+  display:block;
+}
+.note-box.tip .label{color:var(--green)}
+.note-box.warn .label{color:var(--orange)}
+.note-box.info .label{color:var(--teal)}
+
+/* Math Display */
+.math-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:20px 24px;
+  margin:16px 0;
+  overflow-x:auto;
+  position:relative;
+}
+.math-block::before{
+  content:'公式';
+  position:absolute;
+  top:6px;right:10px;
+  font-size:.65rem;
+  color:var(--text3);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+/* Code Block */
+.code-block{
+  background:#1e293b;
+  color:#e2e8f0;
+  border-radius:var(--radius-sm);
+  padding:18px 22px;
+  margin:16px 0;
+  overflow-x:auto;
+  font-family:var(--font-mono);
+  font-size:.84rem;
+  line-height:1.65;
+  position:relative;
+}
+.code-block::before{
+  content:attr(data-lang);
+  position:absolute;
+  top:6px;right:12px;
+  font-size:.65rem;
+  color:#64748b;
+  font-weight:600;
+  text-transform:uppercase;
+}
+.code-block .kw{color:#c084fc}
+.code-block .fn{color:#60a5fa}
+.code-block .str{color:#4ade80}
+.code-block .num{color:#fbbf24}
+.code-block .cmt{color:#64748b;font-style:italic}
+
+/* Tables */
+.table-wrap{
+  overflow-x:auto;
+  margin:16px 0;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.88rem;
+}
+thead{background:var(--primary-lighter)}
+th{
+  padding:10px 14px;
+  text-align:left;
+  font-weight:700;
+  color:var(--primary-dark);
+  border-bottom:2px solid var(--border);
+  white-space:nowrap;
+}
+td{
+  padding:10px 14px;
+  border-bottom:1px solid var(--border-light);
+  color:var(--text2);
+}
+tbody tr:hover{background:var(--primary-lighter)}
+tbody tr:last-child td{border-bottom:none}
+
+/* Cards Grid */
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:16px;
+  margin:20px 0;
+}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:18px 20px;
+  transition:var(--transition);
+}
+.card:hover{
+  box-shadow:var(--shadow-md);
+  border-color:var(--primary);
+  transform:translateY(-2px);
+}
+.card .card-icon{
+  width:40px;height:40px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
+  margin-bottom:12px;
+}
+.card .card-title{
+  font-weight:700;font-size:1rem;
+  color:var(--text);
+  margin-bottom:6px;
+}
+.card .card-desc{
+  font-size:.85rem;color:var(--text2);
+  line-height:1.6;
+}
+
+/* Paradigm Cards */
+.paradigm-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin:20px 0;
+}
+.paradigm-card{
+  border-radius:var(--radius);
+  padding:24px 20px;
+  position:relative;
+  overflow:hidden;
+}
+.paradigm-card.supervised{background:linear-gradient(135deg,#dbeafe,#eff6ff);border:1px solid #bfdbfe}
+.paradigm-card.unsupervised{background:linear-gradient(135deg,#ede9fe,#f5f3ff);border:1px solid #ddd6fe}
+.paradigm-card.reinforcement{background:linear-gradient(135deg,#d1fae5,#ecfdf5);border:1px solid #a7f3d0}
+.paradigm-card .p-icon{font-size:1.8rem;margin-bottom:10px}
+.paradigm-card .p-title{font-weight:800;font-size:1.1rem;margin-bottom:6px}
+.paradigm-card .p-desc{font-size:.84rem;color:var(--text2);line-height:1.6}
+.paradigm-card .p-tag{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:12px;
+  font-size:.72rem;font-weight:600;
+  margin-top:10px;
+}
+.paradigm-card.supervised .p-tag{background:#2563eb;color:#fff}
+.paradigm-card.unsupervised .p-tag{background:#7c3aed;color:#fff}
+.paradigm-card.reinforcement .p-tag{background:#059669;color:#fff}
+
+/* Comparison List */
+.compare-list{
+  list-style:none;
+  margin:12px 0;
+}
+.compare-list li{
+  padding:8px 0;
+  border-bottom:1px solid var(--border-light);
+  display:flex;align-items:start;gap:10px;
+  font-size:.9rem;
+}
+.compare-list li:last-child{border-bottom:none}
+.compare-list li .check{
+  color:var(--green);font-weight:700;flex-shrink:0;
+}
+.compare-list li .cross{
+  color:var(--red);font-weight:700;flex-shrink:0;
+}
+
+/* Algorithm Steps */
+.algo-steps{
+  counter-reset:step;
+  list-style:none;
+  margin:16px 0;
+}
+.algo-steps li{
+  position:relative;
+  padding:10px 0 10px 44px;
+  font-size:.9rem;
+  border-bottom:1px solid var(--border-light);
+}
+.algo-steps li:last-child{border-bottom:none}
+.algo-steps li::before{
+  counter-increment:step;
+  content:counter(step);
+  position:absolute;
+  left:0;top:10px;
+  width:28px;height:28px;
+  background:var(--primary);
+  color:#fff;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:700;
+}
+
+/* Inline Code */
+code.inline{
+  background:var(--border-light);
+  padding:2px 6px;
+  border-radius:4px;
+  font-family:var(--font-mono);
+  font-size:.85em;
+  color:var(--primary-dark);
+}
+
+/* Tag Badges */
+.tag-badge{
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:12px;
+  font-size:.72rem;font-weight:600;
+  margin-right:4px;
+}
+.tag-badge.blue{background:var(--primary-light);color:var(--primary-dark)}
+.tag-badge.purple{background:var(--purple-light);color:var(--purple)}
+.tag-badge.green{background:var(--green-light);color:var(--green)}
+.tag-badge.orange{background:var(--orange-light);color:var(--orange)}
+.tag-badge.red{background:var(--red-light);color:var(--red)}
+.tag-badge.teal{background:var(--teal-light);color:var(--teal)}
+.tag-badge.pink{background:var(--pink-light);color:var(--pink)}
+
+/* Architecture Diagram (CSS-based) */
+.arch-diagram{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:24px;
+  margin:16px 0;
+  text-align:center;
+}
+.arch-row{
+  display:flex;justify-content:center;gap:8px;
+  margin-bottom:8px;flex-wrap:wrap;
+}
+.arch-box{
+  padding:10px 16px;
+  border-radius:8px;
+  font-size:.82rem;font-weight:600;
+  border:2px solid;
+}
+.arch-box.input{background:var(--primary-lighter);border-color:var(--primary);color:var(--primary-dark)}
+.arch-box.hidden{background:var(--purple-light);border-color:var(--purple);color:var(--purple)}
+.arch-box.output{background:var(--green-light);border-color:var(--green);color:var(--green)}
+.arch-box.conv{background:var(--teal-light);border-color:var(--teal);color:var(--teal)}
+.arch-box.pool{background:var(--orange-light);border-color:var(--orange);color:var(--orange)}
+.arch-box.fc{background:var(--pink-light);border-color:var(--pink);color:var(--pink)}
+.arch-arrow{
+  color:var(--text3);font-size:1.2rem;
+  display:flex;align-items:center;
+}
+
+/* Footer */
+.footer{
+  text-align:center;
+  padding:32px 20px;
+  border-top:1px solid var(--border);
+  margin-top:60px;
+  color:var(--text3);
+  font-size:.85rem;
+}
+.footer a{color:var(--primary);text-decoration:none}
+
+/* Mobile Overlay */
+.overlay{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.4);
+  z-index:80;
+}
+.overlay.show{display:block}
+
+/* ═══════════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════════ */
+@media(max-width:1024px){
+  .paradigm-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{
+    transform:translateX(-100%);
+    transition:var(--transition);
+    box-shadow:var(--shadow-lg);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .topbar .toggle{display:block}
+  .topbar .search-box{display:none}
+  .main{
+    margin-left:0;
+    padding:24px 20px 60px;
+  }
+  .hero{padding:32px 24px}
+  .hero h1{font-size:1.6rem}
+  .hero p{font-size:.95rem}
+  .section-title{font-size:1.3rem}
+  .subsection-title{font-size:1.1rem}
+  .paradigm-grid{grid-template-columns:1fr}
+  .cards-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Reading Progress -->
+<div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+
+<!-- ═══ Top Bar ═══ -->
+<header class="topbar">
+  <button class="toggle" id="sidebarToggle" aria-label="Toggle navigation">☰</button>
+  <a class="logo" href="index.html">
+    <span class="icon">ML</span>
+    <span>机器学习与深度学习<span class="sub"> · 理论基础全指南</span></span>
+  </a>
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索章节..." />
+  </div>
+</header>
+
+<!-- ═══ Overlay ═══ -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ═══ Sidebar TOC ═══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="toc-header">📑 目录导航</div>
+
+  <div class="toc-section">
+    <div class="toc-cat">概述</div>
+    <a class="toc-item" href="#sec-overview">机器学习概述</a>
+    <a class="toc-item" href="#sec-paradigms">三大学习范式</a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-cat">监督学习</div>
+    <a class="toc-item" href="#sec-supervised">监督学习核心</a>
+    <a class="toc-item" href="#sec-linear-reg">线性回归</a>
+    <a class="toc-item" href="#sec-logistic">逻辑回归</a>
+    <a class="toc-item" href="#sec-decision-tree">决策树</a>
+    <a class="toc-item" href="#sec-svm">支持向量机</a>
+    <a class="toc-item" href="#sec-naive-bayes">朴素贝叶斯</a>
+    <a class="toc-item" href="#sec-knn">K近邻</a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-cat">无监督学习</div>
+    <a class="toc-item" href="#sec-unsupervised">无监督学习核心</a>
+    <a class="toc-item" href="#sec-kmeans">K-Means 聚类</a>
+    <a class="toc-item" href="#sec-pca">PCA 降维</a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-cat">强化学习</div>
+    <a class="toc-item" href="#sec-rl">强化学习核心</a>
+    <a class="toc-item" href="#sec-qlearning">Q-Learning</a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-cat">神经网络</div>
+    <a class="toc-item" href="#sec-nn-basics">神经网络基础</a>
+    <a class="toc-item" href="#sec-perceptron">感知机</a>
+    <a class="toc-item" href="#sec-activation">激活函数</a>
+    <a class="toc-item" href="#sec-backprop">反向传播</a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-cat">深度学习架构</div>
+    <a class="toc-item" href="#sec-cnn">卷积神经网络 CNN</a>
+    <a class="toc-item" href="#sec-rnn">循环神经网络 RNN</a>
+    <a class="toc-item" href="#sec-lstm">LSTM</a>
+    <a class="toc-item" href="#sec-transformer">Transformer</a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-cat">训练与优化</div>
+    <a class="toc-item" href="#sec-loss">损失函数</a>
+    <a class="toc-item" href="#sec-optimizer">优化器</a>
+    <a class="toc-item" href="#sec-overfit">过拟合与正则化</a>
+  </div>
+</nav>
+
+<!-- ═══ Main Content ═══ -->
+<main class="main">
+
+<!-- ──────────────── Hero ──────────────── -->
+<section class="hero">
+  <span class="badge">📖 系统性教学文档</span>
+  <h1>机器学习与深度学习<br>理论基础全指南</h1>
+  <p>从三大学习范式到深度学习核心架构，从数学原理到工程实践 —— 一份适合系统性学习的完整教程，覆盖监督学习、无监督学习、强化学习、神经网络、CNN/RNN/LSTM/Transformer、损失函数、优化器与正则化技术。</p>
+  <div class="meta">
+    <div class="meta-item"><span class="num">8</span> 大章节</div>
+    <div class="meta-item"><span class="num">15+</span> 核心算法</div>
+    <div class="meta-item"><span class="num">30+</span> 数学公式</div>
+    <div class="meta-item"><span class="num">4</span> 深度架构</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第一章：机器学习概述
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-overview">
+  <h2 class="section-title"><span class="num">1</span>机器学习概述</h2>
+  <p class="section-desc">理解机器学习的本质、分类体系与核心术语，建立全局认知框架。</p>
+
+  <div class="def-box">
+    <span class="label">📌 核心定义</span>
+    <div class="term">机器学习 (Machine Learning)</div>
+    <p>让计算机从<strong>数据</strong>中自动学习<strong>模式</strong>和<strong>规律</strong>，并在无需显式编程的情况下对新数据做出<strong>预测</strong>或<strong>决策</strong>的方法论体系。其核心思想是用数据替代规则，用学习替代编程。</p>
+  </div>
+
+  <div class="subsection" id="sec-ml-essence">
+    <h3 class="subsection-title"><span class="dot"></span>1.1 从传统编程到机器学习</h3>
+    <p>传统编程范式是 <code class="inline">数据 + 规则 → 答案</code>，程序员手动编写规则逻辑。而机器学习范式是 <code class="inline">数据 + 答案 → 规则</code>，算法自动从数据中归纳出规则。</p>
+
+    <div class="arch-diagram">
+      <div style="display:flex;justify-content:center;gap:40px;flex-wrap:wrap">
+        <div>
+          <div class="arch-row"><div class="arch-box input">数据</div></div>
+          <div class="arch-row"><div class="arch-box hidden" style="opacity:.5">+ 规则（人工编写）</div></div>
+          <div class="arch-row"><div class="arch-arrow">↓</div></div>
+          <div class="arch-row"><div class="arch-box output">答案</div></div>
+          <div style="font-size:.75rem;color:var(--text3);margin-top:8px">传统编程</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:2rem;color:var(--text3)">→</div>
+        <div>
+          <div class="arch-row"><div class="arch-box input">数据</div></div>
+          <div class="arch-row"><div class="arch-box hidden">+ 答案（标签）</div></div>
+          <div class="arch-row"><div class="arch-arrow">↓</div></div>
+          <div class="arch-row"><div class="arch-box output">规则（自动学习）</div></div>
+          <div style="font-size:.75rem;color:var(--text3);margin-top:8px">机器学习</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>1.2 核心术语</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>术语</th><th>英文</th><th>含义</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>特征</strong></td><td>Feature</td><td>输入数据的可度量属性，如房屋面积、卧室数量</td></tr>
+          <tr><td><strong>标签</strong></td><td>Label</td><td>监督学习中的目标输出，如房价、类别</td></tr>
+          <tr><td><strong>样本</strong></td><td>Sample</td><td>一条完整的数据记录（特征+标签）</td></tr>
+          <tr><td><strong>模型</strong></td><td>Model</td><td>从数据中学到的函数映射 $f: X \rightarrow Y$</td></tr>
+          <tr><td><strong>训练集</strong></td><td>Training Set</td><td>用于训练模型的数据子集</td></tr>
+          <tr><td><strong>测试集</strong></td><td>Test Set</td><td>用于评估模型泛化能力的数据子集</td></tr>
+          <tr><td><strong>假设空间</strong></td><td>Hypothesis Space</td><td>模型所有可能函数的集合</td></tr>
+          <tr><td><strong>泛化能力</strong></td><td>Generalization</td><td>模型对未见过的数据的预测能力</td></tr>
+          <tr><td><strong>损失函数</strong></td><td>Loss Function</td><td>衡量预测值与真实值差距的函数 $L(\hat{y}, y)$</td></tr>
+          <tr><td><strong>超参数</strong></td><td>Hyperparameter</td><td>训练前手动设置的参数，如学习率、迭代次数</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>1.3 机器学习工作流</h3>
+    <ol class="algo-steps">
+      <li><strong>数据收集</strong> — 获取高质量的训练数据，数据量与质量直接决定模型上限</li>
+      <li><strong>数据预处理</strong> — 清洗噪声、处理缺失值、特征编码、归一化/标准化</li>
+      <li><strong>特征工程</strong> — 特征提取、特征选择、特征变换，将原始数据转化为模型可用的特征</li>
+      <li><strong>模型选择</strong> — 根据问题类型（分类/回归/聚类）选择合适的算法</li>
+      <li><strong>模型训练</strong> — 用训练数据拟合模型参数，最小化损失函数</li>
+      <li><strong>模型评估</strong> — 在验证集/测试集上评估性能指标（准确率、F1、RMSE等）</li>
+      <li><strong>模型部署</strong> — 将训练好的模型上线，持续监控性能并迭代</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第二章：三大学习范式
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-paradigms">
+  <h2 class="section-title"><span class="num">2</span>三大学习范式</h2>
+  <p class="section-desc">监督学习、无监督学习与强化学习构成了机器学习的三大核心范式，各自解决不同类型的问题。</p>
+
+  <div class="paradigm-grid">
+    <div class="paradigm-card supervised">
+      <div class="p-icon">🎯</div>
+      <div class="p-title">监督学习</div>
+      <div class="p-desc">从<strong>带标签</strong>的数据中学习输入到输出的映射关系。每个训练样本都有明确的"标准答案"。</div>
+      <span class="p-tag">分类 / 回归</span>
+    </div>
+    <div class="paradigm-card unsupervised">
+      <div class="p-icon">🔍</div>
+      <div class="p-title">无监督学习</div>
+      <div class="p-desc">从<strong>无标签</strong>的数据中发现内在结构和模式。没有标准答案，靠算法自行发现规律。</div>
+      <span class="p-tag">聚类 / 降维</span>
+    </div>
+    <div class="paradigm-card reinforcement">
+      <div class="p-icon">🎮</div>
+      <div class="p-title">强化学习</div>
+      <div class="p-desc">通过<strong>试错与奖励</strong>机制学习最优决策策略。智能体在环境中行动，根据反馈调整行为。</div>
+      <span class="p-tag">决策 / 控制</span>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>2.1 三大范式对比</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>维度</th><th>监督学习</th><th>无监督学习</th><th>强化学习</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>数据</strong></td><td>有标签 (X, Y)</td><td>无标签 (X)</td><td>状态-动作-奖励序列</td></tr>
+          <tr><td><strong>目标</strong></td><td>学习 X→Y 映射</td><td>发现数据结构</td><td>最大化累积奖励</td></tr>
+          <tr><td><strong>反馈</strong></td><td>直接反馈（标签）</td><td>无反馈</td><td>延迟反馈（奖励）</td></tr>
+          <tr><td><strong>典型任务</strong></td><td>分类、回归</td><td>聚类、降维、密度估计</td><td>游戏AI、机器人控制</td></tr>
+          <tr><td><strong>代表算法</strong></td><td>SVM、决策树、神经网络</td><td>K-Means、PCA、DBSCAN</td><td>Q-Learning、PPO、DQN</td></tr>
+          <tr><td><strong>评估难度</strong></td><td>较易（有标准答案）</td><td>较难（无标准答案）</td><td>中等（看累积奖励）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note-box info">
+    <span class="label">💡 延伸：半监督学习与自监督学习</span>
+    <p>除了三大范式外，还有<strong>半监督学习</strong>（少量有标签+大量无标签数据）和<strong>自监督学习</strong>（从数据本身构造标签，如语言模型的掩码预测）。自监督学习是当前大语言模型（GPT、BERT）成功的关键技术之一。</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第三章：监督学习
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-supervised">
+  <h2 class="section-title"><span class="num">3</span>监督学习</h2>
+  <p class="section-desc">监督学习是机器学习中最成熟的范式。给定训练集 $D = \{(x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n)\}$，目标是学习一个映射函数 $f: \mathcal{X} \rightarrow \mathcal{Y}$，使得对新的输入 $x$，能预测出 $y$。</p>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>3.1 分类 vs 回归</h3>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon" style="background:var(--primary-lighter)">📊</div>
+        <div class="card-title">回归 (Regression)</div>
+        <div class="card-desc">预测<strong>连续值</strong>。如房价预测、温度预测、股票价格预测。输出空间 $\mathcal{Y} = \mathbb{R}$。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--purple-light)">🏷️</div>
+        <div class="card-title">分类 (Classification)</div>
+        <div class="card-desc">预测<strong>离散类别</strong>。如垃圾邮件检测、图像识别、疾病诊断。输出空间 $\mathcal{Y} = \{1, 2, \ldots, K\}$。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 线性回归 -->
+  <div class="subsection" id="sec-linear-reg">
+    <h3 class="subsection-title"><span class="dot"></span>3.2 线性回归 (Linear Regression)</h3>
+    <p>线性回归是最基础的回归算法，假设因变量与自变量之间存在线性关系。</p>
+
+    <div class="def-box">
+      <span class="label">📌 定义</span>
+      <div class="term">线性回归</div>
+      <p>给定特征向量 $\mathbf{x} = (x_1, x_2, \ldots, x_d)$，模型假设输出 $y$ 与输入之间满足线性关系：$\hat{y} = w_1 x_1 + w_2 x_2 + \cdots + w_d x_d + b$，其中 $\mathbf{w}$ 是权重向量，$b$ 是偏置。</p>
+    </div>
+
+    <h4 class="sub-sub">数学模型</h4>
+    <p>用向量形式表示：</p>
+    <div class="math-block">
+      $$\hat{y} = \mathbf{w}^\top \mathbf{x} + b$$
+    </div>
+    <p>对于 $n$ 个样本的数据集，用矩阵形式表示（将偏置 $b$ 吸收到 $\mathbf{w}$ 中，并给 $\mathbf{x}$ 增加一维常数 1）：</p>
+    <div class="math-block">
+      $$\hat{\mathbf{y}} = \mathbf{X}\mathbf{w}$$
+    </div>
+    <p>其中 $\mathbf{X} \in \mathbb{R}^{n \times (d+1)}$ 是设计矩阵，$\mathbf{w} \in \mathbb{R}^{d+1}$ 是参数向量。</p>
+
+    <h4 class="sub-sub">损失函数：均方误差 (MSE)</h4>
+    <p>目标是最小化预测值与真实值之间的均方误差：</p>
+    <div class="math-block">
+      $$J(\mathbf{w}) = \frac{1}{n} \sum_{i=1}^{n} (\hat{y}_i - y_i)^2 = \frac{1}{n} \|\mathbf{X}\mathbf{w} - \mathbf{y}\|^2$$
+    </div>
+
+    <h4 class="sub-sub">求解方法一：正规方程 (Normal Equation)</h4>
+    <p>对 $J(\mathbf{w})$ 关于 $\mathbf{w}$ 求导并令其为零，得到闭式解：</p>
+    <div class="math-block">
+      $$\nabla_\mathbf{w} J = \frac{2}{n} \mathbf{X}^\top (\mathbf{X}\mathbf{w} - \mathbf{y}) = 0$$
+    </div>
+    <div class="math-block">
+      $$\mathbf{w}^* = (\mathbf{X}^\top \mathbf{X})^{-1} \mathbf{X}^\top \mathbf{y}$$
+    </div>
+
+    <div class="note-box warn">
+      <span class="label">⚠️ 注意</span>
+      <p>当 $\mathbf{X}^\top \mathbf{X}$ 不可逆时（特征间线性相关或特征数 > 样本数），需要使用伪逆或正则化。</p>
+    </div>
+
+    <h4 class="sub-sub">求解方法二：梯度下降 (Gradient Descent)</h4>
+    <p>当数据量大时，正规方程求逆代价太高（$O(d^3)$），改用迭代式的梯度下降：</p>
+    <div class="math-block">
+      $$\mathbf{w} \leftarrow \mathbf{w} - \eta \cdot \nabla_\mathbf{w} J = \mathbf{w} - \frac{2\eta}{n} \mathbf{X}^\top (\mathbf{X}\mathbf{w} - \mathbf{y})$$
+    </div>
+    <p>其中 $\eta$ 是学习率，控制每步更新的步长。</p>
+
+    <div class="note-box tip">
+      <span class="label">✅ 梯度下降变体</span>
+      <p><strong>批量梯度下降 (BGD)</strong>：每次用全部数据计算梯度，稳定但慢。<br>
+      <strong>随机梯度下降 (SGD)</strong>：每次用一个样本，快但不稳定。<br>
+      <strong>小批量梯度下降 (Mini-batch GD)</strong>：每次用一小批数据，兼顾效率与稳定性，实际最常用。</p>
+    </div>
+  </div>
+
+  <!-- 逻辑回归 -->
+  <div class="subsection" id="sec-logistic">
+    <h3 class="subsection-title"><span class="dot"></span>3.3 逻辑回归 (Logistic Regression)</h3>
+    <p>虽然名字中有"回归"，但逻辑回归实际用于<strong>二分类</strong>问题。它通过 Sigmoid 函数将线性输出映射到 $(0, 1)$ 区间，表示属于正类的概率。</p>
+
+    <h4 class="sub-sub">Sigmoid 函数</h4>
+    <div class="math-block">
+      $$\sigma(z) = \frac{1}{1 + e^{-z}}$$
+    </div>
+    <p>其导数有优美的性质：$\sigma'(z) = \sigma(z)(1 - \sigma(z))$，这在反向传播中非常方便。</p>
+
+    <h4 class="sub-sub">模型</h4>
+    <div class="math-block">
+      $$P(y=1 \mid \mathbf{x}) = \sigma(\mathbf{w}^\top \mathbf{x} + b) = \frac{1}{1 + e^{-(\mathbf{w}^\top \mathbf{x} + b)}}$$
+    </div>
+
+    <h4 class="sub-sub">损失函数：交叉熵</h4>
+    <p>逻辑回归不使用 MSE（会导致非凸优化），而是使用<strong>二元交叉熵损失</strong>：</p>
+    <div class="math-block">
+      $$J(\mathbf{w}) = -\frac{1}{n} \sum_{i=1}^{n} \left[ y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \right]$$
+    </div>
+    <p>其中 $\hat{y}_i = \sigma(\mathbf{w}^\top \mathbf{x}_i + b)$。这个损失函数是凸函数，保证梯度下降能收敛到全局最优。</p>
+
+    <div class="note-box info">
+      <span class="label">💡 对数几率视角</span>
+      <p>对 Sigmoid 取对数可得：<br>
+      $\log\frac{P(y=1|\mathbf{x})}{1 - P(y=1|\mathbf{x})} = \mathbf{w}^\top \mathbf{x} + b$<br>
+      左边是<strong>对数几率 (log-odds)</strong>，即逻辑回归实际上是在用线性模型拟合对数几率。</p>
+    </div>
+  </div>
+
+  <!-- 决策树 -->
+  <div class="subsection" id="sec-decision-tree">
+    <h3 class="subsection-title"><span class="dot"></span>3.4 决策树 (Decision Tree)</h3>
+    <p>决策树是一种基于树形结构进行决策的算法，具有天然的可解释性。每个内部节点是一个特征测试，每个分支是一个测试结果，每个叶节点是一个类别或值。</p>
+
+    <div class="def-box">
+      <span class="label">📌 定义</span>
+      <div class="term">决策树</div>
+      <p>一种递归地选择最优特征对样本空间进行划分的算法。每次选择一个特征，按某种准则将数据集分成若干子集，直到子集足够"纯"（全部属于同一类别）或满足停止条件。</p>
+    </div>
+
+    <h4 class="sub-sub">核心问题：如何选择划分特征？</h4>
+    <p>不同的决策树算法使用不同的"纯度"度量指标：</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>算法</th><th>划分准则</th><th>公式</th><th>特点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ID3</strong></td>
+            <td>信息增益</td>
+            <td>$Gain(D, A) = Ent(D) - \sum \frac{|D_v|}{|D|} Ent(D_v)$</td>
+            <td>偏好特征值多的特征</td>
+          </tr>
+          <tr>
+            <td><strong>C4.5</strong></td>
+            <td>信息增益率</td>
+            <td>$Gain\_ratio(D, A) = \frac{Gain(D, A)}{IV(A)}$</td>
+            <td>修正了 ID3 的偏好</td>
+          </tr>
+          <tr>
+            <td><strong>CART</strong></td>
+            <td>基尼指数</td>
+            <td>$Gini(D) = 1 - \sum_{k=1}^{K} p_k^2$</td>
+            <td>二叉树，可用于分类和回归</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="sub-sub">信息熵 (Information Entropy)</h4>
+    <p>信息熵衡量数据集的不确定性：</p>
+    <div class="math-block">
+      $$Ent(D) = -\sum_{k=1}^{K} p_k \log_2 p_k$$
+    </div>
+    <p>其中 $p_k$ 是第 $k$ 类样本在 $D$ 中的比例。熵越低，数据越纯。当所有样本属于同一类时，$Ent(D) = 0$。</p>
+
+    <h4 class="sub-sub">基尼指数 (Gini Index)</h4>
+    <div class="math-block">
+      $$Gini(D) = 1 - \sum_{k=1}^{K} p_k^2$$
+    </div>
+    <p>基尼指数衡量从 $D$ 中随机抽两个样本属于不同类的概率。基尼越小，纯度越高。CART 算法选择使划分后基尼指数最小的特征。</p>
+
+    <div class="note-box tip">
+      <span class="label">✅ 决策树的优缺点</span>
+      <p><strong>优点</strong>：可解释性强、不需特征归一化、能处理混合类型特征。<br>
+      <strong>缺点</strong>：容易过拟合、对数据微小变化敏感、难以处理异或等复杂关系。</p>
+    </div>
+  </div>
+
+  <!-- SVM -->
+  <div class="subsection" id="sec-svm">
+    <h3 class="subsection-title"><span class="dot"></span>3.5 支持向量机 (SVM)</h3>
+    <p>支持向量机是一种强大的二分类算法，其核心思想是找到一个超平面，使不同类别的样本之间的<strong>间隔 (margin)</strong> 最大化。</p>
+
+    <div class="def-box">
+      <span class="label">📌 核心概念</span>
+      <div class="term">支持向量机 (Support Vector Machine)</div>
+      <p>在特征空间中寻找一个最优分离超平面 $\mathbf{w}^\top \mathbf{x} + b = 0$，使得离超平面最近的样本点（支持向量）到超平面的距离最大化。SVM 通过最大化间隔来提高模型的泛化能力。</p>
+    </div>
+
+    <h4 class="sub-sub">最大间隔超平面</h4>
+    <p>对于线性可分数据，超平面到样本点的距离为：</p>
+    <div class="math-block">
+      $$\text{margin} = \frac{2}{\|\mathbf{w}\|}$$
+    </div>
+    <p>最大化间隔等价于最小化 $\|\mathbf{w}\|^2$，因此优化问题为：</p>
+    <div class="math-block">
+      $$\min_{\mathbf{w}, b} \frac{1}{2} \|\mathbf{w}\|^2 \quad \text{s.t.} \quad y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1, \quad \forall i$$
+    </div>
+
+    <h4 class="sub-sub">软间隔 (Soft Margin)</h4>
+    <p>实际数据通常不是严格线性可分的，引入松弛变量 $\xi_i \geq 0$ 允许部分样本违反约束：</p>
+    <div class="math-block">
+      $$\min_{\mathbf{w}, b, \boldsymbol{\xi}} \frac{1}{2} \|\mathbf{w}\|^2 + C \sum_{i=1}^{n} \xi_i \quad \text{s.t.} \quad y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$
+    </div>
+    <p>其中 $C$ 是正则化参数，控制间隔宽度与分类错误之间的权衡。$C$ 越大，对错误越不容忍。</p>
+
+    <h4 class="sub-sub">核技巧 (Kernel Trick)</h4>
+    <p>对于线性不可分的数据，SVM 通过<strong>核函数</strong>将数据映射到高维空间，使其在高维空间中线性可分：</p>
+    <div class="math-block">
+      $$K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i)^\top \phi(\mathbf{x}_j)$$
+    </div>
+    <p>核技巧的巧妙之处在于：不需要显式计算高维映射 $\phi(\mathbf{x})$，只需直接计算核函数 $K$ 即可。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>核函数</th><th>公式</th><th>适用场景</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>线性核</td><td>$K(\mathbf{x}, \mathbf{z}) = \mathbf{x}^\top \mathbf{z}$</td><td>线性可分数据，高维稀疏特征</td></tr>
+          <tr><td>多项式核</td><td>$K(\mathbf{x}, \mathbf{z}) = (\mathbf{x}^\top \mathbf{z} + c)^d$</td><td>需要非线性边界</td></tr>
+          <tr><td>RBF (高斯) 核</td><td>$K(\mathbf{x}, \mathbf{z}) = e^{-\gamma \|\mathbf{x} - \mathbf{z}\|^2}$</td><td>最常用，适合大多数非线性问题</td></tr>
+          <tr><td>Sigmoid 核</td><td>$K(\mathbf{x}, \mathbf{z}) = \tanh(\alpha \mathbf{x}^\top \mathbf{z} + c)$</td><td>类似神经网络的激活</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 朴素贝叶斯 -->
+  <div class="subsection" id="sec-naive-bayes">
+    <h3 class="subsection-title"><span class="dot"></span>3.6 朴素贝叶斯 (Naive Bayes)</h3>
+    <p>朴素贝叶斯基于贝叶斯定理，假设特征之间<strong>条件独立</strong>（这就是"朴素"的来源），是一种简单但高效的分类算法。</p>
+
+    <h4 class="sub-sub">贝叶斯定理</h4>
+    <div class="math-block">
+      $$P(y \mid \mathbf{x}) = \frac{P(\mathbf{x} \mid y) P(y)}{P(\mathbf{x})}$$
+    </div>
+
+    <h4 class="sub-sub">朴素独立性假设</h4>
+    <p>假设在给定类别 $y$ 的条件下，各特征相互独立：</p>
+    <div class="math-block">
+      $$P(\mathbf{x} \mid y) = P(x_1 \mid y) \cdot P(x_2 \mid y) \cdots P(x_d \mid y) = \prod_{j=1}^{d} P(x_j \mid y)$$
+    </div>
+    <p>因此分类决策为：</p>
+    <div class="math-block">
+      $$\hat{y} = \arg\max_y P(y) \prod_{j=1}^{d} P(x_j \mid y)$$
+    </div>
+
+    <div class="note-box info">
+      <span class="label">💡 应用场景</span>
+      <p>朴素贝叶斯在<strong>文本分类</strong>（如垃圾邮件过滤、情感分析）中表现优异，因为词袋模型中词与词之间的独立性假设相对合理，且计算高效。</p>
+    </div>
+  </div>
+
+  <!-- KNN -->
+  <div class="subsection" id="sec-knn">
+    <h3 class="subsection-title"><span class="dot"></span>3.7 K近邻 (K-Nearest Neighbors)</h3>
+    <p>KNN 是一种"懒惰学习"算法 —— 它不在训练阶段构建模型，而是在预测时直接查找最近的 $k$ 个训练样本进行投票。</p>
+
+    <div class="def-box">
+      <span class="label">📌 定义</span>
+      <div class="term">K近邻算法</div>
+      <p>给定测试样本 $\mathbf{x}$，在训练集中找到与之距离最近的 $k$ 个样本，然后通过多数投票（分类）或平均值（回归）决定输出。</p>
+    </div>
+
+    <h4 class="sub-sub">距离度量</h4>
+    <div class="math-block">
+      $$d(\mathbf{x}, \mathbf{z}) = \left( \sum_{j=1}^{d} |x_j - z_j|^p \right)^{1/p}$$
+    </div>
+    <p>当 $p=2$ 时为欧氏距离，$p=1$ 时为曼哈顿距离，$p \to \infty$ 时为切比雪夫距离。</p>
+
+    <div class="note-box warn">
+      <span class="label">⚠️ 注意</span>
+      <p>KNN 需要对特征进行<strong>归一化</strong>，否则取值范围大的特征会主导距离计算。$k$ 值太小容易过拟合，太大容易欠拟合，通常通过交叉验证选择。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第四章：无监督学习
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-unsupervised">
+  <h2 class="section-title"><span class="num">4</span>无监督学习</h2>
+  <p class="section-desc">无监督学习从无标签数据中发现隐藏的结构和模式，主要包括聚类、降维和密度估计。</p>
+
+  <!-- K-Means -->
+  <div class="subsection" id="sec-kmeans">
+    <h3 class="subsection-title"><span class="dot"></span>4.1 K-Means 聚类</h3>
+    <p>K-Means 是最经典的聚类算法，将 $n$ 个样本划分为 $K$ 个簇，使簇内样本尽可能相似，簇间尽可能不同。</p>
+
+    <div class="def-box">
+      <span class="label">📌 定义</span>
+      <div class="term">K-Means 算法</div>
+      <p>给定 $K$ 值，将数据集划分为 $K$ 个簇 $\{C_1, C_2, \ldots, C_K\}$，最小化所有样本到其所属簇中心的距离平方和（即簇内方差）。</p>
+    </div>
+
+    <h4 class="sub-sub">优化目标</h4>
+    <div class="math-block">
+      $$J = \sum_{k=1}^{K} \sum_{\mathbf{x}_i \in C_k} \|\mathbf{x}_i - \boldsymbol{\mu}_k\|^2$$
+    </div>
+    <p>其中 $\boldsymbol{\mu}_k$ 是第 $k$ 个簇的中心（簇内样本均值）。</p>
+
+    <h4 class="sub-sub">算法步骤</h4>
+    <ol class="algo-steps">
+      <li><strong>初始化</strong>：随机选择 $K$ 个样本点作为初始簇中心 $\{\boldsymbol{\mu}_1, \boldsymbol{\mu}_2, \ldots, \boldsymbol{\mu}_K\}$</li>
+      <li><strong>分配</strong>：将每个样本分配到最近的簇中心所在的簇：$C_k = \{\mathbf{x}_i : \|\mathbf{x}_i - \boldsymbol{\mu}_k\| \leq \|\mathbf{x}_i - \boldsymbol{\mu}_j\|, \forall j\}$</li>
+      <li><strong>更新</strong>：重新计算每个簇的中心：$\boldsymbol{\mu}_k = \frac{1}{|C_k|} \sum_{\mathbf{x}_i \in C_k} \mathbf{x}_i$</li>
+      <li><strong>迭代</strong>：重复步骤 2-3，直到簇中心不再变化或达到最大迭代次数</li>
+    </ol>
+
+    <div class="note-box warn">
+      <span class="label">⚠️ K-Means 的局限性</span>
+      <p>① 需要预先指定 $K$ 值；② 对初始中心敏感（可用 K-Means++ 改善）；③ 只能发现球形簇，不适合非凸形状；④ 对异常值敏感。</p>
+    </div>
+  </div>
+
+  <!-- PCA -->
+  <div class="subsection" id="sec-pca">
+    <h3 class="subsection-title"><span class="dot"></span>4.2 PCA 降维</h3>
+    <p>主成分分析 (PCA) 是最常用的降维方法，通过线性变换将高维数据投影到低维空间，同时尽可能保留数据的方差（信息量）。</p>
+
+    <div class="def-box">
+      <span class="label">📌 定义</span>
+      <div class="term">主成分分析 (Principal Component Analysis)</div>
+      <p>找到一个低维子空间，使得数据在该子空间上的投影方差最大。等价于找到数据协方差矩阵的特征向量（主成分），保留最大特征值对应的方向。</p>
+    </div>
+
+    <h4 class="sub-sub">数学推导</h4>
+    <p>给定中心化后的数据 $\mathbf{X}$（均值为零），其协方差矩阵为：</p>
+    <div class="math-block">
+      $$\boldsymbol{\Sigma} = \frac{1}{n} \mathbf{X}^\top \mathbf{X}$$
+    </div>
+    <p>对 $\boldsymbol{\Sigma}$ 进行特征值分解：</p>
+    <div class="math-block">
+      $$\boldsymbol{\Sigma} \mathbf{v}_j = \lambda_j \mathbf{v}_j$$
+    </div>
+    <p>特征值 $\lambda_j$ 表示数据在对应特征向量 $\mathbf{v}_j$ 方向上的方差。选择前 $k$ 个最大特征值对应的特征向量组成投影矩阵 $\mathbf{W} = [\mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_k]$，降维结果为：</p>
+    <div class="math-block">
+      $$\mathbf{Z} = \mathbf{X} \mathbf{W}$$
+    </div>
+
+    <h4 class="sub-sub">信息保留率</h4>
+    <p>降维后保留的信息量比例为：</p>
+    <div class="math-block">
+      $$\text{保留率} = \frac{\sum_{j=1}^{k} \lambda_j}{\sum_{j=1}^{d} \lambda_j}$$
+    </div>
+
+    <div class="note-box tip">
+      <span class="label">✅ PCA 应用</span>
+      <p>数据可视化（降至2D/3D）、特征压缩、噪声过滤、加速训练。在深度学习中，PCA 也常用于分析中间层特征的表示结构。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第五章：强化学习
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-rl">
+  <h2 class="section-title"><span class="num">5</span>强化学习</h2>
+  <p class="section-desc">强化学习研究智能体如何在与环境的交互中通过试错学习最优策略，以最大化长期累积奖励。</p>
+
+  <div class="def-box">
+    <span class="label">📌 核心定义</span>
+    <div class="term">强化学习 (Reinforcement Learning)</div>
+    <p>智能体 (Agent) 在环境 (Environment) 中根据当前状态 (State) 选择动作 (Action)，环境返回新的状态和奖励 (Reward)。智能体的目标是学习一个策略 $\pi(a|s)$，使得累积奖励的期望最大化。</p>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>5.1 马尔可夫决策过程 (MDP)</h3>
+    <p>强化学习的数学基础是马尔可夫决策过程，定义为五元组 $(\mathcal{S}, \mathcal{A}, P, R, \gamma)$：</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>符号</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td>$\mathcal{S}$</td><td>状态空间 (State Space)</td></tr>
+          <tr><td>$\mathcal{A}$</td><td>动作空间 (Action Space)</td></tr>
+          <tr><td>$P(s'|s,a)$</td><td>状态转移概率 (Transition Probability)</td></tr>
+          <tr><td>$R(s,a)$</td><td>奖励函数 (Reward Function)</td></tr>
+          <tr><td>$\gamma \in [0,1)$</td><td>折扣因子 (Discount Factor)，权衡即时与未来奖励</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>5.2 核心概念</h3>
+
+    <h4 class="sub-sub">累积回报 (Return)</h4>
+    <div class="math-block">
+      $$G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}$$
+    </div>
+
+    <h4 class="sub-sub">状态价值函数 (State Value Function)</h4>
+    <div class="math-block">
+      $$V^\pi(s) = \mathbb{E}_\pi \left[ G_t \mid S_t = s \right] = \mathbb{E}_\pi \left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \mid S_t = s \right]$$
+    </div>
+    <p>表示在策略 $\pi$ 下，从状态 $s$ 出发的期望累积回报。</p>
+
+    <h4 class="sub-sub">动作价值函数 (Action-Value Function)</h4>
+    <div class="math-block">
+      $$Q^\pi(s, a) = \mathbb{E}_\pi \left[ G_t \mid S_t = s, A_t = a \right]$$
+    </div>
+    <p>表示在状态 $s$ 下采取动作 $a$，此后遵循策略 $\pi$ 的期望累积回报。</p>
+
+    <h4 class="sub-sub">贝尔曼方程 (Bellman Equation)</h4>
+    <p>价值函数满足递归关系，这是所有 RL 算法的基础：</p>
+    <div class="math-block">
+      $$V^\pi(s) = \sum_a \pi(a|s) \sum_{s'} P(s'|s,a) \left[ R(s,a) + \gamma V^\pi(s') \right]$$
+    </div>
+    <div class="math-block">
+      $$Q^\pi(s, a) = \sum_{s'} P(s'|s,a) \left[ R(s,a) + \gamma \sum_{a'} \pi(a'|s') Q^\pi(s', a') \right]$$
+    </div>
+  </div>
+
+  <!-- Q-Learning -->
+  <div class="subsection" id="sec-qlearning">
+    <h3 class="subsection-title"><span class="dot"></span>5.3 Q-Learning</h3>
+    <p>Q-Learning 是一种经典的<strong>无模型 (model-free)</strong>、<strong>离策略 (off-policy)</strong> 的 TD 学习算法。</p>
+
+    <h4 class="sub-sub">更新规则</h4>
+    <div class="math-block">
+      $$Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \left[ r_{t+1} + \gamma \max_{a} Q(s_{t+1}, a) - Q(s_t, a_t) \right]$$
+    </div>
+    <p>其中 $\alpha$ 是学习率。更新目标使用了下一状态的最大 Q 值（贪心策略），而行为策略可以是 $\epsilon$-greedy（探索与利用的平衡）。</p>
+
+    <h4 class="sub-sub">$\epsilon$-Greedy 策略</h4>
+    <ul class="compare-list">
+      <li><span class="check">✓</span> 以概率 $1 - \epsilon$ 选择 Q 值最大的动作（利用 exploitation）</li>
+      <li><span class="check">✓</span> 以概率 $\epsilon$ 随机选择动作（探索 exploration）</li>
+      <li><span class="check">✓</span> 随着训练进行，逐步减小 $\epsilon$，从探索转向利用</li>
+    </ul>
+
+    <div class="note-box info">
+      <span class="label">💡 Deep Q-Network (DQN)</span>
+      <p>当状态空间过大或连续时，用神经网络近似 $Q(s, a)$ 函数，即为 DQN。DQN 引入了<strong>经验回放 (Experience Replay)</strong> 和<strong>目标网络 (Target Network)</strong> 两大技巧来稳定训练，是深度强化学习的里程碑工作。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第六章：神经网络基础
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-nn-basics">
+  <h2 class="section-title"><span class="num">6</span>神经网络基础</h2>
+  <p class="section-desc">神经网络是深度学习的基石。从单个感知机到多层网络，从激活函数到反向传播，理解这些基础概念是掌握深度学习的前提。</p>
+
+  <!-- 感知机 -->
+  <div class="subsection" id="sec-perceptron">
+    <h3 class="subsection-title"><span class="dot"></span>6.1 感知机 (Perceptron)</h3>
+    <p>感知机是最早的人工神经元模型，由 Rosenblatt 于 1958 年提出，是神经网络和 SVM 的共同起源。</p>
+
+    <div class="def-box">
+      <span class="label">📌 定义</span>
+      <div class="term">感知机</div>
+      <p>一个二分类线性模型：接收多个输入，加权求和后通过阶跃函数输出 0 或 1。数学表达为 $y = \text{sign}(\mathbf{w}^\top \mathbf{x} + b)$。</p>
+    </div>
+
+    <div class="math-block">
+      $$y = \text{sign}\left(\sum_{i=1}^{d} w_i x_i + b\right) = \text{sign}(\mathbf{w}^\top \mathbf{x} + b)$$
+    </div>
+
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box input">$x_1$</div>
+        <div class="arch-box input">$x_2$</div>
+        <div class="arch-box input">···</div>
+        <div class="arch-box input">$x_d$</div>
+      </div>
+      <div class="arch-row" style="font-size:.8rem;color:var(--text2)">
+        <div>w₁</div><div>w₂</div><div>···</div><div>w_d</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box hidden">Σ wᵢxᵢ + b</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box output">sign(·) → y</div>
+      </div>
+    </div>
+
+    <div class="note-box warn">
+      <span class="label">⚠️ 感知机的局限</span>
+      <p>单层感知机只能解决<strong>线性可分</strong>问题，无法解决 XOR（异或）问题。这一局限导致了神经网络的第一次寒冬。多层感知机 (MLP) 的提出解决了这一问题。</p>
+    </div>
+  </div>
+
+  <!-- 多层感知机 -->
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>6.2 多层感知机 (MLP)</h3>
+    <p>多层感知机由输入层、一个或多个隐藏层和输出层组成。每一层的神经元接收上一层的输出，加权求和后通过激活函数非线性变换。</p>
+
+    <div class="arch-diagram">
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px">输入层 → 隐藏层1 → 隐藏层2 → 输出层</div>
+      <div class="arch-row">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="arch-box input">$x_1$</div>
+          <div class="arch-box input">$x_2$</div>
+          <div class="arch-box input">$x_3$</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="arch-box hidden">$h_1^{(1)}$</div>
+          <div class="arch-box hidden">$h_2^{(1)}$</div>
+          <div class="arch-box hidden">$h_3^{(1)}$</div>
+          <div class="arch-box hidden">$h_4^{(1)}$</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="arch-box hidden">$h_1^{(2)}$</div>
+          <div class="arch-box hidden">$h_2^{(2)}$</div>
+          <div class="arch-box hidden">$h_3^{(2)}$</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="arch-box output">$\hat{y}_1$</div>
+          <div class="arch-box output">$\hat{y}_2$</div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="sub-sub">前向传播 (Forward Propagation)</h4>
+    <p>对于第 $l$ 层，前向传播的计算为：</p>
+    <div class="math-block">
+      $$\mathbf{z}^{(l)} = \mathbf{W}^{(l)} \mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}$$
+    </div>
+    <div class="math-block">
+      $$\mathbf{a}^{(l)} = f(\mathbf{z}^{(l)})$$
+    </div>
+    <p>其中 $\mathbf{W}^{(l)}$ 是第 $l$ 层的权重矩阵，$\mathbf{b}^{(l)}$ 是偏置，$f$ 是激活函数，$\mathbf{a}^{(0)} = \mathbf{x}$ 是输入。</p>
+  </div>
+
+  <!-- 激活函数 -->
+  <div class="subsection" id="sec-activation">
+    <h3 class="subsection-title"><span class="dot"></span>6.3 激活函数 (Activation Function)</h3>
+    <p>激活函数为神经网络引入<strong>非线性</strong>，是神经网络能够拟合复杂函数的关键。没有激活函数，无论多少层网络都等价于一个线性模型。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>激活函数</th><th>公式</th><th>特点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sigmoid</strong></td>
+            <td>$\sigma(z) = \frac{1}{1+e^{-z}}$</td>
+            <td>输出 $(0,1)$，平滑可导。<span class="tag-badge red">梯度消失</span> <span class="tag-badge orange">非零中心</span></td>
+          </tr>
+          <tr>
+            <td><strong>Tanh</strong></td>
+            <td>$\tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$</td>
+            <td>输出 $(-1,1)$，零中心化。<span class="tag-badge red">梯度消失</span></td>
+          </tr>
+          <tr>
+            <td><strong>ReLU</strong></td>
+            <td>$\text{ReLU}(z) = \max(0, z)$</td>
+            <td>计算简单，缓解梯度消失。<span class="tag-badge green">最常用</span> <span class="tag-badge orange">神经元死亡</span></td>
+          </tr>
+          <tr>
+            <td><strong>Leaky ReLU</strong></td>
+            <td>$\max(0.01z, z)$</td>
+            <td>解决 ReLU 的神经元死亡问题</td>
+          </tr>
+          <tr>
+            <td><strong>ELU</strong></td>
+            <td>$\begin{cases} z & z>0 \\ \alpha(e^z-1) & z \leq 0 \end{cases}$</td>
+            <td>负区间平滑，输出零均值</td>
+          </tr>
+          <tr>
+            <td><strong>GELU</strong></td>
+            <td>$z \cdot \Phi(z)$</td>
+            <td>Transformer 默认激活函数 <span class="tag-badge purple">BERT/GPT</span></td>
+          </tr>
+          <tr>
+            <td><strong>Softmax</strong></td>
+            <td>$\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$</td>
+            <td>多分类输出层，输出概率分布</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box warn">
+      <span class="label">⚠️ 梯度消失问题</span>
+      <p>当使用 Sigmoid/Tanh 时，由于导数最大值分别为 0.25 和 1，在多层网络中通过链式法则反向传播时，梯度会指数级衰减，导致浅层权重几乎不更新。ReLU 的导数在正区间恒为 1，有效缓解了这一问题，是深度学习的标配激活函数。</p>
+    </div>
+  </div>
+
+  <!-- 反向传播 -->
+  <div class="subsection" id="sec-backprop">
+    <h3 class="subsection-title"><span class="dot"></span>6.4 反向传播算法 (Backpropagation)</h3>
+    <p>反向传播是训练神经网络的核心算法，通过<strong>链式法则</strong>高效计算损失函数对每一层参数的梯度。</p>
+
+    <div class="def-box">
+      <span class="label">📌 核心思想</span>
+      <div class="term">反向传播</div>
+      <p>先进行前向传播计算输出和损失，然后从输出层开始反向计算每一层的误差信号和梯度，利用链式法则将误差从后向前传播，最后用梯度下降更新参数。</p>
+    </div>
+
+    <h4 class="sub-sub">链式法则</h4>
+    <p>对于复合函数 $L = L(f(g(x)))$，梯度为：</p>
+    <div class="math-block">
+      $$\frac{\partial L}{\partial x} = \frac{\partial L}{\partial f} \cdot \frac{\partial f}{\partial g} \cdot \frac{\partial g}{\partial x}$$
+    </div>
+
+    <h4 class="sub-sub">反向传播的四步</h4>
+    <ol class="algo-steps">
+      <li><strong>前向传播</strong>：逐层计算 $\mathbf{z}^{(l)} = \mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}$ 和 $\mathbf{a}^{(l)} = f(\mathbf{z}^{(l)})$，得到输出 $\hat{\mathbf{y}}$</li>
+      <li><strong>计算损失</strong>：$L = \mathcal{L}(\hat{\mathbf{y}}, \mathbf{y})$，如 MSE 或交叉熵</li>
+      <li><strong>反向计算梯度</strong>：从输出层开始，逐层计算 $\frac{\partial L}{\partial \mathbf{W}^{(l)}}$ 和 $\frac{\partial L}{\partial \mathbf{b}^{(l)}}$</li>
+      <li><strong>参数更新</strong>：$\mathbf{W}^{(l)} \leftarrow \mathbf{W}^{(l)} - \eta \frac{\partial L}{\partial \mathbf{W}^{(l)}}$，$\mathbf{b}^{(l)} \leftarrow \mathbf{b}^{(l)} - \eta \frac{\partial L}{\partial \mathbf{b}^{(l)}}$</li>
+    </ol>
+
+    <h4 class="sub-sub">梯度推导（以单样本 MSE 为例）</h4>
+    <p>设损失 $L = \frac{1}{2}\|\hat{\mathbf{y}} - \mathbf{y}\|^2$，输出层误差：</p>
+    <div class="math-block">
+      $$\boldsymbol{\delta}^{(L)} = \frac{\partial L}{\partial \mathbf{z}^{(L)}} = (\hat{\mathbf{y}} - \mathbf{y}) \odot f'(\mathbf{z}^{(L)})$$
+    </div>
+    <p>隐藏层误差（递推公式）：</p>
+    <div class="math-block">
+      $$\boldsymbol{\delta}^{(l)} = \left(\mathbf{W}^{(l+1)\top} \boldsymbol{\delta}^{(l+1)}\right) \odot f'(\mathbf{z}^{(l)})$$
+    </div>
+    <p>参数梯度：</p>
+    <div class="math-block">
+      $$\frac{\partial L}{\partial \mathbf{W}^{(l)}} = \boldsymbol{\delta}^{(l)} \mathbf{a}^{(l-1)\top}, \quad \frac{\partial L}{\partial \mathbf{b}^{(l)}} = \boldsymbol{\delta}^{(l)}$$
+    </div>
+    <p>其中 $\odot$ 表示逐元素乘法 (Hadamard product)。</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第七章：深度学习关键架构
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-dl-arch">
+  <h2 class="section-title"><span class="num">7</span>深度学习关键架构</h2>
+  <p class="section-desc">CNN 处理图像，RNN/LSTM 处理序列，Transformer 统治 NLP —— 四大架构构成了现代深度学习的基石。</p>
+
+  <!-- CNN -->
+  <div class="subsection" id="sec-cnn">
+    <h3 class="subsection-title"><span class="dot"></span>7.1 卷积神经网络 (CNN)</h3>
+    <p>CNN 是处理图像数据的标杆架构，通过卷积操作提取局部特征，通过池化操作降维，具有<strong>局部感知</strong>、<strong>权值共享</strong>和<strong>平移不变性</strong>三大特性。</p>
+
+    <div class="def-box">
+      <span class="label">📌 核心概念</span>
+      <div class="term">卷积神经网络</div>
+      <p>一种利用卷积核 (filter/kernel) 在输入上滑动提取局部特征的神经网络。卷积核的参数在整张图上共享，大幅减少了参数量，并能自动学习从低级（边缘、纹理）到高级（物体部件、整体）的层次化特征。</p>
+    </div>
+
+    <h4 class="sub-sub">卷积操作</h4>
+    <p>二维卷积运算：</p>
+    <div class="math-block">
+      $$Y[i,j] = \sum_{m=0}^{k_h-1} \sum_{n=0}^{k_w-1} X[i+m, j+n] \cdot W[m,n] + b$$
+    </div>
+    <p>其中 $W$ 是大小为 $k_h \times k_w$ 的卷积核，$b$ 是偏置。</p>
+
+    <h4 class="sub-sub">输出尺寸计算</h4>
+    <div class="math-block">
+      $$O = \left\lfloor \frac{I - K + 2P}{S} \right\rfloor + 1$$
+    </div>
+    <p>其中 $I$ 是输入尺寸，$K$ 是卷积核尺寸，$P$ 是填充 (padding)，$S$ 是步长 (stride)。</p>
+
+    <h4 class="sub-sub">典型 CNN 架构</h4>
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box input">输入图像<br>224×224×3</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box conv">Conv<br>+ ReLU</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box pool">Pool</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box conv">Conv<br>+ ReLU</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box pool">Pool</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box fc">FC</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box output">Softmax<br>分类输出</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>经典模型</th><th>年份</th><th>关键创新</th></tr></thead>
+        <tbody>
+          <tr><td>LeNet-5</td><td>1998</td><td>首个成功的 CNN，用于手写数字识别</td></tr>
+          <tr><td>AlexNet</td><td>2012</td><td>ReLU + Dropout + GPU 训练，开启深度学习时代</td></tr>
+          <tr><td>VGG</td><td>2014</td><td>小卷积核 (3×3) 堆叠，加深网络</td></tr>
+          <tr><td>ResNet</td><td>2015</td><td>残差连接，解决梯度消失，训练超深网络 (152层+)</td></tr>
+          <tr><td>EfficientNet</td><td>2019</td><td>复合缩放策略，平衡深度/宽度/分辨率</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box info">
+      <span class="label">💡 残差连接 (Residual Connection)</span>
+      <p>ResNet 的核心创新：$\mathbf{y} = F(\mathbf{x}) + \mathbf{x}$。恒等映射的捷径 (skip connection) 让梯度可以绕过深层网络直接反向传播，解决了超深网络的梯度消失问题，使得训练上百层的网络成为可能。</p>
+    </div>
+  </div>
+
+  <!-- RNN -->
+  <div class="subsection" id="sec-rnn">
+    <h3 class="subsection-title"><span class="dot"></span>7.2 循环神经网络 (RNN)</h3>
+    <p>RNN 专为处理<strong>序列数据</strong>设计（文本、语音、时间序列），通过隐藏状态在时间步之间传递信息，具有记忆能力。</p>
+
+    <h4 class="sub-sub">基本结构</h4>
+    <p>在时间步 $t$，RNN 的计算为：</p>
+    <div class="math-block">
+      $$\mathbf{h}_t = \tanh(\mathbf{W}_{hh} \mathbf{h}_{t-1} + \mathbf{W}_{xh} \mathbf{x}_t + \mathbf{b}_h)$$
+    </div>
+    <div class="math-block">
+      $$\mathbf{y}_t = \mathbf{W}_{hy} \mathbf{h}_t + \mathbf{b}_y$$
+    </div>
+    <p>其中 $\mathbf{h}_t$ 是隐藏状态（"记忆"），$\mathbf{W}_{hh}$ 是隐藏层间的权重（在所有时间步共享）。</p>
+
+    <div class="note-box warn">
+      <span class="label">⚠️ RNN 的梯度消失/爆炸</span>
+      <p>RNN 反向传播时（BPTT，Backpropagation Through Time），梯度需要沿时间步连乘 $\mathbf{W}_{hh}$ 的幂。当序列较长时，若 $\mathbf{W}_{hh}$ 的特征值大于 1 则梯度爆炸，小于 1 则梯度消失，导致 RNN 难以捕捉长距离依赖。</p>
+    </div>
+  </div>
+
+  <!-- LSTM -->
+  <div class="subsection" id="sec-lstm">
+    <h3 class="subsection-title"><span class="dot"></span>7.3 长短期记忆网络 (LSTM)</h3>
+    <p>LSTM 是 RNN 的改进版本，通过引入<strong>门控机制</strong> (gate) 精确控制信息的保留与遗忘，有效解决了长距离依赖问题。</p>
+
+    <div class="def-box">
+      <span class="label">📌 核心创新</span>
+      <div class="term">LSTM</div>
+      <p>在隐藏状态之外引入了<strong>细胞状态</strong> $\mathbf{C}_t$（一条贯穿整个序列的信息高速公路），并通过三个门（遗忘门、输入门、输出门）控制信息的流动。</p>
+    </div>
+
+    <h4 class="sub-sub">三个门</h4>
+
+    <p><strong>① 遗忘门 (Forget Gate)</strong> — 决定从细胞状态中丢弃什么信息：</p>
+    <div class="math-block">
+      $$\mathbf{f}_t = \sigma(\mathbf{W}_f [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f)$$
+    </div>
+
+    <p><strong>② 输入门 (Input Gate)</strong> — 决定哪些新信息存入细胞状态：</p>
+    <div class="math-block">
+      $$\mathbf{i}_t = \sigma(\mathbf{W}_i [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i)$$
+    </div>
+    <div class="math-block">
+      $$\tilde{\mathbf{C}}_t = \tanh(\mathbf{W}_C [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_C)$$
+    </div>
+
+    <p><strong>③ 细胞状态更新</strong>：</p>
+    <div class="math-block">
+      $$\mathbf{C}_t = \mathbf{f}_t \odot \mathbf{C}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{C}}_t$$
+    </div>
+
+    <p><strong>④ 输出门 (Output Gate)</strong> — 决定输出什么信息：</p>
+    <div class="math-block">
+      $$\mathbf{o}_t = \sigma(\mathbf{W}_o [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o)$$
+    </div>
+    <div class="math-block">
+      $$\mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{C}_t)$$
+    </div>
+
+    <div class="note-box tip">
+      <span class="label">✅ LSTM 为何能解决梯度消失</span>
+      <p>细胞状态的更新是加法操作（$\mathbf{C}_t = \mathbf{f}_t \odot \mathbf{C}_{t-1} + \ldots$），而非乘法。当遗忘门接近 1 时，梯度可以几乎无损地从最后一个时间步流回第一个时间步，形成了"梯度高速公路"。</p>
+    </div>
+
+    <div class="note-box info">
+      <span class="label">💡 GRU — LSTM 的简化版</span>
+      <p>GRU (Gated Recurrent Unit) 将遗忘门和输入门合并为更新门，并去掉单独的细胞状态，参数更少、训练更快，在多数任务上性能与 LSTM 相当。</p>
+    </div>
+  </div>
+
+  <!-- Transformer -->
+  <div class="subsection" id="sec-transformer">
+    <h3 class="subsection-title"><span class="dot"></span>7.4 Transformer</h3>
+    <p>Transformer 是 2017 年 Google 在 "Attention Is All You Need" 论文中提出的架构，完全摒弃了 RNN 的循环结构，仅依赖<strong>自注意力机制</strong> (Self-Attention) 处理序列，支持大规模并行计算，是 GPT、BERT 等大语言模型的基础。</p>
+
+    <div class="def-box">
+      <span class="label">📌 核心概念</span>
+      <div class="term">自注意力机制 (Self-Attention)</div>
+      <p>对于序列中的每个位置，通过 Query、Key、Value 三个向量计算与序列中所有其他位置的相关性（注意力权重），然后对所有位置的 Value 加权求和，得到该位置的输出表示。</p>
+    </div>
+
+    <h4 class="sub-sub">缩放点积注意力 (Scaled Dot-Product Attention)</h4>
+    <div class="math-block">
+      $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
+    </div>
+    <p>其中 $Q$ (Query)、$K$ (Key)、$V$ (Value) 分别由输入 $\mathbf{X}$ 线性变换得到：</p>
+    <div class="math-block">
+      $$Q = \mathbf{X}\mathbf{W}_Q, \quad K = \mathbf{X}\mathbf{W}_K, \quad V = \mathbf{X}\mathbf{W}_V$$
+    </div>
+    <p>除以 $\sqrt{d_k}$ 是为了防止点积过大导致 softmax 梯度消失。</p>
+
+    <h4 class="sub-sub">多头注意力 (Multi-Head Attention)</h4>
+    <p>将 Q、K、V 分割到 $h$ 个头，每个头独立计算注意力，然后拼接：</p>
+    <div class="math-block">
+      $$\text{MultiHead}(Q,K,V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) \mathbf{W}_O$$
+    </div>
+    <div class="math-block">
+      $$\text{head}_i = \text{Attention}(Q\mathbf{W}_i^Q, K\mathbf{W}_i^K, V\mathbf{W}_i^V)$$
+    </div>
+    <p>多头机制让模型能同时关注不同子空间的不同模式（如语法关系、语义相似性等）。</p>
+
+    <h4 class="sub-sub">Transformer 整体架构</h4>
+    <div class="arch-diagram">
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px">Encoder-Decoder 架构</div>
+      <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--primary)">Encoder ×N</div>
+          <div class="arch-row" style="flex-direction:column">
+            <div class="arch-box input">输入嵌入 + 位置编码</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box conv">多头自注意力</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box hidden">Add &amp; Norm</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box fc">前馈网络 (FFN)</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box hidden">Add &amp; Norm</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:1.5rem;color:var(--text3)">⇄</div>
+        <div>
+          <div style="font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--green)">Decoder ×N</div>
+          <div class="arch-row" style="flex-direction:column">
+            <div class="arch-box output">输出嵌入 + 位置编码</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box conv">掩码多头自注意力</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box hidden">Add &amp; Norm</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box conv">交叉注意力 (Encoder-Decoder)</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box hidden">Add &amp; Norm</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-box fc">前馈网络 (FFN)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="sub-sub">位置编码 (Positional Encoding)</h4>
+    <p>由于 Transformer 没有循环结构，需要显式注入位置信息。原始论文使用正弦/余弦函数：</p>
+    <div class="math-block">
+      $$PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{2i/d_{model}}}\right)$$
+    </div>
+    <div class="math-block">
+      $$PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{2i/d_{model}}}\right)$$
+    </div>
+    <p>位置编码与词嵌入相加，使模型能感知序列中 token 的相对位置。</p>
+
+    <div class="note-box info">
+      <span class="label">💡 Transformer 家族</span>
+      <p><strong>Encoder-Only</strong>（BERT）：理解类任务（分类、NER）<br>
+      <strong>Decoder-Only</strong>（GPT 系列）：生成类任务（文本生成）<br>
+      <strong>Encoder-Decoder</strong>（T5、BART）：Seq2Seq 任务（翻译、摘要）<br>
+      当前大语言模型（GPT-4、Claude、LLaMA）均为 Decoder-Only 架构。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第八章：损失函数与优化器
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-loss-optimizer">
+  <h2 class="section-title"><span class="num">8</span>损失函数与优化器</h2>
+  <p class="section-desc">损失函数定义了"学什么"，优化器决定了"怎么学"。两者的选择直接影响模型的训练效果和收敛速度。</p>
+
+  <!-- 损失函数 -->
+  <div class="subsection" id="sec-loss">
+    <h3 class="subsection-title"><span class="dot"></span>8.1 损失函数 (Loss Function)</h3>
+    <p>损失函数衡量模型预测值 $\hat{y}$ 与真实值 $y$ 之间的差异，训练过程就是最小化损失函数的过程。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>损失函数</th><th>公式</th><th>适用场景</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>均方误差</strong><br>MSE</td>
+            <td>$L = \frac{1}{n}\sum_{i=1}^{n}(\hat{y}_i - y_i)^2$</td>
+            <td>回归问题。对异常值敏感</td>
+          </tr>
+          <tr>
+            <td><strong>平均绝对误差</strong><br>MAE</td>
+            <td>$L = \frac{1}{n}\sum_{i=1}^{n}|\hat{y}_i - y_i|$</td>
+            <td>回归问题。对异常值鲁棒</td>
+          </tr>
+          <tr>
+            <td><strong>Huber Loss</strong></td>
+            <td>$\begin{cases} \frac{1}{2}(y-\hat{y})^2 & |y-\hat{y}| \leq \delta \\ \delta(|y-\hat{y}| - \frac{\delta}{2}) & \text{otherwise} \end{cases}$</td>
+            <td>回归。结合 MSE 和 MAE 的优点</td>
+          </tr>
+          <tr>
+            <td><strong>二元交叉熵</strong><br>BCE</td>
+            <td>$L = -\frac{1}{n}\sum [y\log\hat{y} + (1-y)\log(1-\hat{y})]$</td>
+            <td>二分类问题</td>
+          </tr>
+          <tr>
+            <td><strong>多类交叉熵</strong><br>CE</td>
+            <td>$L = -\sum_{c=1}^{C} y_c \log(\hat{y}_c)$</td>
+            <td>多分类问题</td>
+          </tr>
+          <tr>
+            <td><strong>KL 散度</strong></td>
+            <td>$D_{KL}(P\|Q) = \sum P(x)\log\frac{P(x)}{Q(x)}$</td>
+            <td>衡量两个分布的差异</td>
+          </tr>
+          <tr>
+            <td><strong>对比损失</strong><br>Contrastive</td>
+            <td>拉近正样本对，推远负样本对</td>
+            <td>表示学习、SimCLR</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box info">
+      <span class="label">💡 为什么分类用交叉熵而非 MSE？</span>
+      <p>① 当使用 Sigmoid/Softmax 输出时，MSE + Sigmoid 的损失函数是非凸的，容易陷入局部最优；而交叉熵 + Sigmoid 是凸的。<br>
+      ② 交叉熵的梯度形式为 $\hat{y} - y$，与预测误差成正比，梯度不会因为 Sigmoid 饱和而消失，学习更快。</p>
+    </div>
+  </div>
+
+  <!-- 优化器 -->
+  <div class="subsection" id="sec-optimizer">
+    <h3 class="subsection-title"><span class="dot"></span>8.2 优化器 (Optimizer)</h3>
+    <p>优化器决定了如何根据梯度更新模型参数，好的优化器能加速收敛、跳出局部最优、适应不同参数的学习需求。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>优化器</th><th>更新公式</th><th>核心思想</th><th>特点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SGD</strong></td>
+            <td>$\theta \leftarrow \theta - \eta \cdot g_t$</td>
+            <td>沿梯度反方向更新</td>
+            <td>简单可靠，需要调学习率</td>
+          </tr>
+          <tr>
+            <td><strong>Momentum</strong></td>
+            <td>$v_t = \beta v_{t-1} + \eta g_t$<br>$\theta \leftarrow \theta - v_t$</td>
+            <td>累积历史梯度方向，类似惯性</td>
+            <td>加速收敛，减少震荡</td>
+          </tr>
+          <tr>
+            <td><strong>AdaGrad</strong></td>
+            <td>$\theta \leftarrow \theta - \frac{\eta}{\sqrt{G_t + \epsilon}} \odot g_t$</td>
+            <td>按参数历史梯度平方和自适应调学习率</td>
+            <td>稀疏特征友好，但学习率单调递减</td>
+          </tr>
+          <tr>
+            <td><strong>RMSprop</strong></td>
+            <td>$E[g^2]_t = \beta E[g^2]_{t-1} + (1-\beta)g_t^2$<br>$\theta \leftarrow \theta - \frac{\eta}{\sqrt{E[g^2]_t + \epsilon}} g_t$</td>
+            <td>用指数加权移动平均代替累积和</td>
+            <td>解决 AdaGrad 学习率衰减问题</td>
+          </tr>
+          <tr>
+            <td><strong>Adam</strong></td>
+            <td>$m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t$<br>$v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2$<br>$\hat{m}_t = m_t/(1-\beta_1^t)$<br>$\hat{v}_t = v_t/(1-\beta_2^t)$<br>$\theta \leftarrow \theta - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon}$</td>
+            <td>结合 Momentum (一阶矩) 和 RMSprop (二阶矩)，偏差校正</td>
+            <td><span class="tag-badge green">最常用</span> 自适应，收敛快</td>
+          </tr>
+          <tr>
+            <td><strong>AdamW</strong></td>
+            <td>Adam + 解耦权重衰减</td>
+            <td>将 L2 正则化从梯度中解耦</td>
+            <td><span class="tag-badge purple">Transformer 标配</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box tip">
+      <span class="label">✅ 优化器选择建议</span>
+      <p><strong>默认选择</strong>：Adam，适用于大多数场景，几乎不需要调参。<br>
+      <strong>追求极致性能</strong>：SGD + Momentum，配合学习率调度，在图像分类等任务上往往能达到更高精度。<br>
+      <strong>Transformer 类模型</strong>：AdamW，权重衰减与自适应学习率解耦，效果更好。</p>
+    </div>
+
+    <h4 class="sub-sub">学习率调度 (Learning Rate Scheduling)</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>策略</th><th>描述</th><th>适用场景</th></tr></thead>
+        <tbody>
+          <tr><td>Step Decay</td><td>每隔若干 epoch 将学习率乘以衰减因子</td><td>简单通用</td></tr>
+          <tr><td>Cosine Annealing</td><td>学习率按余弦曲线从最大降到最小</td><td>图像分类、广泛使用</td></tr>
+          <tr><td>Warmup + Decay</td><td>先线性升温再衰减</td><td>Transformer 训练标配</td></tr>
+          <tr><td>OneCycle</td><td>先升后降的一个完整周期</td><td>快速收敛</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     第九章：过拟合与正则化
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-overfit">
+  <h2 class="section-title"><span class="num">9</span>过拟合与正则化</h2>
+  <p class="section-desc">过拟合是机器学习中的核心挑战 —— 模型在训练集上表现极好，却无法泛化到新数据。正则化技术通过约束模型复杂度来对抗过拟合。</p>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>9.1 过拟合与欠拟合</h3>
+
+    <div class="def-box">
+      <span class="label">📌 核心定义</span>
+      <div class="term">过拟合 (Overfitting)</div>
+      <p>模型过于复杂，把训练数据中的噪声和细节都"记住"了，导致在训练集上误差很低，但在测试集上误差很高。模型缺乏泛化能力。</p>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon" style="background:var(--red-light)">📉</div>
+        <div class="card-title">欠拟合</div>
+        <div class="card-desc">模型太简单，连训练集的基本模式都没学到。训练误差和测试误差都很高。<br><span class="tag-badge red">训练误差高</span> <span class="tag-badge red">测试误差高</span></div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--green-light)">✅</div>
+        <div class="card-title">理想拟合</div>
+        <div class="card-desc">模型复杂度适中，学到了数据的真实模式，训练误差和测试误差都低且差距小。<br><span class="tag-badge green">训练误差低</span> <span class="tag-badge green">测试误差低</span></div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--orange-light)">📈</div>
+        <div class="card-title">过拟合</div>
+        <div class="card-desc">模型太复杂，记住了训练数据的噪声，泛化能力差。<br><span class="tag-badge green">训练误差极低</span> <span class="tag-badge red">测试误差高</span></div>
+      </div>
+    </div>
+
+    <h4 class="sub-sub">偏差-方差分解 (Bias-Variance Tradeoff)</h4>
+    <p>模型期望泛化误差可以分解为三部分：</p>
+    <div class="math-block">
+      $$\text{Error} = \underbrace{\text{Bias}^2}_{\text{偏差}^2} + \underbrace{\text{Variance}}_{\text{方差}} + \underbrace{\sigma^2}_{\text{噪声}}$$
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>偏差 (Bias)</th><th>方差 (Variance)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>含义</strong></td><td>模型预测的期望与真实值的偏离</td><td>不同训练集训练出的模型的波动</td></tr>
+          <tr><td><strong>反映</strong></td><td>模型的拟合能力</td><td>模型对训练数据变化的敏感度</td></tr>
+          <tr><td><strong>欠拟合</strong></td><td>高</td><td>低</td></tr>
+          <tr><td><strong>过拟合</strong></td><td>低</td><td>高</td></tr>
+          <tr><td><strong>理想</strong></td><td>低</td><td>低</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>9.2 正则化技术</h3>
+
+    <h4 class="sub-sub">① L1 正则化 (Lasso)</h4>
+    <p>在损失函数中加入权重的 L1 范数：</p>
+    <div class="math-block">
+      $$L_{\text{reg}} = L + \lambda \sum_i |w_i|$$
+    </div>
+    <p>L1 正则化倾向于产生<strong>稀疏权重</strong>（部分权重变为零），因此可以用于特征选择。</p>
+
+    <h4 class="sub-sub">② L2 正则化 (Ridge / Weight Decay)</h4>
+    <div class="math-block">
+      $$L_{\text{reg}} = L + \lambda \sum_i w_i^2 = L + \lambda \|\mathbf{w}\|^2$$
+    </div>
+    <p>L2 正则化使权重趋向于较小的值（但不为零），平滑了模型。$\lambda$ 越大，正则化越强。在深度学习中称为<strong>权重衰减 (Weight Decay)</strong>。</p>
+
+    <div class="note-box info">
+      <span class="label">💡 L1 vs L2 对比</span>
+      <p><strong>L1</strong>：产生稀疏解，适合特征选择；梯度为 $\pm\lambda$（常数），与权重大小无关。<br>
+      <strong>L2</strong>：权重均匀缩小，不产生稀疏；梯度为 $2\lambda w$，大权重受更大惩罚。<br>
+      <strong>Elastic Net</strong>：$L + \lambda_1 \|\mathbf{w}\|_1 + \lambda_2 \|\mathbf{w}\|_2^2$，结合两者优点。</p>
+    </div>
+
+    <h4 class="sub-sub">③ Dropout</h4>
+    <p>训练时以概率 $p$ 随机将神经元输出置零，测试时使用全部神经元（权重缩放）：</p>
+    <div class="math-block">
+      $$\tilde{\mathbf{h}} = \mathbf{h} \odot \mathbf{m}, \quad m_i \sim \text{Bernoulli}(1-p)$$
+    </div>
+    <p>Dropout 相当于训练了指数级多个子网络的集成，有效防止神经元间的<strong>共适应 (co-adaptation)</strong>。典型 $p = 0.5$。</p>
+
+    <h4 class="sub-sub">④ 早停法 (Early Stopping)</h4>
+    <p>在训练过程中监控验证集损失，当验证集损失不再下降（甚至开始上升）时停止训练：</p>
+    <ol class="algo-steps">
+      <li>每个 epoch 结束后在验证集上评估损失</li>
+      <li>如果验证损失连续 $k$ 个 epoch 没有改善，停止训练</li>
+      <li>返回验证损失最低时的模型参数</li>
+    </ol>
+    <p>早停法是一种"免费的正则化" —— 不需要修改模型结构或损失函数。</p>
+
+    <h4 class="sub-sub">⑤ 数据增强 (Data Augmentation)</h4>
+    <p>通过对训练数据施加随机变换，人为扩充数据集，提高模型泛化能力：</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>数据类型</th><th>常用增强方法</th></tr></thead>
+        <tbody>
+          <tr><td>图像</td><td>翻转、旋转、裁剪、缩放、颜色抖动、Cutout、MixUp、CutMix</td></tr>
+          <tr><td>文本</td><td>同义词替换、随机删除、回译、EDA (Easy Data Augmentation)</td></tr>
+          <tr><td>音频</td><td>加噪、变速、SpecAugment (频域掩码)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="sub-sub">⑥ 批归一化 (Batch Normalization)</h4>
+    <p>在每个 mini-batch 内对中间层输出进行标准化：</p>
+    <div class="math-block">
+      $$\hat{\mathbf{z}} = \frac{\mathbf{z} - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}$$
+    </div>
+    <div class="math-block">
+      $$\mathbf{y} = \gamma \hat{\mathbf{z}} + \beta$$
+    </div>
+    <p>其中 $\mu_B, \sigma_B$ 是 batch 内的均值和标准差，$\gamma, \beta$ 是可学习的缩放和平移参数。BN 通过稳定每层输入分布（减少内部协变量偏移），允许使用更大的学习率，同时也有一定的正则化效果。</p>
+
+    <div class="note-box tip">
+      <span class="label">✅ 正则化技术选择指南</span>
+      <p><strong>通用标配</strong>：L2 正则化 (Weight Decay) + Early Stopping<br>
+      <strong>深度学习</strong>：+ Dropout + Batch Normalization + Data Augmentation<br>
+      <strong>需要特征选择</strong>：L1 正则化或 Elastic Net<br>
+      <strong>大模型训练</strong>：AdamW (解耦权重衰减) + Dropout + Data Augmentation</p>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3 class="subsection-title"><span class="dot"></span>9.3 正则化技术总结</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>技术</th><th>原理</th><th>适用场景</th><th>超参数</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>L1 正则化</td><td>权重绝对值惩罚 → 稀疏</td><td>特征选择、线性模型</td><td>$\lambda$</td></tr>
+          <tr><td>L2 正则化</td><td>权重平方惩罚 → 平滑</td><td>通用、深度学习</td><td>$\lambda$</td></tr>
+          <tr><td>Dropout</td><td>随机置零神经元</td><td>全连接层、CNN</td><td>$p$ (0.1~0.5)</td></tr>
+          <tr><td>Early Stopping</td><td>验证集不改善则停止</td><td>所有迭代训练</td><td>patience $k$</td></tr>
+          <tr><td>Data Augmentation</td><td>数据变换扩充</td><td>图像、文本、音频</td><td>变换类型与强度</td></tr>
+          <tr><td>Batch Norm</td><td>层间标准化</td><td>CNN、深度网络</td><td>$\epsilon$, momentum</td></tr>
+          <tr><td>Layer Norm</td><td>层内标准化（不依赖batch）</td><td>RNN、Transformer</td><td>$\epsilon$</td></tr>
+          <tr><td>Label Smoothing</td><td>软标签代替硬标签</td><td>分类、Transformer</td><td>平滑因子</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Footer
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="footer">
+  <p>机器学习与深度学习 · 理论基础全指南 | Frontend Learning Hub</p>
+  <p style="margin-top:4px">公式渲染由 <a href="https://katex.org/" target="_blank">KaTeX</a> 提供支持 · 持续更新中</p>
+</div>
+
+</main>
+
+<!-- ═══ KaTeX Scripts ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<script>
+// ═══ KaTeX Auto Render ═══
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false,
+    ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+  });
+});
+
+// ═══ Reading Progress Bar ═══
+const progressFill = document.getElementById('progressFill');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  progressFill.style.width = progress + '%';
+});
+
+// ═══ Sidebar Toggle (Mobile) ═══
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const overlay = document.getElementById('overlay');
+
+sidebarToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+});
+
+overlay.addEventListener('click', () => {
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+});
+
+// ═══ Active Section Highlight ═══
+const tocItems = document.querySelectorAll('.toc-item');
+const sections = document.querySelectorAll('.section, .subsection[id]');
+
+function updateActiveTOC() {
+  let current = '';
+  const scrollPos = window.scrollY + 100;
+
+  sections.forEach(section => {
+    if (section.offsetTop <= scrollPos) {
+      current = section.id;
+    }
+  });
+
+  tocItems.forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('href') === '#' + current) {
+      item.classList.add('active');
+    }
+  });
+}
+
+window.addEventListener('scroll', updateActiveTOC);
+updateActiveTOC();
+
+// ═══ Search Filter ═══
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    tocItems.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      const parent = item.closest('.toc-section');
+      if (query === '' || text.includes(query)) {
+        item.style.display = '';
+        if (parent) parent.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    // Hide empty sections
+    document.querySelectorAll('.toc-section').forEach(section => {
+      if (query === '') {
+        section.style.display = '';
+        return;
+      }
+      const hasVisible = section.querySelectorAll('.toc-item:not([style*="display: none"])').length > 0;
+      section.style.display = hasVisible ? '' : 'none';
+    });
+  });
+}
+
+// ═══ Smooth Scroll with Offset ═══
+tocItems.forEach(item => {
+  item.addEventListener('click', (e) => {
+    // Close mobile sidebar on click
+    if (window.innerWidth <= 768) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    }
+  });
+});
+</script>
+
+</body>
+</html>

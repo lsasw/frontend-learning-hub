@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java 分布式锁 · Redisson 深度解析与多方案对比</title>
+<style>
+/* ═══════════════════════════════════════════════════ */
+:root {
+  --pri: #dc2626;
+  --pri-dark: #b91c1c;
+  --pri-light: #fef2f2;
+  --pri-lighter: #fff5f5;
+  --bg: #f8fafc;
+  --surface: #fff;
+  --border: #e2e8f0;
+  --text: #1a1a2e;
+  --text2: #5a6170;
+  --text3: #9ca3af;
+  --code-bg: #1a1a2e;
+  --code-text: #e2e8f0;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --purple: #7c3aed;
+  --purple-bg: #f5f3ff;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════ NAV ═══════════ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;height:54px;
+  display:flex;align-items:center;gap:16px;
+  backdrop-filter:blur(8px);
+}
+.nav a.logo{
+  font-weight:700;font-size:15px;
+  color:var(--text);text-decoration:none;
+  display:flex;align-items:center;gap:8px;
+}
+.nav .logo svg{width:22px;height:22px}
+.nav .sep{flex:1}
+.nav-links{display:flex;gap:4px}
+.nav-links a{
+  text-decoration:none;color:var(--text2);font-size:13px;
+  padding:6px 12px;border-radius:6px;transition:.2s;
+}
+.nav-links a:hover{background:var(--pri-light);color:var(--pri)}
+
+/* ═══════════ HERO ═══════════ */
+.hero{
+  background:linear-gradient(135deg,#1a1a2e 0%,#2d1b1b 40%,#b91c1c 100%);
+  color:#fff;padding:60px 24px 48px;
+  text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;
+  top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at 20% 50%,rgba(220,38,38,.15),transparent 50%),
+              radial-gradient(circle at 80% 50%,rgba(124,58,237,.1),transparent 50%);
+  animation:heroPulse 8s ease-in-out infinite;
+}
+@keyframes heroPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.05)}
+}
+.hero>*{position:relative;z-index:1}
+.hero h1{font-size:2.4em;font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
+.hero .sub{font-size:1.1em;color:rgba(255,255,255,.75);max-width:700px;margin:0 auto 20px}
+.hero .tags-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.hero .tag-pill{
+  background:rgba(255,255,255,.12);backdrop-filter:blur(4px);
+  padding:6px 16px;border-radius:20px;font-size:13px;
+  border:1px solid rgba(255,255,255,.15);
+}
+
+/* ═══════════ WRAP ═══════════ */
+.wrap{
+  max-width:960px;margin:0 auto;padding:40px 24px 60px;
+}
+
+/* ═══════════ SECTION ═══════════ */
+.sec{margin-bottom:48px}
+.sec-title{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;padding-bottom:10px;
+  border-bottom:2px solid var(--border);
+}
+.sec-title .num{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:var(--radius-sm);
+  background:var(--pri);color:#fff;font-weight:700;font-size:16px;
+  flex-shrink:0;
+}
+.sec-title h2{font-size:1.35em;font-weight:700;color:var(--text)}
+.card{
+  background:var(--surface);border-radius:var(--radius);
+  padding:28px;margin-bottom:16px;
+  box-shadow:var(--shadow);border:1px solid var(--border);
+  transition:.2s;
+}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{font-size:1.1em;margin-bottom:12px;color:var(--pri-dark)}
+.card p{margin-bottom:12px;color:var(--text2)}
+
+/* ═══════════ CODE ═══════════ */
+.code{
+  background:var(--code-bg);border-radius:var(--radius-sm);
+  margin:16px 0;overflow:hidden;position:relative;
+}
+.code .lang{
+  position:absolute;top:0;right:0;
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.5);font-size:11px;
+  padding:4px 12px;border-radius:0 0 0 var(--radius-sm);
+  font-family:var(--mono);text-transform:uppercase;
+}
+.code .copy-btn{
+  position:absolute;top:8px;right:60px;
+  background:rgba(255,255,255,.08);
+  border:none;color:rgba(255,255,255,.5);
+  font-size:11px;padding:4px 10px;border-radius:4px;
+  cursor:pointer;transition:.2s;
+}
+.code .copy-btn:hover{background:rgba(255,255,255,.16);color:#fff}
+.code .copy-btn.copied{background:var(--green);color:#fff}
+.code pre{
+  padding:40px 20px 20px;margin:0;overflow-x:auto;
+  color:var(--code-text);font-family:var(--mono);font-size:13px;
+  line-height:1.6;
+}
+.code pre .kw{color:#c792ea}
+.code pre .str{color:#c3e88d}
+.code pre .cmt{color:#546e7a;font-style:italic}
+.code pre .num{color:#f78c6c}
+.code pre .fn{color:#82aaff}
+.code pre .ann{color:#ffcb6b}
+
+/* ═══════════ TIPS ═══════════ */
+.tip{
+  border-radius:var(--radius-sm);padding:16px 20px;
+  margin:16px 0;display:flex;gap:12px;align-items:flex-start;
+  font-size:14px;line-height:1.5;
+}
+.tip .tip-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.tip.warn{background:var(--pri-light);border-left:4px solid var(--pri);color:#991b1b}
+.tip.good{background:var(--green-bg);border-left:4px solid var(--green);color:#065f46}
+.tip.blue{background:var(--blue-bg);border-left:4px solid var(--blue);color:#1e40af}
+.tip.amber{background:var(--amber-bg);border-left:4px solid var(--amber);color:#92400e}
+.tip.purple{background:var(--purple-bg);border-left:4px solid var(--purple);color:#5b21b6}
+.tip strong{display:block;margin-bottom:4px}
+
+/* ═══════════ PITFALL ═══════════ */
+.pitfall{
+  background:linear-gradient(135deg,#fef2f2,#fff5f5);
+  border:1px solid #fecaca;border-left:5px solid var(--pri);
+  border-radius:var(--radius);padding:24px;margin:20px 0;
+}
+.pitfall .pit-label{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--pri);color:#fff;
+  padding:4px 14px;border-radius:20px;font-size:12px;
+  font-weight:700;margin-bottom:12px;
+}
+.pitfall h4{font-size:1em;color:var(--pri-dark);margin-bottom:8px}
+.pitfall .pit-bad{color:var(--pri);margin-bottom:6px;font-size:14px}
+.pitfall .pit-good{color:var(--green);font-size:14px}
+
+/* ═══════════ VIZ ═══════════ */
+.viz{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;margin:20px 0;
+  text-align:center;overflow-x:auto;
+}
+.viz .viz-title{font-size:13px;color:var(--text3);margin-bottom:12px;text-align:center}
+
+/* ═══════════ TABLE ═══════════ */
+.tbl-wrap{overflow-x:auto;margin:16px 0}
+table{
+  width:100%;border-collapse:collapse;font-size:14px;
+  background:var(--surface);border-radius:var(--radius-sm);
+  overflow:hidden;box-shadow:var(--shadow);
+}
+th{
+  background:var(--pri);color:#fff;padding:12px 16px;
+  text-align:left;font-weight:600;
+}
+td{
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  color:var(--text2);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+
+/* ═══════════ GRID ═══════════ */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:16px 0}
+.grid3 .mini-card, .grid2 .mini-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:20px;
+  text-align:center;transition:.2s;
+}
+.grid3 .mini-card:hover, .grid2 .mini-card:hover{box-shadow:var(--shadow-md)}
+.mini-card .mc-icon{font-size:28px;margin-bottom:8px}
+.mini-card h4{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.mini-card p{font-size:12px;color:var(--text3);line-height:1.5}
+
+/* ═══════════ FLOW ═══════════ */
+.flow{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin:16px 0}
+.flow .step{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:var(--radius-sm);padding:12px 16px;text-align:center;
+  min-width:100px;font-size:13px;transition:.2s;
+}
+.flow .step:hover{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-light)}
+.flow .step .st-num{font-weight:800;font-size:18px;color:var(--pri)}
+.flow .step .st-label{color:var(--text2);margin-top:2px}
+.flow .arrow{
+  font-size:20px;color:var(--text3);margin:0 4px;flex-shrink:0;
+}
+
+/* ═══════════ RESPONSIVE ═══════════ */
+@media(max-width:768px){
+  .hero h1{font-size:1.6em}
+  .hero{padding:40px 16px}
+  .wrap{padding:24px 16px}
+  .grid3{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow .arrow{transform:rotate(90deg)}
+}
+
+/* ═══════════ TOC ═══════════ */
+.toc{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px 28px;margin-bottom:32px;
+}
+.toc h3{font-size:1em;margin-bottom:14px;color:var(--text)}
+.toc ol{padding-left:20px}
+.toc li{margin-bottom:8px;font-size:14px}
+.toc a{color:var(--pri);text-decoration:none;transition:.2s}
+.toc a:hover{text-decoration:underline}
+
+/* ═══════════ COMPARISON ═══════════ */
+.vs-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.vs-card::before{
+  content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+}
+.vs-card.redisson::before{background:var(--pri)}
+.vs-card.zk::before{background:var(--purple)}
+.vs-card.mysql::before{background:var(--blue)}
+.vs-card .vs-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.vs-card .vs-icon{font-size:24px}
+.vs-card h3{font-size:1.05em}
+.vs-card .vs-pros,.vs-card .vs-cons{margin-top:10px;font-size:13px}
+.vs-card .vs-pros span{color:var(--green)}
+.vs-card .vs-cons span{color:var(--pri)}
+.vs-card .score-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.vs-card .score-badge{
+  font-size:11px;padding:3px 10px;border-radius:12px;
+  background:var(--bg);color:var(--text2);white-space:nowrap;
+}
+
+/* ═══════════ TOGGLE LABELS ═══════════ */
+.inline-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;
+}
+.badge-red{background:var(--pri-light);color:var(--pri)}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+
+/* Step visualization for lock flow */
+.viz-flow{display:flex;flex-direction:column;gap:8px}
+.viz-flow .v-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:8px;
+  font-size:13px;font-family:var(--mono);
+}
+.viz-flow .v-row.client{background:#fef2f2;border-left:3px solid var(--pri)}
+.viz-flow .v-row.server{background:#eff6ff;border-left:3px solid var(--blue)}
+.viz-flow .v-row .v-actor{font-weight:700;min-width:60px}
+.viz-flow .v-arrow{text-align:center;color:var(--text3);font-size:16px;padding:0 20px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav class="nav">
+  <a class="logo" href="index.html" target="_top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    Frontend Learning Hub
+  </a>
+  <span class="sep"></span>
+  <div class="nav-links">
+    <a href="#c1">原理</a>
+    <a href="#c2">Redisson</a>
+    <a href="#c3">对比</a>
+    <a href="#c4">选型</a>
+    <a href="#c5">踩坑</a>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <h1>Java 分布式锁深度解析</h1>
+  <p class="sub">从 Redisson 看门狗到 ZooKeeper 临时节点，全面掌握分布式锁的实现原理、选型策略与踩坑避雷指南</p>
+  <div class="tags-row">
+    <span class="tag-pill">🔴 Redisson</span>
+    <span class="tag-pill">🦓 ZooKeeper</span>
+    <span class="tag-pill">🗄️ MySQL</span>
+    <span class="tag-pill">⚙️ 可重入锁</span>
+    <span class="tag-pill">🐕 看门狗</span>
+    <span class="tag-pill">⚖️ 公平锁</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════════ TOC ═══════════ -->
+<div class="toc">
+  <h3>📑 目录</h3>
+  <ol>
+    <li><a href="#c1">分布式锁核心原理 —— 为什么需要它？</a></li>
+    <li><a href="#c2">Redisson 分布式锁实现机制（重点）</a>
+      <ol>
+        <li><a href="#c2a">加锁流程与 Lua 脚本</a></li>
+        <li><a href="#c2b">看门狗（Watchdog）锁续期机制</a></li>
+        <li><a href="#c2c">锁释放流程</a></li>
+        <li><a href="#c2d">可重入锁（ReentrantLock）</a></li>
+        <li><a href="#c2e">公平锁（FairLock）</a></li>
+        <li><a href="#c2f">红锁（RedLock）</a></li>
+      </ol>
+    </li>
+    <li><a href="#c3">其他分布式锁方案对比</a></li>
+    <li><a href="#c4">实战选型决策指南</a></li>
+    <li><a href="#c5">常见踩坑与最佳实践</a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════ CHAPTER 1 ═══════════════════════════ -->
+<div class="sec" id="c1">
+  <div class="sec-title"><div class="num">1</div><h2>分布式锁核心原理 —— 为什么需要它？</h2></div>
+
+  <div class="card">
+    <h3>从单机锁到分布式锁</h3>
+    <p>在单机 Java 应用中，我们使用 <code>synchronized</code> 或 <code>ReentrantLock</code> 来保护共享资源。但当应用部署到<strong>多台服务器</strong>时，JVM 级别的锁就失效了 —— 每个 JVM 都有自己的锁对象，无法跨进程互斥。</p>
+
+    <div class="viz">
+      <div class="viz-title">单机锁 vs 分布式锁 架构对比</div>
+      <svg viewBox="0 0 680 260" width="100%" height="260">
+        <!-- Left: 单机 -->
+        <rect x="10" y="10" width="310" height="240" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+        <text x="165" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">❌ 单机锁 —— 多实例失效</text>
+
+        <rect x="35" y="55" width="120" height="70" rx="6" fill="#fff" stroke="#86efac"/>
+        <text x="95" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#333">App 实例 A</text>
+        <text x="95" y="100" text-anchor="middle" font-size="10" fill="#666">synchronized ✓</text>
+
+        <rect x="190" y="55" width="120" height="70" rx="6" fill="#fff" stroke="#fca5a5"/>
+        <text x="250" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#333">App 实例 B</text>
+        <text x="250" y="100" text-anchor="middle" font-size="10" fill="#dc2626">synchronized ✗</text>
+
+        <text x="165" y="155" text-anchor="middle" font-size="11" fill="#92400e">两个 JVM 各自持有锁，无法互斥！</text>
+
+        <rect x="50" y="175" width="230" height="55" rx="8" fill="#fffbeb" stroke="#fcd34d"/>
+        <text x="165" y="198" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">数据库 / 缓存</text>
+        <text x="165" y="218" text-anchor="middle" font-size="10" fill="#a16207">同时被两个实例修改 → 数据错乱</text>
+
+        <!-- Right: 分布式 -->
+        <rect x="340" y="10" width="330" height="240" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+        <text x="505" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">✅ 分布式锁 —— 统一协调</text>
+
+        <rect x="360" y="55" width="100" height="70" rx="6" fill="#fff" stroke="#93c5fd"/>
+        <text x="410" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#333">App A</text>
+        <text x="410" y="100" text-anchor="middle" font-size="10" fill="#2563eb">获取锁 ✓</text>
+
+        <rect x="480" y="55" width="100" height="70" rx="6" fill="#fef2f2" stroke="#fca5a5"/>
+        <text x="530" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#333">App B</text>
+        <text x="530" y="100" text-anchor="middle" font-size="10" fill="#dc2626">等待中...</text>
+
+        <rect x="390" y="175" width="240" height="55" rx="8" fill="#dbeafe" stroke="#60a5fa" stroke-width="2"/>
+        <text x="510" y="198" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Redis / ZooKeeper / MySQL</text>
+        <text x="510" y="218" text-anchor="middle" font-size="10" fill="#2563eb">统一协调中心 —— 谁持有锁一目了然</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>分布式锁必须满足的四个条件</h3>
+    <div class="grid2">
+      <div class="mini-card">
+        <div class="mc-icon">🔒</div>
+        <h4>互斥性</h4>
+        <p>任意时刻只有一个客户端持有锁</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-icon">💀</div>
+        <h4>防死锁</h4>
+        <p>即使持有锁的客户端崩溃，锁也能被自动释放</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-icon">🛡️</div>
+        <h4>解铃还须系铃人</h4>
+        <p>只有加锁的客户端才能解锁，不可被他人误释放</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-icon">⚡</div>
+        <h4>高可用</h4>
+        <p>锁服务本身不能是单点故障</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pitfall">
+    <div class="pit-label">⚠️ 致命误区</div>
+    <h4>误以为 SETNX + EXPIRE 就足够安全</h4>
+    <p class="pit-bad">❌ 错误做法：先 SETNX 再 EXPIRE，两步非原子，中间崩溃→死锁。</p>
+    <p class="pit-good">✅ 正确做法：使用 <code>SET key value NX EX seconds</code> 一条原子命令。</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ CHAPTER 2 ═══════════════════════════ -->
+<div class="sec" id="c2">
+  <div class="sec-title"><div class="num">2</div><h2>Redisson 分布式锁实现机制（重点深度剖析）</h2></div>
+
+  <div class="card">
+    <h3>Redisson 是什么？</h3>
+    <p>Redisson 是 Redis 官方推荐的 Java 客户端，它不仅封装了 Redis 的基本操作，更在<strong>分布式锁</strong>领域提供了生产级的实现。底层依赖 Redis 的 <code>EVAL</code> 命令执行 Lua 脚本，保证操作的原子性。</p>
+    <div class="tip blue">
+      <span class="tip-icon">ℹ️</span>
+      <div><strong>核心优势：</strong>所有锁操作都通过 Lua 脚本在 Redis 服务端原子执行，避免了"先查后改"的竞态窗口。Redisson 的分布式锁接口完全兼容 JUC 的 Lock 接口，学习成本极低。</div>
+    </div>
+  </div>
+
+  <!-- 2a: 加锁流程 -->
+  <div id="c2a">
+    <div class="sec-title"><div class="num">2.1</div><h2>加锁流程与 Lua 脚本</h2></div>
+
+    <div class="card">
+      <h3>加锁 Lua 脚本精讲</h3>
+      <p>Redisson 的加锁本质是执行一段 Lua 脚本，<strong>原子地</strong>完成"检查锁是否存在 → 不存在则加锁 / 存在且是自己则重入"的判断。</p>
+
+      <div class="code">
+        <div class="lang">LUA</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre>-- KEYS[1] = 锁的 key（如 "myLock"）
+-- ARGV[1] = 锁自动释放时间（默认 30 秒）
+-- ARGV[2] = 客户端唯一标识（UUID:threadId）
+
+-- 判断锁是否存在
+<span class="kw">if</span> (redis.call(<span class="str">'exists'</span>, KEYS[1]) == 0) <span class="kw">then</span>
+    <span class="cmt">-- 锁不存在 → 直接加锁</span>
+    redis.call(<span class="str">'hincrby'</span>, KEYS[1], ARGV[2], 1);
+    redis.call(<span class="str">'pexpire'</span>, KEYS[1], ARGV[1]);
+    <span class="kw">return</span> nil;  <span class="cmt">-- 返回 nil 表示加锁成功</span>
+<span class="kw">end</span>;
+
+<span class="cmt">-- 锁存在 → 判断是否是自己加的</span>
+<span class="kw">if</span> (redis.call(<span class="str">'hexists'</span>, KEYS[1], ARGV[2]) == 1) <span class="kw">then</span>
+    <span class="cmt">-- 是自己的锁 → 可重入，计数 +1</span>
+    redis.call(<span class="str">'hincrby'</span>, KEYS[1], ARGV[2], 1);
+    redis.call(<span class="str">'pexpire'</span>, KEYS[1], ARGV[1]);
+    <span class="kw">return</span> nil;  <span class="cmt">-- 返回 nil 表示重入成功</span>
+<span class="kw">end</span>;
+
+<span class="cmt">-- 别人的锁 → 返回剩余 TTL（毫秒）</span>
+<span class="kw">return</span> redis.call(<span class="str">'pttl'</span>, KEYS[1]);</pre>
+      </div>
+
+      <div class="tip good">
+        <span class="tip-icon">💡</span>
+        <div><strong>设计精妙之处：</strong>Redisson 使用 Redis <strong>Hash</strong> 结构存储锁信息，而非简单的 String。Hash 的 field 是 <code>UUID:threadId</code>，value 是重入次数。这天然支持了可重入锁！后文会详细展开。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>加锁流程时序图</h3>
+      <div class="viz">
+        <div class="viz-title">客户端加锁完整交互流程</div>
+        <svg viewBox="0 0 680 420" width="100%" height="420">
+          <!-- Axes -->
+          <line x1="100" y1="30" x2="100" y2="400" stroke="#ddd" stroke-width="2"/>
+          <line x1="350" y1="30" x2="350" y2="400" stroke="#ddd" stroke-width="2"/>
+
+          <text x="100" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">业务线程</text>
+          <text x="350" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#2563eb">Redis 服务端</text>
+
+          <!-- Step 1 -->
+          <line x1="100" y1="60" x2="350" y2="60" stroke="#dc2626" stroke-width="2" marker-end="url(#arrowR)"/>
+          <text x="225" y="52" text-anchor="middle" font-size="11" fill="#333">① tryLock() → 发送 Lua 脚本</text>
+
+          <!-- Step 2 -->
+          <line x1="350" y1="90" x2="100" y2="90" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowL)"/>
+          <text x="225" y="82" text-anchor="middle" font-size="11" fill="#333">② 返回 nil（加锁成功）</text>
+
+          <!-- Step 3 -->
+          <line x1="100" y1="120" x2="100" y2="160" stroke="#dc2626" stroke-width="2"/>
+          <text x="110" y="145" font-size="11" fill="#333">③ 启动看门狗定时任务</text>
+
+          <!-- Step 4 - business -->
+          <rect x="105" y="170" width="80" height="40" rx="4" fill="#fef2f2" stroke="#dc2626"/>
+          <text x="145" y="195" text-anchor="middle" font-size="10" fill="#dc2626">执行业务</text>
+
+          <!-- Watchdog loop -->
+          <text x="225" y="225" text-anchor="middle" font-size="11" fill="#d97706">看门狗每 10s 自动续期 ↓</text>
+
+          <line x1="100" y1="245" x2="350" y2="245" stroke="#d97706" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowR)"/>
+          <text x="225" y="237" text-anchor="middle" font-size="10" fill="#d97706">④ PEXPIRE 续期到 30s</text>
+
+          <line x1="100" y1="275" x2="350" y2="275" stroke="#d97706" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowR)"/>
+          <text x="225" y="267" text-anchor="middle" font-size="10" fill="#d97706">⑤ PEXPIRE 续期到 30s</text>
+
+          <!-- Business done -->
+          <rect x="105" y="295" width="80" height="30" rx="4" fill="#ecfdf5" stroke="#059669"/>
+          <text x="145" y="315" text-anchor="middle" font-size="10" fill="#059669">业务完成</text>
+
+          <!-- Step 6 -->
+          <line x1="100" y1="340" x2="350" y2="340" stroke="#dc2626" stroke-width="2" marker-end="url(#arrowR)"/>
+          <text x="225" y="332" text-anchor="middle" font-size="11" fill="#333">⑥ unlock() → 释放锁 Lua 脚本</text>
+
+          <!-- Step 7 -->
+          <line x1="350" y1="370" x2="100" y2="370" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowL)"/>
+          <text x="225" y="362" text-anchor="middle" font-size="11" fill="#333">⑦ 锁已释放 + 取消看门狗</text>
+
+          <!-- Arrows -->
+          <defs>
+            <marker id="arrowR" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#dc2626"/></marker>
+            <marker id="arrowL" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 Z" fill="#2563eb"/></marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2b: Watchdog -->
+  <div id="c2b">
+    <div class="sec-title"><div class="num">2.2</div><h2>看门狗（Watchdog）—— 锁续期机制</h2></div>
+
+    <div class="card">
+      <h3>为什么需要看门狗？</h3>
+      <p>假设你设置了 30 秒的锁过期时间，但业务逻辑跑了 35 秒。如果没有看门狗，锁在第 30 秒自动过期，另一个线程拿到锁，<strong>两个线程同时操作共享数据</strong>——灾难。</p>
+
+      <div class="viz">
+        <div class="viz-title">看门狗续期原理图</div>
+        <svg viewBox="0 0 680 200" width="100%" height="200">
+          <!-- Timeline -->
+          <line x1="40" y1="100" x2="640" y2="100" stroke="#ddd" stroke-width="3"/>
+          <text x="45" y="85" font-size="10" fill="#666">0s</text>
+
+          <!-- Ticks -->
+          <line x1="40" y1="90" x2="40" y2="110" stroke="#999"/><text x="36" y="85" font-size="10" fill="#666">0s</text>
+          <line x1="220" y1="90" x2="220" y2="110" stroke="#999"/><text x="212" y="85" font-size="10" fill="#666">10s</text>
+          <line x1="400" y1="90" x2="400" y2="110" stroke="#999"/><text x="392" y="85" font-size="10" fill="#666">20s</text>
+          <line x1="580" y1="90" x2="580" y2="110" stroke="#999"/><text x="572" y="85" font-size="10" fill="#666">30s</text>
+
+          <!-- Lock life bar -->
+          <rect x="40" y="112" width="560" height="20" rx="6" fill="#dc2626" opacity="0.15"/>
+          <rect x="40" y="112" width="560" height="20" rx="6" fill="#dc2626" opacity="0.3"/>
+
+          <!-- Renewal arrows -->
+          <rect x="40" y="45" width="160" height="40" rx="6" fill="#fef2f2" stroke="#dc2626"/>
+          <text x="120" y="70" text-anchor="middle" font-size="11" fill="#dc2626">锁过期 30s</text>
+          <line x1="200" y1="65" x2="230" y2="100" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowD)"/>
+          <text x="240" y="55" font-size="10" fill="#d97706">续期→30s</text>
+
+          <rect x="220" y="45" width="160" height="40" rx="6" fill="#fef2f2" stroke="#dc2626"/>
+          <text x="300" y="70" text-anchor="middle" font-size="11" fill="#dc2626">锁过期 30s</text>
+          <line x1="380" y1="65" x2="410" y2="100" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowD)"/>
+          <text x="420" y="55" font-size="10" fill="#d97706">续期→30s</text>
+
+          <rect x="400" y="45" width="160" height="40" rx="6" fill="#fef2f2" stroke="#dc2626"/>
+          <text x="480" y="70" text-anchor="middle" font-size="11" fill="#dc2626">锁过期 30s</text>
+
+          <!-- Business done -->
+          <rect x="500" y="140" width="120" height="30" rx="6" fill="#ecfdf5" stroke="#059669"/>
+          <text x="560" y="160" text-anchor="middle" font-size="11" fill="#059669">✅ 业务完成 释放</text>
+
+          <defs>
+            <marker id="arrowD" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d97706"/></marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>看门狗核心参数与源码逻辑</h3>
+      <table>
+        <tr><th>参数</th><th>默认值</th><th>说明</th></tr>
+        <tr><td>lockWatchdogTimeout</td><td>30000 ms</td><td>锁默认过期时间（看门狗守护上限）</td></tr>
+        <tr><td>续期间隔</td><td>lockWatchdogTimeout / 3 = 10s</td><td>每 10 秒检查并续期一次</td></tr>
+        <tr><td>触发条件</td><td>—</td><td>未指定 leaseTime 时自动启用；指定则禁用看门狗</td></tr>
+      </table>
+
+      <div class="code">
+        <div class="lang">JAVA</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><span class="cmt">// 方式1：不指定超时 → 看门狗自动续期（推荐）</span>
+<span class="ann">RLock</span> lock = redisson.getLock(<span class="str">"order:123"</span>);
+lock.lock();  <span class="cmt">// 看门狗启动，每10秒续期到30秒</span>
+
+<span class="cmt">// 方式2：指定 leaseTime → 看门狗不启用</span>
+lock.lock(<span class="num">10</span>, TimeUnit.SECONDS);  <span class="cmt">// 10秒后自动释放，不续期</span>
+
+<span class="cmt">// 看门狗定时任务的核心逻辑（简化版）</span>
+<span class="kw">private void</span> <span class="fn">scheduleExpirationRenewal</span>(<span class="kw">long</span> threadId) {
+    <span class="ann">Timeout</span> task = timer.newTimeout(timeout -> {
+        <span class="cmt">// 执行续期 Lua 脚本：如果锁仍被当前线程持有 → PEXPIRE 30s</span>
+        <span class="kw">if</span> (renewLock(threadId)) {
+            scheduleExpirationRenewal(threadId); <span class="cmt">// 递归调度下一次续期</span>
+        }
+    }, internalLockLeaseTime / <span class="num">3</span>, TimeUnit.MILLISECONDS);
+}</pre>
+      </div>
+
+      <div class="tip amber">
+        <span class="tip-icon">⚠️</span>
+        <div><strong>特别注意：</strong>如果指定了 <code>leaseTime</code>，Redisson 认为你清楚业务执行时间，<strong>不会启动看门狗</strong>。业务超时后锁直接释放，可能导致并发安全问题。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2c: 锁释放 -->
+  <div id="c2c">
+    <div class="sec-title"><div class="num">2.3</div><h2>锁释放流程</h2></div>
+
+    <div class="card">
+      <h3>释放锁 Lua 脚本</h3>
+      <p>释放时也需要原子操作：验证是当前线程的锁 → 减少重入计数 → 计数归零则删除 key → 向等待线程发布解锁消息。</p>
+
+      <div class="code">
+        <div class="lang">LUA</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><span class="cmt">-- KEYS[1] = 锁 key
+-- KEYS[2] = Redisson 的解锁频道（用于通知等待线程）
+-- ARGV[1] = 解锁消息（0 表示解锁）
+-- ARGV[2] = 锁超时时间
+-- ARGV[3] = 客户端标识 UUID:threadId</span>
+
+<span class="kw">if</span> (redis.call(<span class="str">'hexists'</span>, KEYS[1], ARGV[3]) == 0) <span class="kw">then</span>
+    <span class="kw">return</span> nil;  <span class="cmt">-- 锁不属于我，不能释放</span>
+<span class="kw">end</span>;
+
+<span class="kw">local</span> counter = redis.call(<span class="str">'hincrby'</span>, KEYS[1], ARGV[3], -1);
+
+<span class="kw">if</span> (counter > 0) <span class="kw">then</span>
+    <span class="cmt">-- 还有重入计数，只减计数不删 key</span>
+    redis.call(<span class="str">'pexpire'</span>, KEYS[1], ARGV[2]);
+    <span class="kw">return</span> 0;
+<span class="kw">else</span>
+    <span class="cmt">-- 重入计数归零 → 删除 key → 通知等待者</span>
+    redis.call(<span class="str">'del'</span>, KEYS[1]);
+    redis.call(<span class="str">'publish'</span>, KEYS[2], ARGV[1]);
+    <span class="kw">return</span> 1;
+<span class="kw">end</span>;</pre>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="step"><div class="st-num">1</div><div class="st-label">unlock() 调用</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="st-num">2</div><div class="st-label">验证锁归属</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="st-num">3</div><div class="st-label">重入计数 -1</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="st-num">4</div><div class="st-label">计数=0?<br/>删除key</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="st-num">5</div><div class="st-label">PUBLISH 通知<br/>等待者竞争锁</div></div>
+    </div>
+  </div>
+
+  <!-- 2d: 可重入锁 -->
+  <div id="c2d">
+    <div class="sec-title"><div class="num">2.4</div><h2>可重入锁（ReentrantLock）支持</h2></div>
+
+    <div class="card">
+      <h3>Hash 结构实现可重入</h3>
+      <p>Redisson 利用 Redis Hash 的 field-value 对来追踪重入次数。这是它区别于简单 <code>SETNX</code> 方案的核心设计。</p>
+
+      <div class="viz">
+        <div class="viz-title">Redis Hash 存储模型</div>
+        <svg viewBox="0 0 680 180" width="100%" height="180">
+          <rect x="20" y="10" width="640" height="160" rx="10" fill="#1a1a2e"/>
+
+          <text x="50" y="50" font-size="14" font-weight="700" fill="#c792ea">Key: "order:2024"  (锁名)</text>
+
+          <rect x="50" y="65" width="580" height="85" rx="6" fill="#2d2d3f" stroke="#444" stroke-width="1"/>
+
+          <line x1="50" y1="105" x2="630" y2="105" stroke="#444"/>
+          <text x="80" y="98" font-size="12" fill="#82aaff" font-weight="700">field</text>
+          <text x="400" y="98" font-size="12" fill="#82aaff" font-weight="700">value</text>
+
+          <text x="80" y="135" font-size="12" fill="#c3e88d">abc123-thread-1</text>
+          <text x="400" y="135" font-size="12" fill="#f78c6c">3</text>
+          <text x="520" y="135" font-size="10" fill="#546e7a">← 重入了 3 次</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>可重入锁使用示例</h3>
+      <div class="code">
+        <div class="lang">JAVA</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><span class="kw">public void</span> <span class="fn">processOrder</span>(String orderId) {
+    <span class="ann">RLock</span> lock = redisson.getLock(<span class="str">"order:"</span> + orderId);
+    <span class="kw">try</span> {
+        lock.lock();  <span class="cmt">// 第1次加锁，Hash field 计数 = 1</span>
+        <span class="fn">updateInventory</span>(orderId);  <span class="cmt">// 内部也会加同一把锁</span>
+    } <span class="kw">finally</span> {
+        lock.unlock();  <span class="cmt">// 计数 -1 → 0 → 删除 key</span>
+    }
+}
+
+<span class="kw">private void</span> <span class="fn">updateInventory</span>(String orderId) {
+    <span class="ann">RLock</span> lock = redisson.getLock(<span class="str">"order:"</span> + orderId);
+    <span class="kw">try</span> {
+        lock.lock();  <span class="cmt">// 第2次加锁，Hash field 计数 = 2（重入成功！）</span>
+        <span class="cmt">// 扣减库存...</span>
+    } <span class="kw">finally</span> {
+        lock.unlock();  <span class="cmt">// 计数 -1 → 1</span>
+    }
+}</pre>
+      </div>
+
+      <div class="tip good">
+        <span class="tip-icon">💡</span>
+        <div><strong>与 JUC ReentrantLock 完全一致的使用体验！</strong>同一个线程可以多次获取同一把锁，释放时也需要相应次数。这个设计让从单机迁移到分布式几乎不需要改变代码思维。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2e: 公平锁 -->
+  <div id="c2e">
+    <div class="sec-title"><div class="num">2.5</div><h2>公平锁（FairLock）</h2></div>
+
+    <div class="card">
+      <h3>公平锁 vs 非公平锁</h3>
+      <div class="grid2">
+        <div class="mini-card" style="border-left:3px solid var(--pri)">
+          <div class="mc-icon">⚡</div>
+          <h4>非公平锁（默认）</h4>
+          <p>所有等待者同时竞争，随机获胜。吞吐量更高，但可能造成"饥饿"。</p>
+        </div>
+        <div class="mini-card" style="border-left:3px solid var(--green)">
+          <div class="mc-icon">⚖️</div>
+          <h4>公平锁</h4>
+          <p>按照请求顺序排队，先到先得。公平但吞吐量略低（维护队列开销）。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>公平锁实现原理</h3>
+      <p>Redisson 公平锁基于 Redis 的 <strong>List + 优先级队列</strong> 实现排队机制：</p>
+      <div class="viz">
+        <div class="viz-title">公平锁排队机制</div>
+        <svg viewBox="0 0 680 160" width="100%" height="160">
+          <!-- Queue -->
+          <rect x="20" y="20" width="640" height="120" rx="10" fill="#f5f3ff" stroke="#c4b5fd"/>
+
+          <rect x="50" y="50" width="100" height="50" rx="6" fill="#7c3aed"/>
+          <text x="100" y="80" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">客户端 C</text>
+          <text x="100" y="95" text-anchor="middle" font-size="9" fill="#ddd">timeout=5000ms</text>
+
+          <text x="175" y="78" font-size="16" fill="#7c3aed">←</text>
+
+          <rect x="195" y="50" width="100" height="50" rx="6" fill="#a78bfa"/>
+          <text x="245" y="80" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">客户端 B</text>
+          <text x="245" y="95" text-anchor="middle" font-size="9" fill="#ddd">timeout=3000ms</text>
+
+          <text x="320" y="78" font-size="16" fill="#7c3aed">←</text>
+
+          <rect x="340" y="50" width="100" height="50" rx="6" fill="#c4b5fd"/>
+          <text x="390" y="80" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">客户端 A</text>
+          <text x="390" y="95" text-anchor="middle" font-size="9" fill="#ddd">持有锁</text>
+
+          <text x="460" y="78" font-size="12" fill="#7c3aed">← 队头</text>
+
+          <text x="540" y="78" font-size="11" fill="#6d28d9">Redis List: fairLock:queue</text>
+        </svg>
+      </div>
+      <p>每个等待客户端在 Redis List 中排队，当前锁释放后，<strong>队头（最早请求的客户端）</strong>获得锁。同时支持 <strong>超时放弃</strong>——超过等待时间的客户端自动退出队列。</p>
+
+      <div class="code">
+        <div class="lang">JAVA</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><span class="ann">RLock</span> fairLock = redisson.getFairLock(<span class="str">"fairLock"</span>);
+fairLock.lock();  <span class="cmt">// 公平排队获取</span>
+
+<span class="cmt">// 带超时等待</span>
+<span class="kw">boolean</span> acquired = fairLock.tryLock(<span class="num">3</span>, <span class="num">10</span>, TimeUnit.SECONDS);
+<span class="cmt">// 最多等 3 秒，锁最多持有 10 秒</span></pre>
+      </div>
+
+      <div class="tip amber">
+        <span class="tip-icon">⚠️</span>
+        <div><strong>公平锁注意：</strong>公平锁需要额外的 Redis 命令维护队列，性能约为非公平锁的 <strong>70%-80%</strong>。高并发场景下慎重选择。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2f: 红锁 -->
+  <div id="c2f">
+    <div class="sec-title"><div class="num">2.6</div><h2>红锁（RedLock）—— Redis 集群下的安全锁</h2></div>
+
+    <div class="card">
+      <h3>为什么需要 RedLock？</h3>
+      <p>在 Redis 主从 + 哨兵架构下，如果主节点宕机时锁数据尚未同步到从节点，新选出的主节点可能让另一个客户端获取同一把锁。RedLock 通过在 <strong>N 个独立 Redis 节点</strong>上都成功加锁来解决此问题。</p>
+
+      <div class="viz">
+        <div class="viz-title">RedLock 加锁流程（N=5，多数=3）</div>
+        <svg viewBox="0 0 680 200" width="100%" height="200">
+          <rect x="200" y="5" width="280" height="25" rx="12" fill="#dc2626" opacity="0.12"/>
+          <text x="340" y="22" text-anchor="middle" font-size="11" fill="#dc2626">Client 依次向 5 个独立 Redis 节点加锁</text>
+
+          <!-- Nodes -->
+          <rect x="30" y="50" width="110" height="50" rx="8" fill="#ecfdf5" stroke="#059669"/>
+          <text x="85" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">Redis-1</text>
+          <text x="85" y="90" text-anchor="middle" font-size="10" fill="#059669">✓ 加锁成功</text>
+
+          <rect x="155" y="50" width="110" height="50" rx="8" fill="#ecfdf5" stroke="#059669"/>
+          <text x="210" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">Redis-2</text>
+          <text x="210" y="90" text-anchor="middle" font-size="10" fill="#059669">✓ 加锁成功</text>
+
+          <rect x="280" y="50" width="110" height="50" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+          <text x="335" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">Redis-3</text>
+          <text x="335" y="90" text-anchor="middle" font-size="10" fill="#dc2626">✗ 超时</text>
+
+          <rect x="405" y="50" width="110" height="50" rx="8" fill="#ecfdf5" stroke="#059669"/>
+          <text x="460" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">Redis-4</text>
+          <text x="460" y="90" text-anchor="middle" font-size="10" fill="#059669">✓ 加锁成功</text>
+
+          <rect x="530" y="50" width="110" height="50" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+          <text x="585" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">Redis-5</text>
+          <text x="585" y="90" text-anchor="middle" font-size="10" fill="#dc2626">✗ 宕机</text>
+
+          <!-- Result -->
+          <rect x="200" y="115" width="280" height="40" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+          <text x="340" y="140" text-anchor="middle" font-size="13" font-weight="700" fill="#059669">✅ 3/5 成功 ≥ 多数 → RedLock 获取成功</text>
+
+          <text x="340" y="175" text-anchor="middle" font-size="11" fill="#666">多数派原则：N=5 时需要 ≥3 个节点加锁成功</text>
+        </svg>
+      </div>
+
+      <div class="code">
+        <div class="lang">JAVA</div>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><span class="cmt">// 配置 3 个独立 Redis 节点</span>
+<span class="ann">Config</span> config1 = <span class="kw">new</span> <span class="ann">Config</span>();
+config1.useSingleServer().setAddress(<span class="str">"redis://192.168.1.1:6379"</span>);
+<span class="ann">Config</span> config2 = <span class="kw">new</span> <span class="ann">Config</span>();
+config2.useSingleServer().setAddress(<span class="str">"redis://192.168.1.2:6379"</span>);
+<span class="ann">Config</span> config3 = <span class="kw">new</span> <span class="ann">Config</span>();
+config3.useSingleServer().setAddress(<span class="str">"redis://192.168.1.3:6379"</span>);
+
+<span class="ann">RedissonRedLock</span> redLock = redisson.getRedLock(
+    redisson1.getLock(<span class="str">"myLock"</span>),
+    redisson2.getLock(<span class="str">"myLock"</span>),
+    redisson3.getLock(<span class="str">"myLock"</span>)
+);
+
+<span class="kw">try</span> {
+    <span class="kw">if</span> (redLock.tryLock(<span class="num">500</span>, <span class="num">30000</span>, TimeUnit.MILLISECONDS)) {
+        <span class="cmt">// 执行业务...</span>
+    }
+} <span class="kw">finally</span> {
+    redLock.unlock();  <span class="cmt">// 依次向所有节点发送解锁命令</span>
+}</pre>
+      </div>
+
+      <div class="pitfall">
+        <div class="pit-label">🚨 重要争议</div>
+        <h4>RedLock 并非银弹</h4>
+        <p class="pit-bad">❌ Redis 作者 antirez 提出的 RedLock 算法被分布式系统专家 Martin Kleppmann 公开质疑：时钟跳跃、GC 停顿都可能导致锁安全被破坏。</p>
+        <p class="pit-good">✅ 如果你的业务能容忍极低概率的锁冲突（如缓存更新），RedLock 可用。涉及资金等强一致性场景，建议用 ZooKeeper。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ CHAPTER 3 ═══════════════════════════ -->
+<div class="sec" id="c3">
+  <div class="sec-title"><div class="num">3</div><h2>三种分布式锁方案全景对比</h2></div>
+
+  <!-- Redis / Redisson -->
+  <div class="vs-card redisson">
+    <div class="vs-header">
+      <div class="vs-icon">🔴</div>
+      <h3>方案一：Redis + Redisson（基于缓存）</h3>
+    </div>
+    <p style="color:var(--text2);font-size:14px">利用 Redis 的单线程 + Lua 原子脚本实现分布式锁。Redisson 封装了看门狗、可重入、公平锁等高级特性。</p>
+    <div class="viz">
+      <div class="viz-title">Redis 分布式锁架构</div>
+      <svg viewBox="0 0 680 120" width="100%" height="120">
+        <rect x="30" y="30" width="100" height="50" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+        <text x="80" y="60" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">客户端 A</text>
+
+        <line x1="130" y1="55" x2="200" y2="55" stroke="#dc2626" stroke-width="2"/>
+        <text x="165" y="48" text-anchor="middle" font-size="9" fill="#dc2626">Lua 脚本</text>
+
+        <rect x="200" y="15" width="130" height="80" rx="10" fill="#dc2626"/>
+        <text x="265" y="50" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">Redis</text>
+        <text x="265" y="70" text-anchor="middle" font-size="10" fill="#fecaca">SET NX + Hash</text>
+        <text x="265" y="85" text-anchor="middle" font-size="10" fill="#fecaca">看门狗续期</text>
+
+        <line x1="330" y1="55" x2="400" y2="55" stroke="#2563eb" stroke-width="2"/>
+
+        <rect x="400" y="30" width="100" height="50" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+        <text x="450" y="60" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="700">客户端 B</text>
+
+        <text x="540" y="60" font-size="11" fill="#666">等待 PUB/SUB 通知</text>
+      </svg>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 高性能（微秒级）</div>
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 自动续期</div>
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 可重入</div>
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 公平锁</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 主从切换丢锁风险</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 强一致性场景不适用</div>
+    </div>
+    <div class="vs-pros" style="margin-top:8px"><span>✅ 适用场景：</span>高并发扣库存、接口防重、缓存击穿保护、短时互斥操作</div>
+  </div>
+
+  <!-- ZooKeeper -->
+  <div class="vs-card zk">
+    <div class="vs-header">
+      <div class="vs-icon">🦓</div>
+      <h3>方案二：ZooKeeper + Curator（基于 CP 协调服务）</h3>
+    </div>
+    <p style="color:var(--text2);font-size:14px">利用 ZK 的<strong>临时顺序节点</strong> + <strong>Watcher 机制</strong>实现。节点删除即释放锁，天然防死锁。Curator 是 Netflix 开源的高层封装。</p>
+    <div class="viz">
+      <div class="viz-title">ZooKeeper 分布式锁原理</div>
+      <svg viewBox="0 0 680 140" width="100%" height="140">
+        <rect x="220" y="5" width="240" height="22" rx="11" fill="#f5f3ff"/>
+        <text x="340" y="20" text-anchor="middle" font-size="10" fill="#7c3aed">持久节点：/locks/myLock</text>
+
+        <!-- Ephemeral sequential nodes -->
+        <rect x="30" y="40" width="110" height="40" rx="6" fill="#7c3aed"/>
+        <text x="85" y="65" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">0000000001</text>
+
+        <rect x="155" y="40" width="110" height="40" rx="6" fill="#a78bfa"/>
+        <text x="210" y="65" text-anchor="middle" font-size="10" fill="#fff">0000000002 (Watch-1)</text>
+
+        <rect x="280" y="40" width="110" height="40" rx="6" fill="#c4b5fd"/>
+        <text x="335" y="65" text-anchor="middle" font-size="10" fill="#fff">0000000003 (Watch-2)</text>
+
+        <rect x="405" y="40" width="110" height="40" rx="6" fill="#ddd6fe"/>
+        <text x="460" y="65" text-anchor="middle" font-size="10" fill="#6d28d9">0000000004 (Watch-3)</text>
+
+        <text x="85" y="105" text-anchor="middle" font-size="10" fill="#059669" font-weight="700">持有锁</text>
+        <text x="210" y="105" text-anchor="middle" font-size="10" fill="#666">等待中</text>
+        <text x="335" y="105" text-anchor="middle" font-size="10" fill="#666">等待中</text>
+        <text x="460" y="105" text-anchor="middle" font-size="10" fill="#666">等待中</text>
+
+        <text x="340" y="130" text-anchor="middle" font-size="10" fill="#7c3aed">每个客户端 Watch 前一个节点，节点删除 → 下一客户端感知并获取锁</text>
+      </svg>
+    </div>
+
+    <div class="code">
+      <div class="lang">JAVA</div>
+      <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      <pre><span class="cmt">// Curator 分布式锁（推荐）</span>
+<span class="ann">InterProcessMutex</span> lock = <span class="kw">new</span> <span class="ann">InterProcessMutex</span>(
+    curatorClient, <span class="str">"/locks/myLock"</span>
+);
+
+<span class="kw">if</span> (lock.acquire(<span class="num">10</span>, TimeUnit.SECONDS)) {
+    <span class="kw">try</span> {
+        <span class="cmt">// 执行业务...</span>
+    } <span class="kw">finally</span> {
+        lock.release();
+    }
+}</pre>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 强一致性（CP模型）</div>
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 自动释放（Session断开）</div>
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 天然公平排队</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 性能较低（毫秒级）</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 运维成本高</div>
+    </div>
+    <div class="vs-cons" style="margin-top:8px"><span>⚠️ 注意：</span>ZK 锁的性能瓶颈在写操作（创建/删除节点），不适合超高并发。Session 超时期间可能短暂无锁。</div>
+  </div>
+
+  <!-- MySQL -->
+  <div class="vs-card mysql">
+    <div class="vs-header">
+      <div class="vs-icon">🗄️</div>
+      <h3>方案三：MySQL（基于数据库行锁）</h3>
+    </div>
+    <p style="color:var(--text2);font-size:14px">利用 MySQL 的<strong>唯一索引 + 行级锁</strong>或<strong> SELECT ... FOR UPDATE</strong> 实现。最简单但性能最差。</p>
+
+    <div class="code">
+      <div class="lang">SQL / JAVA</div>
+      <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      <pre><span class="cmt">-- 方式 A：唯一索引 + INSERT（推荐）</span>
+<span class="kw">CREATE TABLE</span> distributed_lock (
+    lock_key <span class="fn">VARCHAR</span>(128) <span class="ann">PRIMARY KEY</span>,
+    holder    <span class="fn">VARCHAR</span>(128),
+    expire_at <span class="fn">DATETIME</span>,
+    <span class="ann">INDEX</span> idx_expire (expire_at)
+);
+
+<span class="cmt">-- 加锁：插入成功 = 获取锁</span>
+<span class="kw">INSERT INTO</span> distributed_lock (lock_key, holder, expire_at)
+<span class="kw">VALUES</span> (<span class="str">'order:123'</span>, <span class="str">'server-1'</span>, <span class="fn">NOW</span>() + <span class="ann">INTERVAL</span> 30 <span class="ann">SECOND</span>);
+
+<span class="cmt">-- 解锁：删除记录</span>
+<span class="kw">DELETE FROM</span> distributed_lock
+<span class="kw">WHERE</span> lock_key = <span class="str">'order:123'</span> <span class="kw">AND</span> holder = <span class="str">'server-1'</span>;</pre>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 零额外依赖</div>
+      <div class="score-badge" style="background:#ecfdf5;color:#059669">✅ 天然持久化</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 性能最差</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 无自动续期</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 手动清理过期锁</div>
+      <div class="score-badge" style="background:#fef2f2;color:#dc2626">❌ 单点瓶颈</div>
+    </div>
+    <div class="vs-cons" style="margin-top:8px"><span>⚠️ 注意：</span>MySQL 锁只适合<strong>低并发 + 已有数据库</strong>的场景。高并发下连接池耗尽风险极高。</div>
+  </div>
+
+  <!-- Summary Comparison Table -->
+  <div class="card">
+    <h3>三维度量化对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr>
+          <th>维度</th><th>Redisson (Redis)</th><th>Curator (ZooKeeper)</th><th>MySQL</th>
+        </tr>
+        <tr>
+          <td><strong>性能</strong></td>
+          <td><span class="badge-green">⭐⭐⭐⭐⭐ 极高</span></td>
+          <td><span class="badge-blue">⭐⭐⭐ 中等</span></td>
+          <td><span class="badge-red">⭐ 低</span></td>
+        </tr>
+        <tr>
+          <td><strong>一致性</strong></td>
+          <td><span class="badge-red">最终一致（主从有风险）</span></td>
+          <td><span class="badge-green">强一致（CP 模型）</span></td>
+          <td><span class="badge-green">强一致（ACID）</span></td>
+        </tr>
+        <tr>
+          <td><strong>可用性</strong></td>
+          <td><span class="badge-green">高（哨兵/集群）</span></td>
+          <td><span class="badge-green">高（过半存活）</span></td>
+          <td><span class="badge-red">低（单点）</span></td>
+        </tr>
+        <tr>
+          <td><strong>防死锁</strong></td>
+          <td><span class="badge-green">TTL + 看门狗</span></td>
+          <td><span class="badge-green">Session 断开自动删节点</span></td>
+          <td><span class="badge-red">需手动清理过期锁</span></td>
+        </tr>
+        <tr>
+          <td><strong>可重入</strong></td>
+          <td><span class="badge-green">Hash field 计数</span></td>
+          <td><span class="badge-green">需自行实现</span></td>
+          <td><span class="badge-red">需自行实现</span></td>
+        </tr>
+        <tr>
+          <td><strong>公平性</strong></td>
+          <td><span class="badge-green">FairLock 支持</span></td>
+          <td><span class="badge-green">顺序节点天然公平</span></td>
+          <td><span class="badge-red">需自行实现</span></td>
+        </tr>
+        <tr>
+          <td><strong>运维成本</strong></td>
+          <td><span class="badge-green">低（Redis 普及）</span></td>
+          <td><span class="badge-red">高（ZK 学习曲线陡）</span></td>
+          <td><span class="badge-blue">极低（无额外组件）</span></td>
+        </tr>
+        <tr>
+          <td><strong>适用并发</strong></td>
+          <td><span class="badge-green">万级 QPS</span></td>
+          <td><span class="badge-blue">千级 QPS</span></td>
+          <td><span class="badge-red">百级 QPS</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ CHAPTER 4 ═══════════════════════════ -->
+<div class="sec" id="c4">
+  <div class="sec-title"><div class="num">4</div><h2>实战选型决策指南</h2></div>
+
+  <div class="card">
+    <h3>按场景选型速查</h3>
+    <div class="viz">
+      <div class="viz-title">分布式锁选型决策树</div>
+      <svg viewBox="0 0 680 360" width="100%" height="360">
+        <!-- Root -->
+        <rect x="240" y="5" width="200" height="38" rx="19" fill="#1a1a2e"/>
+        <text x="340" y="29" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">需要分布式锁</text>
+
+        <!-- Branch 1 -->
+        <line x1="280" y1="43" x2="120" y2="80" stroke="#666" stroke-width="1.5"/>
+        <line x1="400" y1="43" x2="560" y2="80" stroke="#666" stroke-width="1.5"/>
+
+        <rect x="20" y="80" width="200" height="45" rx="8" fill="#fef2f2" stroke="#dc2626"/>
+        <text x="120" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">强一致性场景？</text>
+        <text x="120" y="116" text-anchor="middle" font-size="10" fill="#666">（资金、库存扣减）</text>
+
+        <rect x="480" y="80" width="200" height="45" rx="8" fill="#eff6ff" stroke="#2563eb"/>
+        <text x="580" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="#2563eb">高性能 + 容忍偶发冲突？</text>
+        <text x="580" y="116" text-anchor="middle" font-size="10" fill="#666">（幂等、限流、缓存）</text>
+
+        <!-- Sub branches -->
+        <line x1="120" y1="125" x2="120" y2="155" stroke="#666" stroke-width="1.5"/>
+
+        <rect x="20" y="155" width="200" height="35" rx="8" fill="#7c3aed"/>
+        <text x="120" y="177" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">✅ ZooKeeper / Curator</text>
+
+        <line x1="580" y1="125" x2="580" y2="155" stroke="#666" stroke-width="1.5"/>
+
+        <rect x="480" y="155" width="200" height="35" rx="8" fill="#dc2626"/>
+        <text x="580" y="177" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">✅ Redisson (Redis)</text>
+
+        <!-- Another branch: already have MySQL -->
+        <line x1="340" y1="43" x2="340" y2="220" stroke="#666" stroke-width="1.5"/>
+
+        <rect x="240" y="220" width="200" height="45" rx="8" fill="#fffbeb" stroke="#d97706"/>
+        <text x="340" y="240" text-anchor="middle" font-size="11" font-weight="700" fill="#d97706">没有 Redis/ZK？</text>
+        <text x="340" y="256" text-anchor="middle" font-size="10" fill="#666">只有 MySQL</text>
+
+        <line x1="340" y1="265" x2="340" y2="295" stroke="#666" stroke-width="1.5"/>
+
+        <rect x="240" y="295" width="200" height="35" rx="8" fill="#2563eb"/>
+        <text x="340" y="317" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">⚠️ MySQL 兜底方案</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="tip good">
+    <span class="tip-icon">🎯</span>
+    <div><strong>一句话总结：</strong>90% 的场景用 Redisson 就够了。需要强一致性（金融交易）上 ZooKeeper。只有 MySQL 的环境才用数据库锁兜底。</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ CHAPTER 5 ═══════════════════════════ -->
+<div class="sec" id="c5">
+  <div class="sec-title"><div class="num">5</div><h2>常见踩坑与最佳实践</h2></div>
+
+  <div class="pitfall">
+    <div class="pit-label">💣 踩坑 #1</div>
+    <h4>指定 leaseTime 后忘记看门狗不会启动</h4>
+    <p class="pit-bad">❌ <code>lock.lock(10, TimeUnit.SECONDS);</code> 业务跑了 15 秒，锁在第 10 秒自动释放，另一个线程拿到锁</p>
+    <p class="pit-good">✅ 不指定超时让看门狗自动管理，或用 tryLock(waitTime, leaseTime, unit) 并确保 leaseTime 足够大</p>
+  </div>
+
+  <div class="pitfall">
+    <div class="pit-label">💣 踩坑 #2</div>
+    <h4>unlock() 未放在 finally 块</h4>
+    <p class="pit-bad">❌ 业务抛异常后锁不释放，其他线程永久阻塞</p>
+    <p class="pit-good">✅ <code>lock.lock(); try { ... } finally { lock.unlock(); }</code> 铁律</p>
+  </div>
+
+  <div class="pitfall">
+    <div class="pit-label">💣 踩坑 #3</div>
+    <h4>锁粒度太大导致性能瓶颈</h4>
+    <p class="pit-bad">❌ 对整个商品列表加一把锁 <code>"product:all"</code> —— 所有商品操作串行化</p>
+    <p class="pit-good">✅ 按资源 ID 细粒度加锁 <code>"product:" + productId</code></p>
+  </div>
+
+  <div class="pitfall">
+    <div class="pit-label">💣 踩坑 #4</div>
+    <h4>Redis 主从切换导致锁丢失</h4>
+    <p class="pit-bad">❌ 主节点宕机，锁数据未同步到从节点，新主节点允许另一客户端加锁</p>
+    <p class="pit-good">✅ ① 接受极小概率冲突（大部分场景可行）② 用 RedLock ③ 切到 ZooKeeper</p>
+  </div>
+
+  <div class="pitfall">
+    <div class="pit-label">💣 踩坑 #5</div>
+    <h4>锁重入与释放次数不匹配</h4>
+    <p class="pit-bad">❌ lock() 了 3 次但只 unlock() 了 2 次，锁永远不会释放</p>
+    <p class="pit-good">✅ 使用 <code>lock.lock(); try { ... } finally { lock.unlock(); }</code> 配对，或使用 <code>lock.forceUnlock()</code> 强制清理</p>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <h3>最佳实践检查清单</h3>
+    <table>
+      <tr><th>#</th><th>实践</th><th>理由</th></tr>
+      <tr><td>1</td><td>默认不指定 leaseTime</td><td>让看门狗自动续期，避免锁提前释放</td></tr>
+      <tr><td>2</td><td>lock + try/finally 铁三角</td><td>确保异常时锁也能释放</td></tr>
+      <tr><td>3</td><td>控制锁粒度</td><td>按资源 ID 加锁，避免全局锁</td></tr>
+      <tr><td>4</td><td>设置合理的等待超时</td><td>tryLock(waitTime, ...) 避免无限阻塞</td></tr>
+      <tr><td>5</td><td>避免在锁内执行 RPC</td><td>远程调用不可控，锁持有时间不可预测</td></tr>
+      <tr><td>6</td><td>监控锁竞争情况</td><td>使用 Redis MONITOR 或 Redisson 内置统计</td></tr>
+      <tr><td>7</td><td>资金场景用 ZK</td><td>强一致性保证，不允许锁冲突</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- .wrap -->
+
+<script>
+// ── 代码复制 ──
+function copyCode(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已复制!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── 导航滚动高亮 ──
+const sections = document.querySelectorAll('.sec[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => {
+        link.style.color = link.getAttribute('href') === '#' + entry.target.id
+          ? 'var(--pri)' : 'var(--text2)';
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+// ── 响应式调整 ──
+window.addEventListener('scroll', () => {
+  const nav = document.querySelector('.nav');
+  if (window.scrollY > 10) {
+    nav.style.boxShadow = '0 2px 8px rgba(0,0,0,.08)';
+  } else {
+    nav.style.boxShadow = 'none';
+  }
+});
+</script>
+</body>
+</html>

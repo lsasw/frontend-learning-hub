@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python3 语法讲解与语法糖 · 交互式学习指南</title>
+<style>
+:root {
+  --py: #3776AB; --py-dark: #1e4a6d; --py-light: #e8f0f8;
+  --yel: #FFD43B; --yel-dark: #b89500; --yel-light: #fff9e0;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --teal: #0d9488; --teal-light: #ccfbf1;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--py);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--py-light);color:var(--py-dark)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#3776AB 0%,#1e4a6d 50%,#0d1f30 100%);color:#fff;padding:64px 40px 52px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-80px;right:-60px;width:300px;height:300px;background:rgba(255,212,59,.08);border-radius:50%}
+.hero::after{content:"";position:absolute;bottom:-40px;left:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h1{font-size:2.6rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative}
+.hero .sub{font-size:1.04rem;opacity:.9;margin-top:12px;max-width:680px;margin-inline:auto;position:relative}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px;scroll-margin-top:64px}
+.sec-title{font-size:1.6rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--py);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--py);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-intro{font-size:.88rem;color:var(--text2);margin-bottom:18px;line-height:1.7}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.05rem;margin-bottom:10px;color:var(--py-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card p{font-size:.87rem;margin-bottom:8px;color:var(--text2)}
+
+/* SUGAR BADGE */
+.sugar-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#FFD43B,#f59e0b);color:#1a1a2e;padding:2px 12px;border-radius:12px;font-size:.7rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 1px 3px rgba(245,158,11,.3)}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--py-light);border-left:4px solid var(--py)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.purple{background:var(--purple-light);border-left:4px solid var(--purple)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+
+/* CODE DISPLAY */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:18px 22px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.64rem;color:#6b7394;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.8rem;color:#e2e8f0;white-space:pre;line-height:1.75}
+.kw{color:#c4b5fd}.str{color:#86efac}.cmt{color:#64748b;font-style:italic}
+.fn{color:#93c5fd}.num{color:#fdba74}.typ{color:#fde68a}
+.builtin{color:#f9a8d4}.op{color:#fca5a5}.dec{color:#67e8f9}
+
+/* OUTPUT DISPLAY */
+.output{background:#0f172a;border-radius:var(--radius-sm);padding:14px 18px;margin:8px 0 0;min-height:40px;border:1px solid #334155}
+.output .out-label{font-size:.66rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono)}
+.output .out-content{font-family:var(--mono);font-size:.8rem;color:#a6e3a1;white-space:pre-wrap;line-height:1.7;min-height:20px}
+.output .out-content.err{color:#f38ba8}
+.output .out-loading{color:#fcd34c;font-style:italic}
+
+/* INTERACTIVE CODE BLOCK */
+.ide{background:var(--code-bg);border-radius:var(--radius);margin:14px 0;overflow:hidden;border:1px solid #334155}
+.ide-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#16162a;border-bottom:1px solid #334155}
+.ide-header .ide-label{font-size:.72rem;color:#94a3b8;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.ide-header .ide-dots{display:flex;gap:6px;margin-right:8px}
+.ide-header .ide-dots span{width:11px;height:11px;border-radius:50%}
+.ide-header .ide-dots span:nth-child(1){background:#ef4444}
+.ide-header .ide-dots span:nth-child(2){background:#f59e0b}
+.ide-header .ide-dots span:nth-child(3){background:#22c55e}
+.ide-actions{display:flex;gap:8px}
+.ide-btn{background:var(--py);color:#fff;border:none;padding:5px 14px;border-radius:5px;cursor:pointer;font-size:.74rem;font-weight:600;font-family:var(--sans);transition:all .2s;display:flex;align-items:center;gap:5px}
+.ide-btn:hover{background:var(--py-dark);transform:translateY(-1px)}
+.ide-btn:active{transform:translateY(0)}
+.ide-btn.reset{background:#475569}
+.ide-btn.reset:hover{background:#334155}
+.ide-btn:disabled{opacity:.5;cursor:wait}
+.ide-textarea{width:100%;background:#1a1a2e;color:#e2e8f0;border:none;padding:16px 22px;font-family:var(--mono);font-size:.8rem;line-height:1.75;resize:vertical;min-height:100px;outline:none;tab-size:4;white-space:pre}
+.ide-textarea:focus{background:#1e1e34}
+.ide-output{background:#0f172a;padding:12px 22px;border-top:1px solid #334155;display:none}
+.ide-output.show{display:block}
+.ide-output .out-label{font-size:.66rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono)}
+.ide-output .out-content{font-family:var(--mono);font-size:.8rem;color:#a6e3a1;white-space:pre-wrap;line-height:1.7;min-height:20px}
+.ide-output .out-content.err{color:#f38ba8}
+.ide-output .out-content.loading{color:#fcd34c;font-style:italic}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--py-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--py);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f4f8fc}
+td code{background:var(--py-light);color:var(--py-dark);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.77rem}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+
+/* TYPE CARDS */
+.type-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px;transition:all .25s}
+.type-card:hover{border-color:var(--py);box-shadow:0 2px 12px rgba(55,118,171,.08)}
+.type-card h4{font-size:.9rem;margin-bottom:6px;color:var(--py-dark);display:flex;align-items:center;gap:6px}
+.type-card .ic{font-size:1.2rem}
+.type-card .ex{font-family:var(--mono);font-size:.76rem;background:var(--code-bg);color:#86efac;padding:4px 10px;border-radius:4px;display:inline-block;margin-top:4px}
+.type-card .desc{font-size:.78rem;color:var(--text2);margin-top:4px}
+
+/* ACCORDION */
+.acc{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden;transition:box-shadow .2s}
+.acc:hover{box-shadow:var(--shadow)}
+.acc-header{cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 18px;user-select:none;background:var(--surface);transition:background .2s}
+.acc-header:hover{background:var(--py-light)}
+.acc-header .acc-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.acc-header .acc-title{flex:1;font-weight:700;font-size:.88rem}
+.acc-header .chev{transition:transform .3s;color:var(--text3);font-size:.85rem;flex-shrink:0}
+.acc.open .chev{transform:rotate(180deg)}
+.acc.open .acc-header{border-bottom:1px solid var(--border)}
+.acc-body{display:none;padding:16px 18px;background:#fcfcfd}
+.acc.open .acc-body{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.tab{flex:1;min-width:80px;padding:10px 12px;border:none;background:transparent;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text2);font-family:var(--sans);transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab:hover{color:var(--text);background:var(--py-light)}
+.tab.active{border-bottom-color:var(--py);color:var(--py)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .3s}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.71rem;font-weight:600}
+.badge.py{background:var(--py-light);color:var(--py-dark)}
+.badge.green{background:var(--green-light);color:#065f46}
+.badge.amber{background:var(--amber-light);color:#92400e}
+.badge.purple{background:var(--purple-light);color:#5b21b6}
+
+/* PYODIDE STATUS */
+.py-status{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;box-shadow:var(--shadow-hover);font-size:.78rem;color:var(--text2);display:none;align-items:center;gap:8px;z-index:200;transition:all .3s}
+.py-status.show{display:flex}
+.py-status .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s infinite}
+.py-status.ready .dot{background:var(--green);animation:none}
+.py-status.error .dot{background:var(--red);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* FLOW */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:14px;background:#f0f4f8;border-radius:var(--radius-sm);margin:12px 0;font-size:.8rem;overflow-x:auto;justify-content:center}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.77rem;text-align:center}
+.flow-node.py{border-color:var(--py);background:var(--py-light);color:var(--py-dark)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#065f46}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.orange{border-color:var(--orange);background:var(--orange-light);color:#7c2d12}
+.flow-arrow{color:var(--text3);font-size:1rem;font-weight:700}
+
+/* SUMMARY BOX */
+.summary-box{background:linear-gradient(135deg,#3776AB 0%,#1e4a6d 100%);color:#fff;border-radius:var(--radius);padding:24px 28px;margin:16px 0}
+.summary-box h3{font-size:1.1rem;margin-bottom:10px}
+.summary-box ul{list-style:none;padding:0}
+.summary-box ul li{padding:5px 0;font-size:.83rem;padding-left:18px;position:relative}
+.summary-box ul li::before{content:"▸";position:absolute;left:0;color:rgba(255,255,255,.6)}
+.summary-box code{background:rgba(255,255,255,.15);color:#fff;padding:1px 6px;border-radius:3px;font-size:.78rem}
+
+.footer{text-align:center;padding:40px 0 20px;color:var(--text3);font-size:.78rem}
+
+@media(max-width:768px){
+  .hero{padding:40px 16px 32px}.hero h1{font-size:1.7rem}
+  .card{padding:18px 16px}.sec-title{font-size:1.3rem}
+  .nav a{padding:8px 10px;font-size:.78rem}
+  .ide-textarea{font-size:.74rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="navbar">
+  <span class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.03 2 3 5.58 3 10c0 3.54 2.39 6.51 5.67 7.38.44.08.6-.19.6-.42 0-.21-.01-.91-.01-1.65-2.46.45-2.97-1.05-2.97-1.05-.4-.96-.98-1.22-.98-1.22-.8-.51.06-.5.06-.5.88.06 1.35.87 1.35.87.73 1.07 1.87.83 2.32.64.07-.55.28-.93.51-1.14-1.78-.19-3.64-.84-3.64-3.74 0-.83.31-1.5.82-2.03-.08-.19-.36-.96.08-2 0 0 .65-.2 2.12.76A7.5 7.5 0 0112 6.5c.68 0 1.36.09 2 .26 1.47-.96 2.12-.76 2.12-.76.44 1.04.16 1.81.08 2 .51.53.82 1.2.82 2.03 0 2.91-1.87 3.55-3.65 3.74.29.24.54.71.54 1.43 0 1.03-.01 1.86-.01 2.11 0 .23.16.5.6.42C18.61 16.51 21 13.54 21 10c0-4.42-4.03-8-9-8z" fill="#3776AB"/></svg>
+    Python3 语法
+  </span>
+  <a href="#s0" class="active">总览</a>
+  <a href="#s1">变量与类型</a>
+  <a href="#s2">条件判断</a>
+  <a href="#s3">循环结构</a>
+  <a href="#s4">函数定义</a>
+  <a href="#s5">异常处理</a>
+  <a href="#s6">推导式</a>
+  <a href="#s7">海象运算符</a>
+  <a href="#s8">f-string</a>
+  <a href="#s9">解包</a>
+  <a href="#s10">enumerate与zip</a>
+  <a href="#s11">with语句</a>
+  <a href="#s12">练习区</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <h1>🐍 Python3 语法讲解与语法糖</h1>
+  <p class="sub">从基础语法到 Pythonic 语法糖 —— 变量类型、条件循环、函数异常、推导式、海象运算符、f-string、解包、上下文管理器，每个知识点配可运行代码与交互式练习</p>
+  <div class="tags">
+    <span class="tag">8 种数据类型</span>
+    <span class="tag">10+ 语法糖</span>
+    <span class="tag">可交互运行</span>
+    <span class="tag">Pyodide 引擎</span>
+    <span class="tag">陷阱提示</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ====== SECTION 0: OVERVIEW ====== -->
+<div class="sec" id="s0">
+<div class="card">
+  <h2 class="sec-title" style="margin-top:0"><span class="n">0</span>学习路线总览</h2>
+  <p style="font-size:.88rem;color:var(--text2);margin-bottom:16px">本页面分为两大模块：<strong>基础语法</strong>（§1-§5）打地基，<strong>语法糖</strong>（§6-§11）提效率。每个知识点都配备语法说明、代码示例、输出结果和常见陷阱。点击代码块右上角的「运行」按钮可实时执行 Python 代码。</p>
+
+  <div class="flow">
+    <div class="flow-node py">变量与类型</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node py">条件判断</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node py">循环结构</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node py">函数定义</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node py">异常处理</div>
+  </div>
+  <div style="text-align:center;margin:8px 0;font-size:.8rem;color:var(--text3)">基础语法 · 地基</div>
+  <div class="flow">
+    <div class="flow-node green">推导式</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node green">海象运算符</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node green">f-string</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node green">解包操作</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node green">enumerate/zip</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node green">with 语句</div>
+  </div>
+  <div style="text-align:center;font-size:.8rem;color:var(--text3)">语法糖 · 效率</div>
+
+  <div class="tip info" style="margin-top:16px">
+    <span class="ti">💡</span>
+    <div><strong>如何使用：</strong>每个代码块都有「运行」按钮，首次点击会加载 Pyodide（浏览器端 Python 引擎，约 5-10 秒），之后所有代码块即可秒级运行。你也可以修改代码后再运行，亲手实践每个语法点。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 1: VARIABLES & TYPES ====== -->
+<div class="sec" id="s1">
+<div class="card">
+  <h2 class="sec-title"><span class="n">1</span>变量与数据类型</h2>
+  <p class="sec-intro">Python 是动态类型语言，变量无需声明类型，赋值即定义。内置 8 种核心数据类型覆盖了绝大多数场景。</p>
+
+  <h3>1.1 八大数据类型一览</h3>
+  <div class="grid3" style="margin:14px 0">
+    <div class="type-card"><h4><span class="ic">🔢</span>int 整数</h4><span class="ex">x = 42</span><p class="desc">任意精度，不会溢出</p></div>
+    <div class="type-card"><h4><span class="ic">💧</span>float 浮点数</h4><span class="ex">x = 3.14</span><p class="desc">IEEE 754 双精度</p></div>
+    <div class="type-card"><h4><span class="ic">📝</span>str 字符串</h4><span class="ex">x = "hello"</span><p class="desc">不可变，Unicode</p></div>
+    <div class="type-card"><h4><span class="ic">✅</span>bool 布尔值</h4><span class="ex">x = True</span><p class="desc">True / False</p></div>
+    <div class="type-card"><h4><span class="ic">📋</span>list 列表</h4><span class="ex">x = [1, 2, 3]</span><p class="desc">可变，有序</p></div>
+    <div class="type-card"><h4><span class="ic">📦</span>tuple 元组</h4><span class="ex">x = (1, 2, 3)</span><p class="desc">不可变，有序</p></div>
+    <div class="type-card"><h4><span class="ic">🗂️</span>dict 字典</h4><span class="ex">x = {"k": "v"}</span><p class="desc">键值对，可变</p></div>
+    <div class="type-card"><h4><span class="ic">🎯</span>set 集合</h4><span class="ex">x = {1, 2, 3}</span><p class="desc">无序，去重</p></div>
+  </div>
+
+  <h3>1.2 类型操作与转换</h3>
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># 基本类型赋值</span>
+<span class="kw">name</span> = <span class="str">"Python"</span>
+<span class="kw">version</span> = <span class="num">3.12</span>
+<span class="kw">is_awesome</span> = <span class="kw">True</span>
+<span class="kw">features</span> = [<span class="str">"简洁"</span>, <span class="str">"易学"</span>, <span class="str">"强大"</span>]
+<span class="kw">coordinates</span> = (<span class="num">39.9</span>, <span class="num">116.4</span>)
+<span class="kw">config</span> = {<span class="str">"debug"</span>: <span class="kw">True</span>, <span class="str">"port"</span>: <span class="num">8080</span>}
+<span class="kw">unique_tags</span> = {<span class="str">"python"</span>, <span class="str">"java"</span>, <span class="str">"python"</span>}
+
+<span class="fn">print</span>(<span class="builtin">type</span>(name))         <span class="cmt"># <class 'str'></span>
+<span class="fn">print</span>(<span class="builtin">type</span>(version))      <span class="cmt"># <class 'float'></span>
+<span class="fn">print</span>(unique_tags)          <span class="cmt"># 去重: {'python', 'java'}</span>
+
+<span class="cmt"># 类型转换</span>
+<span class="kw">num_str</span> = <span class="builtin">str</span>(<span class="num">42</span>)            <span class="cmt"># "42"</span>
+<span class="kw">num_int</span> = <span class="builtin">int</span>(<span class="str">"42"</span>)          <span class="cmt"># 42</span>
+<span class="kw">num_float</span> = <span class="builtin">float</span>(<span class="str">"3.14"</span>)    <span class="cmt"># 3.14</span>
+<span class="kw">bool_val</span> = <span class="builtin">bool</span>(<span class="num">0</span>)           <span class="cmt"># False (0/空为False)</span>
+<span class="kw">list_from</span> = <span class="builtin">list</span>(<span class="str">"abc"</span>)      <span class="cmt"># ['a', 'b', 'c']</span>
+
+<span class="fn">print</span>(<span class="builtin">type</span>(num_str), num_str)</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">&lt;class 'str'&gt;
+&lt;class 'float'&gt;
+{'python', 'java'}
+&lt;class 'str'&gt; 42</div></div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><strong>常见陷阱：</strong><code>is</code> 比较的是内存地址（identity），<code>==</code> 比较的是值（equality）。小整数（-5~256）有缓存池，<code>a = 256; b = 256; a is b</code> 为 True，但 <code>a = 257; b = 257; a is b</code> 可能为 False。永远用 <code>==</code> 比较值。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 2: CONDITIONALS ====== -->
+<div class="sec" id="s2">
+<div class="card">
+  <h2 class="sec-title"><span class="n">2</span>条件判断（if / elif / else）</h2>
+  <p class="sec-intro">Python 用缩进（4 空格）表示代码块，没有花括号。条件表达式不需要括号，但行尾必须有冒号。</p>
+
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="kw">score</span> = <span class="num">85</span>
+
+<span class="kw">if</span> score >= <span class="num">90</span>:
+    <span class="fn">print</span>(<span class="str">"优秀"</span>)
+<span class="kw">elif</span> score >= <span class="num">80</span>:
+    <span class="fn">print</span>(<span class="str">"良好"</span>)
+<span class="kw">elif</span> score >= <span class="num">60</span>:
+    <span class="fn">print</span>(<span class="str">"及格"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"不及格"</span>)
+
+<span class="cmt"># 条件嵌套</span>
+<span class="kw">age</span> = <span class="num">20</span>
+<span class="kw">has_id</span> = <span class="kw">True</span>
+<span class="kw">if</span> age >= <span class="num">18</span>:
+    <span class="kw">if</span> has_id:
+        <span class="fn">print</span>(<span class="str">"允许进入"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"需要证件"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"未成年禁止进入"</span>)
+
+<span class="cmt"># 多条件组合: and / or / not</span>
+<span class="kw">is_weekend</span> = <span class="kw">True</span>
+<span class="kw">is_sunny</span> = <span class="kw">False</span>
+<span class="kw">if</span> is_weekend <span class="kw">and</span> is_sunny:
+    <span class="fn">print</span>(<span class="str">"去郊游"</span>)
+<span class="kw">elif</span> is_weekend <span class="kw">and</span> <span class="kw">not</span> is_sunny:
+    <span class="fn">print</span>(<span class="str">"在家看书"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"上班"</span>)</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">良好
+允许进入
+在家看书</div></div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><strong>真值表：</strong>以下值在布尔上下文中为 <code>False</code>：<code>None</code>、<code>False</code>、<code>0</code>、<code>0.0</code>、<code>""</code>（空字符串）、<code>[]</code>（空列表）、<code>{}</code>（空字典）、<code>()</code>（空元组）、<code>set()</code>（空集合）。其余所有值都为 <code>True</code>。利用这一点可以简化：<code>if my_list:</code> 比 <code>if len(my_list) > 0:</code> 更 Pythonic。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 3: LOOPS ====== -->
+<div class="sec" id="s3">
+<div class="card">
+  <h2 class="sec-title"><span class="n">3</span>循环结构（for / while / else）</h2>
+  <p class="sec-intro">Python 的 <code>for</code> 是遍历循环（迭代器协议），不是 C 语言的计数循环。<code>while</code> 是条件循环。两者都有独特的 <code>else</code> 子句。</p>
+
+  <h3>3.1 for 循环</h3>
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># 遍历列表</span>
+<span class="kw">for</span> fruit <span class="kw">in</span> [<span class="str">"苹果"</span>, <span class="str">"香蕉"</span>, <span class="str">"橘子"</span>]:
+    <span class="fn">print</span>(fruit)
+
+<span class="cmt"># range() 生成整数序列</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">3</span>):       <span class="cmt"># 0, 1, 2</span>
+    <span class="fn">print</span>(<span class="str">f"第 {i} 次"</span>)
+
+<span class="cmt"># range(start, stop, step)</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">10</span>, <span class="num">0</span>, -<span class="num">2</span>):  <span class="cmt"># 10, 8, 6, 4, 2</span>
+    <span class="fn">print</span>(i, end=<span class="str">" "</span>)
+<span class="fn">print</span>()
+
+<span class="cmt"># 遍历字典</span>
+<span class="kw">student</span> = {<span class="str">"name"</span>: <span class="str">"小明"</span>, <span class="str">"age"</span>: <span class="num">18</span>, <span class="str">"grade"</span>: <span class="str">"A"</span>}
+<span class="kw">for</span> key, value <span class="kw">in</span> student.items():
+    <span class="fn">print</span>(<span class="str">f"{key}: {value}"</span>)</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">苹果
+香蕉
+橘子
+第 0 次
+第 1 次
+第 2 次
+10 8 6 4 2 
+name: 小明
+age: 18
+grade: A</div></div>
+
+  <h3>3.2 while 循环与 else 子句</h3>
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># while 基本用法</span>
+<span class="kw">count</span> = <span class="num">0</span>
+<span class="kw">while</span> count < <span class="num">3</span>:
+    <span class="fn">print</span>(<span class="str">f"count = {count}"</span>)
+    count += <span class="num">1</span>
+
+<span class="cmt"># for-else: 循环正常结束(未被break)时执行else</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">5</span>):
+    <span class="kw">if</span> i == <span class="num">10</span>:  <span class="cmt"># 永远不会触发</span>
+        <span class="kw">break</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"循环正常结束，没有break"</span>)
+
+<span class="cmt"># 实用场景: 查找素数</span>
+<span class="kw">for</span> n <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">2</span>, <span class="num">10</span>):
+    <span class="kw">for</span> x <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">2</span>, n):
+        <span class="kw">if</span> n % x == <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">f"{n} = {x} * {n//x}"</span>)
+            <span class="kw">break</span>
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"{n} 是素数"</span>)</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">count = 0
+count = 1
+count = 2
+循环正常结束，没有break
+2 是素数
+3 是素数
+4 = 2 * 2
+5 是素数
+6 = 2 * 3
+7 是素数
+8 = 2 * 4
+9 = 3 * 3</div></div>
+
+  <div class="tip purple">
+    <span class="ti">🔑</span>
+    <div><strong>for-else 的妙用：</strong><code>else</code> 子句在循环<strong>未被 <code>break</code> 打断</strong>时执行。这非常适合「查找」场景：找到就 break，没找到就走 else。比用一个额外的 flag 变量更优雅。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 4: FUNCTIONS ====== -->
+<div class="sec" id="s4">
+<div class="card">
+  <h2 class="sec-title"><span class="n">4</span>函数定义（def / 参数 / 返回值）</h2>
+  <p class="sec-intro">Python 函数灵活强大：支持默认参数、关键字参数、可变参数（*args / **kwargs）、仅关键字参数、类型注解等。</p>
+
+  <h3>4.1 参数类型全解</h3>
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="cmt"># 1. 位置参数</span>
+<span class="kw">def</span> <span class="fn">greet</span>(name):
+    <span class="kw">return</span> <span class="str">f"Hello, {name}!"</span>
+
+<span class="cmt"># 2. 默认参数</span>
+<span class="kw">def</span> <span class="fn">greet2</span>(name, greeting=<span class="str">"你好"</span>):
+    <span class="kw">return</span> <span class="str">f"{greeting}, {name}!"</span>
+
+<span class="cmt"># 3. 可变位置参数 *args</span>
+<span class="kw">def</span> <span class="fn">sum_all</span>(*args):
+    <span class="kw">return</span> <span class="builtin">sum</span>(args)
+
+<span class="cmt"># 4. 可变关键字参数 **kwargs</span>
+<span class="kw">def</span> <span class="fn">print_info</span>(**kwargs):
+    <span class="kw">for</span> k, v <span class="kw">in</span> kwargs.items():
+        <span class="fn">print</span>(<span class="str">f"  {k} = {v}"</span>)
+
+<span class="cmt"># 5. 仅关键字参数 (在 * 之后)</span>
+<span class="kw">def</span> <span class="fn">create_user</span>(name, *, age, email):
+    <span class="kw">return</span> {<span class="str">"name"</span>: name, <span class="str">"age"</span>: age, <span class="str">"email"</span>: email}
+
+<span class="cmt"># 调用示例</span>
+<span class="fn">print</span>(<span class="fn">greet</span>(<span class="str">"Python"</span>))
+<span class="fn">print</span>(<span class="fn">greet2</span>(<span class="str">"小明"</span>))
+<span class="fn">print</span>(<span class="fn">greet2</span>(<span class="str">"小明"</span>, greeting=<span class="str">"Hi"</span>))
+<span class="fn">print</span>(<span class="str">f"求和: {</span><span class="fn">sum_all</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>)<span class="str">}"</span>)
+<span class="fn">print</span>(<span class="str">"用户信息:"</span>)
+<span class="fn">print_info</span>(name=<span class="str">"小明"</span>, age=<span class="num">18</span>, city=<span class="str">"北京"</span>)
+<span class="fn">print</span>(<span class="fn">create_user</span>(<span class="str">"小红"</span>, age=<span class="num">20</span>, email=<span class="str">"a@b.com"</span>))</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">Hello, Python!
+你好, 小明!
+Hi, 小明!
+求和: 15
+用户信息:
+  name = 小明
+  age = 18
+  city = 北京
+{'name': '小红', 'age': 20, 'email': 'a@b.com'}</div></div>
+
+  <h3>4.2 类型注解与多返回值</h3>
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="kw">from</span> typing <span class="kw">import</span> Optional
+
+<span class="cmt"># 类型注解 (Python 3.6+，不影响运行但提升可读性)</span>
+<span class="kw">def</span> <span class="fn">divide</span>(a: <span class="builtin">float</span>, b: <span class="builtin">float</span>) -> Optional[<span class="builtin">float</span>]:
+    <span class="str">"""两数相除，除数为0返回None"""</span>
+    <span class="kw">if</span> b == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="kw">None</span>
+    <span class="kw">return</span> a / b
+
+<span class="cmt"># 多返回值 (本质是返回tuple)</span>
+<span class="kw">def</span> <span class="fn">min_max</span>(numbers: <span class="builtin">list</span>) -> <span class="builtin">tuple</span>:
+    <span class="kw">return</span> <span class="builtin">min</span>(numbers), <span class="builtin">max</span>(numbers)
+
+<span class="cmt"># 解包接收多返回值</span>
+lo, hi = <span class="fn">min_max</span>([<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">6</span>])
+<span class="fn">print</span>(<span class="str">f"最小: {lo}, 最大: {hi}"</span>)
+<span class="fn">print</span>(<span class="str">f"10/3 = {</span><span class="fn">divide</span>(<span class="num">10</span>, <span class="num">3</span>)<span class="str">:.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"10/0 = {</span><span class="fn">divide</span>(<span class="num">10</span>, <span class="num">0</span>)<span class="str">}"</span>)</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">最小: 1, 最大: 9
+10/3 = 3.3333
+10/0 = None</div></div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><strong>可变默认参数陷阱：</strong>默认参数在函数定义时只求值一次！<code>def f(items=[]):</code> 中 <code>[]</code> 会在所有调用间共享。<br><strong>正确做法：</strong><code>def f(items=None): if items is None: items = []</code></div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 5: EXCEPTIONS ====== -->
+<div class="sec" id="s5">
+<div class="card">
+  <h2 class="sec-title"><span class="n">5</span>异常处理（try / except / else / finally）</h2>
+  <p class="sec-intro">Python 异常处理四段式：<code>try</code> 试运行 → <code>except</code> 捕获异常 → <code>else</code> 无异常时执行 → <code>finally</code> 必定执行。</p>
+
+  <div class="code">
+    <span class="lang">python</span>
+    <pre><span class="kw">def</span> <span class="fn">safe_divide</span>(a, b):
+    <span class="str">"""安全除法：处理各种异常情况"""</span>
+    <span class="kw">try</span>:
+        result = a / b
+    <span class="kw">except</span> <span class="typ">ZeroDivisionError</span>:
+        <span class="fn">print</span>(<span class="str">"错误: 除数不能为零"</span>)
+        <span class="kw">return</span> <span class="kw">None</span>
+    <span class="kw">except</span> <span class="typ">TypeError</span> <span class="kw">as</span> e:
+        <span class="fn">print</span>(<span class="str">f"类型错误: {e}"</span>)
+        <span class="kw">return</span> <span class="kw">None</span>
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"计算成功: {a} / {b} = {result}"</span>)
+        <span class="kw">return</span> result
+    <span class="kw">finally</span>:
+        <span class="fn">print</span>(<span class="str">"--- 计算结束 ---"</span>)
+
+<span class="cmt"># 测试各种情况</span>
+<span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="num">3</span>)
+<span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="num">0</span>)
+<span class="fn">safe_divide</span>(<span class="str">"10"</span>, <span class="num">3</span>)
+
+<span class="cmt"># 主动抛出异常</span>
+<span class="kw">def</span> <span class="fn">check_age</span>(age):
+    <span class="kw">if</span> age < <span class="num">0</span>:
+        <span class="kw">raise</span> <span class="typ">ValueError</span>(<span class="str">f"年龄不能为负数: {age}"</span>)
+    <span class="kw">return</span> <span class="str">f"年龄合法: {age}"</span>
+
+<span class="kw">try</span>:
+    <span class="fn">check_age</span>(-<span class="num">5</span>)
+<span class="kw">except</span> <span class="typ">ValueError</span> <span class="kw">as</span> e:
+    <span class="fn">print</span>(<span class="str">f"捕获异常: {e}"</span>)</pre>
+  </div>
+  <div class="output"><div class="out-label">输出</div><div class="out-content">计算成功: 10 / 3 = 3.3333333333333335
+--- 计算结束 ---
+错误: 除数不能为零
+--- 计算结束 ---
+类型错误: unsupported operand type(s) for /: 'str' and 'int'
+--- 计算结束 ---
+捕获异常: 年龄不能为负数: -5</div></div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <div><strong>四段式最佳实践：</strong><code>else</code> 块放「成功后逻辑」，让 <code>try</code> 块只包含可能出错的代码，避免意外捕获 <code>else</code> 中的异常。<code>finally</code> 用于资源清理（关闭文件/连接），即使 <code>return</code> 或 <code>raise</code> 也会执行。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 6: COMPREHENSIONS ====== -->
+<div class="sec" id="s6">
+<div class="card">
+  <h2 class="sec-title"><span class="n">6</span>推导式 <span class="sugar-badge">语法糖</span></h2>
+  <p class="sec-intro">推导式（Comprehension）是 Python 最具代表性的语法糖 —— 用一行代码完成过滤+变换+构建集合，比 for 循环更简洁且通常更快。</p>
+
+  <div class="tabs" id="tabs-comp">
+    <button class="tab active" data-tab="comp-list">列表推导式</button>
+    <button class="tab" data-tab="comp-dict">字典推导式</button>
+    <button class="tab" data-tab="comp-set">集合推导式</button>
+    <button class="tab" data-tab="comp-gen">生成器表达式</button>
+  </div>
+
+  <!-- List Comprehension -->
+  <div class="tab-panel active" id="comp-list">
+    <h3 style="font-size:.95rem;margin-bottom:8px;color:var(--py-dark)">📋 列表推导式 [expr for item in iterable if condition]</h3>
+    <div class="ide" data-ide>
+      <div class="ide-header">
+        <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>列表推导式示例</div>
+        <div class="ide-actions">
+          <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+          <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+        </div>
+      </div>
+      <textarea class="ide-textarea" spellcheck="false"># 传统写法 vs 列表推导式
+nums = range(1, 11)
+
+# 传统 for 循环
+squares_old = []
+for n in nums:
+    if n % 2 == 0:
+        squares_old.append(n ** 2)
+
+# 列表推导式 — 一行搞定
+squares_new = [n ** 2 for n in nums if n % 2 == 0]
+
+print(f"传统写法: {squares_old}")
+print(f"推导式:   {squares_new}")
+
+# 嵌套推导式: 展平二维列表
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+flat = [num for row in matrix for num in row]
+print(f"展平: {flat}")
+
+# 带条件表达式
+labels = ["偶" if n % 2 == 0 else "奇" for n in range(1, 6)]
+print(f"标签: {labels}")</textarea>
+      <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+    </div>
+  </div>
+
+  <!-- Dict Comprehension -->
+  <div class="tab-panel" id="comp-dict">
+    <h3 style="font-size:.95rem;margin-bottom:8px;color:var(--py-dark)">🗂️ 字典推导式 {key: val for item in iterable if condition}</h3>
+    <div class="ide" data-ide>
+      <div class="ide-header">
+        <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>字典推导式示例</div>
+        <div class="ide-actions">
+          <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+          <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+        </div>
+      </div>
+      <textarea class="ide-textarea" spellcheck="false"># 字典推导式: 列表转字典
+words = ["apple", "banana", "cherry", "date"]
+word_len = {word: len(word) for word in words}
+print(f"单词长度: {word_len}")
+
+# 反转字典 key↔value
+original = {"a": 1, "b": 2, "c": 3}
+reversed_dict = {v: k for k, v in original.items()}
+print(f"反转后: {reversed_dict}")
+
+# 带条件过滤
+scores = {"Alice": 85, "Bob": 45, "Charlie": 92, "Diana": 58}
+passed = {name: score for name, score in scores.items() if score >= 60}
+print(f"及格: {passed}")</textarea>
+      <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+    </div>
+  </div>
+
+  <!-- Set Comprehension -->
+  <div class="tab-panel" id="comp-set">
+    <h3 style="font-size:.95rem;margin-bottom:8px;color:var(--py-dark)">🎯 集合推导式 {expr for item in iterable if condition}</h3>
+    <div class="ide" data-ide>
+      <div class="ide-header">
+        <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>集合推导式示例</div>
+        <div class="ide-actions">
+          <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+          <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+        </div>
+      </div>
+      <textarea class="ide-textarea" spellcheck="false"># 集合推导式: 自动去重
+nums = [1, 2, 2, 3, 3, 3, 4, 5, 5]
+unique_squares = {n ** 2 for n in nums}
+print(f"去重平方: {unique_squares}")
+
+# 提取单词首字母集合
+sentence = "the quick brown fox jumps over the lazy dog"
+first_letters = {word[0] for word in sentence.split()}
+print(f"首字母集合: {first_letters}")
+
+# 注意: 集合无序，每次输出顺序可能不同
+print(f"类型: {type(first_letters)}")</textarea>
+      <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+    </div>
+  </div>
+
+  <!-- Generator Expression -->
+  <div class="tab-panel" id="comp-gen">
+    <h3 style="font-size:.95rem;margin-bottom:8px;color:var(--py-dark)">⚡ 生成器表达式 (expr for item in iterable if condition)</h3>
+    <div class="ide" data-ide>
+      <div class="ide-header">
+        <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>生成器表达式示例</div>
+        <div class="ide-actions">
+          <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+          <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+        </div>
+      </div>
+      <textarea class="ide-textarea" spellcheck="false"># 生成器表达式: 用 () 代替 []，惰性求值
+# 不一次性生成所有元素，节省内存
+
+# 列表推导式: 立即创建完整列表
+squares_list = [n ** 2 for n in range(5)]
+print(f"列表: {squares_list}, 类型: {type(squares_list).__name__}")
+
+# 生成器表达式: 返回生成器对象
+squares_gen = (n ** 2 for n in range(5))
+print(f"生成器: {squares_gen}, 类型: {type(squares_gen).__name__}")
+
+# 逐个获取值
+print(f"第一个: {next(squares_gen)}")
+print(f"第二个: {next(squares_gen)}")
+print(f"剩余: {list(squares_gen)}")
+
+# 实用: 直接传给 sum/max/min
+total = sum(n ** 2 for n in range(1, 101))
+print(f"1到100的平方和: {total}")
+
+# 内存对比
+import sys
+list_mem = sys.getsizeof([n for n in range(1000)])
+gen_mem = sys.getsizeof((n for n in range(1000)))
+print(f"列表内存: {list_mem} bytes")
+print(f"生成器内存: {gen_mem} bytes")</textarea>
+      <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><strong>推导式陷阱：</strong>1）推导式只能嵌套 2-3 层，更多层请用 for 循环；2）生成器表达式只能遍历一次，遍历完后即耗尽；3）<code>list(gen)</code> 会消耗整个生成器。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 7: WALRUS OPERATOR ====== -->
+<div class="sec" id="s7">
+<div class="card">
+  <h2 class="sec-title"><span class="n">7</span>海象运算符 := <span class="sugar-badge">语法糖</span></h2>
+  <p class="sec-intro">Python 3.8 引入的 <code>:=</code>（海象运算符，因为长得像海象侧躺）可以在表达式内部赋值，减少重复计算和冗余代码。</p>
+
+  <div class="ide" data-ide>
+    <div class="ide-header">
+      <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>海象运算符示例</div>
+      <div class="ide-actions">
+        <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+        <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+      </div>
+    </div>
+    <textarea class="ide-textarea" spellcheck="false"># 1. 在 while 条件中赋值
+# 传统写法: 需要两行
+# line = input()
+# while line:
+#     ...
+#     line = input()
+
+# 海象运算符: 一行搞定
+items = [1, 2, 3, 4, 5]
+idx = 0
+while (item := items[idx] if idx < len(items) else None) is not None:
+    print(f"处理: {item}")
+    idx += 1
+
+print("---")
+
+# 2. 在 if 条件中赋值，避免重复计算
+import re
+text = "Hello World 123"
+
+# 传统写法: match 写两次
+# match = re.search(r'\d+', text)
+# if match:
+#     print(match.group())
+
+# 海象运算符: 只写一次
+if (match := re.search(r'\d+', text)):
+    print(f"找到数字: {match.group()}")
+
+# 3. 在列表推导式中使用
+# 过滤并变换: 先计算再判断
+data = ["apple", "banana", "cherry", "date", "elderberry"]
+# 传统写法需要两次 len() 调用
+# result = [word.upper() for word in data if len(word) > 5]
+# 海象写法: len 只算一次
+result = [upper for word in data if len(word) > 5 if (upper := word.upper())]
+print(f"长单词大写: {result}")
+
+# 4. 读取直到空行
+lines = ["第一行", "第二行", "", "第四行"]
+processed = []
+for line in lines:
+    if not (stripped := line.strip()):
+        break
+    processed.append(stripped)
+print(f"处理结果: {processed}")</textarea>
+    <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><strong>何时使用：</strong>海象运算符最适合「先赋值再判断」的场景，减少重复调用。但如果让代码更难读了，就不要用 —— 可读性永远优先于简洁性。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 8: F-STRING ====== -->
+<div class="sec" id="s8">
+<div class="card">
+  <h2 class="sec-title"><span class="n">8</span>f-string 格式化 <span class="sugar-badge">语法糖</span></h2>
+  <p class="sec-intro">Python 3.6+ 引入的 f-string 是最推荐的字符串格式化方式 —— 直观、快速、可读性强。Python 3.8+ 还支持 <code>=</code> 调试语法。</p>
+
+  <div class="ide" data-ide>
+    <div class="ide-header">
+      <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>f-string 示例</div>
+      <div class="ide-actions">
+        <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+        <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+      </div>
+    </div>
+    <textarea class="ide-textarea" spellcheck="false"># 基本用法
+name = "Python"
+version = 3.12
+print(f"欢迎使用 {name} {version}")
+
+# 表达式内嵌
+print(f"2 + 3 = {2 + 3}")
+print(f"{'hello'.upper()}")
+
+# 格式化数字
+pi = 3.14159265358979
+print(f"π = {pi:.2f}")          # 保留2位小数
+print(f"π = {pi:.4f}")          # 保留4位小数
+print(f"百分比 = {0.856:.1%}")   # 百分比格式
+
+# 对齐与填充
+for i in range(1, 4):
+    print(f"{i:0>3}")           # 右对齐，左侧补0，宽度3
+
+# 千分位分隔符
+big_num = 1234567890
+print(f"大数: {big_num:,}")
+
+# 日期格式化
+from datetime import datetime
+now = datetime(2024, 1, 15, 14, 30)
+print(f"时间: {now:%Y-%m-%d %H:%M}")
+
+# Python 3.8+ 调试语法 = (自动显示变量名)
+x = 42
+y = "hello"
+print(f"{x = }")               # x = 42
+print(f"{x = }, {y = }")       # x = 42, y = 'hello'
+
+# Python 3.12+ 多行 f-string
+info = {
+    "name": "Alice",
+    "score": 95.5
+}
+msg = (
+    f"学生: {info['name']}\n"
+    f"分数: {info['score']:.1f}\n"
+    f"等级: {'A' if info['score'] >= 90 else 'B'}"
+)
+print(msg)</textarea>
+    <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <div><strong>f-string vs 其他方式：</strong>f-string 比 <code>%s</code> 和 <code>.format()</code> 更快（编译时优化）、更可读。生产代码中应优先使用 f-string。<code>{x = }</code> 调试语法在排错时非常方便，直接输出「变量名 = 值」。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 9: UNPACKING ====== -->
+<div class="sec" id="s9">
+<div class="card">
+  <h2 class="sec-title"><span class="n">9</span>解包操作 *args / **kwargs <span class="sugar-badge">语法糖</span></h2>
+  <p class="sec-intro"><code>*</code> 解包可迭代对象，<code>**</code> 解包字典。Python 3 的解包能力远超 Python 2，可以在任意位置使用。</p>
+
+  <div class="ide" data-ide>
+    <div class="ide-header">
+      <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>解包操作示例</div>
+      <div class="ide-actions">
+        <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+        <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+      </div>
+    </div>
+    <textarea class="ide-textarea" spellcheck="false"># 1. 基本解包
+a, b, c = 1, 2, 3
+print(f"a={a}, b={b}, c={c}")
+
+# 2. * 收集多余元素
+first, *rest = [1, 2, 3, 4, 5]
+print(f"第一个: {first}, 剩余: {rest}")
+
+*init, last = [1, 2, 3, 4, 5]
+print(f"前面: {init}, 最后: {last}")
+
+first, *middle, last = [1, 2, 3, 4, 5]
+print(f"首: {first}, 中: {middle}, 尾: {last}")
+
+# 3. * 展开可迭代对象
+list1 = [1, 2, 3]
+list2 = [4, 5, 6]
+merged = [*list1, *list2]
+print(f"合并列表: {merged}")
+
+# 字典合并 (Python 3.5+)
+dict1 = {"a": 1, "b": 2}
+dict2 = {"c": 3, "d": 4}
+merged_dict = {**dict1, **dict2}
+print(f"合并字典: {merged_dict}")
+
+# 4. 函数调用时解包
+def add(a, b, c):
+    return a + b + c
+
+args = [1, 2, 3]
+print(f"列表解包调用: {add(*args)}")
+
+kwargs = {"a": 10, "b": 20, "c": 30}
+print(f"字典解包调用: {add(**kwargs)}")
+
+# 5. Python 3.12+ 解包在 f-string 中
+data = {"name": "Alice", "age": 25}
+# 等价于 f"name={data['name']}, age={data['age']}"
+print(f"name={data['name']}, age={data['age']}")
+
+# 6. 忽略值: 用 _ 或 *_
+_, _, important = (1, 2, 3)
+print(f"只要第三个: {important}")</textarea>
+    <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+  </div>
+
+  <div class="tip blue">
+    <span class="ti">📌</span>
+    <div><strong>函数定义 vs 调用：</strong>定义时 <code>*args</code> 是「收集」——将多余位置参数打包成 tuple；调用时 <code>*list</code> 是「展开」——将 list 拆成独立位置参数。<code>**</code> 同理，只是作用于字典/关键字参数。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 10: ENUMERATE & ZIP ====== -->
+<div class="sec" id="s10">
+<div class="card">
+  <h2 class="sec-title"><span class="n">10</span>enumerate 与 zip <span class="sugar-badge">语法糖</span></h2>
+  <p class="sec-intro"><code>enumerate</code> 同时获取索引和元素，<code>zip</code> 同时遍历多个序列。告别 <code>range(len(...))</code> 的丑陋写法。</p>
+
+  <div class="ide" data-ide>
+    <div class="ide-header">
+      <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>enumerate & zip 示例</div>
+      <div class="ide-actions">
+        <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+        <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+      </div>
+    </div>
+    <textarea class="ide-textarea" spellcheck="false"># ❌ 丑陋写法
+fruits = ["苹果", "香蕉", "橘子"]
+for i in range(len(fruits)):
+    print(f"{i}: {fruits[i]}")
+
+print("---")
+
+# ✅ enumerate: 优雅获取索引+元素
+for i, fruit in enumerate(fruits):
+    print(f"{i}: {fruit}")
+
+print("---")
+
+# enumerate 指定起始索引
+for i, fruit in enumerate(fruits, start=1):
+    print(f"第{i}个: {fruit}")
+
+print("===")
+
+# zip: 并行遍历多个序列
+names = ["Alice", "Bob", "Charlie"]
+scores = [85, 92, 78]
+for name, score in zip(names, scores):
+    print(f"{name}: {score}分")
+
+# zip 创建字典
+name_score = dict(zip(names, scores))
+print(f"字典: {name_score}")
+
+# zip 长度: 以最短的为准
+short = [1, 2, 3]
+long = [10, 20, 30, 40, 50]
+for s, l in zip(short, long):
+    print(f"{s} + {l} = {s + l}")
+
+# zip_longest: 以最长的为准 (需导入)
+from itertools import zip_longest
+for s, l in zip_longest(short, long, fillvalue=0):
+    print(f"{s} + {l} = {s + l}")
+
+# zip 转置矩阵
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+transposed = list(zip(*matrix))
+print(f"转置: {transposed}")
+
+# zip 拆包
+pairs = [(1, 'a'), (2, 'b'), (3, 'c')]
+nums, letters = zip(*pairs)
+print(f"数字: {nums}, 字母: {letters}")</textarea>
+    <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">✅</span>
+    <div><strong>Pythonic 原则：</strong><code>for i in range(len(lst))</code> 几乎总是错的。需要索引用 <code>enumerate</code>，需要并行用 <code>zip</code>。这是 Python 社区最基础的代码规范之一。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 11: WITH STATEMENT ====== -->
+<div class="sec" id="s11">
+<div class="card">
+  <h2 class="sec-title"><span class="n">11</span>with 语句上下文管理器 <span class="sugar-badge">语法糖</span></h2>
+  <p class="sec-intro"><code>with</code> 语句自动管理资源的获取和释放 —— 无论中间是否出错，<code>__exit__</code> 都会被调用，替代繁琐的 try-finally。</p>
+
+  <div class="ide" data-ide>
+    <div class="ide-header">
+      <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>with 语句示例</div>
+      <div class="ide-actions">
+        <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+        <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+      </div>
+    </div>
+    <textarea class="ide-textarea" spellcheck="false"># 1. 文件操作: with 自动关闭文件
+# 传统写法:
+#   f = open("file.txt", "w")
+#   f.write("hello")
+#   f.close()  # 忘记关就泄漏
+
+# with 写法: 自动关闭，即使出错
+from io import StringIO
+
+# 用 StringIO 模拟文件 (浏览器环境无真实文件)
+fake_file = StringIO()
+with fake_file as f:
+    f.write("Hello, World!\n")
+    f.write("Python3 is awesome!")
+    content = f.getvalue()
+
+print(f"文件内容:\n{content}")
+print(f"文件已关闭: {fake_file.closed}")
+
+print("---")
+
+# 2. 自定义上下文管理器: 类方式
+class Timer:
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        print(f"[{self.name}] 开始计时")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(f"[{self.name}] 结束计时")
+        if exc_type:
+            print(f"  发生异常: {exc_type.__name__}: {exc_val}")
+        return False  # 不抑制异常
+
+with Timer("任务A"):
+    print("  执行任务A...")
+    x = sum(range(100000))
+    print(f"  结果: {x}")
+
+print("---")
+
+# 3. contextlib.contextmanager: 装饰器方式 (更简洁)
+from contextlib import contextmanager
+
+@contextmanager
+def tag(name):
+    print(f"<{name}>")
+    yield
+    print(f"</{name}>")
+
+with tag("div"):
+    print("  内容")
+
+print("---")
+
+# 4. 多个上下文管理器
+@contextmanager
+def section(title):
+    print(f"=== {title} ===")
+    yield
+    print(f"=== {title} 结束 ===")
+
+with section("第一部分"), section("第二部分"):
+    print("  嵌套内容")</textarea>
+    <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+  </div>
+
+  <div class="tip purple">
+    <span class="ti">🔑</span>
+    <div><strong>__exit__ 的返回值：</strong>如果 <code>__exit__</code> 返回 <code>True</code>，异常会被「吞掉」（抑制）；返回 <code>False</code> 或 <code>None</code>，异常继续传播。大多数场景应返回 <code>False</code>，让调用方处理异常。</div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SECTION 12: INTERACTIVE PRACTICE ====== -->
+<div class="sec" id="s12">
+<div class="card">
+  <h2 class="sec-title"><span class="n">12</span>自由练习区</h2>
+  <p class="sec-intro">在这里自由编写 Python3 代码，点击运行查看结果。试试将上面学到的语法糖组合使用吧！</p>
+
+  <div class="ide" data-ide>
+    <div class="ide-header">
+      <div class="ide-label"><div class="ide-dots"><span></span><span></span><span></span></div>Python3 自由练习</div>
+      <div class="ide-actions">
+        <button class="ide-btn reset" onclick="resetCode(this)">重置</button>
+        <button class="ide-btn" onclick="runCode(this)">▶ 运行</button>
+      </div>
+    </div>
+    <textarea class="ide-textarea" spellcheck="false" style="min-height:200px"># 🐍 自由练习区 — 试试组合使用学到的语法糖
+
+# 示例: 综合练习
+# 用推导式 + f-string + enumerate 做一个成绩报告
+
+students = [
+    ("Alice", 92),
+    ("Bob", 78),
+    ("Charlie", 85),
+    ("Diana", 65),
+    ("Eve", 95),
+]
+
+# 计算平均分
+avg = sum(score for _, score in students) / len(students)
+
+# 生成报告 (列表推导式 + 三元表达式)
+report = [
+    f"{i}. {name:<8} {score:>3}分 {'⭐' if score >= 90 else '✅' if score >= 60 else '❌'}"
+    for i, (name, score) in enumerate(students, 1)
+]
+
+print("=" * 35)
+print(f"{'成绩报告':^35}")
+print("=" * 35)
+for line in report:
+    print(line)
+print("-" * 35)
+print(f"平均分: {avg:.1f}")
+print(f"最高分: {max(s for _, s in students)}")
+print(f"及格率: {sum(1 for _, s in students if s >= 60) / len(students):.0%}")
+print("=" * 35)
+
+# 试试修改上面的代码，或者写你自己的！</textarea>
+    <div class="ide-output"><div class="out-label">输出</div><div class="out-content"></div></div>
+  </div>
+
+  <div class="grid3" style="margin-top:20px">
+    <div class="type-card">
+      <h4><span class="ic">💡</span>练习建议 1</h4>
+      <p class="desc">用列表推导式生成 1-100 中所有 3 和 5 的公倍数</p>
+    </div>
+    <div class="type-card">
+      <h4><span class="ic">💡</span>练习建议 2</h4>
+      <p class="desc">用海象运算符读取输入直到空字符串</p>
+    </div>
+    <div class="type-card">
+      <h4><span class="ic">💡</span>练习建议 3</h4>
+      <p class="desc">用 zip 将两个列表转为字典并按值排序</p>
+    </div>
+  </div>
+
+  <div class="summary-box" style="margin-top:20px">
+    <h3>🎯 学习总结</h3>
+    <ul>
+      <li><strong>基础语法</strong>是地基：变量类型、条件循环、函数异常 — 每天都在用</li>
+      <li><strong>推导式</strong>是 Pythonic 的灵魂：一行代码 = 过滤 + 变换 + 构建</li>
+      <li><strong>海象运算符 :=</strong> 减少重复，在 if/while/推导式中赋值</li>
+      <li><strong>f-string</strong> 是字符串格式化的终极方案：直观、快速、强大</li>
+      <li><strong>解包操作</strong> 让函数调用和数据交换更灵活</li>
+      <li><strong>enumerate / zip</strong> 是替代 range(len()) 的标准做法</li>
+      <li><strong>with 语句</strong> 让资源管理自动化，告别资源泄漏</li>
+      <li><code>Pythonic</code> = 简洁 + 可读 + 高效 — 这就是 Python 的哲学</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p>🐍 Python3 语法讲解与语法糖 · 交互式学习指南</p>
+    <p>Frontend Learning Hub · Pyodide powered</p>
+  </div>
+</div>
+</div>
+
+</div><!-- /.wrap -->
+
+<!-- Pyodide Status -->
+<div class="py-status" id="pyStatus">
+  <span class="dot"></span>
+  <span id="pyStatusText">准备中...</span>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Pyodide Loader & Code Runner
+   ═══════════════════════════════════════════════════ */
+let pyodide = null;
+let pyodideLoading = null;
+
+async function loadPyodide() {
+  if (pyodide) return pyodide;
+  if (pyodideLoading) return pyodideLoading;
+
+  const status = document.getElementById('pyStatus');
+  const statusText = document.getElementById('pyStatusText');
+  status.classList.add('show');
+
+  pyodideLoading = (async () => {
+    statusText.textContent = '加载 Pyodide 引擎...';
+    // Load Pyodide script
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Failed to load Pyodide'));
+      document.head.appendChild(script);
+    });
+    statusText.textContent = '初始化 Python 运行时...';
+    pyodide = await loadPyodideFromScript({
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/'
+    });
+    statusText.textContent = 'Python 就绪';
+    status.classList.add('ready');
+    setTimeout(() => status.classList.remove('show'), 2000);
+    return pyodide;
+  })().catch(err => {
+    statusText.textContent = '加载失败，显示预置输出';
+    status.classList.add('error');
+    console.error('Pyodide load error:', err);
+    throw err;
+  });
+
+  return pyodideLoading;
+}
+
+async function runCode(btn) {
+  const ide = btn.closest('[data-ide]');
+  const textarea = ide.querySelector('.ide-textarea');
+  const output = ide.querySelector('.ide-output');
+  const outContent = output.querySelector('.out-content');
+  const runBtn = ide.querySelector('.ide-btn:not(.reset)');
+
+  output.classList.add('show');
+  runBtn.disabled = true;
+  outContent.className = 'out-content loading';
+  outContent.textContent = '正在加载 Python 运行时...';
+
+  try {
+    const py = await loadPyodide();
+    runBtn.querySelector('textContent');
+    outContent.className = 'out-content loading';
+    outContent.textContent = '运行中...';
+
+    // Capture stdout
+    py.runPython(`
+import sys, io
+_capture_buffer = io.StringIO()
+sys.stdout = _capture_buffer
+sys.stderr = _capture_buffer
+    `);
+
+    let errorMsg = null;
+    try {
+      py.runPython(textarea.value);
+    } catch(e) {
+      errorMsg = e.message || String(e);
+    }
+
+    // Get captured output
+    const captured = py.runPython('_capture_buffer.getvalue()');
+
+    // Restore stdout
+    py.runPython(`
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+    `);
+
+    outContent.className = 'out-content';
+    if (errorMsg) {
+      outContent.classList.add('err');
+      outContent.textContent = (captured ? captured + '\n' : '') + errorMsg;
+    } else {
+      outContent.textContent = captured || '(无输出)';
+    }
+  } catch(err) {
+    // Fallback: show fallback message
+    outContent.className = 'out-content err';
+    outContent.textContent = '⚠️ Pyodide 加载失败，请检查网络连接后重试。\n\n提示: 代码语法本身是正确的，可以复制到本地 Python 环境运行。';
+  } finally {
+    runBtn.disabled = false;
+  }
+}
+
+function resetCode(btn) {
+  const ide = btn.closest('[data-ide]');
+  const textarea = ide.querySelector('.ide-textarea');
+  const output = ide.querySelector('.ide-output');
+  // Reset to original value
+  if (textarea.dataset.original) {
+    textarea.value = textarea.dataset.original;
+  }
+  output.classList.remove('show');
+}
+
+// Store original code for reset
+document.querySelectorAll('.ide-textarea').forEach(t => {
+  t.dataset.original = t.value;
+  // Tab key support
+  t.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = t.selectionStart;
+      const end = t.selectionEnd;
+      t.value = t.value.substring(0, start) + '    ' + t.value.substring(end);
+      t.selectionStart = t.selectionEnd = start + 4;
+    }
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   Tab Switching
+   ═══════════════════════════════════════════════════ */
+document.querySelectorAll('.tabs').forEach(tabGroup => {
+  const tabs = tabGroup.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      const card = tab.closest('.card');
+      card.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById(target);
+      if (panel) panel.classList.add('active');
+    });
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   Nav Scroll Spy
+   ═══════════════════════════════════════════════════ */
+const navLinks = document.querySelectorAll('.nav a');
+const sections = document.querySelectorAll('.sec');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.offsetTop - 80;
+    if (window.scrollY >= top) current = sec.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

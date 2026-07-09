@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LlamaIndex 数据框架教程 · 踩坑指南</title>
+<style>
+:root {
+  --pri: #2563eb; --pri-dark: #1d4ed8; --pri-light: #dbeafe; --pri-lighter: #eff6ff;
+  --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --code-bg: #1a1a2e; --code-text: #e2e8f0;
+  --warn: #f59e0b; --warn-bg: #fffbeb; --warn-border: #fcd34d;
+  --danger: #dc2626; --danger-bg: #fef2f2; --danger-border: #fecaca;
+  --info: #2563eb; --info-bg: #eff6ff; --info-border: #bfdbfe;
+  --good: #059669; --good-bg: #ecfdf5; --good-border: #a7f3d0;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:54px;gap:16px}
+.nav a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--pri);font-weight:700;font-size:.92rem}
+.nav a svg{width:24px;height:24px}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:4px;overflow-x:auto;font-size:.78rem}
+.nav .nav-toc a{color:var(--text2);font-weight:500;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.nav .nav-toc a:hover{background:var(--pri-lighter);color:var(--pri)}
+.hero{background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 40%,#2563eb 100%);color:#fff;padding:56px 32px 48px;text-align:center}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.hero .sub{opacity:.8;max-width:680px;margin:0 auto;font-size:1rem;line-height:1.7}
+.hero .tags{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.78rem}
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 60px}
+.sec{margin-bottom:44px;scroll-margin-top:70px}
+.sec-title{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.sec-title .num{width:36px;height:36px;border-radius:8px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0}
+.sec-title h2{font-size:1.4rem;font-weight:700;border-bottom:2px solid var(--pri);padding-bottom:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin:16px 0;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{font-size:1.08rem;margin-bottom:12px;color:var(--pri-dark)}
+.card p{margin:8px 0;color:var(--text2);font-size:.92rem}
+.card ul,.card ol{margin:8px 0;padding-left:20px;color:var(--text2);font-size:.9rem}
+.card li{margin:4px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0}
+.code{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;position:relative}
+.code .lang{position:absolute;top:0;right:0;background:rgba(255,255,255,.08);color:var(--text3);font-size:.7rem;padding:3px 12px;border-radius:0 0 0 8px;font-family:var(--mono)}
+.code .copy-btn{position:absolute;top:6px;right:60px;background:rgba(255,255,255,.1);border:none;color:var(--text3);font-size:.7rem;padding:2px 10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.code pre{padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.7;color:var(--code-text);white-space:pre;tab-size:2}
+.code .kw{color:#f472b6}
+.code .str{color:#a5d6ff}
+.code .fn{color:#67e8f9}
+.code .num{color:#fbbf24}
+.code .cm{color:#94a3b8}
+.code .ty{color:#c084fc}
+.tip{padding:16px 20px;border-radius:var(--radius-sm);margin:16px 0;border-left:4px solid;font-size:.9rem;line-height:1.65;display:flex;gap:12px;align-items:flex-start}
+.tip .icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.tip .content{flex:1}
+.tip .content strong{display:block;margin-bottom:4px}
+.tip.info{background:var(--info-bg);border-color:var(--info)}
+.tip.warn{background:var(--warn-bg);border-color:var(--warn)}
+.tip.danger{background:var(--danger-bg);border-color:var(--danger)}
+.tip.good{background:var(--good-bg);border-color:var(--good)}
+.pitfall{background:linear-gradient(135deg,#fef2f2,#fff7ed);border:2px solid var(--danger-border);border-radius:var(--radius);padding:20px 24px;margin:20px 0;position:relative}
+.pitfall::before{content:'⚠️ 踩坑';position:absolute;top:-12px;left:20px;background:var(--danger);color:#fff;padding:2px 14px;border-radius:12px;font-size:.72rem;font-weight:700;letter-spacing:.5px}
+.pitfall h4{color:var(--danger);margin:6px 0 10px;font-size:1.02rem}
+.pitfall p,.pitfall li{color:var(--text2);font-size:.88rem;margin:4px 0}
+.pitfall ul{padding-left:18px}
+.pitfall .fix{background:var(--good-bg);border:1px solid var(--good-border);padding:10px 16px;border-radius:8px;margin-top:12px;font-size:.84rem}
+.pitfall .fix::before{content:'✅ 正确做法: ';font-weight:700;color:var(--good)}
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:600px}
+.tbl-wrap th{background:#f1f5f9;padding:10px 14px;text-align:left;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl-wrap td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl-wrap tr:last-child td{border-bottom:none}
+.tbl-wrap tr:hover td{background:#f8fafc}
+.viz{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin:16px 0;text-align:center;overflow-x:auto}
+.viz svg{max-width:100%;height:auto}
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+  .hero{padding:40px 20px 32px}
+  .wrap{padding:20px 16px 40px}
+  .card{padding:18px 20px}
+  .nav .nav-toc{display:none}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .sec-title h2{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" title="返回门户">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#dbeafe"/><path d="M7 16V8l5 4-5 4z" fill="#2563eb"/><path d="M12 16v-3l3.5-2v5z" fill="#1d4ed8"/></svg>
+    Frontend Learning Hub
+  </a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">概述</a>
+    <a href="#s2">数据加载</a>
+    <a href="#s3">索引类型</a>
+    <a href="#s4">查询引擎</a>
+    <a href="#s5">高级模式</a>
+    <a href="#s6">踩坑合集</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>🦙 LlamaIndex 数据框架教程</h1>
+  <p class="sub">从数据接入到复杂查询 —— 用 LlamaIndex 构建数据驱动的 LLM 应用。精讲索引类型、查询引擎和 10 个高频踩坑点。</p>
+  <div class="tags">
+    <span>LlamaIndex</span><span>RAG</span><span>向量索引</span><span>Query Engine</span><span>数据框架</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ 1 ═══════════════════════════════════════ -->
+<div class="wrap">
+<section class="sec" id="s1">
+<div class="sec-title"><span class="num">1</span><h2>LlamaIndex 是什么 —— 与 LangChain 的定位差异</h2></div>
+
+<div class="card">
+<h3>一句话定义</h3>
+<p>LlamaIndex（前身为 GPT Index）是一个 <strong>以数据为中心</strong> 的 LLM 应用框架。它的核心使命是：<strong>让你的数据可以被 LLM 理解和使用</strong>——把你散落在各处的文档、数据库、API 变成 LLM 可查询的知识。</p>
+</div>
+
+<div class="grid2">
+<div class="card">
+  <h3>🦙 LlamaIndex 的设计哲学</h3>
+  <ul>
+    <li><strong>Data-first</strong>：数据接入 → 索引 → 查询，三步搞定</li>
+    <li><strong>索引为核心</strong>：提供 10+ 种索引类型应对不同场景</li>
+    <li><strong>开箱即用</strong>：5 行代码搭建一个 RAG 问答系统</li>
+    <li>擅长：文档问答、知识库、结构化+非结构化混合查询</li>
+  </ul>
+</div>
+<div class="card">
+  <h3>⛓️ 与 LangChain 对比</h3>
+  <div class="tbl-wrap"><table>
+  <tr><th>维度</th><th>LlamaIndex</th><th>LangChain</th></tr>
+  <tr><td>核心关注</td><td>数据索引与检索</td><td>组件编排与 Agent</td></tr>
+  <tr><td>上手门槛</td><td>较低（API 设计直观）</td><td>中等（概念较多）</td></tr>
+  <tr><td>RAG 能力</td><td>⭐⭐⭐⭐⭐ 王者级</td><td>⭐⭐⭐ 需较多自定义</td></tr>
+  <tr><td>Agent 能力</td><td>⭐⭐⭐ 够用</td><td>⭐⭐⭐⭐⭐ 王者级</td></tr>
+  <tr><td>最佳拍档</td><td>两者可以一起用！</td><td>LlamaIndex 做 RAG + LangChain 做 orchestration</td></tr>
+  </table></div>
+</div>
+</div>
+
+<div class="viz">
+<svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg"><defs><marker id="c3" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5 Z" fill="#2563eb"/></marker></defs>
+<text x="340" y="22" text-anchor="middle" font-size="14" font-weight="800" fill="#1e3a5f">LlamaIndex 数据处理管线</text>
+<rect x="15" y="45" width="120" height="40" rx="6" fill="#dbeafe" stroke="#2563eb"/><text x="75" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Files / DB / API</text>
+<line x1="135" y1="65" x2="175" y2="65" stroke="#2563eb" stroke-width="2" marker-end="url(#c3)"/>
+<rect x="180" y="40" width="140" height="50" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="250" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Data Connectors</text><text x="250" y="78" text-anchor="middle" font-size="9" fill="#2563eb">160+ 数据源</text>
+<line x1="320" y1="65" x2="360" y2="65" stroke="#2563eb" stroke-width="2" marker-end="url(#c3)"/>
+<rect x="365" y="40" width="120" height="50" rx="8" fill="#dbeafe" stroke="#2563eb"/><text x="425" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Node Parser</text><text x="425" y="78" text-anchor="middle" font-size="9" fill="#2563eb">分块 / 解析</text>
+<line x1="485" y1="65" x2="525" y2="65" stroke="#2563eb" stroke-width="2" marker-end="url(#c3)"/>
+<rect x="530" y="40" width="120" height="50" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="590" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Index</text><text x="590" y="78" text-anchor="middle" font-size="9" fill="#2563eb">向量 / 摘要 / 树形...</text>
+
+<rect x="160" y="140" width="140" height="50" rx="8" fill="#d1fae5" stroke="#059669"/><text x="230" y="160" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Query Engine</text><text x="230" y="178" text-anchor="middle" font-size="9" fill="#059669">检索 + 合成</text>
+<line x1="540" y1="90" x2="540" y2="130" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4"/>
+<line x1="540" y1="130" x2="300" y2="140" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#c3)"/>
+
+<rect x="380" y="140" width="130" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="445" y="160" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Chat Engine</text><text x="445" y="178" text-anchor="middle" font-size="9" fill="#d97706">多轮对话</text>
+
+<rect x="250" y="215" width="160" height="30" rx="6" fill="#fee2e2" stroke="#dc2626"/><text x="330" y="235" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">Response (带引用源)</text>
+</svg>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 2. 数据加载 ═══════════════════════════════════════ -->
+<section class="sec" id="s2">
+<div class="sec-title"><span class="num">2</span><h2>数据接入 —— 从 160+ 种数据源加载</h2></div>
+
+<div class="card">
+<h3>SimpleDirectoryReader（最常用）</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> llama_index.core <span class="kw">import</span> SimpleDirectoryReader
+
+<span class="cm"># 一行加载整个目录（支持 PDF, Markdown, TXT, CSV, 代码文件...）</span>
+documents = SimpleDirectoryReader(
+    input_dir=<span class="str">"./data"</span>,
+    recursive=<span class="kw">True</span>,               <span class="cm"># 递归子目录</span>
+    required_exts=[<span class="str">".pdf"</span>, <span class="str">".md"</span>, <span class="str">".txt"</span>],
+    filename_as_id=<span class="kw">True</span>             <span class="cm"># 文件名作为 doc ID（便于追溯）</span>
+).load_data()
+
+<span class="kw">print</span>(<span class="str">f"加载了 {len(documents)} 个文档"</span>)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #1：PDF 加载后全是乱码或空文本</h4>
+<p>LlamaIndex 默认用 PyPDF2 解析 PDF，但 PyPDF2 对中文 PDF、扫描件、复杂排版的解析效果很差，经常返回空字符串或乱码。</p>
+<div class="fix">安装 <code>llama-index-readers-file</code> 并使用 <code>PDFReader</code>：<code>from llama_index.readers.file import PDFReader</code>。对于扫描件 PDF，建议先用 OCR（如 <code>pytesseract</code>）预处理。中文 PDF 优先用 <code>pymupdf</code>（fitz）。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>常用 Data Connector 速览</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>数据源</th><th>Connector</th><th>适用场景</th></tr></thead>
+<tbody>
+<tr><td>本地文件</td><td><code>SimpleDirectoryReader</code></td><td>PDF / MD / TXT / CSV / PPT 等</td></tr>
+<tr><td>网页</td><td><code>BeautifulSoupWebReader</code></td><td>爬取网页内容做问答</td></tr>
+<tr><td>数据库</td><td><code>DatabaseReader</code></td><td>SQL 数据直接接入索引</td></tr>
+<tr><td>Notion</td><td><code>NotionPageReader</code></td><td>Notion 知识库索引</td></tr>
+<tr><td>Google Docs</td><td><code>GoogleDocsReader</code></td><td>企业文档检索</td></tr>
+<tr><td>GitHub</td><td><code>GithubRepositoryReader</code></td><td>代码仓库 RAG</td></tr>
+<tr><td>Slack / Discord</td><td><code>SlackReader</code> / <code>DiscordReader</code></td><td>聊天记录知识库</td></tr>
+<tr><td>YouTube</td><td><code>YoutubeTranscriptReader</code></td><td>视频字幕转文字问答</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>Node Parser —— 分块策略</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> llama_index.core.node_parser <span class="kw">import</span> (
+    SentenceSplitter,
+    SemanticSplitterNodeParser,
+    MarkdownNodeParser,
+    CodeSplitter,
+)
+
+<span class="cm"># 方式 1：按句子分块（最通用）</span>
+parser = SentenceSplitter(
+    chunk_size=<span class="num">512</span>,
+    chunk_overlap=<span class="num">64</span>,
+    paragraph_separator=<span class="str">"\n\n"</span>
+)
+
+<span class="cm"># 方式 2：语义分块（推荐！）</span>
+<span class="cm"># 根据 embedding 相似度自动切分，比固定大小效果好很多</span>
+<span class="kw">from</span> llama_index.embeddings.openai <span class="kw">import</span> OpenAIEmbedding
+semantic_parser = SemanticSplitterNodeParser(
+    embed_model=OpenAIEmbedding(),
+    breakpoint_percentile_threshold=<span class="num">95</span>,  <span class="cm"># 相似度断点阈值</span>
+    buffer_size=<span class="num">1</span>,
+)
+
+<span class="cm"># 方式 3：Markdown 结构分块（按标题层级）</span>
+md_parser = MarkdownNodeParser()
+
+<span class="cm"># 使用</span>
+nodes = parser.get_nodes_from_documents(documents)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #2：SemanticSplitter 调用太频繁导致 embedding 费用爆炸</h4>
+<p><code>SemanticSplitterNodeParser</code> 会对每个句子做 embedding 来计算语义相似度。如果你的文档有 10 万个句子，这就是 10 万次 API 调用。</p>
+<div class="fix">对超大文档，先用 <code>SentenceSplitter</code> 做一个粗分块（chunk_size=2048），再对每个粗分块用 <code>SemanticSplitter</code> 细切。或者直接用简单的 <code>SentenceSplitter</code> + 合理的 overlap，大部分场景已经够用。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #3：代码文件直接用普通分块 → 函数被拦腰截断</h4>
+<p>Python 文件用 <code>SentenceSplitter</code> 分块，可能把一半函数体分到 chunk A、另一半分到 chunk B。检索时要么找不到，要么找到的是不完整的代码片段。</p>
+<div class="fix">代码文件使用 <code>CodeSplitter</code>，它会按函数/类边界分块，保持代码完整性。</div>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 3. 索引类型 ═══════════════════════════════════════ -->
+<section class="sec" id="s3">
+<div class="sec-title"><span class="num">3</span><h2>索引类型全景 —— 不只是向量索引</h2></div>
+
+<div class="card">
+<h3>7 种索引一句话总结</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>索引类型</th><th>核心思想</th><th>最佳场景</th><th>检索速度</th></tr></thead>
+<tbody>
+<tr><td><strong>VectorStoreIndex</strong></td><td>embedding → 向量搜索</td><td>语义搜索、通用 RAG</td><td>⭐⭐⭐⭐</td></tr>
+<tr><td><strong>SummaryIndex</strong></td><td>逐段摘要递归合成</td><td>需要覆盖全文的问题</td><td>⭐⭐</td></tr>
+<tr><td><strong>TreeIndex</strong></td><td>树形结构分层检索</td><td>长文档（>100 页）</td><td>⭐⭐⭐</td></tr>
+<tr><td><strong>KeywordTableIndex</strong></td><td>关键词 → 文档映射</td><td>精确关键词匹配</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td><strong>KnowledgeGraphIndex</strong></td><td>实体关系图</td><td>多跳推理、关系查询</td><td>⭐⭐</td></tr>
+<tr><td><strong>PropertyGraphIndex</strong></td><td>带属性的知识图谱</td><td>结构化 + 非结构化混合</td><td>⭐⭐</td></tr>
+<tr><td><strong>DocumentSummaryIndex</strong></td><td>先查摘要再定位文档</td><td>大量文档快速筛选</td><td>⭐⭐⭐⭐</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>VectorStoreIndex —— 90% 场景的首选</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> llama_index.core <span class="kw">import</span> VectorStoreIndex, Settings
+<span class="kw">from</span> llama_index.embeddings.openai <span class="kw">import</span> OpenAIEmbedding
+<span class="kw">from</span> llama_index.llms.openai <span class="kw">import</span> OpenAI
+<span class="kw">from</span> llama_index.vector_stores.chroma <span class="kw">import</span> ChromaVectorStore
+<span class="kw">import</span> chromadb
+
+<span class="cm"># 全局配置</span>
+Settings.embed_model = OpenAIEmbedding(model=<span class="str">"text-embedding-3-small"</span>)
+Settings.llm = OpenAI(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0.1</span>)
+
+<span class="cm"># 方式 1：默认内存索引（原型阶段）</span>
+index = VectorStoreIndex.from_documents(documents)
+
+<span class="cm"># 方式 2：持久化到 ChromaDB（生产环境）</span>
+chroma_client = chromadb.PersistentClient(path=<span class="str">"./chroma_db"</span>)
+chroma_collection = chroma_client.get_or_create_collection(<span class="str">"my_knowledge"</span>)
+vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+index = VectorStoreIndex.from_vector_store(vector_store)
+
+<span class="cm"># 保存 & 加载（方式 1 的持久化）</span>
+index.storage_context.persist(persist_dir=<span class="str">"./index_store"</span>)
+<span class="cm"># 下次加载：</span>
+<span class="kw">from</span> llama_index.core <span class="kw">import</span> StorageContext, load_index_from_storage
+storage_context = StorageContext.from_defaults(persist_dir=<span class="str">"./index_store"</span>)
+index = load_index_from_storage(storage_context)
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #4：Settings 配置时机错误 → 索引重建才发现用错了 embedding 模型</h4>
+<p><code>Settings.embed_model</code> 必须在 <code>VectorStoreIndex.from_documents()</code> <strong>之前</strong> 设置。如果在创建索引之后才改 Settings，已创建的索引不会自动更新。等查询时发现检索质量差，只能重建整个索引。</p>
+<div class="fix">在脚本/应用的最开头（import 之后、建索引之前）就配置好 Settings。建索引后如果要切换模型，必须重建索引。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #5：向量存储和索引分开保存 → 加载后只恢复了一半</h4>
+<p>LlamaIndex 的持久化分两部分：<strong>向量存储</strong>（vector embeddings）和 <strong>索引元数据</strong>（docstore、index_store）。如果用 ChromaDB 存向量但忘记 persist index_store，下次加载时只有向量没有元数据映射。</p>
+<div class="fix">使用外部向量库（ChromaDB/Pinecone）时：向量由外部库管理，但 <code>storage_context.persist()</code> 仍需调用（保存 docstore 映射）。或者全部存到外部库，不用 llama_index 的持久化。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>混合索引 —— 多索引联合检索</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 同时建立 VectorStoreIndex + KeywordTableIndex</span>
+<span class="kw">from</span> llama_index.core <span class="kw">import</span> VectorStoreIndex, KeywordTableIndex
+<span class="kw">from</span> llama_index.core.query_engine <span class="kw">import</span> RouterQueryEngine
+<span class="kw">from</span> llama_index.core.selectors <span class="kw">import</span> LLMSingleSelector
+<span class="kw">from</span> llama_index.core.tools <span class="kw">import</span> QueryEngineTool
+
+vector_index = VectorStoreIndex.from_documents(docs)
+keyword_index = KeywordTableIndex.from_documents(docs)
+
+<span class="cm"># 包装成工具</span>
+vector_tool = QueryEngineTool.from_defaults(
+    query_engine=vector_index.as_query_engine(),
+    description=<span class="str">"适合语义模糊、概念性问题"</span>
+)
+keyword_tool = QueryEngineTool.from_defaults(
+    query_engine=keyword_index.as_query_engine(),
+    description=<span class="str">"适合精确关键词匹配"</span>
+)
+
+<span class="cm"># Router 自动选择最合适的索引</span>
+router = RouterQueryEngine(
+    selector=LLMSingleSelector.from_defaults(),
+    query_engine_tools=[vector_tool, keyword_tool],
+)
+result = router.query(<span class="str">"数据库连接池的配置参数有哪些？"</span>)
+<span class="kw">print</span>(result)
+</pre></div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 4. 查询引擎 ═══════════════════════════════════════ -->
+<section class="sec" id="s4">
+<div class="sec-title"><span class="num">4</span><h2>Query Engine —— 从检索到回答</h2></div>
+
+<div class="card">
+<h3>四种查询引擎对比</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>引擎</th><th>检索策略</th><th>适用场景</th></tr></thead>
+<tbody>
+<tr><td><code>as_query_engine()</code></td><td>检索 top-k 文档，LLM 合成答案</td><td>通用问答（默认）</td></tr>
+<tr><td><code>as_chat_engine()</td><td>带对话记忆的检索</td><td>多轮对话场景</td></tr>
+<tr><td><code>RetrieverQueryEngine</code></td><td>自定义检索器 + 后处理</td><td>需要精细控制检索流程</td></tr>
+<tr><td><code>SubQuestionQueryEngine</code></td><td>拆分子问题 → 逐个检索 → 合成</td><td>复杂/对比类问题</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 1. 基础查询</span>
+query_engine = index.as_query_engine(
+    similarity_top_k=<span class="num">5</span>,            <span class="cm"># 检索 top-5</span>
+    response_mode=<span class="str">"compact"</span>,          <span class="cm"># compact / tree_summarize / refine</span>
+    streaming=<span class="kw">True</span>,
+)
+response = query_engine.query(<span class="str">"LlamaIndex 支持哪些索引类型？"</span>)
+<span class="kw">for</span> node <span class="kw">in</span> response.source_nodes:
+    <span class="kw">print</span>(<span class="str">f"来源: {node.metadata.get('file_name')}, 相关度: {node.score:.3f}"</span>)
+
+<span class="cm"># 2. SubQuestion —— 拆解复杂问题</span>
+<span class="kw">from</span> llama_index.core.query_engine <span class="kw">import</span> SubQuestionQueryEngine
+<span class="kw">from</span> llama_index.core.tools <span class="kw">import</span> QueryEngineTool
+
+sub_engine = SubQuestionQueryEngine.from_defaults(
+    query_engine_tools=[
+        QueryEngineTool.from_defaults(query_engine, description=<span class="str">"技术文档"</span>),
+    ],
+    llm=OpenAI(model=<span class="str">"gpt-4o"</span>)  <span class="cm"># 子问题拆分需要强模型</span>
+)
+<span class="cm"># 自动拆分："对比 LlamaIndex v0.9 和 v0.10 的变化"</span>
+<span class="cm"># → ["LlamaIndex v0.9 特点", "LlamaIndex v0.10 新功能", "总结差异"]</span>
+response = sub_engine.query(<span class="str">"对比 LlamaIndex v0.9 和 v0.10 的核心变化"</span>)
+</pre></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #6：response_mode 选错 → 回答不完整或幻觉严重</h4>
+<p>LlamaIndex 有 6 种 response_mode，默认 <code>compact</code> 适合大部分场景。但 <code>tree_summarize</code> 适合"总结全文"类问题，<code>refine</code> 适合"逐段精炼"。用错了可能导致只回答了第一个 chunk 的内容。</p>
+<div class="fix"><b>compact</b>（默认，通用）→ <b>tree_summarize</b>（总结性、全文覆盖）→ <b>refine</b>（逐步精炼、长文档细节）→ <b>no_text</b>（只返回检索结果不合成）。根据问题类型选择。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #7：SubQuestionQueryEngine 拆分不准 → 回答文不对题</h4>
+<p>SubQuestionQueryEngine 依赖 LLM 把复杂问题拆成子问题。如果原问题表述模糊或专有名词多，拆分结果可能偏差很大，导致检索的内容和用户想问的完全不相关。</p>
+<div class="fix">在问题中提供足够的上下文和专有名词解释。对于已知复杂的问题类型，建议人工预设子问题模板（用 <code>QueryTransform</code>），而不是完全依赖 LLM 自动拆分。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>Chat Engine —— 多轮对话 RAG</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> llama_index.core.memory <span class="kw">import</span> ChatMemoryBuffer
+
+<span class="cm"># 带记忆的多轮对话</span>
+chat_engine = index.as_chat_engine(
+    chat_mode=<span class="str">"condense_plus_context"</span>,  <span class="cm"># 推荐模式</span>
+    memory=ChatMemoryBuffer.from_defaults(token_limit=<span class="num">3000</span>),
+    verbose=<span class="kw">True</span>,
+)
+
+<span class="cm"># 多轮对话</span>
+response1 = chat_engine.chat(<span class="str">"LlamaIndex 支持哪些索引类型？"</span>)
+<span class="kw">print</span>(response1)
+
+response2 = chat_engine.chat(<span class="str">"刚才说的第一种有什么特点？"</span>)  <span class="cm"># 自动关联上轮</span>
+<span class="kw">print</span>(response2)
+
+<span class="cm"># 重置对话</span>
+chat_engine.reset()
+</pre></div>
+
+<div class="pitfall">
+<h4>坑 #8：chat_mode 选 "simple" 导致多轮关联断裂</h4>
+<p><code>chat_mode="simple"</code> 不会用对话历史来改写查询。用户第二轮说"那它的缺点是什么？"，引擎不知道"它"指什么，检索结果全错。</p>
+<div class="fix">始终使用 <code>"condense_plus_context"</code>（先用对话历史改写问题再检索）或 <code>"context"</code>（直接检索 + 传入对话历史）。生产环境推荐前者。</div>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 5. 高级模式 ═══════════════════════════════════════ -->
+<section class="sec" id="s5">
+<div class="sec-title"><span class="num">5</span><h2>高级模式 —— 生产级优化</h2></div>
+
+<div class="card">
+<h3>5.1 Ingestion Pipeline —— 数据摄取管线</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> llama_index.core.ingestion <span class="kw">import</span> IngestionPipeline
+<span class="kw">from</span> llama_index.core.node_parser <span class="kw">import</span> SentenceSplitter
+<span class="kw">from</span> llama_index.core.extractors <span class="kw">import</span> (
+    TitleExtractor,
+    QuestionsAnsweredExtractor,
+    SummaryExtractor,
+)
+
+pipeline = IngestionPipeline(
+    transformations=[
+        SentenceSplitter(chunk_size=<span class="num">512</span>, chunk_overlap=<span class="num">64</span>),
+        TitleExtractor(),                    <span class="cm"># 自动提取标题</span>
+        QuestionsAnsweredExtractor(),        <span class="cm"># 为每个 chunk 生成"可能被问的问题"</span>
+        SummaryExtractor(),                  <span class="cm"># 为每个 chunk 生成摘要</span>
+        OpenAIEmbedding(),
+    ]
+)
+
+<span class="cm"># 运行管线</span>
+nodes = pipeline.run(documents=documents)
+<span class="kw">print</span>(<span class="str">f"生成了 {len(nodes)} 个节点"</span>)
+</pre></div>
+
+<div class="tip info"><span class="icon">💡</span><div class="content"><strong>QuestionsAnsweredExtractor 是 RAG 质量的秘密武器</strong><br>
+它用 LLM 为每个 chunk 生成几个"可能被问到的问题"，并在索引中同时索引这些问题。当用户提问时，问题比原文更容易匹配到相关 chunk，显著提升检索召回率。</div></div>
+
+<div class="pitfall">
+<h4>坑 #9：IngestionPipeline 中 QuestionsAnsweredExtractor 开销巨大</h4>
+<p>每个 chunk 都要调一次 LLM 生成问题，1000 个 chunk 就是 1000 次调用。如果不加缓存，每次重建索引都是一笔不小的 API 费用。</p>
+<div class="fix">对已有的索引做增量更新而非全量重建。使用 <code>IngestionCache</code> 缓存已处理的节点。对于不需要高精度的场景，跳过 QuestionExtractor，直接用合理的 chunk 大小 + overlap。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>5.2 结构化数据 + 非结构化数据混合查询</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> llama_index.core.query_engine <span class="kw">import</span> SQLAutoVectorQueryEngine
+<span class="kw">from</span> llama_index.core <span class="kw">import</span> SQLDatabase
+
+<span class="cm"># 同时查询 SQL 数据库 + 文档</span>
+sql_engine = SQLAutoVectorQueryEngine(
+    sql_database=SQLDatabase.from_uri(<span class="str">"sqlite:///company.db"</span>),
+    vector_query_engine=vector_index.as_query_engine(),
+    llm=OpenAI(model=<span class="str">"gpt-4o"</span>)
+)
+
+<span class="cm"># 问一些跨数据源的问题</span>
+result = sql_engine.query(
+    <span class="str">"销售额最高的前3个产品的详细文档介绍是什么？"</span>
+)
+<span class="cm"># → 先用 SQL 查出 Top 3 → 再用文档检索产品详情</span>
+</pre></div>
+</div>
+
+<div class="card">
+<h3>5.3 性能优化速查</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>优化点</th><th>做法</th><th>效果</th></tr></thead>
+<tbody>
+<tr><td><strong>Embedding 缓存</strong></td><td><code>Settings.embed_model = OpenAIEmbedding(..., embed_batch_size=100)</code></td><td>减少 API 调用</td></tr>
+<tr><td><strong>检索后压缩</strong></td><td><code>SentenceWindowNodeParser</code> + metadata 窗口</td><td>提升上下文完整性</td></tr>
+<tr><td><strong>重排序（Reranker）</strong></td><td><code>node_postprocessors=[SentenceTransformerRerank(top_n=3)]</code></td><td>提升 Top-1 准确率 20-40%</td></tr>
+<tr><td><strong>混合检索</strong></td><td>向量 + BM25 关键词 双路融合</td><td>精确匹配 + 语义理解兼顾</td></tr>
+<tr><td><strong>增量索引</strong></td><td><code>index.insert_nodes(new_nodes)</code></td><td>避免全量重建</td></tr>
+<tr><td><strong>异步查询</strong></td><td><code>await query_engine.aquery("...")</code></td><td>高并发场景</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 6. 踩坑合集 ═══════════════════════════════════════ -->
+<section class="sec" id="s6">
+<div class="sec-title"><span class="num">6</span><h2>十大踩坑速查表</h2></div>
+
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>#</th><th>坑</th><th>现象</th><th>解法</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>PDF 解析乱码/空文本</td><td>中文 PDF 或扫描件加载后无内容</td><td>改用 pymupdf(fitz) / OCR 预处理</td></tr>
+<tr><td>2</td><td>SemanticSplitter 费用爆炸</td><td>海量文档每个句子都做 embedding</td><td>先用粗分块再用语义细切</td></tr>
+<tr><td>3</td><td>代码文件被拦腰切分</td><td>函数一半在 A 一半在 B</td><td>使用 CodeSplitter</td></tr>
+<tr><td>4</td><td>Settings 配置时机错误</td><td>索引用错了 embedding 模型</td><td>建索引前就设置好 Settings</td></tr>
+<tr><td>5</td><td>持久化不完整</td><td>只保存了向量，丢了元数据</td><td>同时 persist storage_context</td></tr>
+<tr><td>6</td><td>response_mode 选错</td><td>只返回了部分内容</td><td>根据问题类型选择正确模式</td></tr>
+<tr><td>7</td><td>SubQuestion 拆分不准</td><td>子问题与用户意图偏离</td><td>加上下文 / 人工预设模板</td></tr>
+<tr><td>8</td><td>chat_mode="simple"</td><td>多轮对话丢失上文</td><td>用 condense_plus_context</td></tr>
+<tr><td>9</td><td>IngestionPipeline 开销巨大</td><td>每次重建索引费用高</td><td>增量更新 + IngestionCache</td></tr>
+<tr><td>10</td><td>检索结果没有 source_nodes</td><td>不知道回答基于哪个文档</td><td>始终记录 response.source_nodes</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- 附录 -->
+<section class="sec">
+<div class="sec-title"><span class="num">📦</span><h2>LlamaIndex vs LangChain：什么时候用谁</h2></div>
+
+<div class="grid2">
+<div class="card">
+  <h3>✅ 优先 LlamaIndex</h3>
+  <ul>
+    <li>构建文档问答 / 知识库系统</li>
+    <li>需要多种数据源接入（PDF / DB / API / Notion...）</li>
+    <li>需要高级索引策略（摘要索引、知识图谱索引）</li>
+    <li>对检索质量有高要求（reranker、混合检索）</li>
+    <li>希望快速出原型：5 行代码跑通 RAG</li>
+  </ul>
+</div>
+<div class="card">
+  <h3>✅ 优先 LangChain</h3>
+  <ul>
+    <li>复杂的 Agent 工作流（条件分支、循环）</li>
+    <li>需要 Human-in-the-loop</li>
+    <li>多模型编排、链式调用</li>
+    <li>需要灵活的 Prompt 管理</li>
+    <li>已有 LangChain 技术栈的团队</li>
+  </ul>
+</div>
+</div>
+
+<div class="tip good"><span class="icon">🚀</span><div class="content"><strong>最佳组合：LlamaIndex + LangChain 协同工作</strong>
+实际生产中，很多团队选择"双剑合璧"：<br>
+1. 用 <strong>LlamaIndex</strong> 做数据接入、索引构建、高质量 RAG 检索<br>
+2. 用 <strong>LangChain / LangGraph</strong> 做 Agent 编排、工作流控制、工具调用<br>
+3. 用 <strong>LangSmith</strong> 做全链路 Tracing 和监控<br><br>
+三者不是竞争关系，是互补关系。选择对场景最合适的工具，而不是绑定单一框架。
+</div></div>
+
+<div class="tip info"><span class="icon">📚</span><div class="content"><strong>推荐学习路径</strong>
+1. 安装 <code>pip install llama-index llama-index-embeddings-openai llama-index-llms-openai</code><br>
+2. 用 SimpleDirectoryReader 加载本地文档，跑通 VectorStoreIndex<br>
+3. 尝试不同的 chunk 策略和 response_mode<br>
+4. 接入 ChromaDB 做持久化，加上 Reranker 后处理<br>
+5. 探索混合索引和高级查询引擎（SubQuestion / SQLAutoVector）
+</div></div>
+</section>
+</div>
+
+<script>
+function copyCode(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    btn.textContent='已复制';setTimeout(()=>btn.textContent='复制',1500);
+  }).catch(()=>{btn.textContent='失败';setTimeout(()=>btn.textContent='复制',1500);});
+}
+const sections = document.querySelectorAll('.sec[id]');
+const tocLinks = document.querySelectorAll('.nav-toc a');
+if(sections.length && tocLinks.length){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        tocLinks.forEach(a=>{a.style.color='';a.style.fontWeight='500'});
+        const link = document.querySelector(`.nav-toc a[href="#${e.target.id}"]`);
+        if(link){link.style.color='var(--pri)';link.style.fontWeight='700'}
+      }
+    });
+  },{rootMargin:'-80px 0px -60% 0px'});
+  sections.forEach(s=>observer.observe(s));
+}
+</script>
+</body>
+</html>

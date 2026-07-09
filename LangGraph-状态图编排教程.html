@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangGraph 状态图编排教程 · 踩坑指南</title>
+<style>
+:root {
+  --pri: #7c3aed; --pri-dark: #6d28d9; --pri-light: #ede9fe; --pri-lighter: #f5f3ff;
+  --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --code-bg: #1a1a2e; --code-text: #e2e8f0;
+  --warn: #f59e0b; --warn-bg: #fffbeb; --warn-border: #fcd34d;
+  --danger: #dc2626; --danger-bg: #fef2f2; --danger-border: #fecaca;
+  --info: #2563eb; --info-bg: #eff6ff; --info-border: #bfdbfe;
+  --good: #059669; --good-bg: #ecfdf5; --good-border: #a7f3d0;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:54px;gap:16px}
+.nav a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--pri);font-weight:700;font-size:.92rem}
+.nav a svg{width:24px;height:24px}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:4px;overflow-x:auto;font-size:.78rem}
+.nav .nav-toc a{color:var(--text2);font-weight:500;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.nav .nav-toc a:hover{background:var(--pri-lighter);color:var(--pri)}
+.hero{background:linear-gradient(135deg,#2e1065 0%,#4c1d95 40%,#6d28d9 100%);color:#fff;padding:56px 32px 48px;text-align:center}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.hero .sub{opacity:.8;max-width:680px;margin:0 auto;font-size:1rem;line-height:1.7}
+.hero .tags{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.78rem}
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 60px}
+.sec{margin-bottom:44px;scroll-margin-top:70px}
+.sec-title{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.sec-title .num{width:36px;height:36px;border-radius:8px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0}
+.sec-title h2{font-size:1.4rem;font-weight:700;border-bottom:2px solid var(--pri);padding-bottom:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin:16px 0;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{font-size:1.08rem;margin-bottom:12px;color:var(--pri-dark)}
+.card p{margin:8px 0;color:var(--text2);font-size:.92rem}
+.card ul,.card ol{margin:8px 0;padding-left:20px;color:var(--text2);font-size:.9rem}
+.card li{margin:4px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0}
+.code{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;position:relative}
+.code .lang{position:absolute;top:0;right:0;background:rgba(255,255,255,.08);color:var(--text3);font-size:.7rem;padding:3px 12px;border-radius:0 0 0 8px;font-family:var(--mono)}
+.code .copy-btn{position:absolute;top:6px;right:60px;background:rgba(255,255,255,.1);border:none;color:var(--text3);font-size:.7rem;padding:2px 10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.code pre{padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.7;color:var(--code-text);white-space:pre;tab-size:2}
+.code .kw{color:#f472b6}
+.code .str{color:#a5d6ff}
+.code .fn{color:#67e8f9}
+.code .num{color:#fbbf24}
+.code .cm{color:#94a3b8}
+.code .ty{color:#c084fc}
+.tip{padding:16px 20px;border-radius:var(--radius-sm);margin:16px 0;border-left:4px solid;font-size:.9rem;line-height:1.65;display:flex;gap:12px;align-items:flex-start}
+.tip .icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.tip .content{flex:1}
+.tip .content strong{display:block;margin-bottom:4px}
+.tip.info{background:var(--info-bg);border-color:var(--info)}
+.tip.warn{background:var(--warn-bg);border-color:var(--warn)}
+.tip.danger{background:var(--danger-bg);border-color:var(--danger)}
+.tip.good{background:var(--good-bg);border-color:var(--good)}
+.pitfall{background:linear-gradient(135deg,#fef2f2,#fff7ed);border:2px solid var(--danger-border);border-radius:var(--radius);padding:20px 24px;margin:20px 0;position:relative}
+.pitfall::before{content:'⚠️ 踩坑';position:absolute;top:-12px;left:20px;background:var(--danger);color:#fff;padding:2px 14px;border-radius:12px;font-size:.72rem;font-weight:700;letter-spacing:.5px}
+.pitfall h4{color:var(--danger);margin:6px 0 10px;font-size:1.02rem}
+.pitfall p,.pitfall li{color:var(--text2);font-size:.88rem;margin:4px 0}
+.pitfall ul{padding-left:18px}
+.pitfall .fix{background:var(--good-bg);border:1px solid var(--good-border);padding:10px 16px;border-radius:8px;margin-top:12px;font-size:.84rem}
+.pitfall .fix::before{content:'✅ 正确做法: ';font-weight:700;color:var(--good)}
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:600px}
+.tbl-wrap th{background:#f1f5f9;padding:10px 14px;text-align:left;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl-wrap td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl-wrap tr:last-child td{border-bottom:none}
+.tbl-wrap tr:hover td{background:#f8fafc}
+.viz{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin:16px 0;text-align:center;overflow-x:auto}
+.viz svg{max-width:100%;height:auto}
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+  .hero{padding:40px 20px 32px}
+  .wrap{padding:20px 16px 40px}
+  .card{padding:18px 20px}
+  .nav .nav-toc{display:none}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .sec-title h2{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" title="返回门户">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#ede9fe"/><path d="M7 16V8l5 4-5 4z" fill="#7c3aed"/><path d="M12 16v-3l3.5-2v5z" fill="#6d28d9"/></svg>
+    Frontend Learning Hub
+  </a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">概述</a>
+    <a href="#s2">StateGraph</a>
+    <a href="#s3">分支控制</a>
+    <a href="#s4">Human-in-Loop</a>
+    <a href="#s5">多Agent</a>
+    <a href="#s6">踩坑合集</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>🕸️ LangGraph 状态图编排教程</h1>
+  <p class="sub">从简单的链式调用到复杂多 Agent 工作流 —— 用状态图思想构建可控、可暂停、可恢复的 LLM 应用。</p>
+  <div class="tags">
+    <span>LangGraph</span><span>StateGraph</span><span>Agent</span><span>Human-in-the-Loop</span><span>多Agent</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ 1 ═══════════════════════════════════════ -->
+<div class="wrap">
+<section class="sec" id="s1">
+<div class="sec-title"><span class="num">1</span><h2>LangGraph 是什么 —— 为什么需要它</h2></div>
+
+<div class="card">
+<h3>LangChain 链式调用的天花板</h3>
+<p>LangChain 的 <strong>线性 Chain</strong> 擅长 <code>A → B → C</code> 的流水线。但真实应用往往是：</p>
+<ul>
+  <li>根据中间结果 <strong>条件分支</strong>（if answer is code → execute; else → explain）</li>
+  <li><strong>循环</strong> 执行直到满足条件（Agent 的 Think-Act-Observe 循环）</li>
+  <li>需要 <strong>人工审批</strong> 后才能继续（发送邮件前确认）</li>
+  <li>多个 Agent <strong>并行/串行</strong> 协作</li>
+</ul>
+<p>这些场景下，线性 Chain 力不从心。LangGraph 用 <strong>有向图（DAG / 循环图）</strong> 来建模工作流。</p>
+</div>
+
+<div class="grid2">
+<div class="card">
+  <h3>🔗 LangChain（链）</h3>
+  <ul><li>线性 Pipeline：<code>A → B → C</code></li><li>无状态（每次调用独立）</li><li>适合：翻译、摘要、简单 RAG</li></ul>
+</div>
+<div class="card">
+  <h3>🕸️ LangGraph（图）</h3>
+  <ul><li>任意有向图：<code>A → B → C → (循环回 A)</code></li><li>有状态（State 贯穿图执行）</li><li>适合：Agent 循环、多步推理、人工审批</li></ul>
+</div>
+</div>
+
+<div class="viz">
+<svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5 Z" fill="#7c3aed"/></marker></defs>
+<text x="340" y="20" text-anchor="middle" font-size="14" font-weight="800" fill="#4c1d95">LangGraph 执行流示意（ReAct Agent 循环）</text>
+<rect x="250" y="40" width="160" height="50" rx="25" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/><text x="330" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">Agent (Think)</text>
+<line x1="330" y1="90" x2="330" y2="120" stroke="#7c3aed" stroke-width="2" marker-end="url(#a3)"/>
+<rect x="250" y="125" width="160" height="50" rx="25" fill="#d1fae5" stroke="#059669" stroke-width="2"/><text x="330" y="155" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">Tool (Act)</text>
+<line x1="410" y1="150" x2="540" y2="150" stroke="#7c3aed" stroke-width="2" marker-end="url(#a3)"/>
+<rect x="545" y="125" width="110" height="50" rx="25" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/><text x="600" y="155" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Observe</text>
+<path d="M600,175 C600,210 330,210 330,180" stroke="#7c3aed" stroke-width="2" fill="none" stroke-dasharray="6,3" marker-end="url(#a3)"/>
+<text x="465" y="205" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="600">循环直到得出最终答案</text>
+</svg>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 2. StateGraph ═══════════════════════════════════════ -->
+<section class="sec" id="s2">
+<div class="sec-title"><span class="num">2</span><h2>StateGraph —— 核心概念</h2></div>
+
+<div class="card">
+<h3>三大核心元素</h3>
+<div class="grid3">
+<div class="card"><h3>State（状态）</h3><p>一个 TypedDict，贯穿整个图的执行。每个节点都可以读写它。类似 Redux 的 store。</p></div>
+<div class="card"><h3>Nodes（节点）</h3><p>执行具体逻辑的函数：调用 LLM、调用工具、判断条件... 接收 State，返回 State 的更新部分。</p></div>
+<div class="card"><h3>Edges（边）</h3><p>节点之间的转移规则。分普通边（无条件）和条件边（根据 State 内容路由）。</p></div>
+</div>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> typing <span class="kw">import</span> TypedDict, Annotated, Literal
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> langgraph.graph.message <span class="kw">import</span> add_messages
+
+<span class="cm"># 1. 定义 State（状态结构）</span>
+<span class="kw">class</span> <span class="ty">AgentState</span>(TypedDict):
+    messages: Annotated[list, add_messages]   <span class="cm"># 消息自动累加</span>
+    next_step: str                            <span class="cm"># 控制路由</span>
+    approved: bool                            <span class="cm"># 审批状态</span>
+
+<span class="cm"># 2. 定义 Node（节点函数）</span>
+<span class="kw">def</span> <span class="fn">call_model</span>(state: AgentState) -> AgentState:
+    <span class="str">"""调用 LLM，返回新消息"""</span>
+    llm = ChatOpenAI(model=<span class="str">"gpt-4o"</span>)
+    response = llm.invoke(state[<span class="str">"messages"</span>])
+    <span class="kw">return</span> {<span class="str">"messages"</span>: [response]}
+
+<span class="cm"># 3. 构建图</span>
+builder = StateGraph(AgentState)
+
+builder.add_node(<span class="str">"agent"</span>, call_model)
+builder.set_entry_point(<span class="str">"agent"</span>)         <span class="cm"># 入口节点</span>
+builder.add_edge(<span class="str">"agent"</span>, END)            <span class="cm"># agent → 结束</span>
+
+graph = builder.compile()
+result = graph.invoke({<span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"你好!"</span>)]})
+</pre></div>
+</div>
+
+<div class="tip info"><span class="icon">🔑</span><div class="content"><strong>Annotated[list, add_messages] 是关键魔法</strong><code>add_messages</code> 是一个 reducer 函数——当多个节点都返回 messages 时，新消息会追加到已有列表中，而不是覆盖。没有这个 reducer，后执行的节点返回的 messages 会覆盖前一个的。</div></div>
+
+<div class="pitfall">
+<h4>坑 #1：忘记用 Annotated 导致 State 被覆盖</h4>
+<p>在 TypedDict 中，如果字段没有 <code>Annotated + reducer</code>，新的返回值会 <strong>完全覆盖</strong> 旧值。很多人把 <code>messages: list</code> 当成会自动追加的列表，结果只剩下最后一条消息。</p>
+<div class="fix">任何需要累积的字段（如消息列表、中间结果列表），必须使用 <code>Annotated[list, operator.add]</code> 或 <code>Annotated[list, add_messages]</code>。不需要累积的字段（如 <code>next_step</code>, <code>approved</code>）可以不用 Annotated，直接覆盖即可。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>图编译与运行</h3>
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 编译图</span>
+graph = builder.compile(
+    checkpointer=MemorySaver(),   <span class="cm"># 启用持久化（支持暂停/恢复）</span>
+    interrupt_before=[<span class="str">"approval"</span>]  <span class="cm"># 在执行 approval 节点前暂停</span>
+)
+
+<span class="cm"># 同步调用</span>
+result = graph.invoke(
+    {<span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"查一下今天天气"</span>)]},
+    config={<span class="str">"configurable"</span>: {<span class="str">"thread_id"</span>: <span class="str">"conv-001"</span>}}
+)
+
+<span class="cm"># 流式输出</span>
+<span class="kw">for</span> event <span class="kw">in</span> graph.stream(input_data, stream_mode=<span class="str">"values"</span>):
+    <span class="kw">print</span>(event[<span class="str">"messages"</span>][-<span class="num">1</span>])
+
+<span class="cm"># 异步调用</span>
+result = <span class="kw">await</span> graph.ainvoke(input_data)
+</pre></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #2：checkpointer 未设置导致无法暂停/恢复</h4>
+<p>如果编译图时没有传 <code>checkpointer</code>，graph 是<strong>完全无状态</strong>的。这意味着 <code>interrupt_before</code> / <code>interrupt_after</code> 不生效，每次 <code>invoke</code> 都是独立的。很多人在做 Human-in-the-loop 时忘记这个。</p>
+<div class="fix">做中断/暂停/恢复功能时，编译图时一定要传入 checkpointer（如 <code>MemorySaver()</code> 或 <code>SqliteSaver</code>），并在 invoke 时指定唯一的 <code>thread_id</code>。</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 3. 分支控制 ═══════════════════════════════════════ -->
+<section class="sec" id="s3">
+<div class="sec-title"><span class="num">3</span><h2>条件分支与循环 —— 图的核心能力</h2></div>
+
+<div class="card">
+<h3>条件边 (Conditional Edges)</h3>
+<p>根据 State 的内容，动态决定下一个要执行的节点。这是 Agent 循环的基础。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+
+<span class="cm"># 构建 ReAct Agent 图</span>
+builder = StateGraph(AgentState)
+
+<span class="cm"># 添加节点</span>
+builder.add_node(<span class="str">"agent"</span>, call_model)        <span class="cm"># LLM 推理</span>
+builder.add_node(<span class="str">"tools"</span>, ToolNode(tools))    <span class="cm"># 工具调用</span>
+
+builder.set_entry_point(<span class="str">"agent"</span>)
+
+<span class="cm"># 条件边：根据 agent 的输出来路由</span>
+<span class="kw">def</span> <span class="fn">should_continue</span>(state: AgentState) -> Literal[<span class="str">"tools"</span>, END]:
+    last_message = state[<span class="str">"messages"</span>][-<span class="num">1</span>]
+    <span class="cm"># 如果 LLM 要求调用工具 → 跳转到 tools 节点</span>
+    <span class="kw">if</span> last_message.tool_calls:
+        <span class="kw">return</span> <span class="str">"tools"</span>
+    <span class="cm"># 否则结束</span>
+    <span class="kw">return</span> END
+
+builder.add_conditional_edges(
+    <span class="str">"agent"</span>,                <span class="cm"># 从 agent 节点出发</span>
+    should_continue,          <span class="cm"># 条件判断函数</span>
+    {<span class="str">"tools"</span>: <span class="str">"tools"</span>, END: END}  <span class="cm"># 路由映射</span>
+)
+
+builder.add_edge(<span class="str">"tools"</span>, <span class="str">"agent"</span>)  <span class="cm"># tools 执行完回到 agent</span>
+
+graph = builder.compile()
+</pre></div>
+
+<div class="viz">
+<svg viewBox="0 0 680 180" xmlns="http://www.w3.org/2000/svg"><defs><marker id="b3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5 Z" fill="#7c3aed"/></marker></defs>
+<text x="340" y="20" text-anchor="middle" font-size="13" font-weight="800" fill="#4c1d95">ReAct 循环图结构</text>
+<rect x="250" y="35" width="160" height="50" rx="25" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/><text x="330" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">Agent Node</text>
+<line x1="330" y1="85" x2="330" y2="115" stroke="#7c3aed" stroke-width="2" marker-end="url(#b3)"/>
+<rect x="250" y="120" width="160" height="50" rx="25" fill="#d1fae5" stroke="#059669" stroke-width="2"/><text x="330" y="150" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">Tool Node</text>
+<path d="M410,145 C440,145 440,60 410,60" stroke="#7c3aed" stroke-width="2" fill="none" marker-end="url(#b3)"/>
+<text x="445" y="105" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="600">循环</text>
+<line x1="410" y1="60" x2="560" y2="60" stroke="#7c3aed" stroke-width="2" marker-end="url(#b3)"/>
+<rect x="565" y="35" width="90" height="50" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/><text x="610" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">END</text>
+<text x="485" y="52" font-size="10" fill="#6d28d9">无 tool_calls</text>
+</svg>
+</div>
+
+<div class="pitfall">
+<h4>坑 #3：条件函数返回的字符串不在路由映射中</h4>
+<p>条件函数返回的 Literal 值必须精确匹配路由映射的 key。如果条件函数返回 <code>"tool"</code> 但路由映射里写的是 <code>"tools"</code>，图会直接报错。</p>
+<div class="fix">使用 Python <code>Literal</code> 类型注解约束返回值（会自动检查），并确保路由映射的 key 和返回值严格一致。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #4：Agent 循环没有出口条件 → 无限循环</h4>
+<p>ReAct Agent 的实现中，如果 LLM 每次都返回 tool_calls（即使工具返回了错误），图就会在 <code>agent ↔ tools</code> 之间无限循环。</p>
+<div class="fix">在图编译时设置 <code>recursion_limit</code>（默认 25）：<code>graph.compile(recursion_limit=10)</code>。同时在条件函数中检查 <code>total_steps</code>，超过阈值直接 <code>return END</code>。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>并行执行与子图</h3>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 并行节点：Send API</span>
+<span class="kw">from</span> langgraph.types <span class="kw">import</span> Send
+
+<span class="kw">class</span> <span class="ty">State</span>(TypedDict):
+    tasks: list[str]
+    results: Annotated[list, operator.add]  <span class="cm"># 并行结果自动汇总</span>
+
+<span class="kw">def</span> <span class="fn">continue_to_jokes</span>(state: State):
+    <span class="str">"""为每个任务生成一个并行分支"""</span>
+    <span class="kw">return</span> [Send(<span class="str">"process_task"</span>, {<span class="str">"task"</span>: t}) <span class="kw">for</span> t <span class="kw">in</span> state[<span class="str">"tasks"</span>]]
+
+<span class="kw">def</span> <span class="fn">process_task</span>(state: dict):
+    <span class="str">"""并行处理单个任务"""</span>
+    result = llm.invoke(<span class="str">f"处理任务: {state['task']}"</span>)
+    <span class="kw">return</span> {<span class="str">"results"</span>: [result.content]}
+
+<span class="cm"># 图的构建</span>
+builder.add_node(<span class="str">"process_task"</span>, process_task)
+builder.add_conditional_edges(<span class="str">"planner"</span>, continue_to_jokes, [<span class="str">"process_task"</span>])
+builder.add_edge(<span class="str">"process_task"</span>, <span class="str">"aggregator"</span>)
+</pre></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #5：Send 并行中忘记用 Annotated + reducer → 结果互相覆盖</h4>
+<p>N 个并行分支都写入同一个 State 字段时，如果没设 reducer，最后一个完成的会覆盖所有。</p>
+<div class="fix">并行写入的字段必须用 <code>Annotated[list, operator.add]</code>（或自定义 reducer）来实现聚合，而非简单覆盖。</div>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 4. Human-in-the-Loop ═══════════════════════════════════════ -->
+<section class="sec" id="s4">
+<div class="sec-title"><span class="num">4</span><h2>Human-in-the-Loop —— 人机协作</h2></div>
+
+<div class="card">
+<h3>中断 → 审批 → 恢复</h3>
+<p>这是 LangGraph 最强大的特性之一。让图在执行关键操作前暂停，等待人工确认。</p>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> langgraph.checkpoint.memory <span class="kw">import</span> MemorySaver
+
+builder = StateGraph(AgentState)
+
+builder.add_node(<span class="str">"draft"</span>, draft_email)      <span class="cm"># 草拟邮件</span>
+builder.add_node(<span class="str">"approval"</span>, human_approval)  <span class="cm"># 人工审批节点</span>
+builder.add_node(<span class="str">"send"</span>, send_email)         <span class="cm"># 发送邮件</span>
+
+builder.set_entry_point(<span class="str">"draft"</span>)
+builder.add_edge(<span class="str">"draft"</span>, <span class="str">"approval"</span>)
+builder.add_edge(<span class="str">"approval"</span>, <span class="str">"send"</span>)
+builder.add_edge(<span class="str">"send"</span>, END)
+
+<span class="cm"># 关键：在 approval 节点前暂停</span>
+graph = builder.compile(
+    checkpointer=MemorySaver(),
+    interrupt_before=[<span class="str">"approval"</span>]  <span class="cm"># 👈 此处中断</span>
+)
+
+<span class="cm"># 首次运行 → 在 approval 前自动暂停</span>
+config = {<span class="str">"configurable"</span>: {<span class="str">"thread_id"</span>: <span class="str">"email-001"</span>}}
+result = graph.invoke(
+    {<span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"起草一封发给全员的周报邮件"</span>)]},
+    config
+)
+<span class="kw">print</span>(result[<span class="str">"messages"</span>][-<span class="num">1</span>].content)  <span class="cm"># 查看草稿</span>
+
+<span class="cm"># 人工审批通过 → 恢复执行</span>
+graph.update_state(config, {<span class="str">"approved"</span>: <span class="kw">True</span>})
+result = graph.invoke(<span class="kw">None</span>, config)  <span class="cm"># 传入 None 继续执行</span>
+</pre></div>
+</div>
+
+<div class="tip info"><span class="icon">🔑</span><div class="content"><strong>interrupt_before vs interrupt_after</strong><br>
+<code>interrupt_before=["send"]</code>：执行 send 节点<strong>之前</strong>暂停（还没发邮件）<br>
+<code>interrupt_after=["draft"]</code>：draft 节点执行<strong>完之后</strong>暂停（已经生成了草稿，等待确认）<br>
+还可以用 <code>NodeInterrupt</code> 异常在节点内部主动中断。</div></div>
+
+<div class="pitfall">
+<h4>坑 #6：用 invoke(None, config) 恢复时传入错误数据</h4>
+<p>恢复执行时 <code>invoke(None, config)</code> 的 <code>None</code> 表示"不新增输入"。但如果在 <code>update_state</code> 时 state 结构写错了（比如把 <code>approved</code> 放在了错误的层级），恢复后的图会读到错误的状态。</p>
+<div class="fix"><code>update_state</code> 接受的字典格式和 TypedDict 必须一致。可以先 <code>graph.get_state(config)</code> 查看当前 state 结构，再精确更新。</div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #7：thread_id 用错导致读取到别人的会话状态</h4>
+<p>thread_id 是隔离不同会话的关键。如果多个用户共享同一个 thread_id，它们的对话历史和状态会混在一起。</p>
+<div class="fix">每个用户/会话使用唯一的 thread_id（如 <code>f"user-{user_id}-{session_uuid}"</code>）。使用 <code>SqliteSaver</code> 而非 <code>MemorySaver</code> 做生产持久化。</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 5. 多Agent ═══════════════════════════════════════ -->
+<section class="sec" id="s5">
+<div class="sec-title"><span class="num">5</span><h2>多 Agent 协作模式</h2></div>
+
+<div class="card">
+<h3>四种协作模式</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>模式</th><th>结构</th><th>适用场景</th><th>复杂度</th></tr></thead>
+<tbody>
+<tr><td><strong>Supervisor</strong></td><td>一个主管 Agent 调度多个 Worker</td><td>任务分发、客服路由</td><td>⭐ 中</td></tr>
+<tr><td><strong>Hierarchical</strong></td><td>多层嵌套的 Agent 团队</td><td>复杂项目管理、多层审批</td><td>⭐⭐ 高</td></tr>
+<tr><td><strong>Sequential</strong></td><td>A → B → C → D 串联</td><td>流水线处理、文档审核</td><td>⭐ 低</td></tr>
+<tr><td><strong>Debate</strong></td><td>多个 Agent 互相校验</td><td>代码审查、安全审计</td><td>⭐⭐ 高</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="code"><div class="lang">PYTHON</div><button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># Supervisor 模式 —— 最实用的多 Agent 模式</span>
+<span class="kw">from</span> langgraph_supervisor <span class="kw">import</span> create_supervisor
+<span class="kw">from</span> langgraph.prebuilt <span class="kw">import</span> create_react_agent
+
+<span class="cm"># 创建两个独立 Agent</span>
+research_agent = create_react_agent(
+    llm, [search_tool, web_scrape_tool],
+    state_modifier=<span class="str">"你是研究员，擅长搜集资料。"</span>
+)
+code_agent = create_react_agent(
+    llm, [python_repl, bash_tool],
+    state_modifier=<span class="str">"你是程序员，擅长写代码。"</span>
+)
+
+<span class="cm"># 创建主管 Agent，把两个子 Agent 当工具</span>
+supervisor = create_supervisor(
+    agents=[research_agent, code_agent],
+    model=llm,
+    prompt=<span class="str">"你是项目主管。接到任务后分派给合适的人。"</span>
+)
+
+<span class="cm"># 使用</span>
+result = supervisor.invoke({
+    <span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"调研 LangGraph 最新版本变化，并写一个对比代码示例"</span>)]
+})
+</pre></div>
+</div>
+
+<div class="pitfall">
+<h4>坑 #8：Supervisor 模式下子 Agent 的上下文不互通</h4>
+<p>每个子 Agent 都有独立的 State。如果 Research Agent 查到了关键信息，Code Agent 默认看不到。Supervisor 必须显式地把信息从输出中提取并传递给下一个 Agent。</p>
+<div class="fix">在 Supervisor prompt 中明确要求它"提取前一个 Agent 的关键结果并传递给下一个 Agent"。或者用 SharedState 模式：定义一个共享 State，所有子 Agent 读写同一个 state。</div>
+</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ 6. 踩坑合集 ═══════════════════════════════════════ -->
+<section class="sec" id="s6">
+<div class="sec-title"><span class="num">6</span><h2>八大踩坑速查表</h2></div>
+
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>#</th><th>坑</th><th>现象</th><th>解法</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>忘记用 Annotated + reducer</td><td>State 字段被覆盖，数据丢失</td><td>累积字段用 <code>Annotated[list, add_messages]</code></td></tr>
+<tr><td>2</td><td>未设 checkpointer</td><td>interrupt 不生效、无法恢复</td><td>编译时传 <code>checkpointer=MemorySaver()</code></td></tr>
+<tr><td>3</td><td>条件路由映射不匹配</td><td>图执行报错或走错节点</td><td>用 Literal 约束 + 严格匹配 key</td></tr>
+<tr><td>4</td><td>无限循环无出口</td><td>Agent 永远在 tool ↔ agent 之间</td><td>设置 recursion_limit + 步数检查</td></tr>
+<tr><td>5</td><td>并行结果互相覆盖</td><td>只有最后一个分支结果被保留</td><td>用 <code>Annotated[list, operator.add]</code></td></tr>
+<tr><td>6</td><td>恢复时 state 结构错误</td><td>update_state 后图读到错数据</td><td>先 get_state 再精确 update</td></tr>
+<tr><td>7</td><td>thread_id 共享/混乱</td><td>不同用户互相读到对方状态</td><td>每会话唯一 ID，生产用 SqliteSaver</td></tr>
+<tr><td>8</td><td>子 Agent 上下文不互通</td><td>Supervisor 模式信息断裂</td><td>Prompt 明确要求传递 / SharedState</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- 附录 -->
+<section class="sec">
+<div class="sec-title"><span class="num">📦</span><h2>LangGraph vs LangChain 选型指南</h2></div>
+
+<div class="grid2">
+<div class="card">
+  <h3>✅ 直接用 LangChain（不用 LangGraph）</h3>
+  <ul>
+    <li>翻译、摘要、简单 RAG 问答</li>
+    <li>单次调用、无状态、无分支</li>
+    <li>代码量少、可读性优先</li>
+  </ul>
+</div>
+<div class="card">
+  <h3>✅ 必须用 LangGraph</h3>
+  <ul>
+    <li>Agent 需要 Think-Act-Observe 循环</li>
+    <li>需要条件分支 / 循环 / 并行</li>
+    <li>需要 Human-in-the-loop（审批/确认）</li>
+    <li>多 Agent 协作</li>
+  </ul>
+</div>
+</div>
+
+<div class="tip good"><span class="icon">✅</span><div class="content"><strong>最佳实践</strong>
+1. 从简单开始：先用 LCEL 实现基础流程，复杂了再迁移到 LangGraph<br>
+2. State 设计是核心：花时间设计好 TypedDict 结构，后续改动成本低<br>
+3. 善用 <code>.get_graph().draw_mermaid_png()</code> 可视化图结构<br>
+4. 生产环境用 <code>SqliteSaver</code> 或 <code>PostgresSaver</code> 做 checkpointer<br>
+5. 始终设置 <code>recursion_limit</code> 防止死循环
+</div></div>
+</section>
+</div>
+
+<script>
+function copyCode(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    btn.textContent='已复制';setTimeout(()=>btn.textContent='复制',1500);
+  }).catch(()=>{btn.textContent='失败';setTimeout(()=>btn.textContent='复制',1500);});
+}
+const sections = document.querySelectorAll('.sec[id]');
+const tocLinks = document.querySelectorAll('.nav-toc a');
+if(sections.length && tocLinks.length){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        tocLinks.forEach(a=>{a.style.color='';a.style.fontWeight='500'});
+        const link = document.querySelector(`.nav-toc a[href="#${e.target.id}"]`);
+        if(link){link.style.color='var(--pri)';link.style.fontWeight='700'}
+      }
+    });
+  },{rootMargin:'-80px 0px -60% 0px'});
+  sections.forEach(s=>observer.observe(s));
+}
+</script>
+</body>
+</html>
