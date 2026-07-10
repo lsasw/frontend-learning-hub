@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apache Spark & Flink · 大数据处理技术全指南</title>
+<style>
+:root {
+  --spark: #E25A1C; --spark-dark: #b3410e; --spark-light: #fed7aa; --spark-bg: #fff7ed;
+  --flink: #E6522F; --flink-dark: #c0392b; --flink-light: #fce4ec; --flink-bg: #fef3f2;
+  --teal: #0d9488; --teal-light: #ccfbf1;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* TOP NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.05rem;padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0;background:linear-gradient(135deg,var(--spark),var(--flink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav a{text-decoration:none;color:var(--text2);font-size:.82rem;font-weight:500;padding:8px 12px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--orange-light);color:var(--spark-dark)}
+.nav a.flink-nav:hover,.nav a.flink-nav.active{background:var(--flink-light);color:var(--flink-dark)}
+.nav a.cmp-nav:hover,.nav a.cmp-nav.active{background:var(--blue-light);color:var(--blue)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 30%,#E25A1C 70%,#E6522F 100%);color:#fff;padding:60px 40px 50px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-100px;right:-60px;width:360px;height:360px;background:rgba(255,255,255,.05);border-radius:50%}
+.hero::after{content:"";position:absolute;bottom:-60px;left:-40px;width:240px;height:240px;background:rgba(229,90,28,.15);border-radius:50%}
+.hero h1{font-size:2.4rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative}
+.hero .sub{font-size:1rem;opacity:.92;margin-top:12px;max-width:720px;margin-inline:auto;position:relative;line-height:1.7}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.78rem;border:1px solid rgba(255,255,255,.22)}
+.hero .tag.spark-t{background:rgba(229,90,28,.35);border-color:rgba(229,90,28,.5)}
+.hero .tag.flink-t{background:rgba(230,82,47,.35);border-color:rgba(230,82,47,.5)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:44px;scroll-margin-top:64px}
+.sec-title{font-size:1.55rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--spark);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--spark);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-title.flink{border-bottom-color:var(--flink)}
+.sec-title.flink .n{background:var(--flink)}
+.sec-title.cmp{border-bottom-color:var(--blue)}
+.sec-title.cmp .n{background:var(--blue)}
+.sec-intro{font-size:.88rem;color:var(--text2);margin-bottom:18px;line-height:1.7}
+
+/* SUBSECTION */
+.subsec{margin-top:28px;scroll-margin-top:64px}
+.subsec-title{font-size:1.15rem;font-weight:700;margin-bottom:12px;color:var(--spark-dark);display:flex;align-items:center;gap:8px}
+.subsec-title.flink{color:var(--flink-dark)}
+.subsec-title .icon{font-size:1.2rem}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px;margin-bottom:16px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h4{font-size:.95rem;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card p{font-size:.86rem;margin-bottom:6px;color:var(--text2);line-height:1.7}
+.card ul,.card ol{margin:6px 0 6px 20px;font-size:.86rem;color:var(--text2);line-height:1.8}
+.card li{margin-bottom:4px}
+.card li code,.card p code{font-family:var(--mono);font-size:.8rem;background:var(--spark-bg);color:var(--spark-dark);padding:1px 6px;border-radius:4px}
+.card.flink li code,.card.flink p code{background:var(--flink-bg);color:var(--flink-dark)}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.83rem;display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.spark{background:var(--spark-bg);border-left:4px solid var(--spark)}
+.tip.flink{background:var(--flink-bg);border-left:4px solid var(--flink)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+
+/* CODE BLOCK */
+.code-block{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;border:1px solid #334155}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#16162a;border-bottom:1px solid #334155}
+.code-header .code-label{font-size:.72rem;color:#94a3b8;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.code-header .dots{display:flex;gap:6px;margin-right:8px}
+.code-header .dots span{width:11px;height:11px;border-radius:50%}
+.code-header .dots span:nth-child(1){background:#ef4444}
+.code-header .dots span:nth-child(2){background:#f59e0b}
+.code-header .dots span:nth-child(3){background:#22c55e}
+.code-header .file-name{font-size:.72rem;font-family:var(--mono)}
+.code-header .file-name.spark{color:var(--spark)}
+.code-header .file-name.flink{color:var(--flink)}
+.code-header .file-name.python{color:#93c5fd}
+.code-header .file-name.scala{color:#fde68a}
+.code-body{padding:16px 22px;overflow-x:auto}
+.code-body pre{font-family:var(--mono);font-size:.79rem;color:#e2e8f0;white-space:pre;line-height:1.75}
+.kw{color:#c4b5fd}.str{color:#86efac}.cmt{color:#64748b;font-style:italic}
+.fn{color:#93c5fd}.num{color:#fdba74}.typ{color:#fde68a}
+.builtin{color:#f9a8d4}.op{color:#fca5a5}.dec{color:#67e8f9}.var{color:#e2e8f0}
+
+/* OUTPUT DISPLAY */
+.output{background:#0f172a;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:14px 22px;border-top:1px solid #334155}
+.output .out-label{font-size:.66rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono);display:flex;align-items:center;gap:6px}
+.output .out-content{font-family:var(--mono);font-size:.76rem;color:#a6e3a1;white-space:pre-wrap;line-height:1.7;min-height:20px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--spark-bg);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--spark);white-space:nowrap}
+th.flink-th{background:var(--flink-bg);border-bottom-color:var(--flink)}
+th.cmp-th{background:var(--blue-light);border-bottom-color:var(--blue)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fff9f5}
+td code{font-family:var(--mono);font-size:.78rem;background:#f3f4f6;padding:1px 5px;border-radius:4px;color:var(--spark-dark)}
+
+/* ARCHITECTURE DIAGRAM */
+.arch-diagram{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin:16px 0;overflow-x:auto}
+.arch-diagram .arch-title{font-size:.9rem;font-weight:700;margin-bottom:16px;text-align:center;color:var(--text)}
+.arch-diagram .arch-svg{display:block;margin:0 auto}
+
+/* COMPARISON CARDS */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.cmp-card{border-radius:var(--radius);padding:24px;border:2px solid;box-shadow:var(--shadow)}
+.cmp-card.spark{border-color:var(--spark);background:var(--spark-bg)}
+.cmp-card.flink{border-color:var(--flink);background:var(--flink-bg)}
+.cmp-card h4{font-size:1rem;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cmp-card.spark h4{color:var(--spark-dark)}
+.cmp-card.flink h4{color:var(--flink-dark)}
+.cmp-card ul{margin:6px 0 0 18px;font-size:.83rem;line-height:1.8}
+.cmp-card li{margin-bottom:3px}
+
+/* SCENARIO MATRIX */
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin:16px 0}
+.scenario-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;box-shadow:var(--shadow)}
+.scenario-card .sc-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.scenario-card .sc-icon{font-size:1.3rem}
+.scenario-card .sc-title{font-size:.88rem;font-weight:700}
+.scenario-card .sc-rec{display:inline-block;font-size:.72rem;padding:2px 10px;border-radius:12px;font-weight:600;margin-top:4px}
+.scenario-card .sc-rec.spark{background:var(--spark);color:#fff}
+.scenario-card .sc-rec.flink{background:var(--flink);color:#fff}
+.scenario-card .sc-rec.both{background:var(--blue);color:#fff}
+.scenario-card p{font-size:.8rem;color:var(--text2);margin-top:4px;line-height:1.6}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:28px;margin:20px 0}
+.timeline::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--spark),var(--flink))}
+.timeline .tl-item{position:relative;margin-bottom:20px}
+.timeline .tl-item::before{content:"";position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--spark);background:#fff}
+.timeline .tl-item.flink-item::before{border-color:var(--flink)}
+.timeline .tl-year{font-size:.72rem;font-weight:700;color:var(--spark);font-family:var(--mono)}
+.timeline .tl-item.flink-item .tl-year{color:var(--flink)}
+.timeline .tl-text{font-size:.84rem;color:var(--text2);margin-top:2px;line-height:1.6}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.badge.spark{background:var(--spark-light);color:var(--spark-dark)}
+.badge.flink{background:var(--flink-light);color:var(--flink-dark)}
+.badge.both{background:var(--blue-light);color:var(--blue)}
+
+/* MISC */
+.highlight-box{background:linear-gradient(135deg,var(--spark-bg),var(--flink-bg));border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin:16px 0}
+.highlight-box h4{font-size:.92rem;font-weight:700;margin-bottom:8px}
+.highlight-box p{font-size:.85rem;color:var(--text2);line-height:1.7}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero{padding:40px 20px 36px}
+  .hero h1{font-size:1.7rem}
+  .hero .sub{font-size:.9rem}
+  .wrap{padding:20px 14px 40px}
+  .nav{padding:0 12px}
+  .nav .logo{font-size:.95rem;margin-right:8px}
+  .nav a{font-size:.76rem;padding:6px 8px}
+  .sec-title{font-size:1.3rem}
+  .subsec-title{font-size:1rem}
+  .card{padding:18px 16px}
+  .code-body pre{font-size:.73rem}
+  .output .out-content{font-size:.72rem}
+  .cmp-grid{grid-template-columns:1fr}
+  .scenario-grid{grid-template-columns:1fr}
+  table{font-size:.76rem}
+  th,td{padding:8px 10px}
+}
+@media(max-width:480px){
+  .hero h1{font-size:1.4rem}
+  .code-body{padding:12px 14px}
+  .code-body pre{font-size:.68rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ TOP NAV ════════ -->
+<nav class="nav">
+  <div class="logo">⚡ Spark & Flink</div>
+  <a href="#spark-overview">Spark 概述</a>
+  <a href="#spark-rdd">RDD</a>
+  <a href="#spark-dataframe">DataFrame</a>
+  <a href="#spark-sql">Spark SQL</a>
+  <a href="#spark-streaming">Streaming</a>
+  <a href="#flink-overview" class="flink-nav">Flink 概述</a>
+  <a href="#flink-datastream" class="flink-nav">DataStream</a>
+  <a href="#flink-table" class="flink-nav">Table API</a>
+  <a href="#flink-window" class="flink-nav">窗口</a>
+  <a href="#flink-state" class="flink-nav">状态管理</a>
+  <a href="#comparison" class="cmp-nav">对比分析</a>
+  <a href="#summary" class="cmp-nav">总结</a>
+</nav>
+
+<!-- ════════ HERO ════════ -->
+<section class="hero">
+  <h1>Apache Spark & Flink<br>大数据处理技术全指南</h1>
+  <p class="sub">从 RDD 到 Structured Streaming，从 DataStream 到状态管理 —— 两大主流大数据处理引擎的核心概念、代码实战与深度对比</p>
+  <div class="tags">
+    <span class="tag spark-t">Apache Spark 3.5</span>
+    <span class="tag flink-t">Apache Flink 1.18</span>
+    <span class="tag">PySpark</span>
+    <span class="tag">PyFlink</span>
+    <span class="tag">流批一体</span>
+    <span class="tag">代码实战</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════════════════════════════════════════════════
+     PART 1: APACHE SPARK
+     ═══════════════════════════════════════════════════ -->
+
+<!-- ── Spark Overview ── -->
+<div class="sec" id="spark-overview">
+  <h2 class="sec-title"><span class="n">1</span> Apache Spark 概述</h2>
+  <p class="sec-intro">Apache Spark 是一个统一的分析引擎，用于大规模数据处理。它基于内存计算，比 Hadoop MapReduce 快 100 倍（内存中）。Spark 提供了批处理、流处理、机器学习（MLlib）、图计算（GraphX）和 SQL 查询等一体化能力。</p>
+
+  <div class="card">
+    <h4>🏗️ Spark 架构核心组件</h4>
+    <div class="arch-diagram">
+      <div class="arch-title">Spark 集群架构</div>
+      <svg class="arch-svg" width="680" height="320" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+        <!-- Driver -->
+        <rect x="260" y="10" width="160" height="56" rx="8" fill="#fff7ed" stroke="#E25A1C" stroke-width="2"/>
+        <text x="340" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#b3410e">Driver</text>
+        <text x="340" y="52" text-anchor="middle" font-size="10" fill="#5a6170">SparkContext / SparkSession</text>
+
+        <!-- Cluster Manager -->
+        <rect x="260" y="90" width="160" height="46" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="340" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Cluster Manager</text>
+        <text x="340" y="130" text-anchor="middle" font-size="9" fill="#5a6170">YARN / K8s / Standalone</text>
+
+        <!-- Connection lines -->
+        <line x1="340" y1="66" x2="340" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+        <line x1="340" y1="136" x2="180" y2="180" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="340" y1="136" x2="340" y2="180" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="340" y1="136" x2="500" y2="180" stroke="#94a3b8" stroke-width="2"/>
+
+        <!-- Executors -->
+        <rect x="80" y="180" width="200" height="120" rx="8" fill="#fff7ed" stroke="#E25A1C" stroke-width="2"/>
+        <text x="180" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#b3410e">Executor 1</text>
+        <rect x="95" y="214" width="80" height="24" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+        <text x="135" y="230" text-anchor="middle" font-size="9" fill="#b3410e">Task 1</text>
+        <rect x="185" y="214" width="80" height="24" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+        <text x="225" y="230" text-anchor="middle" font-size="9" fill="#b3410e">Task 2</text>
+        <rect x="95" y="248" width="170" height="20" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+        <text x="180" y="262" text-anchor="middle" font-size="9" fill="#92400e">Cache / Storage</text>
+        <rect x="95" y="274" width="170" height="18" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+        <text x="180" y="287" text-anchor="middle" font-size="8" fill="#6b7280">JVM Process</text>
+
+        <rect x="300" y="180" width="160" height="120" rx="8" fill="#fff7ed" stroke="#E25A1C" stroke-width="2"/>
+        <text x="380" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#b3410e">Executor 2</text>
+        <rect x="315" y="214" width="60" height="24" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+        <text x="345" y="230" text-anchor="middle" font-size="9" fill="#b3410e">Task</text>
+        <rect x="385" y="214" width="60" height="24" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+        <text x="415" y="230" text-anchor="middle" font-size="9" fill="#b3410e">Task</text>
+        <rect x="315" y="248" width="130" height="20" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+        <text x="380" y="262" text-anchor="middle" font-size="9" fill="#92400e">Cache</text>
+        <rect x="315" y="274" width="130" height="18" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+        <text x="380" y="287" text-anchor="middle" font-size="8" fill="#6b7280">JVM</text>
+
+        <rect x="480" y="180" width="160" height="120" rx="8" fill="#fff7ed" stroke="#E25A1C" stroke-width="2"/>
+        <text x="560" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="#b3410e">Executor N</text>
+        <rect x="495" y="214" width="60" height="24" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+        <text x="525" y="230" text-anchor="middle" font-size="9" fill="#b3410e">Task</text>
+        <rect x="565" y="214" width="60" height="24" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+        <text x="595" y="230" text-anchor="middle" font-size="9" fill="#b3410e">Task</text>
+        <rect x="495" y="248" width="130" height="20" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+        <text x="560" y="262" text-anchor="middle" font-size="9" fill="#92400e">Cache</text>
+        <rect x="495" y="274" width="130" height="18" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+        <text x="560" y="287" text-anchor="middle" font-size="8" fill="#6b7280">JVM</text>
+
+        <!-- Arrow marker -->
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <ul>
+      <li><strong>Driver</strong>：运行用户的主函数，创建 <code>SparkContext</code> / <code>SparkSession</code>，负责任务调度和 DAG 构建</li>
+      <li><strong>Cluster Manager</strong>：集群资源管理，支持 YARN、Kubernetes、Standalone 三种模式</li>
+      <li><strong>Executor</strong>：在工作节点上运行，负责执行 Task 并缓存数据，每个 Executor 是一个独立的 JVM 进程</li>
+      <li><strong>Task</strong>：最小执行单元，一个 Task 处理一个 Partition 的数据</li>
+    </ul>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><strong>核心设计理念</strong>：Spark 基于「弹性分布式数据集（RDD）」抽象，将数据分片存储在集群内存中，通过 DAG（有向无环图）调度器优化执行计划，实现内存级迭代计算性能。惰性求值（Lazy Evaluation）是 Spark 的灵魂 —— Transformation 操作不会立即执行，只有 Action 操作才会触发真正的计算。</div>
+  </div>
+
+  <div class="card">
+    <h4>📊 Spark 生态组件一览</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>组件</th><th>功能</th><th>典型场景</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Spark Core</code></td><td>底层引擎：RDD API、任务调度、内存管理、容错恢复</td><td>所有上层组件的基础</td></tr>
+          <tr><td><code>Spark SQL</code></td><td>结构化数据处理：DataFrame/Dataset、SQL 查询引擎</td><td>ETL、数据仓库查询、CSV/Parquet 读写</td></tr>
+          <tr><td><code>Structured Streaming</code></td><td>流处理：基于 Spark SQL 引擎的微批流处理</td><td>实时日志分析、IoT 数据监控</td></tr>
+          <tr><td><code>MLlib</code></td><td>机器学习库：分类、回归、聚类、协同过滤</td><td>推荐系统、欺诈检测模型训练</td></tr>
+          <tr><td><code>GraphX</code></td><td>图计算：PageRank、连通分量、三角计数</td><td>社交网络分析、路网规划</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Spark RDD ── -->
+<div class="sec" id="spark-rdd">
+  <h2 class="sec-title"><span class="n">2</span> Spark RDD — 弹性分布式数据集</h2>
+  <p class="sec-intro">RDD（Resilient Distributed Dataset）是 Spark 最底层的数据抽象，是一个不可变的分区记录集合。虽然现代 Spark 推荐使用 DataFrame/Dataset，但理解 RDD 是掌握 Spark 的基础。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">📌</span> RDD 五大核心特性</h3>
+    <div class="card">
+      <ol>
+        <li><strong>分区列表（Partitions）</strong>：数据被切分为多个分区，分布在集群不同节点上并行处理</li>
+        <li><strong>计算函数</strong>：每个分区都有对应的计算函数，定义如何生成该分区的数据</li>
+        <li><strong>依赖列表</strong>：记录与其他 RDD 的血缘关系（Lineage），用于容错恢复</li>
+        <li><strong>分区器（Partitioner）</strong>：可选，定义 key-value 类型 RDD 的分区策略（Hash / Range）</li>
+        <li><strong>首选位置列表</strong>：可选，指定每个分区的最优计算位置（数据本地性）</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🔧</span> RDD 创建与基本操作</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">rdd_basics.py · PySpark</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyspark <span class="kw">import</span> SparkContext
+
+<span class="cmt"># 初始化 SparkContext</span>
+sc = SparkContext(<span class="str">"local[*]"</span>, <span class="str">"RDD_Demo"</span>)
+
+<span class="cmt"># ── 方式1：从集合创建 RDD ──</span>
+rdd1 = sc.parallelize([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>, <span class="num">7</span>, <span class="num">8</span>], numSlices=<span class="num">4</span>)
+<span class="builtin">print</span>(<span class="str">f"分区数: {rdd1.getNumPartitions()}"</span>)  <span class="cmt"># 4</span>
+
+<span class="cmt"># ── 方式2：从文件创建 RDD ──</span>
+<span class="cmt"># rdd2 = sc.textFile("hdfs://path/to/data.txt")</span>
+<span class="cmt"># rdd3 = sc.wholeTextFiles("hdfs://path/to/dir/")  # 每个文件作为一个 (filename, content) 对</span>
+
+<span class="cmt"># ═══ Transformation 操作（惰性求值，不立即执行）═══</span>
+mapped = rdd1.<span class="fn">map</span>(<span class="kw">lambda</span> x: x * x)          <span class="cmt"># [1, 4, 9, 16, 25, 36, 49, 64]</span>
+filtered = mapped.<span class="fn">filter</span>(<span class="kw">lambda</span> x: x > <span class="num">10</span>)    <span class="cmt"># [16, 25, 36, 49, 64]</span>
+flatmapped = rdd1.<span class="fn">flatMap</span>(<span class="kw">lambda</span> x: <span class="fn">range</span>(x))  <span class="cmt"># 展平：[0, 0,1, 0,1,2, ...]</span>
+
+<span class="cmt"># ── KV 操作 ──</span>
+pairs = sc.parallelize([(<span class="str">"apple"</span>, <span class="num">3</span>), (<span class="str">"banana"</span>, <span class="num">5</span>), (<span class="str">"apple"</span>, <span class="num">2</span>), (<span class="str">"banana"</span>, <span class="num">7</span>)])
+reduced = pairs.<span class="fn">reduceByKey</span>(<span class="kw">lambda</span> a, b: a + b)  <span class="cmt"># [("apple", 5), ("banana", 12)]</span>
+grouped = pairs.<span class="fn">groupByKey</span>().<span class="fn">mapValues</span>(<span class="fn">list</span>)       <span class="cmt"># [("apple", [3, 2]), ("banana", [5, 7])]</span>
+
+<span class="cmt"># ── 排序 ──</span>
+sorted_rdd = reduced.<span class="fn">sortBy</span>(<span class="kw">lambda</span> x: x[<span class="num">1</span>], ascending=<span class="kw">False</span>)  <span class="cmt"># 按值降序</span>
+
+<span class="cmt"># ═══ Action 操作（触发实际计算）═══</span>
+<span class="builtin">print</span>(<span class="str">f"collect: {filtered.collect()}"</span>)   <span class="cmt"># [16, 25, 36, 49, 64]</span>
+<span class="builtin">print</span>(<span class="str">f"count: {filtered.count()}"</span>)       <span class="cmt"># 5</span>
+<span class="builtin">print</span>(<span class="str">f"first: {filtered.first()}"</span>)        <span class="cmt"># 16</span>
+<span class="builtin">print</span>(<span class="str">f"take(3): {filtered.take(3)}"</span>)      <span class="cmt"># [16, 25, 36]</span>
+<span class="builtin">print</span>(<span class="str">f"reduce: {filtered.reduce(lambda x, y: x + y)}"</span>)  <span class="cmt"># 190</span>
+<span class="builtin">print</span>(<span class="str">f"sorted: {sorted_rdd.collect()}"</span>)  <span class="cmt"># [("banana", 12), ("apple", 5)]</span>
+
+sc.stop()</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果</div>
+        <div class="out-content">分区数: 4
+collect: [16, 25, 36, 49, 64]
+count: 5
+first: 16
+take(3): [16, 25, 36]
+reduce: 190
+sorted: [('banana', 12), ('apple', 5)]</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🔄</span> Transformation vs Action 速查表</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>类别</th><th>操作</th><th>说明</th><th>返回值</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="6"><strong>Transformation</strong><br><span style="font-size:.72rem;color:var(--text3)">惰性求值</span></td><td><code>map(func)</code></td><td>对每个元素应用函数</td><td>RDD</td></tr>
+          <tr><td><code>filter(func)</code></td><td>过滤满足条件的元素</td><td>RDD</td></tr>
+          <tr><td><code>flatMap(func)</code></td><td>map 后展平</td><td>RDD</td></tr>
+          <tr><td><code>distinct()</code></td><td>去重</td><td>RDD</td></tr>
+          <tr><td><code>union(other)</code></td><td>合并两个 RDD</td><td>RDD</td></tr>
+          <tr><td><code>reduceByKey(func)</code></td><td>按 key 聚合</td><td>RDD</td></tr>
+          <tr><td rowspan="5"><strong>Action</strong><br><span style="font-size:.72rem;color:var(--text3)">触发计算</span></td><td><code>collect()</code></td><td>收集所有元素到 Driver</td><td>List</td></tr>
+          <tr><td><code>count()</code></td><td>元素计数</td><td>int</td></tr>
+          <tr><td><code>first()</code></td><td>取第一个元素</td><td>element</td></tr>
+          <tr><td><code>take(n)</code></td><td>取前 n 个</td><td>List</td></tr>
+          <tr><td><code>reduce(func)</code></td><td>聚合所有元素</td><td>element</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">💾</span> RDD 持久化（缓存）</h3>
+    <div class="card">
+      <p>RDD 默认每次 Action 都会重新计算。对于会被多次使用的 RDD，应调用 <code>persist()</code> 或 <code>cache()</code> 缓存到内存中，避免重复计算。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">rdd_persist.py · PySpark</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyspark <span class="kw">import</span> SparkContext
+<span class="kw">from</span> pyspark.storagelevel <span class="kw">import</span> StorageLevel
+
+sc = SparkContext(<span class="str">"local[*]"</span>, <span class="str">"Persist_Demo"</span>)
+
+rdd = sc.parallelize(<span class="fn">range</span>(<span class="num">1000000</span>)).<span class="fn">map</span>(<span class="kw">lambda</span> x: (x, x * x))
+
+<span class="cmt"># ── 存储级别 ──</span>
+<span class="cmt"># MEMORY_ONLY  : 仅内存（默认），放不下的分区不缓存，用时重算</span>
+<span class="cmt"># MEMORY_AND_DISK : 内存放不下的溢写到磁盘</span>
+<span class="cmt"># DISK_ONLY    : 仅磁盘</span>
+<span class="cmt"># MEMORY_ONLY_SER : 序列化后存内存，节省空间但增加 CPU 开销</span>
+
+rdd.<span class="fn">persist</span>(StorageLevel.MEMORY_AND_DISK)
+
+<span class="cmt"># 第一次 Action 触发计算并缓存</span>
+result1 = rdd.<span class="fn">filter</span>(<span class="kw">lambda</span> x: x[<span class="num">1</span>] > <span class="num">100</span>).<span class="fn">count</span>()
+<span class="builtin">print</span>(<span class="str">f"第一次 count: {result1}"</span>)  <span class="cmt"># 计算并缓存</span>
+
+<span class="cmt"># 第二次 Action 直接从缓存读取，无需重算</span>
+result2 = rdd.<span class="fn">filter</span>(<span class="kw">lambda</span> x: x[<span class="num">0</span>] < <span class="num">500</span>).<span class="fn">count</span>()
+<span class="builtin">print</span>(<span class="str">f"第二次 count (走缓存): {result2}"</span>)
+
+<span class="cmt"># 查看缓存信息</span>
+<span class="builtin">print</span>(<span class="str">f"缓存状态: {rdd.getStorageLevel()}"</span>)
+<span class="builtin">print</span>(<span class="str">f"缓存大小: {rdd.context.getRDDStorageInfo()[0].memSize} bytes"</span>)
+
+<span class="cmt"># 手动释放缓存</span>
+rdd.<span class="fn">unpersist</span>()
+sc.stop()</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果</div>
+        <div class="out-content">第一次 count: 999989
+第二次 count (走缓存): 500
+缓存状态: Memory Serialized 1x Replicated
+缓存大小: 16777216 bytes</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><strong>避坑</strong>：<code>cache()</code> 是 <code>persist(MEMORY_ONLY)</code> 的简写。如果你的 RDD 数据量大于内存，使用 <code>MEMORY_ONLY</code> 会导致部分分区不缓存、每次重算。生产环境推荐 <code>MEMORY_AND_DISK</code>。另外，<code>collect()</code> 会把所有数据拉到 Driver 内存中，大数据量下会导致 OOM，应优先使用 <code>take()</code> 或 <code>foreach()</code>。</div>
+  </div>
+</div>
+
+<!-- ── Spark DataFrame ── -->
+<div class="sec" id="spark-dataframe">
+  <h2 class="sec-title"><span class="n">3</span> Spark DataFrame — 结构化数据</h2>
+  <p class="sec-intro">DataFrame 是 Spark 2.0+ 推荐使用的分布式数据集，类似于关系数据库中的表，带有 Schema（列名和类型）。底层使用 Catalyst 优化器和 Tungsten 执行引擎，性能远超 RDD。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🏗️</span> RDD vs DataFrame 性能对比</h3>
+    <div class="cmp-grid">
+      <div class="cmp-card spark">
+        <h4>🐌 RDD</h4>
+        <ul>
+          <li>无 Schema，JVM 对象序列化开销大</li>
+          <li>无查询优化器，用户自行优化</li>
+          <li>Python RDD 需要进程间通信</li>
+          <li>GC 压力大</li>
+        </ul>
+      </div>
+      <div class="cmp-card flink">
+        <h4>🚀 DataFrame</h4>
+        <ul>
+          <li>有 Schema，使用 Tungsten 二进制格式</li>
+          <li>Catalyst 优化器自动优化执行计划</li>
+          <li>Python/Scala/Java 性能一致</li>
+          <li>堆外内存管理，减少 GC</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🔧</span> DataFrame 创建与基本操作</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">dataframe_basics.py · PySpark</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyspark.sql <span class="kw">import</span> SparkSession
+<span class="kw">from</span> pyspark.sql.types <span class="kw">import</span> StructType, StructField, StringType, IntegerType, DoubleType
+
+<span class="cmt"># 创建 SparkSession（Spark 2.0+ 统一入口）</span>
+spark = SparkSession.builder \
+    .appName(<span class="str">"DataFrame_Demo"</span>) \
+    .master(<span class="str">"local[*]"</span>) \
+    .getOrCreate()
+
+<span class="cmt"># ── 方式1：从 JSON/CSV 文件创建 ──</span>
+<span class="cmt"># df = spark.read.json("hdfs://path/to/data.json")</span>
+<span class="cmt"># df = spark.read.csv("data.csv", header=True, inferSchema=True)</span>
+<span class="cmt"># df = spark.read.parquet("hdfs://path/to/data.parquet")</span>
+
+<span class="cmt"># ── 方式2：从列表 + 显式 Schema 创建 ──</span>
+schema = StructType([
+    StructField(<span class="str">"emp_id"</span>, IntegerType(), <span class="kw">True</span>),
+    StructField(<span class="str">"name"</span>, StringType(), <span class="kw">True</span>),
+    StructField(<span class="str">"department"</span>, StringType(), <span class="kw">True</span>),
+    StructField(<span class="str">"salary"</span>, DoubleType(), <span class="kw">True</span>),
+])
+
+data = [
+    (<span class="num">1</span>, <span class="str">"张三"</span>, <span class="str">"工程部"</span>, <span class="num">25000.0</span>),
+    (<span class="num">2</span>, <span class="str">"李四"</span>, <span class="str">"工程部"</span>, <span class="num">30000.0</span>),
+    (<span class="num">3</span>, <span class="str">"王五"</span>, <span class="str">"市场部"</span>, <span class="num">20000.0</span>),
+    (<span class="num">4</span>, <span class="str">"赵六"</span>, <span class="str">"市场部"</span>, <span class="num">22000.0</span>),
+    (<span class="num">5</span>, <span class="str">"孙七"</span>, <span class="str">"工程部"</span>, <span class="num">28000.0</span>),
+    (<span class="num">6</span>, <span class="str">"周八"</span>, <span class="str">"财务部"</span>, <span class="num">18000.0</span>),
+    (<span class="num">7</span>, <span class="str">"吴九"</span>, <span class="str">"财务部"</span>, <span class="kw">None</span>),  <span class="cmt"># 缺失薪资</span>
+]
+
+df = spark.createDataFrame(data, schema=schema)
+
+<span class="cmt"># ── 查看数据 ──</span>
+df.show()
+df.printSchema()
+<span class="builtin">print</span>(<span class="str">f"行数: {df.count()}, 列数: {len(df.columns)}"</span>)</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果</div>
+        <div class="out-content">+------+----+----------+-------+
+|emp_id|name|department| salary|
++------+----+----------+-------+
+|     1|张三|    工程部|25000.0|
+|     2|李四|    工程部|30000.0|
+|     3|王五|    市场部|20000.0|
+|     4|赵六|    市场部|22000.0|
+|     5|孙七|    工程部|28000.0|
+|     6|周八|    财务部|18000.0|
+|     7|吴九|    财务部|   null|
++------+----+----------+-------+
+
+root
+ |-- emp_id: integer (nullable = true)
+ |-- name: string (nullable = true)
+ |-- department: string (nullable = true)
+ |-- salary: double (nullable = true)
+
+行数: 7, 列数: 4</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🔎</span> DataFrame 数据操作实战</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">dataframe_ops.py · PySpark</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyspark.sql.functions <span class="kw">import</span> col, avg, sum, count, max, min, round, when, desc
+
+<span class="cmt"># ═══ 选择与过滤 ═══</span>
+<span class="cmt"># 选择列</span>
+df.select(<span class="str">"name"</span>, <span class="str">"salary"</span>).show(<span class="num">3</span>)
+
+<span class="cmt"># 条件过滤：薪资 > 20000 的工程部员工</span>
+df.filter((col(<span class="str">"salary"</span>) > <span class="num">20000</span>) &amp; (col(<span class="str">"department"</span>) == <span class="str">"工程部"</span>)).show()
+
+<span class="cmt"># 条件表达式</span>
+df.<span class="fn">withColumn</span>(<span class="str">"level"</span>, when(col(<span class="str">"salary"</span>) >= <span class="num">28000</span>, <span class="str">"高级"</span>)
+                     .when(col(<span class="str">"salary"</span>) >= <span class="num">22000</span>, <span class="str">"中级"</span>)
+                     .otherwise(<span class="str">"初级"</span>)).show()
+
+<span class="cmt"># ═══ 分组聚合 ═══</span>
+<span class="cmt"># 按部门统计：人数、平均薪资、最高薪资、总薪资</span>
+dept_stats = df.groupBy(<span class="str">"department"</span>).agg(
+    count(<span class="str">"*"</span>).alias(<span class="str">"headcount"</span>),
+    round(avg(<span class="str">"salary"</span>), <span class="num">2</span>).alias(<span class="str">"avg_salary"</span>),
+    max(<span class="str">"salary"</span>).alias(<span class="str">"max_salary"</span>),
+    sum(<span class="str">"salary"</span>).alias(<span class="str">"total_salary"</span>)
+).orderBy(desc(<span class="str">"avg_salary"</span>))
+dept_stats.show()
+
+<span class="cmt"># ═══ 缺失值处理 ═══</span>
+<span class="cmt"># 填充缺失薪资为 0</span>
+df_filled = df.fillna({<span class="str">"salary"</span>: <span class="num">0.0</span>})
+
+<span class="cmt"># 或用部门均值填充</span>
+dept_avg = df.groupBy(<span class="str">"department"</span>).agg(avg(<span class="str">"salary"</span>).alias(<span class="str">"dept_avg"</span>))
+df_imputed = df.join(dept_avg, <span class="str">"department"</span>) \
+    .withColumn(<span class="str">"salary"</span>, when(col(<span class="str">"salary"</span>).isNull(), col(<span class="str">"dept_avg"</span>))
+                              .otherwise(col(<span class="str">"salary"</span>)))
+df_imputed.show()
+
+<span class="cmt"># ═══ Join 操作 ═══</span>
+dept_info = spark.createDataFrame([
+    (<span class="str">"工程部"</span>, <span class="str">"3号楼"</span>, <span class="num">50</span>),
+    (<span class="str">"市场部"</span>, <span class="str">"1号楼"</span>, <span class="num">20</span>),
+    (<span class="str">"财务部"</span>, <span class="str">"2号楼"</span>, <span class="num">10</span>),
+], [<span class="str">"department"</span>, <span class="str">"building"</span>, <span class="str">"capacity"</span>])
+
+joined = df.join(dept_info, <span class="str">"department"</span>, <span class="str">"left"</span>)
+joined.show()</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果（分组聚合部分）</div>
+        <div class="out-content">+----------+---------+----------+----------+------------+
+|department|headcount|avg_salary|max_salary|total_salary|
++----------+---------+----------+----------+------------+
+|    工程部|        3|   27666.7|   30000.0|     83000.0|
+|    市场部|        2|   21000.0|   22000.0|     42000.0|
+|    财务部|        2|   18000.0|   18000.0|     18000.0|
++----------+---------+----------+----------+------------+
+
+注：财务部 avg_salary 因吴九 salary 为 null 被自动忽略</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip spark">
+    <span class="ti">🔥</span>
+    <div><strong>Catalyst 优化器工作原理</strong>：DataFrame 操作会经过四步优化 —— ① <strong>分析</strong>（解析列名、类型，生成逻辑计划）→ ② <strong>逻辑优化</strong>（谓词下推、列裁剪、常量折叠）→ ③ <strong>物理计划生成</strong>（生成多个物理计划，基于代价选择最优）→ ④ <strong>代码生成</strong>（Tungsten 将操作编译为 JVM 字节码）。这就是为什么 DataFrame 比 RDD 快 —— 用户写的是声明式 API，优化器自动帮你做最优执行。</div>
+  </div>
+</div>
+
+<!-- ── Spark SQL ── -->
+<div class="sec" id="spark-sql">
+  <h2 class="sec-title"><span class="n">4</span> Spark SQL — SQL 查询引擎</h2>
+  <p class="sec-intro">Spark SQL 让你用标准 SQL 查询结构化数据，底层与 DataFrame 共享同一套引擎和优化器。你可以混用 DataFrame API 和 SQL，两者完全等价。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">📝</span> SQL 查询与 DataFrame 等价写法</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">spark_sql_demo.py · PySpark</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyspark.sql <span class="kw">import</span> SparkSession
+<span class="kw">from</span> pyspark.sql.functions <span class="kw">import</span> col, avg, sum, count, desc
+
+spark = SparkSession.builder.appName(<span class="str">"SparkSQL_Demo"</span>).master(<span class="str">"local[*]"</span>).getOrCreate()
+
+<span class="cmt"># 创建示例数据：电商订单</span>
+orders = spark.createDataFrame([
+    (<span class="num">1001</span>, <span class="str">"user_A"</span>, <span class="str">"手机"</span>, <span class="num">2999.0</span>, <span class="str">"2024-01-15"</span>),
+    (<span class="num">1002</span>, <span class="str">"user_B"</span>, <span class="str">"电脑"</span>, <span class="num">8999.0</span>, <span class="str">"2024-01-15"</span>),
+    (<span class="num">1003</span>, <span class="str">"user_A"</span>, <span class="str">"耳机"</span>, <span class="num">399.0</span>, <span class="str">"2024-01-16"</span>),
+    (<span class="num">1004</span>, <span class="str">"user_C"</span>, <span class="str">"手机"</span>, <span class="num">2999.0</span>, <span class="str">"2024-01-16"</span>),
+    (<span class="num">1005</span>, <span class="str">"user_B"</span>, <span class="str">"平板"</span>, <span class="num">4999.0</span>, <span class="str">"2024-01-17"</span>),
+    (<span class="num">1006</span>, <span class="str">"user_A"</span>, <span class="str">"电脑"</span>, <span class="num">8999.0</span>, <span class="str">"2024-01-17"</span>),
+], [<span class="str">"order_id"</span>, <span class="str">"user_id"</span>, <span class="str">"product"</span>, <span class="str">"amount"</span>, <span class="str">"order_date"</span>])
+
+<span class="cmt"># 注册为临时视图</span>
+orders.createOrReplaceTempView(<span class="str">"orders"</span>)
+
+<span class="cmt"># ═══ 方式1：纯 SQL 查询 ═══</span>
+<span class="cmt"># 每个用户的消费总额 TOP 3</span>
+result_sql = spark.sql(<span class="str">"""
+    SELECT user_id,
+           COUNT(*) as order_count,
+           ROUND(SUM(amount), 2) as total_spent,
+           ROUND(AVG(amount), 2) as avg_order
+    FROM orders
+    GROUP BY user_id
+    ORDER BY total_spent DESC
+    LIMIT 3
+"""</span>)
+result_sql.show()
+
+<span class="cmt"># ═══ 方式2：等价的 DataFrame API ═══</span>
+result_df = orders.groupBy(<span class="str">"user_id"</span>).agg(
+    count(<span class="str">"*"</span>).alias(<span class="str">"order_count"</span>),
+    sum(<span class="str">"amount"</span>).alias(<span class="str">"total_spent"</span>),
+    avg(<span class="str">"amount"</span>).alias(<span class="str">"avg_order"</span>)
+).orderBy(desc(<span class="str">"total_spent"</span>)).limit(<span class="num">3</span>)
+result_df.show()
+
+<span class="cmt"># 两者输出完全一致！</span>
+
+<span class="cmt"># ═══ 窗口函数 ═══</span>
+spark.sql(<span class="str">"""
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY amount DESC) as rn,
+           RANK() OVER (ORDER BY amount DESC) as rank_all,
+           SUM(amount) OVER (PARTITION BY user_id) as user_total
+    FROM orders
+    ORDER BY user_id, rn
+"""</span>).show()
+
+<span class="cmt"># ═══ 自定义 UDF ═══</span>
+<span class="kw">from</span> pyspark.sql.functions <span class="kw">import</span> udf
+<span class="kw">from</span> pyspark.sql.types <span class="kw">import</span> StringType
+
+<span class="cmt"># Python UDF（性能较差，每行都有 Python↔JVM 通信开销）</span>
+@udf(returnType=StringType())
+<span class="kw">def</span> <span class="fn">price_level</span>(amount):
+    <span class="kw">if</span> amount >= <span class="num">5000</span>: <span class="kw">return</span> <span class="str">"高消费"</span>
+    <span class="kw">elif</span> amount >= <span class="num">1000</span>: <span class="kw">return</span> <span class="str">"中消费"</span>
+    <span class="kw">else</span>: <span class="kw">return</span> <span class="str">"低消费"</span>
+
+orders.withColumn(<span class="str">"level"</span>, price_level(col(<span class="str">"amount"</span>))).show()
+
+spark.stop()</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果（SQL 查询部分）</div>
+        <div class="out-content">+-------+-----------+-----------+----------+
+|user_id|order_count|total_spent|avg_order|
++-------+-----------+-----------+----------+
+| user_A|          3|    12397.0|  4132.33|
+| user_B|          2|    13998.0|   6999.0|
+| user_C|          1|     2999.0|   2999.0|
++-------+-----------+-----------+----------+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚡</span>
+    <div><strong>UDF 性能陷阱</strong>：Python UDF 会破坏 Catalyst 优化（无法进行谓词下推等优化），并且每行数据都需要 Python↔JVM 序列化。生产环境建议：<br>① 优先使用 Spark 内置函数（<code>pyspark.sql.functions</code>）<br>② 必须用 UDF 时，考虑 Pandas UDF（向量化，性能提升 10-100 倍）<br>③ 用 <code>spark.sql()</code> 注册 SQL UDF 也可以提升性能</div>
+  </div>
+</div>
+
+<!-- ── Spark Streaming ── -->
+<div class="sec" id="spark-streaming">
+  <h2 class="sec-title"><span class="n">5</span> Spark Streaming — 流处理</h2>
+  <p class="sec-intro">Spark Streaming 有两代 API：旧版 DStream（已过时）和新版 Structured Streaming（推荐）。Structured Streaming 基于 Spark SQL 引擎，将流视为一个不断增长的无限表，使用微批（Micro-Batch）模型处理。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🌊</span> Structured Streaming 核心模型</h3>
+    <div class="card">
+      <p>Structured Streaming 的核心思想：把流数据看作一个<strong>无边界的 DataFrame</strong>，每来一批新数据就像在表末尾追加了新行。你可以用与批处理完全相同的 DataFrame/Dataset API 来处理流数据。</p>
+      <div class="tip info">
+        <span class="ti">🔄</span>
+        <div><strong>微批处理模型</strong>：Spark 将到达的数据切成小批次（默认 100ms 间隔），每个批次作为一个 DataFrame 处理。<strong>优点</strong>：容错简单（批次级别 exactly-once）、与批处理统一。<strong>缺点</strong>：延迟下限为批次间隔（100ms~秒级），不适合超低延迟场景。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🔧</span> Structured Streaming 实战：实时日志分析</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">structured_streaming.py · PySpark</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyspark.sql <span class="kw">import</span> SparkSession
+<span class="kw">from</span> pyspark.sql.functions <span class="kw">import</span> col, explode, split, window, current_timestamp
+
+spark = SparkSession.builder \
+    .appName(<span class="str">"Streaming_LogAnalysis"</span>) \
+    .master(<span class="str">"local[*]"</span>) \
+    .config(<span class="str">"spark.sql.shuffle.partitions"</span>, <span class="str">"4"</span>) \
+    .getOrCreate()
+
+spark.sparkContext.setLogLevel(<span class="str">"WARN"</span>)
+
+<span class="cmt"># ═══ 1. 读取数据源（以 Socket 为例）═══</span>
+<span class="cmt"># 实际场景：kafka, rate, file 等</span>
+lines = spark.readStream \
+    .format(<span class="str">"socket"</span>) \
+    .option(<span class="str">"host"</span>, <span class="str">"localhost"</span>) \
+    .option(<span class="str">"port"</span>, <span class="num">9999</span>) \
+    .load()
+
+<span class="cmt"># ═══ 2. 数据处理（与批处理 DataFrame API 完全一致）═══</span>
+<span class="cmt"># 假设每行格式：ERROR 2024-01-15 10:30:00 NullPointerException</span>
+words = lines.select(
+    explode(split(col(<span class="str">"value"</span>), <span class="str">" "</span>)).alias(<span class="str">"word"</span>)
+)
+
+<span class="cmt"># ── 简单词频统计 ──</span>
+word_counts = words.groupBy(<span class="str">"word"</span>).count()
+
+<span class="cmt"># ── 带时间窗口的统计（每 10 秒一个窗口，窗口滑动 5 秒）──</span>
+<span class="cmt"># 需要有 timestamp 列</span>
+<span class="cmt"># windowed = words \</span>
+<span class="cmt">#     .withColumn("ts", current_timestamp()) \</span>
+<span class="cmt">#     .groupBy(window(col("ts"), "10 seconds", "5 seconds"), col("word")) \</span>
+<span class="cmt">#     .count()</span>
+
+<span class="cmt"># ═══ 3. 输出到控制台 ═══</span>
+query = word_counts.writeStream \
+    .outputMode(<span class="str">"complete"</span>)  <span class="cmt"># complete | append | update</span> \
+    .format(<span class="str">"console"</span>) \
+    .option(<span class="str">"truncate"</span>, <span class="str">"false"</span>) \
+    .option(<span class="str">"numRows"</span>, <span class="num">20</span>) \
+    .trigger(processingTime=<span class="str">"5 seconds"</span>)  <span class="cmt"># 每 5 秒处理一次</span> \
+    .start()
+
+<span class="cmt"># 等待流终止</span>
+query.awaitTermination()
+
+<span class="cmt"># ═══ 4. 输出到 Kafka（生产场景）═══</span>
+<span class="cmt"># query = word_counts \</span>
+<span class="cmt">#     .selectExpr("CAST(word AS STRING) as key", "CAST(count AS STRING) as value") \</span>
+<span class="cmt">#     .writeStream \</span>
+<span class="cmt">#     .format("kafka") \</span>
+<span class="cmt">#     .option("kafka.bootstrap.servers", "localhost:9092") \</span>
+<span class="cmt">#     .option("topic", "word_counts") \</span>
+<span class="cmt">#     .option("checkpointLocation", "/checkpoint/wc") \</span>
+<span class="cmt">#     .outputMode("update") \</span>
+<span class="cmt">#     .start()</span>
+
+spark.stop()</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果（控制台持续输出）</div>
+        <div class="out-content">-------------------------------------------
+Batch: 0
+-------------------------------------------
++--------+-----+
+|   word |count|
++--------+-----+
+|  ERROR |    3|
+|   WARN |    2|
+|   INFO |    5|
++--------+-----+
+
+-------------------------------------------
+Batch: 1
+-------------------------------------------
++--------+-----+
+|   word |count|
++--------+-----+
+|  ERROR |    7|
+|   WARN |    5|
+|   INFO |   12|
++--------+-----+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">📤</span> 输出模式（Output Mode）</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>模式</th><th>行为</th><th>适用场景</th><th>限制</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>complete</code></td><td>每次输出完整结果表</td><td>聚合查询（如词频统计）</td><td>数据量大时性能差</td></tr>
+          <tr><td><code>update</code></td><td>仅输出有变化的行</td><td>聚合查询、增量更新</td><td>无聚合时等同于 append</td></tr>
+          <tr><td><code>append</code></td><td>仅输出新增的行</td><td>非聚合查询、ETL 入库</td><td>聚合查询需配合 watermark</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tip spark">
+    <span class="ti">💧</span>
+    <div><strong>Watermark 机制</strong>：处理乱序数据的关键。通过 <code>.withWatermark("event_time", "10 minutes")</code> 告诉引擎：数据最多延迟 10 分钟到达。超过 watermark 的旧数据会被丢弃，这样 append 模式下的聚合查询也能输出（因为引擎知道不会再有更旧的数据到来）。</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PART 2: APACHE FLINK
+     ═══════════════════════════════════════════════════ -->
+
+<!-- ── Flink Overview ── -->
+<div class="sec" id="flink-overview">
+  <h2 class="sec-title flink"><span class="n">6</span> Apache Flink 概述</h2>
+  <p class="sec-intro">Apache Flink 是一个真正的流优先（stream-first）分布式处理框架，支持精确一次（exactly-once）语义。与 Spark 的微批不同，Flink 逐条处理数据，延迟可达毫秒级。Flink 同样支持批处理 —— 批处理被看作是有界的流。</p>
+
+  <div class="card flink">
+    <h4>🏗️ Flink 架构核心组件</h4>
+    <div class="arch-diagram">
+      <div class="arch-title">Flink 集群架构</div>
+      <svg class="arch-svg" width="680" height="340" viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg">
+        <!-- JobManager -->
+        <rect x="220" y="10" width="240" height="100" rx="8" fill="#fef3f2" stroke="#E6522F" stroke-width="2"/>
+        <text x="340" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">JobManager</text>
+        <rect x="235" y="42" width="200" height="22" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="335" y="57" text-anchor="middle" font-size="10" fill="#c0392b">ResourceManager</text>
+        <rect x="235" y="68" width="95" height="22" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="282" y="83" text-anchor="middle" font-size="9" fill="#c0392b">Dispatcher</text>
+        <rect x="340" y="68" width="95" height="22" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="387" y="83" text-anchor="middle" font-size="9" fill="#c0392b">JobMaster</text>
+        <text x="340" y="102" text-anchor="middle" font-size="8" fill="#5a6170">调度 / 容错 / Checkpoint 协调</text>
+
+        <!-- Lines -->
+        <line x1="260" y1="110" x2="160" y2="160" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="340" y1="110" x2="340" y2="160" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="420" y1="110" x2="520" y2="160" stroke="#94a3b8" stroke-width="2"/>
+
+        <!-- TaskManagers -->
+        <rect x="60" y="160" width="200" height="160" rx="8" fill="#fef3f2" stroke="#E6522F" stroke-width="2"/>
+        <text x="160" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#c0392b">TaskManager 1</text>
+        <rect x="75" y="194" width="80" height="30" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="115" y="213" text-anchor="middle" font-size="9" fill="#c0392b">Slot 1</text>
+        <rect x="165" y="194" width="80" height="30" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="205" y="213" text-anchor="middle" font-size="9" fill="#c0392b">Slot 2</text>
+        <rect x="75" y="232" width="170" height="24" rx="4" fill="#ccfbf1" stroke="#0d9488" stroke-width="1"/>
+        <text x="160" y="248" text-anchor="middle" font-size="9" fill="#0d9488">State Backend (RocksDB)</text>
+        <rect x="75" y="262" width="170" height="24" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+        <text x="160" y="278" text-anchor="middle" font-size="9" fill="#059669">Network Buffers</text>
+        <rect x="75" y="292" width="170" height="20" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+        <text x="160" y="305" text-anchor="middle" font-size="8" fill="#6b7280">JVM Process</text>
+
+        <rect x="280" y="160" width="160" height="160" rx="8" fill="#fef3f2" stroke="#E6522F" stroke-width="2"/>
+        <text x="360" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#c0392b">TaskManager 2</text>
+        <rect x="295" y="194" width="60" height="30" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="325" y="213" text-anchor="middle" font-size="9" fill="#c0392b">Slot 1</text>
+        <rect x="365" y="194" width="60" height="30" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="395" y="213" text-anchor="middle" font-size="9" fill="#c0392b">Slot 2</text>
+        <rect x="295" y="232" width="130" height="24" rx="4" fill="#ccfbf1" stroke="#0d9488" stroke-width="1"/>
+        <text x="360" y="248" text-anchor="middle" font-size="9" fill="#0d9488">State Backend</text>
+        <rect x="295" y="262" width="130" height="24" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+        <text x="360" y="278" text-anchor="middle" font-size="9" fill="#059669">Network</text>
+        <rect x="295" y="292" width="130" height="20" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+        <text x="360" y="305" text-anchor="middle" font-size="8" fill="#6b7280">JVM</text>
+
+        <rect x="460" y="160" width="160" height="160" rx="8" fill="#fef3f2" stroke="#E6522F" stroke-width="2"/>
+        <text x="540" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#c0392b">TaskManager N</text>
+        <rect x="475" y="194" width="60" height="30" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="505" y="213" text-anchor="middle" font-size="9" fill="#c0392b">Slot</text>
+        <rect x="545" y="194" width="60" height="30" rx="4" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+        <text x="575" y="213" text-anchor="middle" font-size="9" fill="#c0392b">Slot</text>
+        <rect x="475" y="232" width="130" height="24" rx="4" fill="#ccfbf1" stroke="#0d9488" stroke-width="1"/>
+        <text x="540" y="248" text-anchor="middle" font-size="9" fill="#0d9488">State Backend</text>
+        <rect x="475" y="262" width="130" height="24" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+        <text x="540" y="278" text-anchor="middle" font-size="9" fill="#059669">Network</text>
+        <rect x="475" y="292" width="130" height="20" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+        <text x="540" y="305" text-anchor="middle" font-size="8" fill="#6b7280">JVM</text>
+      </svg>
+    </div>
+    <ul>
+      <li><strong>JobManager</strong>：管理作业的全局协调器，包含三个子组件：
+        <ul>
+          <li><code>ResourceManager</code>：管理 TaskManager 资源（Slot 分配/回收）</li>
+          <li><code>Dispatcher</code>：接收作业提交，启动 JobMaster</li>
+          <li><code>JobMaster</code>：管理单个作业的执行，协调 Checkpoint 和故障恢复</li>
+        </ul>
+      </li>
+      <li><strong>TaskManager</strong>：工作进程，提供 Slot 执行 Task。每个 Slot 是一份固定的 CPU/内存资源</li>
+      <li><strong>State Backend</strong>：状态存储后端，支持 <code>HashMapStateBackend</code>（内存）和 <code>EmbeddedRocksDBStateBackend</code>（磁盘）</li>
+    </ul>
+  </div>
+
+  <div class="tip flink">
+    <span class="ti">💡</span>
+    <div><strong>流批一体的设计哲学</strong>：Flink 认为「批是有界流」—— 批处理只是流处理的一个特例（数据源有界、不再增长）。同一套 DataStream API 既可以处理无限流数据，也可以处理有限批数据，无需切换引擎或 API。这是 Flink 区别于 Spark 的核心设计差异。</div>
+  </div>
+</div>
+
+<!-- ── Flink DataStream API ── -->
+<div class="sec" id="flink-datastream">
+  <h2 class="sec-title flink"><span class="n">7</span> Flink DataStream API</h2>
+  <p class="sec-intro">DataStream API 是 Flink 的核心 API，用于定义数据流的处理逻辑。包含 Source（数据源）、Transformation（转换操作）和 Sink（输出）三个部分。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🔧</span> DataStream 基础：WordCount 流处理</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">flink_wordcount.py · PyFlink</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyflink.datastream <span class="kw">import</span> StreamExecutionEnvironment
+<span class="kw">from</span> pyflink.datastream.functions <span class="kw">import</span> MapFunction, FlatMapFunction
+<span class="kw">from</span> pyflink.common <span class="kw">import</span> Types
+
+<span class="cmt"># 创建执行环境</span>
+env = StreamExecutionEnvironment.get_execution_environment()
+env.set_parallelism(<span class="num">2</span>)
+
+<span class="cmt"># ═══ 1. Source：数据源 ═══</span>
+<span class="cmt"># 方式1：从集合创建（测试用）</span>
+ds = env.from_collection([
+    <span class="str">"flink spark flink"</span>,
+    <span class="str">"spark hadoop flink"</span>,
+    <span class="str">"flink flink spark"</span>,
+], type_info=Types.STRING())
+
+<span class="cmt"># 方式2：从 Kafka 创建（生产场景）</span>
+<span class="cmt"># from pyflink.datastream.connectors import KafkaSource</span>
+<span class="cmt"># kafka_source = KafkaSource.builder() \</span>
+<span class="cmt">#     .set_bootstrap_servers("localhost:9092") \</span>
+<span class="cmt">#     .set_topics("input-topic") \</span>
+<span class="cmt">#     .set_group_id("my-group") \</span>
+<span class="cmt">#     .set_value_only_deserializer(SimpleStringSchema()) \</span>
+<span class="cmt">#     .build()</span>
+<span class="cmt"># ds = env.from_source(kafka_source, WatermarkStrategy.no_watermarks(), "kafka-source")</span>
+
+<span class="cmt"># ═══ 2. Transformation：转换操作 ═══</span>
+<span class="cmt"># 分词 → (word, 1) → 按 word 分组 → 求和</span>
+
+<span class="kw">def</span> <span class="fn">tokenize</span>(line):
+    <span class="kw">for</span> word <span class="kw">in</span> line.<span class="fn">lower</span>().<span class="fn">split</span>():
+        <span class="kw">yield</span> (word, <span class="num">1</span>)
+
+<span class="cmt"># flatMap: 一行变多行</span>
+words = ds.flat_map(tokenize, output_type=Types.TUPLE([Types.STRING(), Types.INT()]))
+
+<span class="cmt"># keyBy: 按 key 分区（类似 Spark 的 reduceByKey）</span>
+<span class="cmt"># sum: 按 index 聚合</span>
+word_counts = words.key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]).sum(<span class="num">1</span>)
+
+<span class="cmt"># ═══ 3. Sink：输出 ═══</span>
+word_counts.print()  <span class="cmt"># 输出到标准输出</span>
+
+<span class="cmt"># 输出到文件</span>
+<span class="cmt"># word_counts.execute_and_collect() 或使用 FileSink</span>
+
+<span class="cmt"># ═══ 4. 触发执行 ═══</span>
+<span class="cmt"># Flink 是「先构建 DAG，最后统一提交」的模式</span>
+env.execute(<span class="str">"WordCount_Stream"</span>)</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果（持续输出）</div>
+        <div class="out-content">2> (flink,1)
+1> (spark,1)
+2> (flink,2)
+1> (hadoop,1)
+2> (flink,3)
+2> (flink,4)
+1> (spark,2)
+1> (spark,3)
+
+注：数字前缀表示并行子任务编号（Slot ID）
+    Flink 是逐条处理的，每来一条数据就输出一次更新</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🔄</span> 常用 Transformation 操作</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th class="flink-th">操作</th><th class="flink-th">说明</th><th class="flink-th">示例</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>map</code></td><td>一对一转换</td><td><code>ds.map(lambda x: x.upper())</code></td></tr>
+          <tr><td><code>flat_map</code></td><td>一对多转换</td><td><code>ds.flat_map(lambda line: line.split())</code></td></tr>
+          <tr><td><code>filter</code></td><td>过滤</td><td><code>ds.filter(lambda x: x > 0)</code></td></tr>
+          <tr><td><code>key_by</code></td><td>按 key 分区（Hash）</td><td><code>ds.key_by(lambda x: x[0])</code></td></tr>
+          <tr><td><code>reduce</code></td><td>按 key 归约</td><td><code>ds.key_by(...).reduce(lambda a,b: a+b)</code></td></tr>
+          <tr><td><code>union</code></td><td>合并多个流</td><td><code>ds1.union(ds2, ds3)</code></td></tr>
+          <tr><td><code>connect</code></td><td>连接两个不同类型的流</td><td><code>ds1.connect(ds2).map(fn1, fn2)</code></td></tr>
+          <tr><td><code>process</code></td><td>底层处理函数（可访问状态和时间）</td><td><code>ds.process(MyProcessFunction())</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">⏱️</span> Watermark 与事件时间</h3>
+    <div class="card flink">
+      <p>Flink 支持三种时间语义：<strong>事件时间</strong>（Event Time，数据实际发生的时间）、<strong>处理时间</strong>（Processing Time，处理数据的机器时间）、<strong>摄入时间</strong>（Ingestion Time，数据进入 Flink 的时间）。生产环境推荐使用事件时间 + Watermark。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">flink_watermark.py · PyFlink</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyflink.datastream <span class="kw">import</span> StreamExecutionEnvironment
+<span class="kw">from</span> pyflink.datastream <span class="kw">import</span> WatermarkStrategy
+<span class="kw">from</span> pyflink.common <span class="kw">import</span> Types, Duration
+<span class="kw">import</span> json
+<span class="kw">import</span> time
+
+env = StreamExecutionEnvironment.get_execution_environment()
+
+<span class="cmt"># 模拟传感器数据流：(sensor_id, temperature, timestamp_ms)</span>
+sensor_data = env.from_collection([
+    (<span class="str">"sensor_1"</span>, <span class="num">25.5</span>, <span class="num">1700000000000</span>),
+    (<span class="str">"sensor_2"</span>, <span class="num">30.1</span>, <span class="num">1700000001000</span>),
+    (<span class="str">"sensor_1"</span>, <span class="num">26.0</span>, <span class="num">1700000002000</span>),
+    <span class="cmt"># 乱序数据：事件时间比上一条早</span>
+    (<span class="str">"sensor_2"</span>, <span class="num">29.8</span>, <span class="num">1700000000000</span>),
+    (<span class="str">"sensor_1"</span>, <span class="num">27.5</span>, <span class="num">1700000003000</span>),
+], type_info=Types.TUPLE([Types.STRING(), Types.DOUBLE(), Types.LONG()]))
+
+<span class="cmt"># ── 定义 Watermark 策略 ──</span>
+<span class="cmt"># 允许 5 秒的乱序（延迟数据在 5 秒内仍可被正确处理）</span>
+watermark_strategy = WatermarkStrategy \
+    .for_bounded_out_of_orderness(Duration.of_seconds(<span class="num">5</span>)) \
+    .with_timestamp_assigner(<span class="kw">lambda</span> event, ts: event[<span class="num">2</span>])
+
+<span class="cmt"># 分配 Watermark</span>
+timed_ds = sensor_data.assign_timestamps_and_watermarks(watermark_strategy)
+
+<span class="cmt"># ── 按传感器 ID 分组，使用事件时间窗口 ──</span>
+result = timed_ds \
+    .key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]) \
+    .window(<span class="fn">TumblingEventTimeWindows.of</span>(Time.seconds(<span class="num">10</span>))) \
+    .reduce(<span class="kw">lambda</span> a, b: (a[<span class="num">0</span>], <span class="fn">max</span>(a[<span class="num">1</span>], b[<span class="num">1</span>]), a[<span class="num">2</span>]))
+
+result.print()
+env.execute(<span class="str">"Watermark_Demo"</span>)</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果</div>
+        <div class="out-content">sensor_1> (sensor_1, 27.5, 1700000000000)
+sensor_2> (sensor_2, 30.1, 1700000000000)
+
+Watermark 机制保证：即使 sensor_2 的第二条数据
+(29.8, ts=1700000000000) 晚于第一条 (30.1, ts=1700000001000)
+到达，它仍然会被正确归入对应的时间窗口</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Flink Table API ── -->
+<div class="sec" id="flink-table">
+  <h2 class="sec-title flink"><span class="n">8</span> Flink Table API & SQL</h2>
+  <p class="sec-intro">Table API 是 Flink 的声明式关系型 API，类似于 Spark 的 DataFrame。与 DataStream API 不同，Table API 操作的是「表」概念，支持 SQL 查询。Table API 和 SQL 可以与 DataStream API 无缝互转。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🔧</span> Table API 与 SQL 实战</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">flink_table_api.py · PyFlink</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyflink.table <span class="kw">import</span> EnvironmentSettings, TableEnvironment
+<span class="kw">from</span> pyflink.table <span class="kw">import</span> DataTypes
+<span class="kw">from</span> pyflink.table.descriptors <span class="kw">import</span> Schema
+
+<span class="cmt"># 创建 Table 环境（流模式）</span>
+settings = EnvironmentSettings.new_instance().in_streaming_mode().build()
+t_env = TableEnvironment.create(settings)
+
+<span class="cmt"># ═══ 1. 用 DDL 创建 Kafka Source 表 ═══</span>
+t_env.execute_sql(<span class="str">"""
+    CREATE TABLE orders (
+        order_id BIGINT,
+        user_id STRING,
+        product STRING,
+        amount DOUBLE,
+        order_time TIMESTAMP(3),
+        WATERMARK FOR order_time AS order_time - INTERVAL '5' SECOND
+    ) WITH (
+        'connector' = 'kafka',
+        'topic' = 'orders',
+        'properties.bootstrap.servers' = 'localhost:9092',
+        'properties.group.id' = 'flink-orders',
+        'format' = 'json',
+        'scan.startup.mode' = 'latest-offset'
+    )
+"""</span>)
+
+<span class="cmt"># ═══ 2. 用 DDL 创建 Sink 表 ═══</span>
+t_env.execute_sql(<span class="str">"""
+    CREATE TABLE result_top_products (
+        window_end TIMESTAMP(3),
+        product STRING,
+        total_amount DOUBLE,
+        order_count BIGINT,
+        PRIMARY KEY (window_end, product) NOT ENFORCED
+    ) WITH (
+        'connector' = 'upsert-kafka',
+        'topic' = 'top-products',
+        'properties.bootstrap.servers' = 'localhost:9092',
+        'key.format' = 'json',
+        'value.format' = 'json'
+    )
+"""</span>)
+
+<span class="cmt"># ═══ 3. 方式A：SQL 查询 ═══</span>
+<span class="cmt"># 每 1 分钟窗口内，按商品统计销售额 TOP N</span>
+t_env.execute_sql(<span class="str">"""
+    INSERT INTO result_top_products
+    SELECT
+        window_end,
+        product,
+        SUM(amount) as total_amount,
+        COUNT(*) as order_count
+    FROM TABLE(
+        TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE)
+    )
+    GROUP BY window_end, product
+    HAVING SUM(amount) > 100
+"""</span>)
+
+<span class="cmt"># ═══ 3. 方式B：Table API（等价写法）═══</span>
+<span class="cmt"># orders = t_env.from_path("orders")</span>
+<span class="cmt"># result = orders \</span>
+<span class="cmt">#     .window(Tumble.over(expr.lit(1).minutes()).on(expr.col("order_time")).alias("w")) \</span>
+<span class="cmt">#     .group_by(expr.col("w"), expr.col("product")) \</span>
+<span class="cmt">#     .select(</span>
+<span class="cmt">#         expr.col("w").row_time().as("window_end"),</span>
+<span class="cmt">#         expr.col("product"),</span>
+<span class="cmt">#         expr.col("amount").sum().as("total_amount"),</span>
+<span class="cmt">#         expr.col("order_id").count().as("order_count")</span>
+<span class="cmt">#     ) \</span>
+<span class="cmt">#     .filter(expr.col("total_amount") > 100)</span>
+<span class="cmt"># result.execute_insert("result_top_products")</span>
+
+<span class="cmt"># ═══ 4. DataStream ↔ Table 互转 ═══</span>
+<span class="kw">from</span> pyflink.datastream <span class="kw">import</span> StreamExecutionEnvironment
+<span class="kw">from</span> pyflink.table <span class="kw">import</span> StreamTableEnvironment
+
+stream_env = StreamExecutionEnvironment.get_execution_environment()
+stream_t_env = StreamTableEnvironment.create(stream_env)
+
+<span class="cmt"># DataStream → Table</span>
+ds = stream_env.from_collection([(\<span class="str">"A"</span>, <span class="num">1</span>), (<span class="str">"B"</span>, <span class="num">2</span>)])
+table = stream_t_env.from_data_stream(ds)
+
+<span class="cmt"># Table → DataStream</span>
+new_ds = stream_t_env.to_data_stream(table)</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果</div>
+        <div class="out-content">作业已提交到 Flink 集群运行
+持续从 Kafka topic 'orders' 消费数据
+每分钟窗口结束时输出聚合结果到 'top-products'
+Table API 和 SQL 产生的执行计划完全一致</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip flink">
+    <span class="ti">🔄</span>
+    <div><strong>Table API vs DataStream API 选择</strong>：<br>• <strong>Table API/SQL</strong>：适合 ETL、报表、数仓查询等关系型场景。优化器自动优化，开发效率高<br>• <strong>DataStream API</strong>：适合需要复杂状态管理、自定义时间逻辑、多流 Connect 等底层控制的场景<br>• 两者可以通过 <code>to_data_stream()</code> / <code>from_data_stream()</code> 自由互转，混合使用</div>
+  </div>
+</div>
+
+<!-- ── Flink Window ── -->
+<div class="sec" id="flink-window">
+  <h2 class="sec-title flink"><span class="n">9</span> Flink 窗口机制</h2>
+  <p class="sec-intro">流数据是无限的，窗口（Window）将无限流切分为有限的数据块，使得聚合操作成为可能。Flink 提供了比 Spark 更丰富的窗口类型。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🪟</span> 三种核心窗口类型</h3>
+
+    <div class="cmp-grid">
+      <div class="cmp-card flink">
+        <h4>📜 Tumbling Window<br><span style="font-size:.78rem;font-weight:400">滚动窗口</span></h4>
+        <ul>
+          <li>固定大小，不重叠</li>
+          <li>每个数据只属于一个窗口</li>
+          <li>如：每 5 分钟统计一次</li>
+        </ul>
+      </div>
+      <div class="cmp-card flink">
+        <h4>📐 Sliding Window<br><span style="font-size:.78rem;font-weight:400">滑动窗口</span></h4>
+        <ul>
+          <li>固定大小，可重叠</li>
+          <li>一个数据可属于多个窗口</li>
+          <li>如：每 1 分钟滑动，统计过去 5 分钟</li>
+        </ul>
+      </div>
+    </div>
+    <div class="cmp-grid">
+      <div class="cmp-card flink">
+        <h4>💬 Session Window<br><span style="font-size:.78rem;font-weight:400">会话窗口</span></h4>
+        <ul>
+          <li>按数据活跃度动态分组</li>
+          <li>无固定大小，不重叠</li>
+          <li>如：用户操作间隔超 10 分钟则开新窗口</li>
+        </ul>
+      </div>
+      <div class="cmp-card flink">
+        <h4>🌍 Global Window<br><span style="font-size:.78rem;font-weight:400">全局窗口</span></h4>
+        <ul>
+          <li>所有同 key 数据归入一个窗口</li>
+          <li>需自定义 Trigger 触发</li>
+          <li>通常配合自定义触发器使用</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🔧</span> 窗口操作代码实战</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">flink_windows.py · PyFlink</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyflink.datastream <span class="kw">import</span> StreamExecutionEnvironment
+<span class="kw">from</span> pyflink.datastream.window <span class="kw">import</span> (
+    TumblingEventTimeWindows, SlidingEventTimeWindows,
+    EventTimeSessionWindows
+)
+<span class="kw">from</span> pyflink.common <span class="kw">import</span> Types, Time, Duration
+<span class="kw">from</span> pyflink.datastream <span class="kw">import</span> WatermarkStrategy
+
+env = StreamExecutionEnvironment.get_execution_environment()
+
+<span class="cmt"># 模拟电商点击流：(user_id, product_id, click_time_ms)</span>
+clicks = env.from_collection([
+    (<span class="str">"user_1"</span>, <span class="str">"prod_A"</span>, <span class="num">1700000000000</span>),
+    (<span class="str">"user_1"</span>, <span class="str">"prod_B"</span>, <span class="num">1700000005000</span>),
+    (<span class="str">"user_2"</span>, <span class="str">"prod_A"</span>, <span class="num">1700000010000</span>),
+    (<span class="str">"user_1"</span>, <span class="str">"prod_A"</span>, <span class="num">1700000015000</span>),
+    (<span class="str">"user_2"</span>, <span class="str">"prod_C"</span>, <span class="num">1700000020000</span>),
+    (<span class="str">"user_1"</span>, <span class="str">"prod_B"</span>, <span class="num">1700000025000</span>),
+], type_info=Types.TUPLE([Types.STRING(), Types.STRING(), Types.LONG()]))
+
+<span class="cmt"># 分配 Watermark（允许 5 秒乱序）</span>
+timed = clicks.assign_timestamps_and_watermarks(
+    WatermarkStrategy
+        .for_bounded_out_of_orderness(Duration.of_seconds(<span class="num">5</span>))
+        .with_timestamp_assigner(<span class="kw">lambda</span> x, ts: x[<span class="num">2</span>])
+)
+
+<span class="cmt"># ═══ 1. 滚动窗口：每 10 秒统计每个用户的点击数 ═══</span>
+tumbling_result = timed \
+    .key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]) \
+    .window(TumblingEventTimeWindows.of(Time.seconds(<span class="num">10</span>))) \
+    .process(<span class="fn">CountClicksProcessFunction</span>())
+
+<span class="cmt"># ═══ 2. 滑动窗口：窗口 10 秒，每 5 秒滑动一次 ═══</span>
+sliding_result = timed \
+    .key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]) \
+    .window(SlidingEventTimeWindows.of(
+        Time.seconds(<span class="num">10</span>),   <span class="cmt"># 窗口大小</span>
+        Time.seconds(<span class="num">5</span>)     <span class="cmt"># 滑动步长</span>
+    )) \
+    .aggregate(<span class="fn">CountAgg</span>())
+
+<span class="cmt"># ═══ 3. 会话窗口：用户 10 秒无操作则窗口关闭 ═══</span>
+session_result = timed \
+    .key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]) \
+    .window(EventTimeSessionWindows.with_gap(Time.seconds(<span class="num">10</span>))) \
+    .process(<span class="fn">SessionSummaryFunction</span>())
+
+<span class="cmt"># ═══ 4. 窗口函数类型 ═══</span>
+<span class="cmt"># ── reduce: 增量聚合（最高效，每来一条数据就聚合）──</span>
+timed.key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]) \
+    .window(TumblingEventTimeWindows.of(Time.seconds(<span class="num">10</span>))) \
+    .reduce(<span class="kw">lambda</span> a, b: (a[<span class="num">0</span>], a[<span class="num">1</span>], a[<span class="num">2</span> + b[<span class="num">2</span>]))
+
+<span class="cmt"># ── aggregate: 更灵活的增量聚合（可定义中间状态类型）──</span>
+<span class="cmt"># ── process: 全量处理（窗口触发时一次性处理所有数据，可访问窗口元信息）──</span>
+<span class="cmt"># ── apply: 类似 process，但不支持复杂状态（旧 API，不推荐）──</span>
+
+tumbling_result.print()
+env.execute(<span class="str">"Window_Demo"</span>)</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果（滚动窗口）</div>
+        <div class="out-content">user_1> 窗口[00:00:00 - 00:00:10) 点击数=2 商品=[prod_A, prod_B]
+user_2> 窗口[00:00:00 - 00:00:10) 点击数=1 商品=[prod_A]
+user_1> 窗口[00:00:10 - 00:00:20) 点击数=2 商品=[prod_A, prod_B]
+user_2> 窗口[00:00:10 - 00:00:20) 点击数=1 商品=[prod_C]
+
+会话窗口结果（gap=10s）：
+user_1> 会话[00:00:00 - 00:00:25) 点击数=4
+user_2> 会话[00:00:10 - 00:00:20) 点击数=2</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">🎯</span>
+    <div><strong>窗口函数选择指南</strong>：<br>• <code>reduce()</code>：输入输出类型相同，增量聚合，最高效。适合求和、最大值等<br>• <code>aggregate()</code>：输入输出类型可不同，增量聚合。适合求平均值（需维护 count+sum）<br>• <code>process()</code>：窗口触发时全量处理，可访问 <code>WindowContext</code>（窗口起止时间、当前 watermark、状态）。最灵活但性能最差</div>
+  </div>
+</div>
+
+<!-- ── Flink State Management ── -->
+<div class="sec" id="flink-state">
+  <h2 class="sec-title flink"><span class="n">10</span> Flink 状态管理</h2>
+  <p class="sec-intro">状态管理是 Flink 最核心的竞争力。与 Spark（无状态或靠外部存储）不同，Flink 原生支持丰富的状态类型，并通过 Checkpoint 机制实现精确一次（exactly-once）容错保证。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🗂️</span> 状态类型分类</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th class="flink-th">类别</th><th class="flink-th">状态类型</th><th class="flink-th">说明</th><th class="flink-th">典型场景</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="3"><strong>Keyed State</strong><br><span style="font-size:.72rem;color:var(--text3)">需在 keyBy 之后使用</span></td><td><code>ValueState&lt;T&gt;</code></td><td>单个值，按 key 隔离</td><td>记录用户最近一次操作</td></tr>
+          <tr><td><code>ListState&lt;T&gt;</code></td><td>列表，按 key 隔离</td><td>收集窗口内所有事件</td></tr>
+          <tr><td><code>MapState&lt;K,V&gt;</code></td><td>键值映射，按 key 隔离</td><td>统计每个 URL 的访问次数</td></tr>
+          <tr><td rowspan="2"><strong>Operator State</strong><br><span style="font-size:.72rem;color:var(--text3)">不需要 keyBy</span></td><td><code>ListState&lt;T&gt;</code></td><td>每个算子实例一个列表</td><td>Kafka Source 记录 offset</td></tr>
+          <tr><td><code>BroadcastState&lt;K,V&gt;</code></td><td>广播状态（所有实例相同）</td><td>规则/配置下发</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">🔧</span> Keyed State 实战：用户行为分析</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">flink_state.py · PyFlink</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyflink.datastream <span class="kw">import</span> StreamExecutionEnvironment, ProcessFunction
+<span class="kw">from</span> pyflink.datastream.state <span class="kw">import</span> ValueStateDescriptor, MapStateDescriptor
+<span class="kw">from</span> pyflink.common <span class="kw">import</span> Types, Time
+<span class="kw">import</span> datetime
+
+env = StreamExecutionEnvironment.get_execution_environment()
+
+<span class="cmt"># 场景：检测用户连续登录失败（3次以上则告警）</span>
+<span class="cmt"># 数据格式：(user_id, action, timestamp)</span>
+events = env.from_collection([
+    (<span class="str">"user_1"</span>, <span class="str">"login_fail"</span>, <span class="num">1700000000000</span>),
+    (<span class="str">"user_1"</span>, <span class="str">"login_fail"</span>, <span class="num">1700000001000</span>),
+    (<span class="str">"user_1"</span>, <span class="str">"login_fail"</span>, <span class="num">1700000002000</span>),
+    (<span class="str">"user_1"</span>, <span class="str">"login_success"</span>, <span class="num">1700000003000</span>),
+    (<span class="str">"user_2"</span>, <span class="str">"login_fail"</span>, <span class="num">1700000004000</span>),
+    (<span class="str">"user_2"</span>, <span class="str">"login_fail"</span>, <span class="num">1700000005000</span>),
+    (<span class="str">"user_2"</span>, <span class="str">"login_fail"</span>, <span class="num">1700000006000</span>),
+], type_info=Types.TUPLE([Types.STRING(), Types.STRING(), Types.LONG()]))
+
+<span class="cmt"># ── 使用 KeyedProcessFunction + ValueState ──</span>
+<span class="kw">class</span> <span class="typ">LoginFailDetector</span>(ProcessFunction):
+
+    <span class="kw">def</span> <span class="fn">open</span>(self, runtime_context):
+        <span class="cmt"># 定义 ValueState：记录连续失败次数</span>
+        self.fail_count = runtime_context.get_state(
+            ValueStateDescriptor(<span class="str">"fail_count"</span>, Types.INT())
+        )
+        <span class="cmt"># 定义 ValueState：记录第一次失败时间</span>
+        self.first_fail_time = runtime_context.get_state(
+            ValueStateDescriptor(<span class="str">"first_fail_time"</span>, Types.LONG())
+        )
+
+    <span class="kw">def</span> <span class="fn">process_element</span>(self, value, ctx, out):
+        user_id, action, ts = value
+
+        <span class="kw">if</span> action == <span class="str">"login_fail"</span>:
+            count = self.fail_count.value()
+            <span class="kw">if</span> count <span class="kw">is</span> <span class="kw">None</span>:
+                <span class="cmt"># 第一次失败</span>
+                self.fail_count.update(<span class="num">1</span>)
+                self.first_fail_time.update(ts)
+                <span class="cmt"># 注册定时器：2 秒后检查（重置窗口）</span>
+                ctx.timer_service().register_event_time_timer(ts + <span class="num">2000</span>)
+            <span class="kw">else</span>:
+                self.fail_count.update(count + <span class="num">1</span>)
+                <span class="kw">if</span> count + <span class="num">1</span> >= <span class="num">3</span>:
+                    out.collect((<span class="str">f"⚠️ 告警: 用户 {user_id} 连续登录失败 {count+1} 次"</span>, ts))
+        <span class="kw">elif</span> action == <span class="str">"login_success"</span>:
+            <span class="cmt"># 登录成功，清空状态</span>
+            self.fail_count.clear()
+            self.first_fail_time.clear()
+
+    <span class="kw">def</span> <span class="fn">on_timer</span>(self, timestamp, ctx, out):
+        <span class="cmt"># 定时器触发：重置计数（超过时间窗口）</span>
+        self.fail_count.clear()
+        self.first_fail_time.clear()
+
+<span class="cmt"># 应用处理函数</span>
+alerts = events \
+    .key_by(<span class="kw">lambda</span> x: x[<span class="num">0</span>]) \
+    .process(LoginFailDetector())
+
+alerts.print()
+env.execute(<span class="str">"LoginFailDetector"</span>)</pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 运行结果</div>
+        <div class="out-content">('⚠️ 告警: 用户 user_1 连续登录失败 3 次', 1700000002000)
+('⚠️ 告警: 用户 user_2 连续登录失败 3 次', 1700000006000)
+
+说明：
+- user_1 第3次失败时触发告警，随后 login_success 清空状态
+- user_2 连续3次失败触发告警
+- ValueState 按 user_id 自动隔离，每个用户有独立计数器
+- 定时器确保超过2秒的失败不会累积</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title flink"><span class="icon">💾</span> State Backend 与 Checkpoint</h3>
+    <div class="card flink">
+      <h4>🔄 Checkpoint 机制（容错核心）</h4>
+      <p>Checkpoint 是 Flink 实现 exactly-once 的基石。原理：JobMaster 定期向数据源注入 <strong>Checkpoint Barrier</strong>（屏障），屏障随数据流一起向下游传播。当算子收到屏障后，会将自己的状态快照异步写入持久化存储（如 HDFS/S3）。如果发生故障，Flink 从最近的 Checkpoint 恢复状态，并重放 Checkpoint 之后的数据。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div><span class="file-name python">flink_checkpoint.py · PyFlink</span></div>
+      </div>
+      <div class="code-body">
+<pre><span class="kw">from</span> pyflink.datastream <span class="kw">import</span> StreamExecutionEnvironment
+<span class="kw">from</span> pyflink.datastream <span class="kw">import</span> CheckpointingMode
+<span class="kw">from</span> pyflink.common <span class="kw">import</span> Duration
+
+env = StreamExecutionEnvironment.get_execution_environment()
+
+<span class="cmt"># ═══ Checkpoint 配置 ═══</span>
+env.enable_checkpointing(<span class="num">60000</span>)  <span class="cmt"># 每 60 秒做一次 Checkpoint</span>
+
+<span class="cmt"># 高级配置</span>
+config = env.get_checkpoint_config()
+config.set_checkpointing_mode(CheckpointingMode.EXACTLY_ONCE)  <span class="cmt"># 精确一次</span>
+config.set_checkpoint_timeout(<span class="num">120000</span>)  <span class="cmt"># Checkpoint 超时 2 分钟</span>
+config.set_min_pause_between_checkpoints(<span class="num">30000</span>)  <span class="cmt"># 两次 CP 间隔至少 30 秒</span>
+config.set_max_concurrent_checkpoints(<span class="num">1</span>)  <span class="cmt"># 最多 1 个并发 CP</span>
+config.enable_externalized_checkpoints(
+    ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION
+)  <span class="cmt"># 作业取消时保留 CP</span>
+
+<span class="cmt"># ═══ State Backend 配置 ═══</span>
+<span class="kw">from</span> pyflink.datastream <span class="kw">import</span> (
+    HashMapStateBackend,
+    EmbeddedRocksDBStateBackend
+)
+
+<span class="cmt"># 方式1：HashMap State Backend（内存，快但受限于内存大小）</span>
+env.set_state_backend(HashMapStateBackend())
+
+<span class="cmt"># 方式2：RocksDB State Backend（磁盘，可存超大状态，生产推荐）</span>
+<span class="cmt"># env.set_state_backend(EmbeddedRocksDBStateBackend())</span>
+<span class="cmt"># 配置增量 Checkpoint（只存 diff，大幅减少 IO）</span>
+<span class="cmt"># config = env.get_checkpoint_config()</span>
+<span class="cmt"># config.set_rocksdb_config(...)  # 可调优 RocksDB 参数</span>
+
+<span class="cmt"># ═══ 开启 Unaligned Checkpoint（解决反压场景下 CP 超时）═══</span>
+config.enable_unaligned_checkpoints()
+
+<span class="cmt"># 数据流：</span>
+<span class="cmt"># Source ──barrier──> Map ──barrier──> KeyBy ──barrier──> Window ──> Sink</span>
+<span class="cmt">#          快照         快照           快照          快照</span>
+<span class="cmt">#                ↓             ↓             ↓            ↓</span>
+<span class="cmt">#              HDFS          HDFS          HDFS         HDFS</span>
+<span class="cmt">#         ──────────────────────────────────────────────────</span>
+<span class="cmt">#         Checkpoint Coordinator (JobMaster) 统一管理</span></pre>
+      </div>
+      <div class="output">
+        <div class="out-label">▶ 配置生效</div>
+        <div class="out-content">Checkpoint 已启用
+- 间隔: 60s
+- 模式: EXACTLY_ONCE
+- 超时: 120s
+- State Backend: HashMapStateBackend
+- Unaligned CP: enabled
+
+故障恢复流程：
+1. 从最近成功的 Checkpoint 恢复状态
+2. 重新提交作业 DAG
+3. 从 Checkpoint 对应的 offset 重放数据
+4. 保证结果与无故障时一致 (exactly-once)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><strong>State Backend 选择</strong>：<br>• <code>HashMapStateBackend</code>：状态存内存，读写快，但受限于 TM 内存。适合状态较小（&lt;几 GB）的作业<br>• <code>EmbeddedRocksDBStateBackend</code>：状态存磁盘（RocksDB），支持 TB 级状态，但读写有磁盘 IO 开销。生产环境首选<br>• 序列化也会影响性能：Flink 自带的高效序列化器（TypeSerializer）比 Java 序列化快 10 倍以上</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PART 3: COMPARISON
+     ═══════════════════════════════════════════════════ -->
+
+<div class="sec" id="comparison">
+  <h2 class="sec-title cmp"><span class="n">11</span> Spark vs Flink 深度对比</h2>
+  <p class="sec-intro">Spark 和 Flink 是大数据处理领域的两大主流框架，它们在设计理念、架构、性能特征上有显著差异。选择哪一种取决于你的具体场景。</p>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">⚔️</span> 核心维度对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="cmp-th">对比维度</th>
+            <th class="cmp-th">Apache Spark</th>
+            <th class="cmp-th">Apache Flink</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>处理模型</strong></td>
+            <td>微批（Micro-Batch）：将流切成小批次处理</td>
+            <td>真流（Native Streaming）：逐条处理</td>
+          </tr>
+          <tr>
+            <td><strong>延迟</strong></td>
+            <td>100ms ~ 秒级（取决于批次间隔）</td>
+            <td>毫秒级（~1ms）</td>
+          </tr>
+          <tr>
+            <td><strong>批流关系</strong></td>
+            <td>批优先，流是批的特例（微批）</td>
+            <td>流优先，批是流的特例（有界流）</td>
+          </tr>
+          <tr>
+            <td><strong>状态管理</strong></td>
+            <td>有限（Structured Streaming 支持简单状态）</td>
+            <td>原生丰富支持（ValueState/ListState/MapState 等）</td>
+          </tr>
+          <tr>
+            <td><strong>容错语义</strong></td>
+            <td>Exactly-once（基于 WAL 和幂等写入）</td>
+            <td>Exactly-once（基于 Chandy-Lamport 算法和 Checkpoint）</td>
+          </tr>
+          <tr>
+            <td><strong>时间语义</strong></td>
+            <td>支持事件时间 + Watermark</td>
+            <td>原生支持事件时间 + Watermark + 允许延迟</td>
+          </tr>
+          <tr>
+            <td><strong>窗口类型</strong></td>
+            <td>滚动、滑动、会话（Session 需要配置）</td>
+            <td>滚动、滑动、会话、全局 + 自定义 Trigger</td>
+          </tr>
+          <tr>
+            <td><strong>SQL 支持</strong></td>
+            <td>成熟（Spark SQL + Hive 兼容）</td>
+            <td>成熟（Flink SQL + 方言扩展）</td>
+          </tr>
+          <tr>
+            <td><strong>ML 生态</strong></td>
+            <td>MLlib（成熟，算法丰富）</td>
+            <td>Flink ML（发展中，算法较少）</td>
+          </tr>
+          <tr>
+            <td><strong>语言支持</strong></td>
+            <td>Scala / Java / Python / R / SQL</td>
+            <td>Java / Scala / Python（PyFlink）/ SQL</td>
+          </tr>
+          <tr>
+            <td><strong>社区成熟度</strong></td>
+            <td>非常成熟，企业用户多</td>
+            <td>快速成长，流处理领域领先</td>
+          </tr>
+          <tr>
+            <td><strong>部署模式</strong></td>
+            <td>YARN / K8s / Standalone / Local</td>
+            <td>YARN / K8s / Standalone / Local / Nomad</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">📊</span> 流处理模型对比</h3>
+    <div class="card">
+      <div class="arch-diagram">
+        <div class="arch-title">Spark 微批 vs Flink 逐条处理</div>
+        <svg class="arch-svg" width="680" height="280" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+          <!-- Spark Micro-Batch -->
+          <text x="180" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#E25A1C">Spark: Micro-Batch</text>
+          <rect x="20" y="35" width="340" height="80" rx="6" fill="#fff7ed" stroke="#E25A1C" stroke-width="1.5"/>
+
+          <!-- Batch blocks -->
+          <rect x="30" y="50" width="55" height="55" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+          <text x="57" y="82" text-anchor="middle" font-size="9" fill="#b3410e">Batch 1</text>
+          <text x="57" y="72" text-anchor="middle" font-size="8" fill="#b3410e">100ms</text>
+
+          <rect x="95" y="50" width="55" height="55" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+          <text x="122" y="82" text-anchor="middle" font-size="9" fill="#b3410e">Batch 2</text>
+          <text x="122" y="72" text-anchor="middle" font-size="8" fill="#b3410e">100ms</text>
+
+          <rect x="160" y="50" width="55" height="55" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+          <text x="187" y="82" text-anchor="middle" font-size="9" fill="#b3410e">Batch 3</text>
+          <text x="187" y="72" text-anchor="middle" font-size="8" fill="#b3410e">100ms</text>
+
+          <rect x="225" y="50" width="55" height="55" rx="4" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+          <text x="252" y="82" text-anchor="middle" font-size="9" fill="#b3410e">Batch 4</text>
+          <text x="252" y="72" text-anchor="middle" font-size="8" fill="#b3410e">100ms</text>
+
+          <text x="340" y="82" text-anchor="middle" font-size="9" fill="#5a6170">→</text>
+          <text x="180" y="110" text-anchor="middle" font-size="10" fill="#5a6170">延迟 = 批次间隔 (100ms+)</text>
+
+          <!-- Flink Native Streaming -->
+          <text x="500" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#E6522F">Flink: Native Streaming</text>
+          <rect x="340" y="35" width="320" height="80" rx="6" fill="#fef3f2" stroke="#E6522F" stroke-width="1.5"/>
+
+          <circle cx="360" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="390" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="420" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="450" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="480" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="510" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="540" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="570" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="600" cy="77" r="6" fill="#E6522F"/>
+          <circle cx="630" cy="77" r="6" fill="#E6522F"/>
+
+          <text x="500" y="110" text-anchor="middle" font-size="10" fill="#5a6170">延迟 = 处理一条数据的时间 (~1ms)</text>
+
+          <!-- Comparison bars -->
+          <text x="340" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a2e">延迟对比</text>
+
+          <text x="20" y="180" font-size="10" fill="#E25A1C" font-weight="600">Spark  </text>
+          <rect x="70" y="170" width="300" height="16" rx="3" fill="#fed7aa" stroke="#E25A1C" stroke-width="1"/>
+          <rect x="70" y="170" width="200" height="16" rx="3" fill="#E25A1C" opacity="0.7"/>
+          <text x="380" y="183" font-size="9" fill="#5a6170">100ms ~ 1s</text>
+
+          <text x="20" y="210" font-size="10" fill="#E6522F" font-weight="600">Flink  </text>
+          <rect x="70" y="200" width="300" height="16" rx="3" fill="#fce4ec" stroke="#E6522F" stroke-width="1"/>
+          <rect x="70" y="200" width="20" height="16" rx="3" fill="#E6522F" opacity="0.7"/>
+          <text x="380" y="213" font-size="9" fill="#5a6170">~1ms</text>
+
+          <text x="20" y="240" font-size="10" fill="#5a6170">低延迟 ◀────────────────────────▶ 高延迟</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🎯</span> 适用场景推荐</h3>
+    <div class="scenario-grid">
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">📦</span>
+          <span class="sc-title">离线批处理 ETL</span>
+        </div>
+        <p>大规模数据清洗、转换、入库。如每日日志分析、T+1 报表生成</p>
+        <span class="sc-rec spark">推荐 Spark</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">⚡</span>
+          <span class="sc-title">实时监控告警</span>
+        </div>
+        <p>毫秒级延迟要求的实时监控。如服务器异常检测、金融风控</p>
+        <span class="sc-rec flink">推荐 Flink</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">📊</span>
+          <span class="sc-title">数仓 / BI 查询</span>
+        </div>
+        <p>SQL 交互式查询、Hive 兼容场景、数据湖分析</p>
+        <span class="sc-rec spark">推荐 Spark</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">🔄</span>
+          <span class="sc-title">复杂事件处理 (CEP)</span>
+        </div>
+        <p>模式匹配、多流 Join、会话窗口分析。如用户行为漏斗</p>
+        <span class="sc-rec flink">推荐 Flink</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">🤖</span>
+          <span class="sc-title">机器学习训练</span>
+        </div>
+        <p>大规模模型训练、特征工程、迭代计算</p>
+        <span class="sc-rec spark">推荐 Spark</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">🌊</span>
+          <span class="sc-title">实时数据管道</span>
+        </div>
+        <p>Kafka → 实时聚合 → 数据库/Kafka。如实时大屏、实时数仓</p>
+        <span class="sc-rec flink">推荐 Flink</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">📋</span>
+          <span class="sc-title">准实时报表</span>
+        </div>
+        <p>秒级延迟可接受的报表场景。如每 5 分钟更新一次统计</p>
+        <span class="sc-rec both">两者皆可</span>
+      </div>
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-icon">🔗</span>
+          <span class="sc-title">图计算</span>
+        </div>
+        <p>PageRank、社交网络分析、图遍历</p>
+        <span class="sc-rec spark">推荐 Spark (GraphX)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">📈</span> 性能特征对比</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="cmp-th">性能指标</th>
+            <th class="cmp-th">Spark</th>
+            <th class="cmp-th">Flink</th>
+            <th class="cmp-th">胜出</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>端到端延迟</strong></td>
+            <td>100ms ~ 秒级</td>
+            <td>~1ms</td>
+            <td><span class="badge flink">Flink</span></td>
+          </tr>
+          <tr>
+            <td><strong>吞吐量（简单聚合）</strong></td>
+            <td>高（批处理优化好）</td>
+            <td>高（与 Spark 相当）</td>
+            <td><span class="badge both">持平</span></td>
+          </tr>
+          <tr>
+            <td><strong>吞吐量（复杂状态）</strong></td>
+            <td>中等</td>
+            <td>高（状态管理原生优化）</td>
+            <td><span class="badge flink">Flink</span></td>
+          </tr>
+          <tr>
+            <td><strong>批处理性能</strong></td>
+            <td>极高（Catalyst + Tungsten）</td>
+            <td>高（但不如 Spark 成熟）</td>
+            <td><span class="badge spark">Spark</span></td>
+          </tr>
+          <tr>
+            <td><strong>故障恢复速度</strong></td>
+            <td>中等（需重算未持久化的 RDD）</td>
+            <td>快（基于 Checkpoint 局部恢复）</td>
+            <td><span class="badge flink">Flink</span></td>
+          </tr>
+          <tr>
+            <td><strong>内存效率</strong></td>
+            <td>高（堆外内存管理）</td>
+            <td>高（RocksDB + 堆外）</td>
+            <td><span class="badge both">持平</span></td>
+          </tr>
+          <tr>
+            <td><strong>大规模状态支持</strong></td>
+            <td>有限</td>
+            <td>TB 级（RocksDB + 增量 CP）</td>
+            <td><span class="badge flink">Flink</span></td>
+          </tr>
+          <tr>
+            <td><strong>迭代计算</strong></td>
+            <td>优秀（内存缓存中间结果）</td>
+            <td>一般（需额外优化）</td>
+            <td><span class="badge spark">Spark</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SUMMARY
+     ═══════════════════════════════════════════════════ -->
+
+<div class="sec" id="summary">
+  <h2 class="sec-title cmp"><span class="n">12</span> 总结与选型建议</h2>
+
+  <div class="highlight-box">
+    <h4>📌 一句话总结</h4>
+    <p><strong>Spark</strong> 是「批处理之王」，适合大规模离线数据处理、数仓查询和机器学习；<strong>Flink</strong> 是「流处理之王」，适合低延迟实时计算、复杂事件处理和有状态流应用。两者不是非此即彼 —— 很多企业同时使用 Spark（离线）和 Flink（实时），构建 Lambda/Kappa 架构。</p>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">🏆</span> 选型决策树</h3>
+    <div class="card">
+      <ol>
+        <li><strong>延迟要求 &lt; 100ms？</strong> → 选 Flink（毫秒级处理）</li>
+        <li><strong>需要复杂状态管理？</strong>（如用户会话、CEP 模式匹配）→ 选 Flink</li>
+        <li><strong>需要机器学习训练？</strong> → 选 Spark（MLlib 生态成熟）</li>
+        <li><strong>需要 Hive 兼容的数仓查询？</strong> → 选 Spark（Spark SQL + Hive 集成）</li>
+        <li><strong>需要图计算？</strong> → 选 Spark（GraphX）</li>
+        <li><strong>需要大规模流式 Join？</strong> → 选 Flink（状态管理 + 窗口优化好）</li>
+        <li><strong>秒级延迟可接受 + 团队更熟悉 Spark？</strong> → 选 Spark Structured Streaming</li>
+        <li><strong>需要统一批流代码？</strong> → 两者都支持（Flink 流批一体更彻底，Spark 3.x 也在改进）</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="subsec">
+    <h3 class="subsec-title"><span class="icon">📅</span> 技术发展时间线</h3>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-year">2009</div>
+        <div class="tl-text">Spark 在 UC Berkeley AMPLab 诞生，2010 年开源</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2013</div>
+        <div class="tl-text">Spark 0.8 引入 Spark Streaming（DStream API）</div>
+      </div>
+      <div class="tl-item flink-item">
+        <div class="tl-year">2014</div>
+        <div class="tl-text">Flink 由柏林工业大学项目 Stratosphere 改名而来，成为 Apache 顶级项目</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2016</div>
+        <div class="tl-text">Spark 2.0 发布 —— 引入 SparkSession、Structured Streaming、DataFrame 统一 API</div>
+      </div>
+      <div class="tl-item flink-item">
+        <div class="tl-year">2017</div>
+        <div class="tl-text">Flink 1.3 引入 Table API/SQL 和事件时间语义，开始大规模企业采用</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2020</div>
+        <div class="tl-text">Spark 3.0 发布 —— GPU 支持、自适应查询执行 (AQE)、动态分区裁剪</div>
+      </div>
+      <div class="tl-item flink-item">
+        <div class="tl-year">2022</div>
+        <div class="tl-text">Flink 1.15 引入 Streaming File Sink 统一批流、Generalized Window API</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2023+</div>
+        <div class="tl-text">Spark 3.5 发布 —— Structured Streaming 增强、Python 性能优化。Flink 持续深耕流批一体和状态管理</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmp-grid">
+    <div class="cmp-card spark">
+      <h4>✅ Spark 优势</h4>
+      <ul>
+        <li>批处理性能最强</li>
+        <li>SQL 生态成熟（Hive 兼容）</li>
+        <li>MLlib 机器学习库丰富</li>
+        <li>GraphX 图计算</li>
+        <li>社区庞大，文档丰富</li>
+        <li>企业级生产部署案例多</li>
+        <li>PySpark 生态完善</li>
+      </ul>
+    </div>
+    <div class="cmp-card flink">
+      <h4>✅ Flink 优势</h4>
+      <ul>
+        <li>真流处理，毫秒级延迟</li>
+        <li>状态管理最强大</li>
+        <li>Checkpoint 容错机制优秀</li>
+        <li>窗口类型最丰富</li>
+        <li>复杂事件处理 (CEP)</li>
+        <li>流批一体最彻底</li>
+        <li>大规模状态支持 (TB 级)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">💡</span>
+    <div><strong>最终建议</strong>：如果你在做<strong>离线数仓 + 批处理 + ML</strong>，Spark 是更成熟的选择。如果你在做<strong>实时风控 + 实时大屏 + CEP</strong>，Flink 是更好的选择。如果你的场景介于两者之间（秒级延迟可接受），两者都能胜任 —— 此时选择团队更熟悉的那一个。<br><br>不要被「哪个更好」的争论困扰 —— 技术选型永远取决于具体场景、团队能力和运维成本。两大框架都在快速迭代，彼此也在互相学习（Spark 在改进流处理，Flink 在改进批处理）。</div>
+  </div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Navigation: scroll spy + smooth scroll
+   ═══════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  const navLinks = document.querySelectorAll('.nav a');
+  const sections = document.querySelectorAll('.sec, .subsec');
+  const nav = document.querySelector('.nav');
+
+  // Smooth scroll on click
+  navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').replace('#', '');
+      const target = document.getElementById(targetId);
+      if (target) {
+        const offset = nav.offsetHeight + 8;
+        const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Scroll spy: highlight active nav item
+  function updateActiveNav() {
+    let current = '';
+    const scrollPos = window.pageYOffset + nav.offsetHeight + 20;
+
+    sections.forEach(sec => {
+      const top = sec.offsetTop;
+      const height = sec.offsetHeight;
+      if (scrollPos >= top && scrollPos < top + height) {
+        current = sec.id;
+      }
+    });
+
+    // If no match, check if we're at the top
+    if (!current && window.pageYOffset < 200) {
+      current = '';
+    }
+
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href').replace('#', '');
+      link.classList.remove('active');
+      if (href === current) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  // Throttled scroll listener
+  let ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        updateActiveNav();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // Initial highlight
+  updateActiveNav();
+})();
+</script>
+
+</body>
+</html>

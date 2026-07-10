@@ -313,6 +313,7 @@ body{
 .ic-redis{background:#fee2e2;color:#b91c1c}
 .ic-mq{background:#d1fae5;color:#065f46}
 .ic-python{background:#e0f2fe;color:#0369a1}
+.ic-bigdata{background:#fed7aa;color:#c2410c}
 
 /* ═══════════════════════════════════════════════════
    Footer
@@ -457,6 +458,14 @@ body{
       <span class="icon">🐍</span> Python3 语法与语法糖
       <span class="tag-new">NEW</span>
     </a>
+    <a class="nav-item" data-nav="pandas-guide" data-title="Pandas 数据处理全指南 · 交互式学习教程" href="Pandas-数据处理全指南.html">
+      <span class="icon">🐼</span> Pandas 数据处理全指南
+      <span class="tag-new">NEW</span>
+    </a>
+    <a class="nav-item" data-nav="numpy-guide" data-title="NumPy 科学计算全指南 · 交互式学习教程" href="NumPy-科学计算全指南.html">
+      <span class="icon">🔢</span> NumPy 科学计算全指南
+      <span class="tag-new">NEW</span>
+    </a>
 
     <div class="cat">☕ Java 进阶</div>
     <a class="nav-item" data-nav="java-juc" data-title="Java JUC 并发工具包 · 系统学习指南" href="Java-JUC-并发工具包教程.html">
@@ -477,6 +486,12 @@ body{
     </a>
     <a class="nav-item" data-nav="java-distributed-lock" data-title="Java 分布式锁 · Redisson 深度解析与多方案对比" href="Java-分布式锁-Redisson深度解析.html">
       <span class="icon">🔐</span> 分布式锁深度解析
+      <span class="tag-new">NEW</span>
+    </a>
+
+    <div class="cat">📊 大数据处理</div>
+    <a class="nav-item" data-nav="spark-flink" data-title="Apache Spark & Flink · 大数据处理技术全指南" href="Spark-Flink-大数据处理教程.html">
+      <span class="icon">⚡</span> Spark & Flink 大数据
       <span class="tag-new">NEW</span>
     </a>
 
@@ -509,11 +524,11 @@ body{
     <div class="welcome" id="welcomePage">
       <div class="welcome-hero">
         <h1>📚 交互式技术教程合集</h1>
-        <p class="lead">25 个精心制作的单文件 HTML 教程，覆盖 AI 智能体、AI 开发工具、Python 后端、Java 进阶、基础设施五大领域，打开即用，支持交互式学习。</p>
+        <p class="lead">28 个精心制作的单文件 HTML 教程，覆盖 AI 智能体、AI 开发工具、Python 后端、Java 进阶、大数据处理、基础设施六大领域，打开即用，支持交互式学习。</p>
         <div class="stats">
-          <div class="stat"><div class="num">26</div><div class="lbl">教程</div></div>
-          <div class="stat"><div class="num">5</div><div class="lbl">分类</div></div>
-          <div class="stat"><div class="num">~57K</div><div class="lbl">行代码</div></div>
+          <div class="stat"><div class="num">29</div><div class="lbl">教程</div></div>
+          <div class="stat"><div class="num">6</div><div class="lbl">分类</div></div>
+          <div class="stat"><div class="num">~67K</div><div class="lbl">行代码</div></div>
         </div>
       </div>
 
@@ -643,6 +658,24 @@ body{
           <h3>Python3 语法与语法糖</h3>
           <p>基础语法 + 推导式/海象运算符/f-string/解包/enumerate/with —— Pyodide 浏览器内实时运行 Python 代码</p>
           <div class="tags"><span class="tag ic-python">Python</span><span class="tag ic-python">语法糖</span><span class="tag ic-python">NEW</span></div>
+        </a>
+        <a class="card-link" data-nav="pandas-guide" data-title="Pandas 数据处理全指南 · 交互式学习教程" href="Pandas-数据处理全指南.html">
+          <div class="card-icon ic-python">🐼</div>
+          <h3>Pandas 数据处理全指南</h3>
+          <p>Series/DataFrame 创建与操作 · 数据筛选与条件过滤 · 分组聚合(groupby/agg/transform) · 缺失值检测/填充/删除 —— 真实业务场景代码演示</p>
+          <div class="tags"><span class="tag ic-python">Pandas</span><span class="tag ic-python">数据分析</span><span class="tag ic-python">NEW</span></div>
+        </a>
+        <a class="card-link" data-nav="numpy-guide" data-title="NumPy 科学计算全指南 · 交互式学习教程" href="NumPy-科学计算全指南.html">
+          <div class="card-icon ic-python">🔢</div>
+          <h3>NumPy 科学计算全指南</h3>
+          <p>数组创建 · 切片/布尔/花式索引 · 广播机制 · 通用函数(ufunc) · 线性代数(矩阵乘法/逆/SVD/特征值) —— 含金融与ML场景实战</p>
+          <div class="tags"><span class="tag ic-python">NumPy</span><span class="tag ic-python">科学计算</span><span class="tag ic-python">NEW</span></div>
+        </a>
+        <a class="card-link" data-nav="spark-flink" data-title="Apache Spark & Flink · 大数据处理技术全指南" href="Spark-Flink-大数据处理教程.html">
+          <div class="card-icon ic-bigdata">⚡</div>
+          <h3>Spark & Flink 大数据全指南</h3>
+          <p>Spark RDD/DataFrame/Spark SQL/Streaming · Flink DataStream/Table API/窗口/状态管理 · 深度对比与选型 —— 含 PySpark/PyFlink 代码实战</p>
+          <div class="tags"><span class="tag ic-bigdata">Spark</span><span class="tag ic-bigdata">Flink</span><span class="tag ic-bigdata">NEW</span></div>
         </a>
         <a class="card-link" data-nav="distributed" data-title="分布式系统 · 交互式学习平台" href="分布式系统-交互式学习平台.html">
           <div class="card-icon ic-infra">🕸️</div>

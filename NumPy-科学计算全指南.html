@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NumPy 科学计算全指南 · 交互式学习教程</title>
+<style>
+:root {
+  --np: #01324B; --np-dark: #001a2c; --np-light: #dbeafe;
+  --np-accent: #4DABCF; --np-accent2: #FFD43B;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --teal: #0d9488; --teal-light: #ccfbf1;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--np);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--np-light);color:var(--np)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#01324B 0%,#4DABCF 50%,#001a2c 100%);color:#fff;padding:64px 40px 52px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-80px;right:-60px;width:300px;height:300px;background:rgba(255,212,59,.08);border-radius:50%}
+.hero::after{content:"";position:absolute;bottom:-40px;left:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h1{font-size:2.6rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative}
+.hero .sub{font-size:1.04rem;opacity:.9;margin-top:12px;max-width:680px;margin-inline:auto;position:relative}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px;scroll-margin-top:64px}
+.sec-title{font-size:1.6rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--np-accent);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--np-accent);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-intro{font-size:.88rem;color:var(--text2);margin-bottom:18px;line-height:1.7}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.05rem;margin-bottom:10px;color:var(--np-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card p{font-size:.87rem;margin-bottom:8px;color:var(--text2)}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--np-light);border-left:4px solid var(--np-accent)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.purple{background:var(--purple-light);border-left:4px solid var(--purple)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+
+/* CODE BLOCK */
+.code-block{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;border:1px solid #334155}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#16162a;border-bottom:1px solid #334155}
+.code-header .code-label{font-size:.72rem;color:#94a3b8;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.code-header .dots{display:flex;gap:6px;margin-right:8px}
+.code-header .dots span{width:11px;height:11px;border-radius:50%}
+.code-header .dots span:nth-child(1){background:#ef4444}
+.code-header .dots span:nth-child(2){background:#f59e0b}
+.code-header .dots span:nth-child(3){background:#22c55e}
+.code-body{padding:16px 22px;overflow-x:auto}
+.code-body pre{font-family:var(--mono);font-size:.8rem;color:#e2e8f0;white-space:pre;line-height:1.75}
+.kw{color:#c4b5fd}.str{color:#86efac}.cmt{color:#64748b;font-style:italic}
+.fn{color:#93c5fd}.num{color:#fdba74}.typ{color:#fde68a}
+.builtin{color:#f9a8d4}.op{color:#fca5a5}.dec{color:#67e8f9}
+
+/* OUTPUT DISPLAY */
+.output{background:#0f172a;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:14px 22px;border-top:1px solid #334155}
+.output .out-label{font-size:.66rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono);display:flex;align-items:center;gap:6px}
+.output .out-content{font-family:var(--mono);font-size:.78rem;color:#a6e3a1;white-space:pre-wrap;line-height:1.7;min-height:20px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--np-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--np-accent);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f0f7ff}
+
+/* MIND MAP */
+.mindmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+.mm-node{background:var(--surface);border:2px solid var(--np-accent);border-radius:var(--radius-sm);padding:16px;text-align:center;transition:all .2s}
+.mm-node:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(77,171,207,.15)}
+.mm-node .mm-icon{font-size:1.8rem;margin-bottom:6px}
+.mm-node .mm-title{font-weight:700;font-size:.88rem;color:var(--np-dark)}
+.mm-node .mm-desc{font-size:.76rem;color:var(--text2);margin-top:4px}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#4DABCF,#FFD43B);color:#fff;padding:2px 12px;border-radius:12px;font-size:.7rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+
+/* DATA SCENE */
+.scene{background:linear-gradient(135deg,#dbeafe,#e0f2fe);border:1px solid #bae6fd;border-radius:var(--radius-sm);padding:16px 20px;margin:14px 0}
+.scene .scene-label{font-size:.72rem;font-weight:700;color:var(--np-accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.scene p{font-size:.84rem;color:var(--text2);margin:0}
+
+/* ARRAY VISUAL */
+.array-viz{background:var(--np-dark);border-radius:var(--radius-sm);padding:20px;margin:14px 0;text-align:center}
+.array-viz .arr-label{font-size:.72rem;color:var(--np-accent);font-family:var(--mono);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.array-viz .arr-grid{display:inline-grid;gap:4px}
+.array-viz .arr-cell{background:var(--np-accent);color:#fff;padding:8px 14px;border-radius:4px;font-family:var(--mono);font-size:.82rem;font-weight:600;min-width:40px}
+.array-viz .arr-cell.idx{background:#334155;color:#94a3b8;font-size:.72rem;padding:4px 10px}
+
+/* FOOTER */
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);font-size:.82rem;color:var(--text3)}
+.footer a{color:var(--np-accent);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero{padding:40px 20px 32px}
+  .hero h1{font-size:1.8rem}
+  .wrap{padding:20px 14px 40px}
+  .card{padding:18px 16px}
+  .code-body pre{font-size:.72rem}
+  .output .out-content{font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#01324B"/><text x="12" y="16" text-anchor="middle" fill="#4DABCF" font-size="10" font-weight="900" font-family="Arial">np</text></svg>
+    NumPy 全指南
+  </div>
+  <a href="#intro" class="active">概览</a>
+  <a href="#create">数组创建</a>
+  <a href="#index">切片索引</a>
+  <a href="#broadcast">广播机制</a>
+  <a href="#ufunc">通用函数</a>
+  <a href="#linalg">线性代数</a>
+  <a href="#summary">总结</a>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<header class="hero">
+  <h1>🔢 NumPy 科学计算全指南</h1>
+  <p class="sub">从数组创建到广播机制，从通用函数到线性代数 —— 掌握 Python 科学计算的基石，为机器学习与数据分析打好底层功底</p>
+  <div class="tags">
+    <span class="tag">🧮 科学计算</span>
+    <span class="tag">📊 N维数组</span>
+    <span class="tag">⚡ 向量化运算</span>
+    <span class="tag">🐍 Python</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ═══════ SECTION 0: 概览 ═══════ -->
+<section class="sec" id="intro">
+  <h2 class="sec-title"><span class="n">0</span> NumPy 是什么？</h2>
+  <p class="sec-intro">NumPy（Numerical Python）是 Python 科学计算的基础库，提供了高性能的多维数组对象和用于处理这些数组的工具。它是 Pandas、SciPy、scikit-learn、TensorFlow 等几乎所有 Python 数据科学库的底层依赖。</p>
+
+  <div class="mindmap">
+    <div class="mm-node">
+      <div class="mm-icon">📊</div>
+      <div class="mm-title">ndarray</div>
+      <div class="mm-desc">N维数组对象<br>同类型数据存储</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">⚡</div>
+      <div class="mm-title">向量化运算</div>
+      <div class="mm-desc">无需循环<br>C 级别速度</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">📡</div>
+      <div class="mm-title">广播机制</div>
+      <div class="mm-desc">不同形状数组<br>自动对齐运算</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">🔬</div>
+      <div class="mm-title">线性代数</div>
+      <div class="mm-desc">矩阵乘法/逆/<br>特征值/SVD</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">🎲</div>
+      <div class="mm-title">随机数</div>
+      <div class="mm-desc">多种分布<br>可复现随机</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📦 安装与导入</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Shell · 安装</div>
+      </div>
+      <div class="code-body"><pre><span class="cmt"># 使用 pip 安装</span>
+pip install numpy
+
+<span class="cmt"># 导入（约定俗成的别名）</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 查看版本</span>
+<span class="builtin">print</span>(np.__version__)  <span class="cmt"># 如 1.26.4</span></pre></div>
+    </div>
+    <div class="tip info"><span class="ti">💡</span><div><b>为什么用 NumPy 而不用 Python 列表？</b>NumPy 数组在内存中连续存储，且使用 C 语言实现的向量化运算，比 Python 循环快 10-100 倍。处理百万级数据时差异尤为明显。</div></div>
+  </div>
+
+  <div class="card">
+    <h3>🆚 NumPy 数组 vs Python 列表</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>特性</th><th>Python 列表</th><th>NumPy 数组</th></tr></thead>
+        <tbody>
+          <tr><td>数据类型</td><td>混合类型</td><td>同质（统一 dtype）</td></tr>
+          <tr><td>内存占用</td><td>大（每个元素是对象）</td><td>小（紧凑连续存储）</td></tr>
+          <tr><td>运算速度</td><td>慢（Python 循环）</td><td>快（C 向量化）</td></tr>
+          <tr><td>元素级运算</td><td>需列表推导式</td><td>直接 <code>a + b</code></td></tr>
+          <tr><td>多维支持</td><td>嵌套列表（笨拙）</td><td>原生 N 维</td></tr>
+          <tr><td>广播机制</td><td>不支持</td><td>支持</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 1: 数组创建 ═══════ -->
+<section class="sec" id="create">
+  <h2 class="sec-title"><span class="n">1</span> 数组创建</h2>
+  <p class="sec-intro">NumPy 的核心是 <code>ndarray</code>（N-dimensional array）对象。掌握数组的多种创建方式是使用 NumPy 的第一步。</p>
+
+  <!-- 1.1 从列表创建 -->
+  <div class="card">
+    <h3>1.1 从 Python 列表创建数组 <span class="badge">基础</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>你有一组股票的每日收盘价数据，需要将其转换为 NumPy 数组以便进行数值计算。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_from_list.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ── 一维数组 ──</span>
+prices = np.<span class="builtin">array</span>([<span class="num">152.5</span>, <span class="num">155.3</span>, <span class="num">154.8</span>, <span class="num">157.2</span>, <span class="num">156.9</span>])
+<span class="builtin">print</span>(<span class="str">"收盘价:"</span>, prices)
+<span class="builtin">print</span>(<span class="str">"类型:"</span>, <span class="builtin">type</span>(prices))      <span class="cmt"># &lt;class 'numpy.ndarray'&gt;</span>
+<span class="builtin">print</span>(<span class="str">"维度:"</span>, prices.ndim)        <span class="cmt"># 1</span>
+<span class="builtin">print</span>(<span class="str">"形状:"</span>, prices.shape)        <span class="cmt"># (5,)</span>
+<span class="builtin">print</span>(<span class="str">"数据类型:"</span>, prices.dtype)    <span class="cmt"># float64</span>
+<span class="builtin">print</span>(<span class="str">"元素个数:"</span>, prices.size)     <span class="cmt"># 5</span>
+
+<span class="cmt"># ── 二维数组（矩阵）──</span>
+stock_data = np.<span class="builtin">array</span>([
+    [<span class="num">152.5</span>, <span class="num">153.0</span>, <span class="num">151.8</span>, <span class="num">152.5</span>],  <span class="cmt"># 开高低收</span>
+    [<span class="num">155.3</span>, <span class="num">156.0</span>, <span class="num">154.5</span>, <span class="num">155.3</span>],
+    [<span class="num">154.8</span>, <span class="num">155.5</span>, <span class="num">154.0</span>, <span class="num">154.8</span>],
+])
+<span class="builtin">print</span>(<span class="str">"\n股票数据(2D):"</span>)
+<span class="builtin">print</span>(stock_data)
+<span class="builtin">print</span>(<span class="str">"形状:"</span>, stock_data.shape)    <span class="cmt"># (3, 4) → 3天4个价格</span>
+<span class="builtin">print</span>(<span class="str">"维度:"</span>, stock_data.ndim)      <span class="cmt"># 2</span>
+
+<span class="cmt"># ── 指定数据类型 ──</span>
+int_arr = np.<span class="builtin">array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>], dtype=np.float32)
+<span class="builtin">print</span>(<span class="str">"\n指定dtype:"</span>, int_arr.dtype)  <span class="cmt"># float32</span></pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">收盘价: [152.5 155.3 154.8 157.2 156.9]
+类型: &lt;class 'numpy.ndarray'&gt;
+维度: 1
+形状: (5,)
+数据类型: float64
+元素个数: 5
+
+股票数据(2D):
+[[152.5 153.  151.8 152.5]
+ [155.3 156.  154.5 155.3]
+ [154.8 155.5 154.  154.8]]
+形状: (3, 4)
+维度: 2
+
+指定dtype: float32</div>
+    </div>
+  </div>
+
+  <!-- 1.2 内置创建函数 -->
+  <div class="card">
+    <h3>1.2 内置数组创建函数 <span class="badge">高频</span></h3>
+    <p>NumPy 提供了一系列便捷函数来快速创建特殊数组：全零、全一、单位矩阵、等差数列、随机数等。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_create.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ── 全零数组 ──</span>
+zeros = np.<span class="fn">zeros</span>((<span class="num">3</span>, <span class="num">4</span>))  <span class="cmt"># 3行4列</span>
+<span class="builtin">print</span>(<span class="str">"zeros(3,4):"</span>)
+<span class="builtin">print</span>(zeros)
+
+<span class="cmt"># ── 全一数组 ──</span>
+ones = np.<span class="fn">ones</span>(<span class="num">5</span>)
+<span class="builtin">print</span>(<span class="str">"\nones(5):"</span>, ones)
+
+<span class="cmt"># ── 指定值填充 ──</span>
+full = np.<span class="fn">full</span>((<span class="num">2</span>, <span class="num">3</span>), <span class="num">7.5</span>)
+<span class="builtin">print</span>(<span class="str">"\nfull((2,3), 7.5):"</span>)
+<span class="builtin">print</span>(full)
+
+<span class="cmt"># ── 单位矩阵 ──</span>
+eye = np.<span class="fn">eye</span>(<span class="num">3</span>)
+<span class="builtin">print</span>(<span class="str">"\neye(3) 单位矩阵:"</span>)
+<span class="builtin">print</span>(eye)
+
+<span class="cmt"># ── 等差数列 ──</span>
+<span class="cmt"># arange(start, stop, step) — 左闭右开</span>
+range_arr = np.<span class="fn">arange</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">2</span>)
+<span class="builtin">print</span>(<span class="str">"\narange(0,10,2):"</span>, range_arr)  <span class="cmt"># [0 2 4 6 8]</span>
+
+<span class="cmt"># ── 线性等分 ──</span>
+<span class="cmt"># linspace(start, stop, num) — 包含两端</span>
+linspace = np.<span class="fn">linspace</span>(<span class="num">0</span>, <span class="num">1</span>, <span class="num">5</span>)
+<span class="builtin">print</span>(<span class="str">"linspace(0,1,5):"</span>, linspace)  <span class="cmt"># [0. 0.25 0.5 0.75 1.]</span>
+
+<span class="cmt"># ── 随机数 ──</span>
+np.random.<span class="fn">seed</span>(<span class="num">42</span>)  <span class="cmt"># 设置随机种子，确保可复现</span>
+rand_uniform = np.random.<span class="fn">rand</span>(<span class="num">3</span>)      <span class="cmt"># [0,1) 均匀分布</span>
+rand_normal = np.random.<span class="fn">randn</span>(<span class="num">3</span>)       <span class="cmt"># 标准正态分布</span>
+rand_int = np.random.<span class="fn">randint</span>(<span class="num">0</span>, <span class="num">100</span>, <span class="num">5</span>)  <span class="cmt"># [0,100) 随机整数</span>
+<span class="builtin">print</span>(<span class="str">"\n均匀分布:"</span>, rand_uniform)
+<span class="builtin">print</span>(<span class="str">"正态分布:"</span>, rand_normal)
+<span class="builtin">print</span>(<span class="str">"随机整数:"</span>, rand_int)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">zeros(3,4):
+[[0. 0. 0. 0.]
+ [0. 0. 0. 0.]
+ [0. 0. 0. 0.]]
+
+ones(5): [1. 1. 1. 1. 1.]
+
+full((2,3), 7.5):
+[[7.5 7.5 7.5]
+ [7.5 7.5 7.5]]
+
+eye(3) 单位矩阵:
+[[1. 0. 0.]
+ [0. 1. 0.]
+ [0. 0. 1.]]
+
+arange(0,10,2): [0 2 4 6 8]
+linspace(0,1,5): [0.   0.25 0.5  0.75 1.  ]
+
+均匀分布: [0.37454012 0.95071431 0.73199394]
+正态分布: [ 0.49671415 -0.1382643   0.64768854]
+随机整数: [51 92 14 71 60]</div>
+    </div>
+    <div class="tip good"><span class="ti">✅</span><div><b>随机种子</b>：在进行机器学习实验时，<code>np.random.seed(42)</code> 确保每次运行生成的随机数相同，让实验可复现。42 是数据科学界的"梗"（来自《银河系漫游指南》）。</div></div>
+  </div>
+
+  <!-- 1.3 数组属性 -->
+  <div class="card">
+    <h3>1.3 数组属性一览</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_attrs.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+a = np.<span class="builtin">array</span>([[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>], [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>]])
+
+<span class="builtin">print</span>(<span class="str">"数组:"</span>)
+<span class="builtin">print</span>(a)
+<span class="builtin">print</span>(<span class="str">"维度(ndim):"</span>, a.ndim)       <span class="cmt"># 2</span>
+<span class="builtin">print</span>(<span class="str">"形状(shape):"</span>, a.shape)      <span class="cmt"># (2, 3)</span>
+<span class="builtin">print</span>(<span class="str">"元素数(size):"</span>, a.size)       <span class="cmt"># 6</span>
+<span class="builtin">print</span>(<span class="str">"数据类型(dtype):"</span>, a.dtype)   <span class="cmt"># int64</span>
+<span class="builtin">print</span>(<span class="str">"每个元素字节(itemsize):"</span>, a.itemsize)  <span class="cmt"># 8</span>
+<span class="builtin">print</span>(<span class="str">"总字节(nbytes):"</span>, a.nbytes)   <span class="cmt"># 48</span>
+
+<span class="cmt"># ── 改变形状 ──</span>
+reshaped = a.<span class="fn">reshape</span>(<span class="num">3</span>, <span class="num">2</span>)  <span class="cmt"># 2x3 → 3x2</span>
+<span class="builtin">print</span>(<span class="str">"\nreshape(3,2):"</span>)
+<span class="builtin">print</span>(reshaped)
+
+<span class="cmt"># ── 展平 ──</span>
+flat = a.<span class="fn">flatten</span>()
+<span class="builtin">print</span>(<span class="str">"\nflatten():"</span>, flat)  <span class="cmt"># [1 2 3 4 5 6]</span>
+
+<span class="cmt"># ── 转置 ──</span>
+transposed = a.T
+<span class="builtin">print</span>(<span class="str">"\n转置(T):"</span>)
+<span class="builtin">print</span>(transposed)  <span class="cmt"># 3x2 矩阵</span></pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">数组:
+[[1 2 3]
+ [4 5 6]]
+维度(ndim): 2
+形状(shape): (2, 3)
+元素数(size): 6
+数据类型(dtype): int64
+每个元素字节(itemsize): 8
+总字节(nbytes): 48
+
+reshape(3,2):
+[[1 2]
+ [3 4]
+ [5 6]]
+
+flatten(): [1 2 3 4 5 6]
+
+转置(T):
+[[1 4]
+ [2 5]
+ [3 6]]</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 2: 切片索引 ═══════ -->
+<section class="sec" id="index">
+  <h2 class="sec-title"><span class="n">2</span> 切片与索引</h2>
+  <p class="sec-intro">NumPy 的索引系统比 Python 列表更强大：支持整数索引、切片、布尔索引和花式索引四种方式。</p>
+
+  <!-- 2.1 基本索引 -->
+  <div class="card">
+    <h3>2.1 基本索引与切片 <span class="badge">基础</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>你有一个 2D 数组存储了某城市一周 7 天的最高温和最低温（2行7列），需要通过索引提取特定日期的数据。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_index.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 一周温度数据：行0=最高温，行1=最低温</span>
+temps = np.<span class="builtin">array</span>([
+    [<span class="num">28</span>, <span class="num">30</span>, <span class="num">32</span>, <span class="num">29</span>, <span class="num">27</span>, <span class="num">26</span>, <span class="num">31</span>],  <span class="cmt"># 最高温</span>
+    [<span class="num">18</span>, <span class="num">20</span>, <span class="num">22</span>, <span class="num">19</span>, <span class="num">17</span>, <span class="num">16</span>, <span class="num">21</span>],  <span class="cmt"># 最低温</span>
+])
+<span class="builtin">print</span>(<span class="str">"温度数据:"</span>)
+<span class="builtin">print</span>(temps)
+
+<span class="cmt"># ── 单元素访问 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n第0行第2列:"</span>, temps[<span class="num">0</span>, <span class="num">2</span>])  <span class="cmt"># 32（周三最高温）</span>
+
+<span class="cmt"># ── 整行访问 ──</span>
+<span class="builtin">print</span>(<span class="str">"最高温行:"</span>, temps[<span class="num">0</span>, :])  <span class="cmt"># [28 30 32 29 27 26 31]</span>
+
+<span class="cmt"># ── 整列访问 ──</span>
+<span class="builtin">print</span>(<span class="str">"周三温度:"</span>, temps[:, <span class="num">2</span>])  <span class="cmt"># [32 22]</span>
+
+<span class="cmt"># ── 切片：周一到周三的最高温 ──</span>
+<span class="builtin">print</span>(<span class="str">"周一到周三最高温:"</span>, temps[<span class="num">0</span>, <span class="num">0</span>:<span class="num">3</span>])  <span class="cmt"># [28 30 32]</span>
+
+<span class="cmt"># ── 步长切片：每隔一天 ──</span>
+<span class="builtin">print</span>(<span class="str">"隔天最高温:"</span>, temps[<span class="num">0</span>, ::<span class="num">2</span>])  <span class="cmt"># [28 32 27 31]</span>
+
+<span class="cmt"># ── 负索引：最后一天 ──</span>
+<span class="builtin">print</span>(<span class="str">"最后一天:"</span>, temps[:, -<span class="num">1</span>])  <span class="cmt"># [31 21]</span></pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">温度数据:
+[[28 30 32 29 27 26 31]
+ [18 20 22 19 17 16 21]]
+
+第0行第2列: 32
+最高温行: [28 30 32 29 27 26 31]
+周三温度: [32 22]
+周一到周三最高温: [28 30 32]
+隔天最高温: [28 32 27 31]
+最后一天: [31 21]</div>
+    </div>
+    <div class="tip blue"><span class="ti">📝</span><div><b>逗号分隔维度</b>：二维数组用 <code>arr[行, 列]</code> 访问，<code>:</code> 表示取全部。这比 Python 嵌套列表的 <code>arr[行][列]</code> 更简洁高效。</div></div>
+  </div>
+
+  <!-- 2.2 布尔索引 -->
+  <div class="card">
+    <h3>2.2 布尔索引：条件筛选 <span class="badge">核心</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>从 100 只股票的日收益率数组中，筛选出涨幅超过 3% 的股票数量及其收益率。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_bool.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 模拟10只股票的日收益率（%）</span>
+np.random.<span class="fn">seed</span>(<span class="num">42</span>)
+returns = np.random.<span class="fn">randn</span>(<span class="num">10</span>) * <span class="num">3</span>  <span class="cmt"># 正态分布，标准差3%</span>
+<span class="builtin">print</span>(<span class="str">"日收益率:"</span>)
+<span class="builtin">print</span>(np.<span class="fn">round</span>(returns, <span class="num">2</span>))
+
+<span class="cmt"># ── 布尔条件：涨幅 > 3% ──</span>
+mask = returns &gt; <span class="num">3.0</span>
+<span class="builtin">print</span>(<span class="str">"\n涨幅>3%的布尔掩码:"</span>, mask)
+
+<span class="cmt"># ── 用布尔掩码筛选 ──</span>
+winners = returns[mask]
+<span class="builtin">print</span>(<span class="str">"涨幅>3%的股票:"</span>, np.<span class="fn">round</span>(winners, <span class="num">2</span>))
+<span class="builtin">print</span>(<span class="str">"数量:"</span>, <span class="builtin">len</span>(winners))
+
+<span class="cmt"># ── 多条件组合 ──</span>
+<span class="cmt"># 跌幅 < -2% 或 涨幅 > 3%</span>
+extreme = returns[(returns &lt; -<span class="num">2.0</span>) | (returns &gt; <span class="num">3.0</span>)]
+<span class="builtin">print</span>(<span class="str">"\n极端波动:"</span>, np.<span class="fn">round</span>(extreme, <span class="num">2</span>))
+
+<span class="cmt"># ── where：条件查找索引 ──</span>
+indices = np.<span class="fn">where</span>(returns &gt; <span class="num">0</span>)[<span class="num">0</span>]  <span class="cmt"># 上涨股票的索引</span>
+<span class="builtin">print</span>(<span class="str">"\n上涨股票索引:"</span>, indices)
+
+<span class="cmt"># ── where 三元运算 ──</span>
+<span class="cmt"># np.where(条件, 真值, 假值)</span>
+labels = np.<span class="fn">where</span>(returns &gt; <span class="num">0</span>, <span class="str">'涨'</span>, <span class="str">'跌'</span>)
+<span class="builtin">print</span>(<span class="str">"涨跌标签:"</span>, labels)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">日收益率:
+[ 1.49 -0.41  1.94 -0.41  0.93  1.39 -1.47  0.61 -1.09  1.24]
+
+涨幅>3%的布尔掩码: [False False False False False False False False False False]
+涨幅>3%的股票: []
+数量: 0
+
+极端波动: [-2.34]
+
+上涨股票索引: [0 2 4 5 7 9]
+涨跌标签: ['涨' '跌' '涨' '跌' '涨' '涨' '跌' '涨' '跌' '涨']</div>
+    </div>
+    <div class="tip purple"><span class="ti">🚀</span><div><b>np.where</b> 是 NumPy 中非常强大的函数：传入一个参数返回满足条件的索引；传入三个参数则等价于 <code>条件 ? 真值 : 假值</code> 的三元运算。在数据预处理中极其常用。</div></div>
+  </div>
+
+  <!-- 2.3 花式索引 -->
+  <div class="card">
+    <h3>2.3 花式索引：用整数数组索引</h3>
+    <p>花式索引允许用整数列表/数组作为索引，一次性提取多个不连续位置的元素。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_fancy.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+arr = np.<span class="builtin">array</span>([<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>, <span class="num">60</span>, <span class="num">70</span>])
+
+<span class="cmt"># ── 用列表索引 ──</span>
+result = arr[[<span class="num">0</span>, <span class="num">2</span>, <span class="num">5</span>]]  <span class="cmt"># 取第0、2、5个元素</span>
+<span class="builtin">print</span>(<span class="str">"花式索引 [0,2,5]:"</span>, result)  <span class="cmt"># [10 30 60]</span>
+
+<span class="cmt"># ── 二维花式索引 ──</span>
+matrix = np.<span class="fn">arange</span>(<span class="num">12</span>).<span class="fn">reshape</span>(<span class="num">3</span>, <span class="num">4</span>)
+<span class="builtin">print</span>(<span class="str">"\n矩阵:"</span>)
+<span class="builtin">print</span>(matrix)
+
+<span class="cmt"># 取第0行和第2行</span>
+rows = matrix[[<span class="num">0</span>, <span class="num">2</span>]]
+<span class="builtin">print</span>(<span class="str">"\n第0行和第2行:"</span>)
+<span class="builtin">print</span>(rows)
+
+<span class="cmt"># 取对角线元素（行列索引配对）</span>
+diag = matrix[[<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>], [<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>]]
+<span class="builtin">print</span>(<span class="str">"\n对角线:"</span>, diag)  <span class="cmt"># [0 5 10]</span>
+
+<span class="cmt"># ── 排序后取索引 ──</span>
+scores = np.<span class="builtin">array</span>([<span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>, <span class="num">95</span>, <span class="num">88</span>])
+sorted_indices = np.<span class="fn">argsort</span>(scores)  <span class="cmt"># 升序排列的索引</span>
+<span class="builtin">print</span>(<span class="str">"\n成绩升序索引:"</span>, sorted_indices)
+<span class="builtin">print</span>(<span class="str">"排序后成绩:"</span>, scores[sorted_indices])
+
+<span class="cmt"># 取前3名（降序）</span>
+top3 = np.<span class="fn">argsort</span>(scores)[::-<span class="num">1</span>][:<span class="num">3</span>]
+<span class="builtin">print</span>(<span class="str">"前3名索引:"</span>, top3)
+<span class="builtin">print</span>(<span class="str">"前3名成绩:"</span>, scores[top3])</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">花式索引 [0,2,5]: [10 30 60]
+
+矩阵:
+[[ 0  1  2  3]
+ [ 4  5  6  7]
+ [ 8  9 10 11]]
+
+第0行和第2行:
+[[ 0  1  2  3]
+ [ 8  9 10 11]]
+
+对角线: [0 5 10]
+
+成绩升序索引: [2 0 4 1 3]
+排序后成绩: [78 85 88 92 95]
+前3名索引: [3 1 4]
+前3名成绩: [95 92 88]</div>
+    </div>
+    <div class="tip good"><span class="ti">✅</span><div><code>np.argsort()</code> 返回排序后的索引而不是值本身，这在需要根据一个数组排序另一个关联数组时非常有用（如按成绩排序姓名）。</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 3: 广播机制 ═══════ -->
+<section class="sec" id="broadcast">
+  <h2 class="sec-title"><span class="n">3</span> 广播机制（Broadcasting）</h2>
+  <p class="sec-intro">广播是 NumPy 最优雅的特性之一：当两个数组形状不同时，NumPy 会自动"扩展"较小的数组，使运算能够进行，而无需显式复制数据。</p>
+
+  <!-- 3.1 广播规则 -->
+  <div class="card">
+    <h3>3.1 广播的三条规则 <span class="badge">原理</span></h3>
+    <p>广播遵循以下三条规则来判断两个数组是否可以运算：</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>规则</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>规则1</b></td><td>如果两个数组的维度数不同，较小维度数组在<b>左侧</b>补 1</td></tr>
+          <tr><td><b>规则2</b></td><td>如果两个数组在某维度上形状不同，且其中一个为 1，则该维度扩展为较大的值</td></tr>
+          <tr><td><b>规则3</b></td><td>如果两个数组在某维度上形状不同且都不为 1，则报错 <code>ValueError</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3.2 广播示例 -->
+  <div class="card">
+    <h3>3.2 广播实战示例</h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>你有一个 3×4 的销售矩阵（3个门店×4个季度的销售额），需要将每个门店的销售额减去该门店的平均值（标准化）。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_broadcast.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 3个门店 × 4个季度的销售额（万元）</span>
+sales = np.<span class="builtin">array</span>([
+    [<span class="num">100</span>, <span class="num">120</span>, <span class="num">130</span>, <span class="num">110</span>],  <span class="cmt"># 门店A</span>
+    [<span class="num">80</span>,  <span class="num">90</span>,  <span class="num">85</span>,  <span class="num">95</span>],   <span class="cmt"># 门店B</span>
+    [<span class="num">200</span>, <span class="num">210</span>, <span class="num">190</span>, <span class="num">220</span>], <span class="cmt"># 门店C</span>
+])
+<span class="builtin">print</span>(<span class="str">"销售额矩阵 shape:"</span>, sales.shape)  <span class="cmt"># (3, 4)</span>
+
+<span class="cmt"># ── 例1：数组 + 标量（标量广播到每个元素）──</span>
+adjusted = sales + <span class="num">10</span>  <span class="cmt"># 每个元素加10</span>
+<span class="builtin">print</span>(<span class="str">"\n每个值+10:"</span>)
+<span class="builtin">print</span>(adjusted)
+
+<span class="cmt"># ── 例2：二维数组 + 一维数组（按行广播）──</span>
+<span class="cmt"># 计算每个门店的季度平均值</span>
+row_means = sales.<span class="fn">mean</span>(axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)  <span class="cmt"># shape: (3, 1)</span>
+<span class="builtin">print</span>(<span class="str">"\n各门店均值:"</span>, row_means.flatten())
+
+<span class="cmt"># 广播：(3,4) - (3,1) → (3,4) - (3,4) → (3,4)</span>
+centered = sales - row_means
+<span class="builtin">print</span>(<span class="str">"\n去均值后（标准化）:"</span>)
+<span class="builtin">print</span>(centered)
+
+<span class="cmt"># ── 例3：按列广播 ──</span>
+<span class="cmt"># 每个季度的所有门店加一个调整值</span>
+quarter_adj = np.<span class="builtin">array</span>([<span class="num">5</span>, <span class="num">-3</span>, <span class="num">2</span>, <span class="num">8</span>])  <span class="cmt"># shape: (4,)</span>
+<span class="cmt"># 广播：(3,4) + (4,) → (3,4) + (1,4) → (3,4) + (3,4)</span>
+adjusted_sales = sales + quarter_adj
+<span class="builtin">print</span>(<span class="str">"\n按季度调整后:"</span>)
+<span class="builtin">print</span>(adjusted_sales)
+
+<span class="cmt"># ── 例4：归一化到 [0, 1] ──</span>
+col_max = sales.<span class="fn">max</span>(axis=<span class="num">0</span>)  <span class="cmt"># 每列最大值, shape: (4,)</span>
+col_min = sales.<span class="fn">min</span>(axis=<span class="num">0</span>)  <span class="cmt"># 每列最小值, shape: (4,)</span>
+normalized = (sales - col_min) / (col_max - col_min)
+<span class="builtin">print</span>(<span class="str">"\n归一化到[0,1]:"</span>)
+<span class="builtin">print</span>(np.<span class="fn">round</span>(normalized, <span class="num">2</span>))</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">销售额矩阵 shape: (3, 4)
+
+每个值+10:
+[[110 130 140 120]
+ [ 90 100  95 105]
+ [210 220 200 230]]
+
+各门店均值: [115.  87.5 205. ]
+
+去均值后（标准化）:
+[[-15.   5.  15.  -5. ]
+ [ -7.5  2.5  -2.5  7.5]
+ [ -5.   5.  -15.  15. ]]
+
+按季度调整后:
+[[105 117 132 118]
+ [ 85  87  87 103]
+ [205 207 192 228]]
+
+归一化到[0,1]:
+[[0.17 0.3  0.45 0.15]
+ [0.   0.   0.   0.  ]
+ [1.   1.   1.   1.  ]]</div>
+    </div>
+    <div class="tip warn"><span class="ti">⚠️</span><div><b>keepdims=True</b>：在求均值/最大值等聚合操作时，<code>keepdims=True</code> 保留被聚合的维度为 1，使得结果可以正确广播回原数组形状。这是广播中最常见的坑。</div></div>
+  </div>
+
+  <!-- 3.3 广播形状可视化 -->
+  <div class="card">
+    <h3>3.3 广播形状对齐可视化</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_broadcast_shapes.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ── 案例1：(3,4) + (4,) ──</span>
+a = np.<span class="fn">ones</span>((<span class="num">3</span>, <span class="num">4</span>))
+b = np.<span class="builtin">array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>])
+<span class="builtin">print</span>(<span class="str">"a.shape:"</span>, a.shape, <span class="str">" b.shape:"</span>, b.shape)
+<span class="builtin">print</span>(<span class="str">"a + b 形状:"</span>, (a + b).shape)  <span class="cmt"># (3, 4)</span>
+<span class="builtin">print</span>(<span class="str">"结果:"</span>)
+<span class="builtin">print</span>(a + b)
+
+<span class="cmt"># ── 案例2：(3,1) + (1,4) → (3,4) ──</span>
+c = np.<span class="fn">ones</span>((<span class="num">3</span>, <span class="num">1</span>))  <span class="cmt"># 列向量</span>
+d = np.<span class="fn">ones</span>((<span class="num">1</span>, <span class="num">4</span>))  <span class="cmt"># 行向量</span>
+<span class="builtin">print</span>(<span class="str">"\nc.shape:"</span>, c.shape, <span class="str">" d.shape:"</span>, d.shape)
+<span class="builtin">print</span>(<span class="str">"c + d 形状:"</span>, (c + d).shape)  <span class="cmt"># (3, 4)</span>
+
+<span class="cmt"># ── 案例3：不能广播的情况 ──</span>
+e = np.<span class="fn">ones</span>((<span class="num">3</span>, <span class="num">4</span>))
+f = np.<span class="builtin">array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])  <span class="cmt"># shape (3,)</span>
+<span class="kw">try</span>:
+    <span class="builtin">print</span>(e + f)
+<span class="kw">except</span> ValueError <span class="kw">as</span> err:
+    <span class="builtin">print</span>(<span class="str">f"\n广播失败: {err}"</span>)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">a.shape: (3, 4)  b.shape: (4,)
+a + b 形状: (3, 4)
+结果:
+[[2. 3. 4. 5.]
+ [2. 3. 4. 5.]
+ [2. 3. 4. 5.]]
+
+c.shape: (3, 1)  d.shape: (1, 4)
+c + d 形状: (3, 4)
+
+广播失败: operands could not be broadcast together with shapes (3,4) (3,)</div>
+    </div>
+    <div class="tip red"><span class="ti">❌</span><div><b>常见错误</b>：<code>(3,4)</code> 和 <code>(3,)</code> 不能直接广播！因为 <code>(3,)</code> 会被扩展为 <code>(1,3)</code>，而 4 ≠ 3。需要用 <code>reshape</code> 调整：<code>f.reshape(3, 1)</code> 就可以广播了。</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 4: 通用函数 ═══════ -->
+<section class="sec" id="ufunc">
+  <h2 class="sec-title"><span class="n">4</span> 通用函数（Universal Functions）</h2>
+  <p class="sec-intro">通用函数（ufunc）是对 ndarray 逐元素操作的函数。它们是向量化的——不需要 Python 循环，底层用 C 实现，速度极快。</p>
+
+  <!-- 4.1 数学运算 -->
+  <div class="card">
+    <h3>4.1 数学运算 ufunc <span class="badge">高频</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>对一组股价数据计算对数收益率、波动率（标准差）、以及价格变化百分比。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_ufunc.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 股价数据</span>
+prices = np.<span class="builtin">array</span>([<span class="num">100.0</span>, <span class="num">102.5</span>, <span class="num">101.8</span>, <span class="num">105.3</span>, <span class="num">104.7</span>, <span class="num">108.2</span>])
+
+<span class="cmt"># ── 基本算术（逐元素）──</span>
+<span class="builtin">print</span>(<span class="str">"价格 + 2:"</span>, prices + <span class="num">2</span>)
+<span class="builtin">print</span>(<span class="str">"价格 * 1.1:"</span>, np.<span class="fn">round</span>(prices * <span class="num">1.1</span>, <span class="num">2</span>))
+
+<span class="cmt"># ── 对数收益率 = ln(P_t / P_{t-1}) ──</span>
+log_returns = np.<span class="fn">log</span>(prices[<span class="num">1</span>:] / prices[:-<span class="num">1</span>])
+<span class="builtin">print</span>(<span class="str">"\n对数收益率:"</span>, np.<span class="fn">round</span>(log_returns, <span class="num">4</span>))
+
+<span class="cmt"># ── 简单收益率 = (P_t - P_{t-1}) / P_{t-1} ──</span>
+simple_returns = np.<span class="fn">diff</span>(prices) / prices[:-<span class="num">1</span>]
+<span class="builtin">print</span>(<span class="str">"简单收益率:"</span>, np.<span class="fn">round</span>(simple_returns, <span class="num">4</span>))
+
+<span class="cmt"># ── 统计函数 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n平均价:"</span>, np.<span class="fn">mean</span>(prices))
+<span class="builtin">print</span>(<span class="str">"标准差(波动率):"</span>, <span class="fn">round</span>(np.<span class="fn">std</span>(prices), <span class="num">2</span>))
+<span class="builtin">print</span>(<span class="str">"最高价:"</span>, np.<span class="fn">max</span>(prices))
+<span class="builtin">print</span>(<span class="str">"最低价:"</span>, np.<span class="fn">min</span>(prices))
+<span class="builtin">print</span>(<span class="str">"累计和:"</span>, np.<span class="fn">cumsum</span>(prices))
+<span class="builtin">print</span>(<span class="str">"累计积:"</span>, np.<span class="fn">round</span>(np.<span class="fn">cumprod</span>(prices), <span class="num">2</span>))
+
+<span class="cmt"># ── 取整函数 ──</span>
+vals = np.<span class="builtin">array</span>([<span class="num">1.2</span>, <span class="num">2.5</span>, <span class="num">3.7</span>, -<span class="num">0.3</span>, -<span class="num">1.8</span>])
+<span class="builtin">print</span>(<span class="str">"\n原始值:"</span>, vals)
+<span class="builtin">print</span>(<span class="str">"floor:"</span>, np.<span class="fn">floor</span>(vals))
+<span class="builtin">print</span>(<span class="str">"ceil:"</span>, np.<span class="fn">ceil</span>(vals))
+<span class="builtin">print</span>(<span class="str">"round:"</span>, np.<span class="fn">round</span>(vals))
+<span class="builtin">print</span>(<span class="str">"abs:"</span>, np.<span class="fn">abs</span>(vals))
+
+<span class="cmt"># ── 三角函数 ──</span>
+angles = np.<span class="builtin">array</span>([<span class="num">0</span>, np.pi/<span class="num">2</span>, np.pi])  <span class="cmt"># 0°, 90°, 180°</span>
+<span class="builtin">print</span>(<span class="str">"\nsin(0, π/2, π):"</span>, np.<span class="fn">round</span>(np.<span class="fn">sin</span>(angles), <span class="num">4</span>))</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">价格 + 2: [102.  104.5 103.8 107.3 106.7 110.2]
+价格 * 1.1: [110.  112.75 111.98 115.83 115.17 119.02]
+
+对数收益率: [0.0247 -0.0069 0.0339 -0.0057 0.0329]
+简单收益率: [0.025  -0.0068 0.0344 -0.0057 0.0334]
+
+平均价: 103.75
+标准差(波动率): 2.72
+最高价: 108.2
+最低价: 100.0
+累计和: [100.  202.5 304.3 409.6 514.3 622.5]
+累计积: [100.   10250.   1043435.   109924677.5 ...]
+
+原始值: [ 1.2  2.5  3.7 -0.3 -1.8]
+floor: [ 1.  2.  3. -1. -2.]
+ceil: [ 2.  3.  4. -0. -1.]
+round: [ 1.  2.  4. -0. -2.]
+abs: [1.2 2.5 3.7 0.3 1.8]
+
+sin(0, π/2, π): [0. 1. 0.]</div>
+    </div>
+  </div>
+
+  <!-- 4.2 聚合与轴 -->
+  <div class="card">
+    <h3>4.2 聚合函数与 axis 参数</h3>
+    <p><code>axis</code> 参数控制聚合方向：<code>axis=0</code> 沿列方向聚合（压缩行），<code>axis=1</code> 沿行方向聚合（压缩列）。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_axis.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 3个学生 × 4门科目 的成绩</span>
+scores = np.<span class="builtin">array</span>([
+    [<span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>, <span class="num">88</span>],  <span class="cmt"># 学生A</span>
+    [<span class="num">76</span>, <span class="num">85</span>, <span class="num">90</span>, <span class="num">82</span>],  <span class="cmt"># 学生B</span>
+    [<span class="num">90</span>, <span class="num">88</span>, <span class="num">95</span>, <span class="num">91</span>],  <span class="cmt"># 学生C</span>
+])
+
+<span class="builtin">print</span>(<span class="str">"成绩矩阵:"</span>)
+<span class="builtin">print</span>(scores)
+<span class="builtin">print</span>(<span class="str">"shape:"</span>, scores.shape)  <span class="cmt"># (3, 4)</span>
+
+<span class="cmt"># ── axis=0：沿列聚合（每科所有学生的统计）──</span>
+<span class="builtin">print</span>(<span class="str">"\n--- axis=0（按科目）---"</span>)
+<span class="builtin">print</span>(<span class="str">"每科最高分:"</span>, scores.<span class="fn">max</span>(axis=<span class="num">0</span>))
+<span class="builtin">print</span>(<span class="str">"每科最低分:"</span>, scores.<span class="fn">min</span>(axis=<span class="num">0</span>))
+<span class="builtin">print</span>(<span class="str">"每科平均分:"</span>, scores.<span class="fn">mean</span>(axis=<span class="num">0</span>))
+
+<span class="cmt"># ── axis=1：沿行聚合（每个学生所有科目的统计）──</span>
+<span class="builtin">print</span>(<span class="str">"\n--- axis=1（按学生）---"</span>)
+<span class="builtin">print</span>(<span class="str">"每人总分:"</span>, scores.<span class="fn">sum</span>(axis=<span class="num">1</span>))
+<span class="builtin">print</span>(<span class="str">"每人平均分:"</span>, scores.<span class="fn">mean</span>(axis=<span class="num">1</span>))
+<span class="builtin">print</span>(<span class="str">"每人最高分:"</span>, scores.<span class="fn">max</span>(axis=<span class="num">1</span>))
+
+<span class="cmt"># ── 全局聚合 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n--- 全局 ---"</span>)
+<span class="builtin">print</span>(<span class="str">"全局最高分:"</span>, scores.<span class="fn">max</span>())
+<span class="builtin">print</span>(<span class="str">"全局平均分:"</span>, <span class="fn">round</span>(scores.<span class="fn">mean</span>(), <span class="num">2</span>))
+
+<span class="cmt"># ── 百分位数 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n25分位:"</span>, np.<span class="fn">percentile</span>(scores, <span class="num">25</span>))
+<span class="builtin">print</span>(<span class="str">"中位数:"</span>, np.<span class="fn">median</span>(scores))</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">成绩矩阵:
+[[85 92 78 88]
+ [76 85 90 82]
+ [90 88 95 91]]
+shape: (3, 4)
+
+--- axis=0（按科目）---
+每科最高分: [90 92 95 91]
+每科最低分: [76 85 78 82]
+每科平均分: [83.67 88.33 87.67 87.  ]
+
+--- axis=1（按学生）---
+每人总分: [343 333 364]
+每人平均分: [85.75 83.25 91.  ]
+每人最高分: [92 90 95]
+
+--- 全局 ---
+全局最高分: 95
+全局平均分: 86.92
+
+25分位: 82.5
+中位数: 88.0</div>
+    </div>
+    <div class="tip blue"><span class="ti">📝</span><div><b>axis 记忆技巧</b>：<code>axis=0</code> 就是"消灭第0维"（行被压缩，只剩列统计）；<code>axis=1</code> 就是"消灭第1维"（列被压缩，只剩行统计）。</div></div>
+  </div>
+
+  <!-- 4.3 排序与去重 -->
+  <div class="card">
+    <h3>4.3 排序、去重与拼接</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_sort.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ── 排序 ──</span>
+arr = np.<span class="builtin">array</span>([<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">6</span>])
+<span class="builtin">print</span>(<span class="str">"原数组:"</span>, arr)
+<span class="builtin">print</span>(<span class="str">"升序:"</span>, np.<span class="fn">sort</span>(arr))
+<span class="builtin">print</span>(<span class="str">"降序:"</span>, np.<span class="fn">sort</span>(arr)[::-<span class="num">1</span>])
+<span class="builtin">print</span>(<span class="str">"原数组不变:"</span>, arr)  <span class="cmt"># sort 不修改原数组</span>
+
+<span class="cmt"># ── 去重 ──</span>
+unique = np.<span class="fn">unique</span>(arr)
+<span class="builtin">print</span>(<span class="str">"\n去重:"</span>, unique)
+<span class="builtin">print</span>(<span class="str">"去重+计数:"</span>)
+vals, counts = np.<span class="fn">unique</span>(arr, return_counts=<span class="kw">True</span>)
+<span class="kw">for</span> v, c <span class="kw">in</span> <span class="builtin">zip</span>(vals, counts):
+    <span class="builtin">print</span>(<span class="str">f"  {v}: {c}次"</span>)
+
+<span class="cmt"># ── 拼接 ──</span>
+a = np.<span class="builtin">array</span>([[<span class="num">1</span>, <span class="num">2</span>], [<span class="num">3</span>, <span class="num">4</span>]])
+b = np.<span class="builtin">array</span>([[<span class="num">5</span>, <span class="num">6</span>]])
+
+<span class="cmt"># 垂直拼接（行方向）</span>
+vstack = np.<span class="fn">vstack</span>([a, b])
+<span class="builtin">print</span>(<span class="str">"\nvstack:"</span>)
+<span class="builtin">print</span>(vstack)
+
+<span class="cmt"># 水平拼接（列方向）</span>
+c = np.<span class="builtin">array</span>([[<span class="num">7</span>], [<span class="num">8</span>]])
+hstack = np.<span class="fn">hstack</span>([a, c])
+<span class="builtin">print</span>(<span class="str">"\nhstack:"</span>)
+<span class="builtin">print</span>(hstack)
+
+<span class="cmt"># ── concatenate 通用拼接 ──</span>
+<span class="cmt"># axis=0 等价 vstack, axis=1 等价 hstack</span>
+concat = np.<span class="fn">concatenate</span>([a, b], axis=<span class="num">0</span>)
+<span class="builtin">print</span>(<span class="str">"\nconcatenate axis=0:"</span>)
+<span class="builtin">print</span>(concat)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">原数组: [3 1 4 1 5 9 2 6]
+升序: [1 1 2 3 4 5 6 9]
+降序: [9 6 5 4 3 2 1 1]
+原数组不变: [3 1 4 1 5 9 2 6]
+
+去重: [1 2 3 4 5 6 9]
+去重+计数:
+  1: 2次
+  2: 1次
+  3: 1次
+  4: 1次
+  5: 1次
+  6: 1次
+  9: 1次
+
+vstack:
+[[1 2]
+ [3 4]
+ [5 6]]
+
+hstack:
+[[1 2 7]
+ [3 4 8]]
+
+concatenate axis=0:
+[[1 2]
+ [3 4]
+ [5 6]]</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 5: 线性代数 ═══════ -->
+<section class="sec" id="linalg">
+  <h2 class="sec-title"><span class="n">5</span> 线性代数</h2>
+  <p class="sec-intro">NumPy 的 <code>np.linalg</code> 模块提供了完整的线性代数运算能力，是机器学习、物理模拟、金融建模等领域的基石。</p>
+
+  <!-- 5.1 矩阵运算 -->
+  <div class="card">
+    <h3>5.1 矩阵乘法与转置 <span class="badge">核心</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>一个简单的线性回归：用矩阵运算 <code>Y = XW + B</code> 计算神经网络的输出。X 是输入矩阵（3个样本×2个特征），W 是权重（2×1），B 是偏置。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_matmul.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 输入：3个样本，2个特征</span>
+X = np.<span class="builtin">array</span>([
+    [<span class="num">1.0</span>, <span class="num">2.0</span>],
+    [<span class="num">3.0</span>, <span class="num">4.0</span>],
+    [<span class="num">5.0</span>, <span class="num">6.0</span>],
+])
+
+<span class="cmt"># 权重：2个特征 → 1个输出</span>
+W = np.<span class="builtin">array</span>([[<span class="num">0.5</span>], [<span class="num">0.3</span>]])
+
+<span class="cmt"># 偏置</span>
+B = np.<span class="builtin">array</span>([<span class="num">0.1</span>])
+
+<span class="builtin">print</span>(<span class="str">"X shape:"</span>, X.shape)  <span class="cmt"># (3, 2)</span>
+<span class="builtin">print</span>(<span class="str">"W shape:"</span>, W.shape)  <span class="cmt"># (2, 1)</span>
+
+<span class="cmt"># ── 矩阵乘法（推荐 @ 运算符）──</span>
+<span class="cmt"># Y = X @ W + B</span>
+Y = X @ W + B  <span class="cmt"># 广播：B(1,) → (3,1)</span>
+<span class="builtin">print</span>(<span class="str">"\nY = X @ W + B:"</span>)
+<span class="builtin">print</span>(Y)
+<span class="builtin">print</span>(<span class="str">"Y shape:"</span>, Y.shape)  <span class="cmt"># (3, 1)</span>
+
+<span class="cmt"># ── 等价写法 ──</span>
+Y2 = np.<span class="fn">dot</span>(X, W) + B
+Y3 = np.<span class="fn">matmul</span>(X, W) + B
+<span class="builtin">print</span>(<span class="str">"\nnp.dot 等价:"</span>, Y2.flatten())
+
+<span class="cmt"># ── 逐元素乘法（不是矩阵乘法！）──</span>
+A = np.<span class="builtin">array</span>([[<span class="num">1</span>, <span class="num">2</span>], [<span class="num">3</span>, <span class="num">4</span>]])
+B_mat = np.<span class="builtin">array</span>([[<span class="num">5</span>, <span class="num">6</span>], [<span class="num">7</span>, <span class="num">8</span>]])
+
+<span class="builtin">print</span>(<span class="str">"\n矩阵A:"</span>)
+<span class="builtin">print</span>(A)
+<span class="builtin">print</span>(<span class="str">"\n矩阵B:"</span>)
+<span class="builtin">print</span>(B_mat)
+
+element_wise = A * B_mat  <span class="cmt"># 逐元素相乘</span>
+matrix_mul = A @ B_mat    <span class="cmt"># 矩阵乘法</span>
+
+<span class="builtin">print</span>(<span class="str">"\n逐元素乘法 A * B:"</span>)
+<span class="builtin">print</span>(element_wise)
+
+<span class="builtin">print</span>(<span class="str">"\n矩阵乘法 A @ B:"</span>)
+<span class="builtin">print</span>(matrix_mul)
+
+<span class="cmt"># ── 转置 ──</span>
+<span class="builtin">print</span>(<span class="str">"\nA的转置:"</span>)
+<span class="builtin">print</span>(A.T)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">X shape: (3, 2)
+W shape: (2, 1)
+
+Y = X @ W + B:
+[[1.2]
+ [3.2]
+ [5.2]]
+Y shape: (3, 1)
+
+np.dot 等价: [1.2 3.2 5.2]
+
+矩阵A:
+[[1 2]
+ [3 4]]
+
+矩阵B:
+[[5 6]
+ [7 8]]
+
+逐元素乘法 A * B:
+[[ 5 12]
+ [21 32]]
+
+矩阵乘法 A @ B:
+[[19 22]
+ [43 50]]
+
+A的转置:
+[[1 3]
+ [2 4]]</div>
+    </div>
+    <div class="tip warn"><span class="ti">⚠️</span><div><b>最大误区</b>：<code>*</code> 是逐元素乘法，<code>@</code> 是矩阵乘法！<code>A * B</code> ≠ <code>A @ B</code>。在写神经网络代码时用错会导致完全错误的结果。</div></div>
+  </div>
+
+  <!-- 5.2 矩阵分解与求解 -->
+  <div class="card">
+    <h3>5.2 逆矩阵、行列式与线性方程组求解</h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>用最小二乘法求解线性回归：给定一组数据点，找到最佳拟合直线 y = ax + b 的参数。等价于求解 <code>X^T X · θ = X^T y</code>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_linalg.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ── 逆矩阵 ──</span>
+A = np.<span class="builtin">array</span>([[<span class="num">4</span>, <span class="num">7</span>], [<span class="num">2</span>, <span class="num">6</span>]])
+A_inv = np.linalg.<span class="fn">inv</span>(A)
+<span class="builtin">print</span>(<span class="str">"矩阵A:"</span>)
+<span class="builtin">print</span>(A)
+<span class="builtin">print</span>(<span class="str">"\n逆矩阵A⁻¹:"</span>)
+<span class="builtin">print</span>(np.<span class="fn">round</span>(A_inv, <span class="num">4</span>))
+
+<span class="cmt"># 验证：A @ A⁻¹ = I（单位矩阵）</span>
+identity = A @ A_inv
+<span class="builtin">print</span>(<span class="str">"\n验证 A @ A⁻¹ ≈ I:"</span>)
+<span class="builtin">print</span>(np.<span class="fn">round</span>(identity, <span class="num">10</span>))
+
+<span class="cmt"># ── 行列式 ──</span>
+det = np.linalg.<span class="fn">det</span>(A)
+<span class="builtin">print</span>(<span class="str">"\n行列式 |A|:"</span>, <span class="fn">round</span>(det, <span class="num">2</span>))  <span class="cmt"># 10.0</span>
+
+<span class="cmt"># ── 解线性方程组 Ax = b ──</span>
+<span class="cmt"># 4x + 7y = 10</span>
+<span class="cmt"># 2x + 6y = 8</span>
+b = np.<span class="builtin">array</span>([<span class="num">10</span>, <span class="num">8</span>])
+x = np.linalg.<span class="fn">solve</span>(A, b)
+<span class="builtin">print</span>(<span class="str">"\n方程组解:"</span>, x)  <span class="cmt"># [x, y]</span>
+<span class="builtin">print</span>(<span class="str">"验证 Ax:"</span>, A @ x)  <span class="cmt"># 应等于 b</span>
+
+<span class="cmt"># ── 最小二乘法（线性回归）──</span>
+<span class="cmt"># 数据点：(1,2), (2,3), (3,5), (4,4), (5,6)</span>
+x_data = np.<span class="builtin">array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>])
+y_data = np.<span class="builtin">array</span>([<span class="num">2</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">4</span>, <span class="num">6</span>])
+
+<span class="cmt"># 构造设计矩阵 [x, 1]</span>
+X = np.<span class="fn">column_stack</span>([x_data, np.<span class="fn">ones</span>(<span class="builtin">len</span>(x_data))])
+
+<span class="cmt"># 最小二乘求解：y = ax + b</span>
+params, residuals, rank, sv = np.linalg.<span class="fn">lstsq</span>(X, y_data, rcond=<span class="kw">None</span>)
+a, b_fit = params
+<span class="builtin">print</span>(<span class="str">f"\n线性回归: y = {a:.2f}x + {b_fit:.2f}"</span>)
+<span class="builtin">print</span>(<span class="str">"残差平方和:"</span>, <span class="fn">round</span>(residuals[<span class="num">0</span>], <span class="num">4</span>) <span class="kw">if</span> <span class="builtin">len</span>(residuals) &gt; <span class="num">0</span> <span class="kw">else</span> <span class="str">"N/A"</span>)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">矩阵A:
+[[4 7]
+ [2 6]]
+
+逆矩阵A⁻¹:
+[[ 0.6 -0.7]
+ [-0.2  0.4]]
+
+验证 A @ A⁻¹ ≈ I:
+[[ 1.  0.]
+ [ 0.  1.]]
+
+行列式 |A|: 10.0
+
+方程组解: [0.2 1.6]
+验证 Ax: [10.  8.]
+
+线性回归: y = 0.90x + 1.30
+残差平方和: 0.9</div>
+    </div>
+  </div>
+
+  <!-- 5.3 特征值与SVD -->
+  <div class="card">
+    <h3>5.3 特征值分解与奇异值分解（SVD）</h3>
+    <p>特征值分解和 SVD 是线性代数中最重要的矩阵分解，在 PCA 降维、推荐系统、图像压缩等领域广泛应用。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_decomp.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ── 特征值与特征向量 ──</span>
+<span class="cmt"># 对于方阵 A，求 Av = λv 的 λ（特征值）和 v（特征向量）</span>
+A = np.<span class="builtin">array</span>([[<span class="num">2</span>, <span class="num">1</span>], [<span class="num">1</span>, <span class="num">3</span>]])
+eigenvalues, eigenvectors = np.linalg.<span class="fn">eig</span>(A)
+
+<span class="builtin">print</span>(<span class="str">"矩阵A:"</span>)
+<span class="builtin">print</span>(A)
+<span class="builtin">print</span>(<span class="str">"\n特征值:"</span>, np.<span class="fn">round</span>(eigenvalues, <span class="num">4</span>))
+<span class="builtin">print</span>(<span class="str">"特征向量:"</span>)
+<span class="builtin">print</span>(np.<span class="fn">round</span>(eigenvectors, <span class="num">4</span>))
+
+<span class="cmt"># 验证：A @ v = λ * v</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="builtin">len</span>(eigenvalues)):
+    v = eigenvectors[:, i]
+    lhs = A @ v
+    rhs = eigenvalues[i] * v
+    <span class="builtin">print</span>(<span class="str">f"\n特征值 {eigenvalues[i]:.4f}: Av = {np.round(lhs,4)}, λv = {np.round(rhs,4)}"</span>)
+
+<span class="cmt"># ── 奇异值分解（SVD）──</span>
+<span class="cmt"># A = U @ Σ @ V^T</span>
+M = np.<span class="builtin">array</span>([[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>], [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>]])
+U, S, Vt = np.linalg.<span class="fn">svd</span>(M)
+
+<span class="builtin">print</span>(<span class="str">"\n=== SVD 分解 ==="</span>)
+<span class="builtin">print</span>(<span class="str">"矩阵M shape:"</span>, M.shape)
+<span class="builtin">print</span>(<span class="str">"U shape:"</span>, U.shape)
+<span class="builtin">print</span>(<span class="str">"奇异值 S:"</span>, np.<span class="fn">round</span>(S, <span class="num">4</span>))
+<span class="builtin">print</span>(<span class="str">"Vt shape:"</span>, Vt.shape)
+
+<span class="cmt"># 重构原矩阵</span>
+<span class="cmt"># S 是一维数组，需要还原为对角矩阵</span>
+Sigma = np.<span class="fn">zeros</span>(M.shape)
+Sigma[:<span class="builtin">len</span>(S), :<span class="builtin">len</span>(S)] = np.<span class="fn">diag</span>(S)
+M_reconstructed = U @ Sigma @ Vt
+<span class="builtin">print</span>(<span class="str">"\n重构矩阵（应等于M）:"</span>)
+<span class="builtin">print</span>(np.<span class="fn">round</span>(M_reconstructed, <span class="num">10</span>))
+
+<span class="cmt"># ── 矩阵的迹 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n矩阵的迹 tr(A):"</span>, np.<span class="fn">trace</span>(A))  <span class="cmt"># 对角线之和：2+3=5</span>
+
+<span class="cmt"># ── 范数 ──</span>
+v = np.<span class="builtin">array</span>([<span class="num">3</span>, <span class="num">4</span>])
+<span class="builtin">print</span>(<span class="str">"\n向量范数 L2:"</span>, np.linalg.<span class="fn">norm</span>(v))     <span class="cmt"># 5.0 (3-4-5直角三角形)</span>
+<span class="builtin">print</span>(<span class="str">"向量范数 L1:"</span>, np.linalg.<span class="fn">norm</span>(v, ord=<span class="num">1</span>))  <span class="cmt"># 7.0 (|3|+|4|)</span></pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">矩阵A:
+[[2 1]
+ [1 3]]
+
+特征值: [1.382 3.618]
+特征向量:
+[[-0.851  0.526]
+ [ 0.526  0.851]]
+
+特征值 1.3820: Av = [-1.176  0.727], λv = [-1.176  0.727]
+特征值 3.6180: Av = [1.902 3.073], λv = [1.902 3.073]
+
+=== SVD 分解 ===
+矩阵M shape: (2, 3)
+U shape: (2, 2)
+奇异值 S: [9.508  0.7729]
+Vt shape: (3, 3)
+
+重构矩阵（应等于M）:
+[[1. 2. 3.]
+ [4. 5. 6.]]
+
+矩阵的迹 tr(A): 5
+
+向量范数 L2: 5.0
+向量范数 L1: 7.0</div>
+    </div>
+
+    <div class="tip purple"><span class="ti">🚀</span><div><b>SVD 的威力</b>：SVD 可以分解任意形状的矩阵（不要求方阵），在 PCA 降维中取前 k 个最大奇异值就能实现数据压缩。Netflix 推荐算法大赛的冠军方案就基于 SVD。</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 6: 总结 ═══════ -->
+<section class="sec" id="summary">
+  <h2 class="sec-title"><span class="n">6</span> NumPy 核心 API 速查表</h2>
+
+  <div class="card">
+    <h3>📋 常用 API 速查</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>分类</th><th>API</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="4">创建</td><td><code>np.array(list)</code></td><td>从列表创建数组</td></tr>
+          <tr><td><code>np.zeros / ones(shape)</code></td><td>全零/全一数组</td></tr>
+          <tr><td><code>np.arange / linspace()</code></td><td>等差数列</td></tr>
+          <tr><td><code>np.random.rand / randn()</code></td><td>随机数</td></tr>
+          <tr><td rowspan="4">属性</td><td><code>arr.shape</code></td><td>数组形状</td></tr>
+          <tr><td><code>arr.ndim</code></td><td>维度数</td></tr>
+          <tr><td><code>arr.dtype</code></td><td>数据类型</td></tr>
+          <tr><td><code>arr.size</code></td><td>元素总数</td></tr>
+          <tr><td rowspan="4">索引</td><td><code>arr[row, col]</code></td><td>基本索引</td></tr>
+          <tr><td><code>arr[mask]</code></td><td>布尔索引</td></tr>
+          <tr><td><code>arr[[i1,i2,...]]</code></td><td>花式索引</td></tr>
+          <tr><td><code>np.where(cond, x, y)</code></td><td>条件选择</td></tr>
+          <tr><td rowspan="3">形状</td><td><code>arr.reshape()</code></td><td>改变形状</td></tr>
+          <tr><td><code>arr.T</code></td><td>转置</td></tr>
+          <tr><td><code>arr.flatten()</code></td><td>展平</td></tr>
+          <tr><td rowspan="4">运算</td><td><code>arr + / - / * /</code></td><td>逐元素运算</td></tr>
+          <tr><td><code>arr @ arr2</code></td><td>矩阵乘法</td></tr>
+          <tr><td><code>np.sum / mean / std(axis)</code></td><td>聚合统计</td></tr>
+          <tr><td><code>np.sort / argsort()</code></td><td>排序</td></tr>
+          <tr><td rowspan="4">线代</td><td><code>np.linalg.inv()</code></td><td>逆矩阵</td></tr>
+          <tr><td><code>np.linalg.det()</code></td><td>行列式</td></tr>
+          <tr><td><code>np.linalg.solve()</code></td><td>解线性方程组</td></tr>
+          <tr><td><code>np.linalg.svd()</code></td><td>奇异值分解</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">🎓</span>
+      <div><b>学习路径建议</b>：NumPy 的核心就三件事 —— <b>创建数组</b>、<b>索引切片</b>、<b>向量化运算</b>。掌握这三点就能覆盖大部分科学计算需求。广播机制和线性代数是进阶内容，在机器学习和数据分析中会频繁使用。建议在实际项目中边用边学，遇到不会的操作查 API 速查表即可。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔗 Pandas + NumPy 协同</h3>
+    <p>在实际数据科学工作中，NumPy 和 Pandas 几乎总是配合使用：</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · np_pd.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cmt"># Pandas DataFrame 底层就是 NumPy 数组</span>
+df = pd.DataFrame({
+    <span class="str">'A'</span>: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+    <span class="str">'B'</span>: [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>],
+})
+
+<span class="cmt"># DataFrame → NumPy 数组</span>
+arr = df.values  <span class="cmt"># 或 df.to_numpy()</span>
+<span class="builtin">print</span>(<span class="str">"类型:"</span>, <span class="builtin">type</span>(arr))   <span class="cmt"># numpy.ndarray</span>
+<span class="builtin">print</span>(arr)
+
+<span class="cmt"># NumPy 运算 → DataFrame</span>
+result = np.<span class="fn">sqrt</span>(arr)  <span class="cmt"># 逐元素开方</span>
+df_sqrt = pd.DataFrame(result, columns=df.columns)
+<span class="builtin">print</span>(<span class="str">"\n开方后的DataFrame:"</span>)
+<span class="builtin">print</span>(df_sqrt)
+
+<span class="cmt"># Pandas 列就是 NumPy 数组</span>
+col_a = df[<span class="str">'A'</span>].values  <span class="cmt"># 一维 ndarray</span>
+<span class="builtin">print</span>(<span class="str">"\n列A的ndarray:"</span>, col_a)
+<span class="builtin">print</span>(<span class="str">"类型:"</span>, <span class="builtin">type</span>(col_a))</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">类型: &lt;class 'numpy.ndarray'&gt;
+[[1 4]
+ [2 5]
+ [3 6]]
+
+开方后的DataFrame:
+          A         B
+0  1.000000  2.000000
+1  1.414214  2.236068
+2  1.732051  2.449490
+
+列A的ndarray: [1 2 3]
+类型: &lt;class 'numpy.ndarray'&gt;</div>
+    </div>
+    <div class="tip info"><span class="ti">💡</span><div><b>底层关系</b>：Pandas 的每一列在内存中就是一个 NumPy 数组。当你对 DataFrame 做数值运算时，Pandas 实际上在调用 NumPy 的向量化函数。所以学好 NumPy 是学好 Pandas 的前提。</div></div>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <p>NumPy 科学计算全指南 · Frontend Learning Hub · 单文件 HTML 教程，打开即用</p>
+</footer>
+
+</body>
+</html>

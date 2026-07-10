@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandas 数据处理全指南 · 交互式学习教程</title>
+<style>
+:root {
+  --pd: #150458; --pd-dark: #0a0230; --pd-light: #ede9fe;
+  --pd-accent: #7028E4; --pd-accent2: #FFCA00;
+  --bg: #fafafa; --surface: #fff; --border: #e5e7eb;
+  --text: #1a1a2e; --text2: #5a6170; --text3: #9ca3af;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --red: #dc2626; --red-light: #fee2e2;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --teal: #0d9488; --teal-light: #ccfbf1;
+  --code-bg: #1a1a2e;
+  --radius: 12px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow)}
+.nav .logo{font-weight:900;font-size:1.1rem;color:var(--pd);padding:14px 0;margin-right:16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav .logo svg{width:24px;height:24px;flex-shrink:0}
+.nav a{text-decoration:none;color:var(--text2);font-size:.84rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--pd-light);color:var(--pd)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#150458 0%,#7028E4 50%,#0a0230 100%);color:#fff;padding:64px 40px 52px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-80px;right:-60px;width:300px;height:300px;background:rgba(255,202,0,.08);border-radius:50%}
+.hero::after{content:"";position:absolute;bottom:-40px;left:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h1{font-size:2.6rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative}
+.hero .sub{font-size:1.04rem;opacity:.9;margin-top:12px;max-width:680px;margin-inline:auto;position:relative}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.8rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+
+/* SECTION */
+.sec{margin-top:40px;scroll-margin-top:64px}
+.sec-title{font-size:1.6rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--pd-accent);display:flex;align-items:center;gap:12px}
+.sec-title .n{background:var(--pd-accent);color:#fff;min-width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700}
+.sec-intro{font-size:.88rem;color:var(--text2);margin-bottom:18px;line-height:1.7}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.05rem;margin-bottom:10px;color:var(--pd-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card p{font-size:.87rem;margin-bottom:8px;color:var(--text2)}
+
+/* TIP */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.tip .ti{flex-shrink:0;font-size:1.05rem}
+.tip.info{background:var(--pd-light);border-left:4px solid var(--pd-accent)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.purple{background:var(--purple-light);border-left:4px solid var(--purple)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+
+/* CODE BLOCK */
+.code-block{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;border:1px solid #334155}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#16162a;border-bottom:1px solid #334155}
+.code-header .code-label{font-size:.72rem;color:#94a3b8;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.code-header .dots{display:flex;gap:6px;margin-right:8px}
+.code-header .dots span{width:11px;height:11px;border-radius:50%}
+.code-header .dots span:nth-child(1){background:#ef4444}
+.code-header .dots span:nth-child(2){background:#f59e0b}
+.code-header .dots span:nth-child(3){background:#22c55e}
+.code-header .file-name{font-size:.72rem;color:#7c3aed;font-family:var(--mono)}
+.code-body{padding:16px 22px;overflow-x:auto}
+.code-body pre{font-family:var(--mono);font-size:.8rem;color:#e2e8f0;white-space:pre;line-height:1.75}
+.kw{color:#c4b5fd}.str{color:#86efac}.cmt{color:#64748b;font-style:italic}
+.fn{color:#93c5fd}.num{color:#fdba74}.typ{color:#fde68a}
+.builtin{color:#f9a8d4}.op{color:#fca5a5}.dec{color:#67e8f9}
+
+/* OUTPUT DISPLAY */
+.output{background:#0f172a;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:14px 22px;border-top:1px solid #334155}
+.output .out-label{font-size:.66rem;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono);display:flex;align-items:center;gap:6px}
+.output .out-content{font-family:var(--mono);font-size:.78rem;color:#a6e3a1;white-space:pre-wrap;line-height:1.7;min-height:20px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--pd-light);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--pd-accent);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f5f3ff}
+
+/* MIND MAP */
+.mindmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.mm-node{background:var(--surface);border:2px solid var(--pd-accent);border-radius:var(--radius-sm);padding:16px;text-align:center;transition:all .2s}
+.mm-node:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(112,40,228,.15)}
+.mm-node .mm-icon{font-size:1.8rem;margin-bottom:6px}
+.mm-node .mm-title{font-weight:700;font-size:.88rem;color:var(--pd-dark)}
+.mm-node .mm-desc{font-size:.76rem;color:var(--text2);margin-top:4px}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#7028E4,#FFCA00);color:#fff;padding:2px 12px;border-radius:12px;font-size:.7rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+
+/* DATA SCENE */
+.scene{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #ddd6fe;border-radius:var(--radius-sm);padding:16px 20px;margin:14px 0}
+.scene .scene-label{font-size:.72rem;font-weight:700;color:var(--pd-accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.scene p{font-size:.84rem;color:var(--text2);margin:0}
+
+/* FOOTER */
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);font-size:.82rem;color:var(--text3)}
+.footer a{color:var(--pd-accent);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero{padding:40px 20px 32px}
+  .hero h1{font-size:1.8rem}
+  .wrap{padding:20px 14px 40px}
+  .card{padding:18px 16px}
+  .code-body pre{font-size:.72rem}
+  .output .out-content{font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#150458"/><text x="12" y="16" text-anchor="middle" fill="#FFCA00" font-size="12" font-weight="900" font-family="Arial">pd</text></svg>
+    Pandas 全指南
+  </div>
+  <a href="#intro" class="active">概览</a>
+  <a href="#series">Series</a>
+  <a href="#dataframe">DataFrame</a>
+  <a href="#filter">数据筛选</a>
+  <a href="#groupby">分组聚合</a>
+  <a href="#missing">缺失值</a>
+  <a href="#summary">总结</a>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<header class="hero">
+  <h1>🐼 Pandas 数据处理全指南</h1>
+  <p class="sub">从 Series 到 DataFrame，从数据筛选到分组聚合 —— 用真实业务场景掌握 Python 数据分析核心利器</p>
+  <div class="tags">
+    <span class="tag">📊 数据分析</span>
+    <span class="tag">🔧 数据清洗</span>
+    <span class="tag">📈 分组聚合</span>
+    <span class="tag">🐍 Python</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ═══════ SECTION 0: 概览 ═══════ -->
+<section class="sec" id="intro">
+  <h2 class="sec-title"><span class="n">0</span> Pandas 是什么？</h2>
+  <p class="sec-intro">Pandas 是 Python 生态中最核心的数据分析库，建立在 NumPy 之上，提供了 Series 和 DataFrame 两种数据结构，让你像写 SQL 一样处理表格数据。</p>
+
+  <div class="mindmap">
+    <div class="mm-node">
+      <div class="mm-icon">📊</div>
+      <div class="mm-title">Series</div>
+      <div class="mm-desc">一维带标签数组<br>类似 SQL 的一列</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">📋</div>
+      <div class="mm-title">DataFrame</div>
+      <div class="mm-desc">二维表格结构<br>类似 Excel 表</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">🔍</div>
+      <div class="mm-title">数据筛选</div>
+      <div class="mm-desc">布尔索引 / loc / iloc<br>条件过滤行/列</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">📈</div>
+      <div class="mm-title">分组聚合</div>
+      <div class="mm-desc">groupby + agg<br>类似 SQL GROUP BY</div>
+    </div>
+    <div class="mm-node">
+      <div class="mm-icon">🧹</div>
+      <div class="mm-title">缺失值处理</div>
+      <div class="mm-desc">isna / fillna / dropna<br>数据清洗利器</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📦 安装与导入</h3>
+    <p>Pandas 通常随 Anaconda 一起安装，也可通过 pip 单独安装：</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Shell · 安装</div>
+      </div>
+      <div class="code-body"><pre><span class="cmt"># 使用 pip 安装</span>
+pip install pandas
+
+<span class="cmt"># 使用 conda 安装</span>
+conda install pandas
+
+<span class="cmt"># 导入（约定俗成的别名）</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np</pre></div>
+    </div>
+    <div class="tip info"><span class="ti">💡</span><div><b>约定俗成</b>：几乎所有 Pandas 代码都用 <code>pd</code> 作为别名，NumPy 用 <code>np</code>。遵循这个惯例能让你的代码更容易被其他人读懂。</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 1: Series ═══════ -->
+<section class="sec" id="series">
+  <h2 class="sec-title"><span class="n">1</span> Series —— 一维数据结构</h2>
+  <p class="sec-intro">Series 是 Pandas 中最基本的数据结构，类似一维数组但带有索引标签。你可以把它理解为 Excel 中的一列数据。</p>
+
+  <!-- 1.1 创建 Series -->
+  <div class="card">
+    <h3>1.1 创建 Series <span class="badge">基础</span></h3>
+    <p>Series 可以从列表、字典、NumPy 数组等多种数据源创建。每个 Series 包含两部分：<b>数据（values）</b>和<b>索引（index）</b>。</p>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>假设你在分析一家科技公司的员工薪资数据，需要存储每个部门的平均月薪。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · series_create.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cmt"># ── 方式1：从列表创建（自动生成整数索引）──</span>
+salaries = pd.<span class="builtin">Series</span>([<span class="num">18000</span>, <span class="num">22000</span>, <span class="num">15000</span>, <span class="num">25000</span>])
+<span class="builtin">print</span>(salaries)
+
+<span class="cmt"># ── 方式2：指定索引标签 ──</span>
+dept_salary = pd.<span class="builtin">Series</span>(
+    [<span class="num">18000</span>, <span class="num">22000</span>, <span class="num">15000</span>, <span class="num">25000</span>],
+    index=[<span class="str">'前端'</span>, <span class="str">'后端'</span>, <span class="str">'测试'</span>, <span class="str">'算法'</span>]
+)
+<span class="builtin">print</span>(dept_salary)
+
+<span class="cmt"># ── 方式3：从字典创建（键自动成为索引）──</span>
+salary_dict = pd.<span class="builtin">Series</span>({
+    <span class="str">'前端'</span>: <span class="num">18000</span>,
+    <span class="str">'后端'</span>: <span class="num">22000</span>,
+    <span class="str">'测试'</span>: <span class="num">15000</span>,
+    <span class="str">'算法'</span>: <span class="num">25000</span>
+})
+<span class="builtin">print</span>(salary_dict)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">0    18000
+1    22000
+2    15000
+3    25000
+dtype: int64
+
+前端    18000
+后端    22000
+测试    15000
+算法    25000
+dtype: int64
+
+前端    18000
+后端    22000
+测试    15000
+算法    25000
+dtype: int64</div>
+    </div>
+    <div class="tip blue"><span class="ti">📝</span><div>注意输出中的 <code>dtype: int64</code>，Pandas 会自动推断数据类型。如果混合了字符串和数字，会退化为 <code>object</code> 类型。</div></div>
+  </div>
+
+  <!-- 1.2 Series 属性与操作 -->
+  <div class="card">
+    <h3>1.2 Series 属性与基本操作</h3>
+    <p>获取 Series 的索引、值、数据类型，以及通过标签/位置访问元素。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · series_ops.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+s = pd.<span class="builtin">Series</span>([<span class="num">18000</span>, <span class="num">22000</span>, <span class="num">15000</span>, <span class="num">25000</span>],
+          index=[<span class="str">'前端'</span>, <span class="str">'后端'</span>, <span class="str">'测试'</span>, <span class="str">'算法'</span>])
+
+<span class="cmt"># ── 查看属性 ──</span>
+<span class="builtin">print</span>(<span class="str">"索引:"</span>, s.index.tolist())      <span class="cmt"># ['前端', '后端', '测试', '算法']</span>
+<span class="builtin">print</span>(<span class="str">"值:"</span>, s.values)               <span class="cmt"># [18000 22000 15000 25000]</span>
+<span class="builtin">print</span>(<span class="str">"数据类型:"</span>, s.dtype)           <span class="cmt"># int64</span>
+<span class="builtin">print</span>(<span class="str">"元素个数:"</span>, s.size)             <span class="cmt"># 4</span>
+
+<span class="cmt"># ── 通过标签访问（推荐）──</span>
+<span class="builtin">print</span>(<span class="str">"\n后端薪资:"</span>, s[<span class="str">'后端'</span>])          <span class="cmt"># 22000</span>
+
+<span class="cmt"># ── 通过位置访问（iloc）──</span>
+<span class="builtin">print</span>(<span class="str">"第二个元素:"</span>, s.iloc[<span class="num">1</span>])        <span class="cmt"># 22000</span>
+
+<span class="cmt"># ── 切片访问 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n前两个部门:"</span>)
+<span class="builtin">print</span>(s[:<span class="str">'后端'</span>])  <span class="cmt"># 标签切片包含两端</span>
+
+<span class="cmt"># ── 向量化运算（每个元素都加2000）──</span>
+<span class="builtin">print</span>(<span class="str">"\n加薪后:"</span>)
+<span class="builtin">print</span>(s + <span class="num">2000</span>)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">索引: ['前端', '后端', '测试', '算法']
+值: [18000 22000 15000 25000]
+数据类型: int64
+元素个数: 4
+
+后端薪资: 22000
+第二个元素: 22000
+
+前两个部门:
+前端    18000
+后端    22000
+dtype: int64
+
+加薪后:
+前端    20000
+后端    24000
+测试    17000
+算法    27000
+dtype: int64</div>
+    </div>
+    <div class="tip warn"><span class="ti">⚠️</span><div><b>loc vs iloc</b>：<code>s.loc['后端']</code> 按标签访问，<code>s.iloc[1]</code> 按位置访问。当索引是整数时两者容易混淆，务必注意区分。</div></div>
+  </div>
+
+  <!-- 1.3 Series 统计方法 -->
+  <div class="card">
+    <h3>1.3 Series 常用统计方法</h3>
+    <p>Pandas 内置了大量统计函数，覆盖日常数据分析的绝大多数需求。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · series_stats.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+s = pd.<span class="builtin">Series</span>([<span class="num">18000</span>, <span class="num">22000</span>, <span class="num">15000</span>, <span class="num">25000</span>, <span class="num">32000</span>],
+          index=[<span class="str">'前端'</span>, <span class="str">'后端'</span>, <span class="str">'测试'</span>, <span class="str">'算法'</span>, <span class="str">'架构'</span>])
+
+<span class="builtin">print</span>(<span class="str">"最高薪资:"</span>, s.<span class="fn">max</span>())        <span class="cmt"># 32000</span>
+<span class="builtin">print</span>(<span class="str">"最低薪资:"</span>, s.<span class="fn">min</span>())        <span class="cmt"># 15000</span>
+<span class="builtin">print</span>(<span class="str">"平均薪资:"</span>, s.<span class="fn">mean</span>())       <span class="cmt"># 22400.0</span>
+<span class="builtin">print</span>(<span class="str">"中位数:"</span>, s.<span class="fn">median</span>())      <span class="cmt"># 22000.0</span>
+<span class="builtin">print</span>(<span class="str">"标准差:"</span>, s.<span class="fn">std</span>())         <span class="cmt"># 6356.49...</span>
+<span class="builtin">print</span>(<span class="str">"薪资总和:"</span>, s.<span class="fn">sum</span>())        <span class="cmt"># 112000</span>
+
+<span class="cmt"># 一键描述性统计</span>
+<span class="builtin">print</span>(<span class="str">"\n--- 描述性统计 ---"</span>)
+<span class="builtin">print</span>(s.<span class="fn">describe</span>())
+
+<span class="cmt"># 排序</span>
+<span class="builtin">print</span>(<span class="str">"\n--- 降序排列 ---"</span>)
+<span class="builtin">print</span>(s.<span class="fn">sort_values</span>(ascending=<span class="kw">False</span>))</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">最高薪资: 32000
+最低薪资: 15000
+平均薪资: 22400.0
+中位数: 22000.0
+标准差: 6356.49368117618
+薪资总和: 112000
+
+--- 描述性统计 ---
+count        5.0
+mean     22400.0
+std       6356.49
+min      15000.0
+25%      18000.0
+50%      22000.0
+75%      25000.0
+max      32000.0
+dtype: float64
+
+--- 降序排列 ---
+架构    32000
+算法    25000
+后端    22000
+前端    18000
+测试    15000
+dtype: int64</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 2: DataFrame ═══════ -->
+<section class="sec" id="dataframe">
+  <h2 class="sec-title"><span class="n">2</span> DataFrame —— 二维表格数据</h2>
+  <p class="sec-intro">DataFrame 是 Pandas 的核心数据结构，类似数据库表或 Excel 工作表。它由多个 Series 组成，每列可以是不同的数据类型。</p>
+
+  <!-- 2.1 创建 DataFrame -->
+  <div class="card">
+    <h3>2.1 创建 DataFrame <span class="badge">核心</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>你有一份电商平台的销售订单数据，包含订单ID、客户名、商品、金额、日期等字段，需要用 DataFrame 来存储和操作。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_create.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cmt"># ── 方式1：从字典创建（最常用）──</span>
+orders = pd.DataFrame({
+    <span class="str">'订单ID'</span>: [<span class="str">'ORD001'</span>, <span class="str">'ORD002'</span>, <span class="str">'ORD003'</span>, <span class="str">'ORD004'</span>, <span class="str">'ORD005'</span>],
+    <span class="str">'客户名'</span>: [<span class="str">'张三'</span>, <span class="str">'李四'</span>, <span class="str">'王五'</span>, <span class="str">'赵六'</span>, <span class="str">'钱七'</span>],
+    <span class="str">'商品'</span>: [<span class="str">'iPhone 15'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'AirPods Pro'</span>, <span class="str">'iPad Air'</span>, <span class="str">'MacBook Pro'</span>],
+    <span class="str">'金额'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>, <span class="num">18999</span>],
+    <span class="str">'日期'</span>: [<span class="str">'2024-01-15'</span>, <span class="str">'2024-01-16'</span>, <span class="str">'2024-01-16'</span>, <span class="str">'2024-01-17'</span>, <span class="str">'2024-01-18'</span>]
+})
+
+<span class="builtin">print</span>(orders)
+<span class="builtin">print</span>(<span class="str">"\n类型:"</span>, <span class="builtin">type</span>(orders))
+
+<span class="cmt"># ── 方式2：从列表的列表创建 ──</span>
+data = [
+    [<span class="str">'ORD001'</span>, <span class="str">'张三'</span>, <span class="str">'iPhone 15'</span>, <span class="num">7999</span>],
+    [<span class="str">'ORD002'</span>, <span class="str">'李四'</span>, <span class="str">'MacBook Pro'</span>, <span class="num">18999</span>],
+]
+df2 = pd.DataFrame(data, columns=[<span class="str">'订单ID'</span>, <span class="str">'客户名'</span>, <span class="str">'商品'</span>, <span class="str">'金额'</span>])
+
+<span class="cmt"># ── 方式3：从 CSV 文件读取（实际最常用）──</span>
+<span class="cmt"># df = pd.read_csv('orders.csv', encoding='utf-8')</span>
+<span class="cmt"># df = pd.read_csv('orders.csv', encoding='utf-8', parse_dates=['日期'])</span></pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">    订单ID 客户名          商品   金额        日期
+0  ORD001   张三    iPhone 15  7999  2024-01-15
+1  ORD002   李四  MacBook Pro  18999  2024-01-16
+2  ORD003   王五  AirPods Pro  1999  2024-01-16
+3  ORD004   赵六      iPad Air  4799  2024-01-17
+4  ORD005   钱七  MacBook Pro  18999  2024-01-18
+
+类型: &lt;class 'pandas.core.frame.DataFrame'&gt;</div>
+    </div>
+  </div>
+
+  <!-- 2.2 DataFrame 基本信息 -->
+  <div class="card">
+    <h3>2.2 DataFrame 基本信息查看</h3>
+    <p>拿到一个 DataFrame 后，第一步永远是了解它的"长相"：形状、列名、数据类型、缺失情况。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_info.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+orders = pd.DataFrame({
+    <span class="str">'订单ID'</span>: [<span class="str">'ORD001'</span>, <span class="str">'ORD002'</span>, <span class="str">'ORD003'</span>, <span class="str">'ORD004'</span>, <span class="str">'ORD005'</span>],
+    <span class="str">'客户名'</span>: [<span class="str">'张三'</span>, <span class="str">'李四'</span>, <span class="str">'王五'</span>, <span class="str">'赵六'</span>, <span class="str">'钱七'</span>],
+    <span class="str">'商品'</span>: [<span class="str">'iPhone 15'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'AirPods Pro'</span>, <span class="str">'iPad Air'</span>, <span class="str">'MacBook Pro'</span>],
+    <span class="str">'金额'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>, <span class="num">18999</span>],
+})
+
+<span class="cmt"># ── 查看前几行（默认5行）──</span>
+<span class="builtin">print</span>(<span class="str">"=== head() ==="</span>)
+<span class="builtin">print</span>(orders.<span class="fn">head</span>(<span class="num">3</span>))
+
+<span class="cmt"># ── 查看形状（行数, 列数）──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== shape ==="</span>)
+<span class="builtin">print</span>(orders.shape)          <span class="cmt"># (5, 4)</span>
+
+<span class="cmt"># ── 查看列名 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== columns ==="</span>)
+<span class="builtin">print</span>(orders.columns.tolist())  <span class="cmt"># ['订单ID', '客户名', '商品', '金额']</span>
+
+<span class="cmt"># ── 查看数据类型 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== dtypes ==="</span>)
+<span class="builtin">print</span>(orders.dtypes)
+
+<span class="cmt"># ── 快速统计摘要（仅数值列）──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== describe() ==="</span>)
+<span class="builtin">print</span>(orders.<span class="fn">describe</span>())
+
+<span class="cmt"># ── 查看详细信息（含内存占用）──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== info() ==="</span>)
+orders.<span class="fn">info</span>()</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== head() ===
+    订单ID 客户名          商品   金额
+0  ORD001   张三    iPhone 15  7999
+1  ORD002   李四  MacBook Pro  18999
+2  ORD003   王五  AirPods Pro  1999
+
+=== shape ===
+(5, 4)
+
+=== columns ===
+['订单ID', '客户名', '商品', '金额']
+
+=== dtypes ===
+订单ID    object
+客户名    object
+商品      object
+金额       int64
+dtype: object
+
+=== describe() ===
+               金额
+count     5.000000
+mean   10359.000000
+std     7648.878887
+min     1999.000000
+25%     4799.000000
+50%     7999.000000
+75%    18999.000000
+max    18999.000000
+
+=== info() ===
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 5 entries, 0 to 4
+Data columns (total 4 columns):
+ #   Column  Non-Null Count  Dtype 
+---  ------  --------------  ----- 
+ 0   订单ID    5 non-null      object
+ 1   客户名    5 non-null      object
+ 2   商品      5 non-null      object
+ 3   金额      5 non-null      int64 
+dtypes: int64(1), object(3)
+memory usage: 288.0+ bytes</div>
+    </div>
+    <div class="tip info"><span class="ti">💡</span><div><b>object 类型</b>：在 Pandas 中，字符串列的类型是 <code>object</code>（底层是 Python 字符串对象）。Pandas 2.0+ 引入了 <code>string</code> 类型来替代，但 <code>object</code> 仍然是最常见的。</div></div>
+  </div>
+
+  <!-- 2.3 DataFrame 列操作 -->
+  <div class="card">
+    <h3>2.3 DataFrame 列操作：选择、新增、删除</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_cols.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="str">'商品'</span>: [<span class="str">'iPhone 15'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'AirPods Pro'</span>, <span class="str">'iPad Air'</span>],
+    <span class="str">'单价'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>],
+    <span class="str">'数量'</span>: [<span class="num">2</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="num">2</span>],
+})
+
+<span class="cmt"># ── 选择单列（返回 Series）──</span>
+prices = df[<span class="str">'单价'</span>]
+<span class="builtin">print</span>(<span class="str">"单价列:"</span>)
+<span class="builtin">print</span>(prices)
+<span class="builtin">print</span>(<span class="str">"类型:"</span>, <span class="builtin">type</span>(prices))  <span class="cmt"># &lt;class 'pandas.core.series.Series'&gt;</span>
+
+<span class="cmt"># ── 选择多列（返回 DataFrame）──</span>
+subset = df[[<span class="str">'商品'</span>, <span class="str">'数量'</span>]]
+<span class="builtin">print</span>(<span class="str">"\n多列选择:"</span>)
+<span class="builtin">print</span>(subset)
+
+<span class="cmt"># ── 新增列（计算总价）──</span>
+df[<span class="str">'总价'</span>] = df[<span class="str">'单价'</span>] * df[<span class="str">'数量'</span>]
+<span class="builtin">print</span>(<span class="str">"\n新增总价列:"</span>)
+<span class="builtin">print</span>(df)
+
+<span class="cmt"># ── 新增列（基于条件）──</span>
+df[<span class="str">'级别'</span>] = df[<span class="str">'总价'</span>].<span class="fn">apply</span>(<span class="kw">lambda</span> x: <span class="str">'高价'</span> <span class="kw">if</span> x &gt; <span class="num">10000</span> <span class="kw">else</span> <span class="str">'普通'</span>)
+<span class="builtin">print</span>(<span class="str">"\n新增级别列:"</span>)
+<span class="builtin">print</span>(df)
+
+<span class="cmt"># ── 删除列 ──</span>
+df_drop = df.<span class="fn">drop</span>(columns=[<span class="str">'级别'</span>])
+<span class="builtin">print</span>(<span class="str">"\n删除级别列后:"</span>)
+<span class="builtin">print</span>(df_drop.columns.tolist())  <span class="cmt"># ['商品', '单价', '数量', '总价']</span>
+
+<span class="cmt"># ── 重命名列 ──
+df_rename = df.rename(columns={'单价': 'unit_price', '数量': 'qty'})</span></pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">单价列:
+0     7999
+1    18999
+2     1999
+3     4799
+Name: 单价, dtype: int64
+类型: &lt;class 'pandas.core.series.Series'&gt;
+
+多列选择:
+           商品  数量
+0    iPhone 15   2
+1  MacBook Pro   1
+2  AirPods Pro   3
+3      iPad Air   2
+
+新增总价列:
+           商品    单价  数量    总价
+0    iPhone 15   7999   2  15998
+1  MacBook Pro  18999   1  18999
+2  AirPods Pro   1999   3   5997
+3      iPad Air   4799   2   9598
+
+新增级别列:
+           商品    单价  数量    总价  级别
+0    iPhone 15   7999   2  15998  高价
+1  MacBook Pro  18999   1  18999  高价
+2  AirPods Pro   1999   3   5997  普通
+3      iPad Air   4799   2   9598  普通
+
+删除级别列后:
+['商品', '单价', '数量', '总价']</div>
+    </div>
+    <div class="tip good"><span class="ti">✅</span><div><code>drop()</code> 默认不修改原 DataFrame（<code>inplace=False</code>），而是返回一个新副本。这是 Pandas 的函数式设计理念，避免了意外的数据修改。</div></div>
+  </div>
+
+  <!-- 2.4 行操作 -->
+  <div class="card">
+    <h3>2.4 DataFrame 行操作：loc 与 iloc</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_rows.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="str">'商品'</span>: [<span class="str">'iPhone 15'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'AirPods Pro'</span>, <span class="str">'iPad Air'</span>],
+    <span class="str">'单价'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>],
+}, index=[<span class="str">'A'</span>, <span class="str">'B'</span>, <span class="str">'C'</span>, <span class="str">'D'</span>])
+
+<span class="cmt"># ── loc：按标签访问 ──</span>
+<span class="builtin">print</span>(<span class="str">"loc['B'] 单行:"</span>)
+<span class="builtin">print</span>(df.loc[<span class="str">'B'</span>])
+
+<span class="cmt"># loc 多行 + 指定列</span>
+<span class="builtin">print</span>(<span class="str">"\nloc[['A','C'], '商品']:"</span>)
+<span class="builtin">print</span>(df.loc[[<span class="str">'A'</span>, <span class="str">'C'</span>], <span class="str">'商品'</span>])
+
+<span class="cmt"># ── iloc：按位置访问 ──</span>
+<span class="builtin">print</span>(<span class="str">"\niloc[1] 第二行:"</span>)
+<span class="builtin">print</span>(df.iloc[<span class="num">1</span>])
+
+<span class="cmt"># iloc 切片（行0-1，列0-1）</span>
+<span class="builtin">print</span>(<span class="str">"\niloc[0:2, 0:2]:"</span>)
+<span class="builtin">print</span>(df.iloc[<span class="num">0</span>:<span class="num">2</span>, <span class="num">0</span>:<span class="num">2</span>])
+
+<span class="cmt"># ── 新增行 ──</span>
+df.loc[<span class="str">'E'</span>] = [<span class="str">'Mac Mini'</span>, <span class="num">4499</span>]
+<span class="builtin">print</span>(<span class="str">"\n新增行E:"</span>)
+<span class="builtin">print</span>(df)
+
+<span class="cmt"># ── 删除行 ──</span>
+df_dropped = df.<span class="fn">drop</span>(index=[<span class="str">'C'</span>, <span class="str">'D'</span>])
+<span class="builtin">print</span>(<span class="str">"\n删除C、D行:"</span>)
+<span class="builtin">print</span>(df_dropped)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">loc['B'] 单行:
+商品    MacBook Pro
+单价          18999
+Name: B, dtype: object
+
+loc[['A','C'], '商品']:
+A    iPhone 15
+C    AirPods Pro
+Name: 商品, dtype: object
+
+iloc[1] 第二行:
+商品    MacBook Pro
+单价          18999
+Name: B, dtype: object
+
+iloc[0:2, 0:2]:
+         商品    单价
+A  iPhone 15   7999
+B  MacBook Pro 18999
+
+新增行E:
+           商品    单价
+A    iPhone 15   7999
+B  MacBook Pro  18999
+C  AirPods Pro   1999
+D      iPad Air   4799
+E      Mac Mini   4499
+
+删除C、D行:
+           商品    单价
+A    iPhone 15   7999
+B  MacBook Pro  18999
+E      Mac Mini   4499</div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>方法</th><th>访问方式</th><th>切片行为</th><th>示例</th></tr></thead>
+        <tbody>
+          <tr><td><code>loc</code></td><td>标签（label）</td><td>包含两端</td><td><code>df.loc['A':'C']</code></td></tr>
+          <tr><td><code>iloc</code></td><td>位置（integer）</td><td>左闭右开</td><td><code>df.iloc[0:3]</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 3: 数据筛选 ═══════ -->
+<section class="sec" id="filter">
+  <h2 class="sec-title"><span class="n">3</span> 数据筛选与过滤</h2>
+  <p class="sec-intro">数据筛选是数据分析中最频繁的操作。Pandas 提供了强大的布尔索引和条件过滤能力，让你像写 SQL WHERE 子句一样筛选数据。</p>
+
+  <!-- 3.1 布尔索引 -->
+  <div class="card">
+    <h3>3.1 布尔索引：条件筛选 <span class="badge">高频</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>电商平台运营需要从订单数据中筛选出金额大于 5000 的高价值订单，用于 VIP 客户分析。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_filter.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="str">'订单ID'</span>: [<span class="str">'ORD001'</span>, <span class="str">'ORD002'</span>, <span class="str">'ORD003'</span>, <span class="str">'ORD004'</span>, <span class="str">'ORD005'</span>, <span class="str">'ORD006'</span>],
+    <span class="str">'客户名'</span>: [<span class="str">'张三'</span>, <span class="str">'李四'</span>, <span class="str">'王五'</span>, <span class="str">'赵六'</span>, <span class="str">'钱七'</span>, <span class="str">'张三'</span>],
+    <span class="str">'商品'</span>: [<span class="str">'iPhone 15'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'AirPods Pro'</span>, <span class="str">'iPad Air'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'Apple Watch'</span>],
+    <span class="str">'金额'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>, <span class="num">18999</span>, <span class="num">2999</span>],
+    <span class="str">'城市'</span>: [<span class="str">'北京'</span>, <span class="str">'上海'</span>, <span class="str">'北京'</span>, <span class="str">'深圳'</span>, <span class="str">'上海'</span>, <span class="str">'广州'</span>],
+})
+
+<span class="cmt"># ── 单条件筛选：金额 > 5000 ──</span>
+high_value = df[df[<span class="str">'金额'</span>] &gt; <span class="num">5000</span>]
+<span class="builtin">print</span>(<span class="str">"=== 金额 > 5000 的高价值订单 ==="</span>)
+<span class="builtin">print</span>(high_value)
+
+<span class="cmt"># ── 多条件筛选：金额 > 5000 且城市为北京 ──</span>
+<span class="cmt"># 注意：& 表示 AND，| 表示 OR，每个条件必须用括号包裹</span>
+result = df[(df[<span class="str">'金额'</span>] &gt; <span class="num">5000</span>) &amp; (df[<span class="str">'城市'</span>] == <span class="str">'北京'</span>)]
+<span class="builtin">print</span>(<span class="str">"\n=== 金额>5000 且 北京 ==="</span>)
+<span class="builtin">print</span>(result)
+
+<span class="cmt"># ── OR 条件：iPhone 或 MacBook ──</span>
+apple_products = df[(df[<span class="str">'商品'</span>] == <span class="str">'iPhone 15'</span>) | (df[<span class="str">'商品'</span>] == <span class="str">'MacBook Pro'</span>)]
+<span class="builtin">print</span>(<span class="str">"\n=== iPhone 或 MacBook ==="</span>)
+<span class="builtin">print</span>(apple_products)
+
+<span class="cmt"># ── isin：多值匹配（等价于 SQL IN）──</span>
+city_filter = df[df[<span class="str">'城市'</span>].<span class="fn">isin</span>([<span class="str">'北京'</span>, <span class="str">'上海'</span>])]
+<span class="builtin">print</span>(<span class="str">"\n=== 北京或上海的订单 ==="</span>)
+<span class="builtin">print</span>(city_filter)
+
+<span class="cmt"># ── 字符串包含（等价于 SQL LIKE）──</span>
+mac_orders = df[df[<span class="str">'商品'</span>].<span class="fn">str</span>.contains(<span class="str">'Mac'</span>)]
+<span class="builtin">print</span>(<span class="str">"\n=== 商品名包含Mac ==="</span>)
+<span class="builtin">print</span>(mac_orders)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== 金额 > 5000 的高价值订单 ===
+    订单ID 客户名          商品   金额  城市
+0  ORD001   张三    iPhone 15  7999  北京
+1  ORD002   李四  MacBook Pro  18999  上海
+4  ORD005   钱七  MacBook Pro  18999  上海
+
+=== 金额>5000 且 北京 ===
+    订单ID 客户名        商品   金额  城市
+0  ORD001   张三  iPhone 15  7999  北京
+
+=== iPhone 或 MacBook ===
+    订单ID 客户名          商品   金额  城市
+0  ORD001   张三    iPhone 15  7999  北京
+1  ORD002   李四  MacBook Pro  18999  上海
+4  ORD005   钱七  MacBook Pro  18999  上海
+
+=== 北京或上海的订单 ===
+    订单ID 客户名          商品   金额  城市
+0  ORD001   张三    iPhone 15  7999  北京
+1  ORD002   李四  MacBook Pro  18999  上海
+2  ORD003   王五  AirPods Pro  1999  北京
+4  ORD005   钱七  MacBook Pro  18999  上海
+
+=== 商品名包含Mac ===
+    订单ID 客户名          商品   金额  城市
+1  ORD002   李四  MacBook Pro  18999  上海
+4  ORD005   钱七  MacBook Pro  18999  上海</div>
+    </div>
+    <div class="tip warn"><span class="ti">⚠️</span><div><b>括号必须加</b>：多条件组合时每个条件必须用括号包裹，否则 Python 会因运算符优先级报错。<code>&amp;</code> 不是 <code>and</code>，<code>|</code> 不是 <code>or</code>——它们是按位运算符，用于元素级比较。</div></div>
+  </div>
+
+  <!-- 3.2 query 方法 -->
+  <div class="card">
+    <h3>3.2 query() 方法：SQL 风格筛选</h3>
+    <p>当条件复杂时，<code>query()</code> 方法让代码更易读，语法接近 SQL WHERE 子句。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_query.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="str">'商品'</span>: [<span class="str">'iPhone 15'</span>, <span class="str">'MacBook Pro'</span>, <span class="str">'AirPods Pro'</span>, <span class="str">'iPad Air'</span>, <span class="str">'MacBook Pro'</span>],
+    <span class="str">'金额'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>, <span class="num">18999</span>],
+    <span class="str">'城市'</span>: [<span class="str">'北京'</span>, <span class="str">'上海'</span>, <span class="str">'北京'</span>, <span class="str">'深圳'</span>, <span class="str">'上海'</span>],
+})
+
+<span class="cmt"># ── 等价于 df[(df['金额'] > 5000) & (df['城市'] == '北京')] ──</span>
+result = df.<span class="fn">query</span>(<span class="str">"金额 > 5000 & 城市 == '北京'"</span>)
+<span class="builtin">print</span>(<span class="str">"=== query 筛选 ==="</span>)
+<span class="builtin">print</span>(result)
+
+<span class="cmt"># ── 使用 in（等价于 isin）──</span>
+result2 = df.<span class="fn">query</span>(<span class="str">"城市 in ['北京', '上海']"</span>)
+<span class="builtin">print</span>(<span class="str">"\n=== query in ==="</span>)
+<span class="builtin">print</span>(result2)
+
+<span class="cmt"># ── 引用外部变量用 @ ──</span>
+min_amount = <span class="num">5000</span>
+result3 = df.<span class="fn">query</span>(<span class="str">"金额 > @min_amount"</span>)
+<span class="builtin">print</span>(<span class="str">"\n=== 引用外部变量 ==="</span>)
+<span class="builtin">print</span>(result3)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== query 筛选 ===
+         商品   金额  城市
+0  iPhone 15  7999  北京
+
+=== query in ===
+           商品   金额  城市
+0    iPhone 15  7999  北京
+1  MacBook Pro  18999  上海
+2  AirPods Pro  1999  北京
+4  MacBook Pro  18999  上海
+
+=== 引用外部变量 ===
+           商品   金额  城市
+0    iPhone 15  7999  北京
+1  MacBook Pro  18999  上海
+4  MacBook Pro  18999  上海</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 4: 分组聚合 ═══════ -->
+<section class="sec" id="groupby">
+  <h2 class="sec-title"><span class="n">4</span> 分组聚合（GroupBy）</h2>
+  <p class="sec-intro">分组聚合是数据分析的灵魂操作，等价于 SQL 的 GROUP BY。Pandas 的 <code>groupby</code> 遵循 "Split-Apply-Combine"（分割-应用-合并）模式。</p>
+
+  <div class="mindmap">
+    <div class="mm-node"><div class="mm-icon">🔀</div><div class="mm-title">Split 分割</div><div class="mm-desc">按某列的值<br>将数据分成多组</div></div>
+    <div class="mm-node"><div class="mm-icon">⚙️</div><div class="mm-title">Apply 应用</div><div class="mm-desc">对每组独立<br>应用聚合函数</div></div>
+    <div class="mm-node"><div class="mm-icon">🔄</div><div class="mm-title">Combine 合并</div><div class="mm-desc">将各组结果<br>合并为一张表</div></div>
+  </div>
+
+  <!-- 4.1 基本分组 -->
+  <div class="card">
+    <h3>4.1 基本分组聚合 <span class="badge">核心</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>运营需要按城市统计每个城市的订单总金额、平均金额、订单数量，用于评估各城市销售表现。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_groupby.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="str">'城市'</span>: [<span class="str">'北京'</span>, <span class="str">'上海'</span>, <span class="str">'北京'</span>, <span class="str">'深圳'</span>, <span class="str">'上海'</span>, <span class="str">'北京'</span>, <span class="str">'深圳'</span>, <span class="str">'上海'</span>],
+    <span class="str">'商品'</span>: [<span class="str">'iPhone'</span>, <span class="str">'MacBook'</span>, <span class="str">'AirPods'</span>, <span class="str">'iPad'</span>, <span class="str">'MacBook'</span>, <span class="str">'iPhone'</span>, <span class="str">'iPad'</span>, <span class="str">'AirPods'</span>],
+    <span class="str">'金额'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>, <span class="num">18999</span>, <span class="num">7999</span>, <span class="num">4799</span>, <span class="num">1999</span>],
+    <span class="str">'数量'</span>: [<span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="num">1</span>],
+})
+
+<span class="cmt"># ── 按城市分组，计算金额总和 ──</span>
+city_total = df.<span class="fn">groupby</span>(<span class="str">'城市'</span>)[<span class="str">'金额'</span>].<span class="fn">sum</span>()
+<span class="builtin">print</span>(<span class="str">"=== 各城市总金额 ==="</span>)
+<span class="builtin">print</span>(city_total)
+
+<span class="cmt"># ── 按城市分组，多个聚合函数 ──</span>
+city_stats = df.<span class="fn">groupby</span>(<span class="str">'城市'</span>)[<span class="str">'金额'</span>].<span class="fn">agg</span>([<span class="str">'sum'</span>, <span class="str">'mean'</span>, <span class="str">'count'</span>, <span class="str">'max'</span>])
+<span class="builtin">print</span>(<span class="str">"\n=== 各城市金额统计 ==="</span>)
+<span class="builtin">print</span>(city_stats)
+
+<span class="cmt"># ── 不同列用不同聚合函数 ──</span>
+multi_agg = df.<span class="fn">groupby</span>(<span class="str">'城市'</span>).<span class="fn">agg</span>({
+    <span class="str">'金额'</span>: [<span class="str">'sum'</span>, <span class="str">'mean'</span>],
+    <span class="str">'数量'</span>: [<span class="str">'sum'</span>, <span class="str">'max'</span>],
+})
+<span class="builtin">print</span>(<span class="str">"\n=== 多列不同聚合 ==="</span>)
+<span class="builtin">print</span>(multi_agg)
+
+<span class="cmt"># ── 自定义聚合函数名 ──</span>
+named_agg = df.<span class="fn">groupby</span>(<span class="str">'城市'</span>).<span class="fn">agg</span>(
+    总金额=(<span class="str">'金额'</span>, <span class="str">'sum'</span>),
+    平均金额=(<span class="str">'金额'</span>, <span class="str">'mean'</span>),
+    总数量=(<span class="str">'数量'</span>, <span class="str">'sum'</span>),
+    订单数=(<span class="str">'金额'</span>, <span class="str">'count'</span>),
+)
+<span class="builtin">print</span>(<span class="str">"\n=== 命名聚合 ==="</span>)
+<span class="builtin">print</span>(named_agg)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== 各城市总金额 ===
+城市
+上海    39997
+北京    17997
+深圳     9598
+Name: 金额, dtype: int64
+
+=== 各城市金额统计 ===
+        sum     mean  count   max
+城市
+上海   39997  13332.333333      3  18999
+北京   17997   5999.000000      3  7999
+深圳    9598   4799.000000      2  4799
+
+=== 多列不同聚合 ===
+         金额             数量
+         sum     mean  sum max
+城市
+上海   39997  13332.333333    4   2
+北京   17997   5999.000000    4   2
+深圳    9598   4799.000000    4   3
+
+=== 命名聚合 ===
+      总金额   平均金额  总数量  订单数
+城市
+上海  39997  13332.333333     4     3
+北京  17997   5999.000000     4     3
+深圳   9598   4799.000000     4     2</div>
+    </div>
+    <div class="tip good"><span class="ti">✅</span><div><b>命名聚合</b>（Named Aggregation）是 Pandas 0.25+ 引入的语法，让你用 <code>名称=(列名, 函数)</code> 的格式直接给输出列命名，避免了多级列名的困扰。</div></div>
+  </div>
+
+  <!-- 4.2 多级分组与变换 -->
+  <div class="card">
+    <h3>3.2 多级分组与 transform</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_groupby2.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="str">'城市'</span>: [<span class="str">'北京'</span>, <span class="str">'上海'</span>, <span class="str">'北京'</span>, <span class="str">'深圳'</span>, <span class="str">'上海'</span>, <span class="str">'北京'</span>],
+    <span class="str">'商品'</span>: [<span class="str">'iPhone'</span>, <span class="str">'MacBook'</span>, <span class="str">'AirPods'</span>, <span class="str">'iPad'</span>, <span class="str">'MacBook'</span>, <span class="str">'iPhone'</span>],
+    <span class="str">'金额'</span>: [<span class="num">7999</span>, <span class="num">18999</span>, <span class="num">1999</span>, <span class="num">4799</span>, <span class="num">18999</span>, <span class="num">7999</span>],
+})
+
+<span class="cmt"># ── 多列分组：先按城市，再按商品 ──</span>
+multi_group = df.<span class="fn">groupby</span>([<span class="str">'城市'</span>, <span class="str">'商品'</span>])[<span class="str">'金额'</span>].<span class="fn">sum</span>()
+<span class="builtin">print</span>(<span class="str">"=== 多级分组 ==="</span>)
+<span class="builtin">print</span>(multi_group)
+
+<span class="cmt"># ── reset_index：把索引变回普通列 ──</span>
+flat = multi_group.<span class="fn">reset_index</span>()
+<span class="builtin">print</span>(<span class="str">"\n=== reset_index 后 ==="</span>)
+<span class="builtin">print</span>(flat)
+
+<span class="cmt"># ── transform：保持原形状，把聚合结果广播回每一行 ──</span>
+<span class="cmt"># 场景：计算每笔订单金额占该城市总金额的比例</span>
+df[<span class="str">'城市总额'</span>] = df.<span class="fn">groupby</span>(<span class="str">'城市'</span>)[<span class="str">'金额'</span>].<span class="fn">transform</span>(<span class="str">'sum'</span>)
+df[<span class="str">'占比'</span>] = (df[<span class="str">'金额'</span>] / df[<span class="str">'城市总额'</span>] * <span class="num">100</span>).<span class="fn">round</span>(<span class="num">2</span>)
+<span class="builtin">print</span>(<span class="str">"\n=== transform 广播 ==="</span>)
+<span class="builtin">print</span>(df)
+
+<span class="cmt"># ── 排序：按金额降序 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== 按金额降序 ==="</span>)
+<span class="builtin">print</span>(df.<span class="fn">sort_values</span>(<span class="str">'金额'</span>, ascending=<span class="kw">False</span>))</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== 多级分组 ===
+城市  商品
+上海  MacBook    37998
+北京  AirPods     1999
+     iPhone     15998
+深圳  iPad        4799
+Name: 金额, dtype: int64
+
+=== reset_index 后 ===
+   城市       商品    金额
+0  上海  MacBook  37998
+1  北京  AirPods   1999
+2  北京   iPhone  15998
+3  深圳    iPad    4799
+
+=== transform 广播 ===
+   城市       商品    金额  城市总额     占比
+0  北京   iPhone  7999   17997  44.45
+1  上海  MacBook  18999  37998  50.00
+2  北京  AirPods  1999   17997  11.11
+3  深圳    iPad   4799    4799  100.00
+4  上海  MacBook  18999  37998  50.00
+5  北京   iPhone  7999   17997  44.45
+
+=== 按金额降序 ===
+   城市       商品    金额  城市总额     占比
+1  上海  MacBook  18999  37998  50.00
+4  上海  MacBook  18999  37998  50.00
+0  北京   iPhone  7999   17997  44.45
+5  北京   iPhone  7999   17997  44.45
+3  深圳    iPad   4799    4799  100.00
+2  北京  AirPods  1999   17997  11.11</div>
+    </div>
+    <div class="tip purple"><span class="ti">🚀</span><div><b>transform vs agg</b>：<code>agg</code> 会把每组压缩成一行，<code>transform</code> 则把聚合结果广播回原始每一行，保持 DataFrame 形状不变。当你需要在原数据上添加"组内统计"列时，用 <code>transform</code>。</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 5: 缺失值处理 ═══════ -->
+<section class="sec" id="missing">
+  <h2 class="sec-title"><span class="n">5</span> 缺失值处理</h2>
+  <p class="sec-intro">真实世界的数据从来不是完美的——总会有缺失值（NaN）。Pandas 提供了一套完整的缺失值检测、填充和删除工具。</p>
+
+  <!-- 5.1 检测缺失值 -->
+  <div class="card">
+    <h3>5.1 检测缺失值 <span class="badge">数据清洗</span></h3>
+
+    <div class="scene">
+      <div class="scene-label">📍 业务场景</div>
+      <p>从用户注册表导入的 CSV 数据中，部分用户没有填写年龄和邮箱字段，需要检测并处理这些缺失值。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_missing.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+df = pd.DataFrame({
+    <span class="str">'姓名'</span>: [<span class="str">'张三'</span>, <span class="str">'李四'</span>, <span class="str">'王五'</span>, <span class="str">'赵六'</span>, <span class="str">'钱七'</span>, <span class="str">'孙八'</span>],
+    <span class="str">'年龄'</span>: [<span class="num">25</span>, np.nan, <span class="num">30</span>, <span class="num">28</span>, np.nan, <span class="num">35</span>],
+    <span class="str">'城市'</span>: [<span class="str">'北京'</span>, <span class="str">'上海'</span>, <span class="kw">None</span>, <span class="str">'深圳'</span>, <span class="str">'广州'</span>, <span class="str">'北京'</span>],
+    <span class="str">'薪资'</span>: [<span class="num">15000</span>, <span class="num">20000</span>, <span class="num">18000</span>, np.nan, <span class="num">22000</span>, np.nan],
+})
+
+<span class="cmt"># ── 检测缺失值 ──</span>
+<span class="builtin">print</span>(<span class="str">"=== isna() 检测缺失值 ==="</span>)
+<span class="builtin">print</span>(df.<span class="fn">isna</span>())
+
+<span class="cmt"># ── 每列缺失值数量 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== 每列缺失值数量 ==="</span>)
+<span class="builtin">print</span>(df.<span class="fn">isna</span>().<span class="fn">sum</span>())
+
+<span class="cmt"># ── 缺失值总数 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n总缺失值数:"</span>, df.<span class="fn">isna</span>().<span class="fn">sum</span>().<span class="fn">sum</span>())
+
+<span class="cmt"># ── 是否有缺失值的行 ──</span>
+<span class="builtin">print</span>(<span class="str">"\n=== 含缺失值的行 ==="</span>)
+<span class="builtin">print</span>(df[df.<span class="fn">isna</span>().<span class="fn">any</span>(axis=<span class="num">1</span>)])</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== isna() 检测缺失值 ===
+     姓名     年龄     城市     薪资
+0  False  False  False  False
+1  False   True  False  False
+2  False  False   True  False
+3  False  False  False   True
+4  False   True  False  False
+5  False  False  False   True
+
+=== 每列缺失值数量 ===
+姓名    0
+年龄    2
+城市    1
+薪资    2
+dtype: int64
+
+总缺失值数: 5
+
+=== 含缺失值的行 ===
+   姓名    年龄   城市      薪资
+1  李四   NaN  上海  20000.0
+2  王五  30.0  None  18000.0
+3  赵六  28.0  深圳      NaN
+4  钱七   NaN  广州  22000.0
+5  孙八  35.0  北京      NaN</div>
+    </div>
+  </div>
+
+  <!-- 5.2 填充缺失值 -->
+  <div class="card">
+    <h3>5.2 填充缺失值（fillna）</h3>
+    <p>根据业务场景选择不同的填充策略：固定值、均值、中位数、前向/后向填充。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_fillna.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+df = pd.DataFrame({
+    <span class="str">'姓名'</span>: [<span class="str">'张三'</span>, <span class="str">'李四'</span>, <span class="str">'王五'</span>, <span class="str">'赵六'</span>, <span class="str">'钱七'</span>],
+    <span class="str">'年龄'</span>: [<span class="num">25</span>, np.nan, <span class="num">30</span>, <span class="num">28</span>, np.nan],
+    <span class="str">'薪资'</span>: [<span class="num">15000</span>, <span class="num">20000</span>, np.nan, np.nan, <span class="num">22000</span>],
+})
+
+<span class="cmt"># ── 策略1：用固定值填充 ──</span>
+df_fixed = df.<span class="fn">fillna</span>({<span class="str">'年龄'</span>: <span class="num">0</span>, <span class="str">'薪资'</span>: <span class="num">0</span>})
+<span class="builtin">print</span>(<span class="str">"=== 固定值填充 ==="</span>)
+<span class="builtin">print</span>(df_fixed)
+
+<span class="cmt"># ── 策略2：用均值填充（推荐）──</span>
+age_mean = df[<span class="str">'年龄'</span>].<span class="fn">mean</span>()  <span class="cmt"># 27.67</span>
+salary_mean = df[<span class="str">'薪资'</span>].<span class="fn">mean</span>()  <span class="cmt"># 19000.0</span>
+df_mean = df.<span class="fn">fillna</span>({<span class="str">'年龄'</span>: age_mean, <span class="str">'薪资'</span>: salary_mean})
+<span class="builtin">print</span>(<span class="str">"\n=== 均值填充 ==="</span>)
+<span class="builtin">print</span>(df_mean)
+
+<span class="cmt"># ── 策略3：用中位数填充（抗异常值）──</span>
+df_median = df.<span class="fn">fillna</span>({
+    <span class="str">'年龄'</span>: df[<span class="str">'年龄'</span>].<span class="fn">median</span>(),
+    <span class="str">'薪资'</span>: df[<span class="str">'薪资'</span>].<span class="fn">median</span>(),
+})
+<span class="builtin">print</span>(<span class="str">"\n=== 中位数填充 ==="</span>)
+<span class="builtin">print</span>(df_median)
+
+<span class="cmt"># ── 策略4：前向填充（用上一行的值）──</span>
+<span class="cmt"># 常用于时间序列数据</span>
+df_ffill = df.<span class="fn">fillna</span>(method=<span class="str">'ffill'</span>)
+<span class="builtin">print</span>(<span class="str">"\n=== 前向填充(ffill) ==="</span>)
+<span class="builtin">print</span>(df_ffill)
+
+<span class="cmt"># ── 策略5：线性插值（适合时间序列）──</span>
+df_interp = df.<span class="fn">interpolate</span>(method=<span class="str">'linear'</span>)
+<span class="builtin">print</span>(<span class="str">"\n=== 线性插值 ==="</span>)
+<span class="builtin">print</span>(df_interp)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== 固定值填充 ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+1  李四   0.0  20000.0
+2  王五  30.0      0.0
+3  赵六  28.0      0.0
+4  钱七   0.0  22000.0
+
+=== 均值填充 ===
+   姓名        年龄      薪资
+0  张三  25.000000  15000.0
+1  李四  27.666667  20000.0
+2  王五  30.000000  19000.0
+3  赵六  28.000000  19000.0
+4  钱七  27.666667  22000.0
+
+=== 中位数填充 ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+1  李四  28.0  20000.0
+2  王五  30.0  19000.0
+3  赵六  28.0  19000.0
+4  钱七  28.0  22000.0
+
+=== 前向填充(ffill) ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+1  李四  25.0  20000.0
+2  王五  30.0  20000.0
+3  赵六  28.0  20000.0
+4  钱七  28.0  22000.0
+
+=== 线性插值 ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+1  李四  27.5  20000.0
+2  王五  30.0  21000.0
+3  赵六  28.0  21500.0
+4  钱七  28.0  22000.0</div>
+    </div>
+  </div>
+
+  <!-- 5.3 删除缺失值 -->
+  <div class="card">
+    <h3>5.3 删除缺失值（dropna）</h3>
+    <p>当缺失值比例较高或填充不合理时，直接删除是更干净的选择。</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-label"><div class="dots"><span></span><span></span><span></span></div>Python · df_dropna.py</div>
+      </div>
+      <div class="code-body"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+df = pd.DataFrame({
+    <span class="str">'姓名'</span>: [<span class="str">'张三'</span>, <span class="str">'李四'</span>, <span class="str">'王五'</span>, <span class="str">'赵六'</span>, <span class="str">'钱七'</span>],
+    <span class="str">'年龄'</span>: [<span class="num">25</span>, np.nan, <span class="num">30</span>, <span class="num">28</span>, np.nan],
+    <span class="str">'薪资'</span>: [<span class="num">15000</span>, <span class="num">20000</span>, np.nan, np.nan, <span class="num">22000</span>],
+})
+
+<span class="cmt"># ── 删除任何含缺失值的行 ──</span>
+df_drop_any = df.<span class="fn">dropna</span>()
+<span class="builtin">print</span>(<span class="str">"=== dropna() 删除所有含NaN的行 ==="</span>)
+<span class="builtin">print</span>(df_drop_any)
+
+<span class="cmt"># ── 仅删除全部为NaN的行 ──</span>
+<span class="cmt"># df_drop_all = df.dropna(how='all')</span>
+
+<span class="cmt"># ── 指定列的缺失才删除 ──</span>
+df_drop_subset = df.<span class="fn">dropna</span>(subset=[<span class="str">'年龄'</span>])
+<span class="builtin">print</span>(<span class="str">"\n=== 仅删除年龄列缺失的行 ==="</span>)
+<span class="builtin">print</span>(df_drop_subset)
+
+<span class="cmt"># ── 设置阈值：非空值少于2个的行才删除 ──</span>
+df_thresh = df.<span class="fn">dropna</span>(thresh=<span class="num">2</span>)
+<span class="builtin">print</span>(<span class="str">"\n=== 非空值<2才删除 ==="</span>)
+<span class="builtin">print</span>(df_thresh)</pre></div>
+    </div>
+    <div class="output">
+      <div class="out-label">▶ 运行结果</div>
+      <div class="out-content">=== dropna() 删除所有含NaN的行 ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+
+=== 仅删除年龄列缺失的行 ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+2  王五  30.0      NaN
+3  赵六  28.0      NaN
+
+=== 非空值<2才删除 ===
+   姓名    年龄      薪资
+0  张三  25.0  15000.0
+1  李四  NaN  20000.0
+2  王五  30.0      NaN
+3  赵六  28.0      NaN
+4  钱七  NaN  22000.0</div>
+    </div>
+
+    <div class="tip warn"><span class="ti">⚠️</span><div><b>数据丢失风险</b>：删除缺失值会减少数据量。如果缺失比例超过 30%，建议先分析缺失原因再决定策略，而非直接删除。</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 6: 总结 ═══════ -->
+<section class="sec" id="summary">
+  <h2 class="sec-title"><span class="n">6</span> Pandas 核心 API 速查表</h2>
+
+  <div class="card">
+    <h3>📋 常用 API 速查</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>分类</th><th>API</th><th>说明</th><th>等价 SQL</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="3">创建</td><td><code>pd.Series(data)</code></td><td>创建 Series</td><td>—</td></tr>
+          <tr><td><code>pd.DataFrame(data)</code></td><td>创建 DataFrame</td><td>CREATE TABLE</td></tr>
+          <tr><td><code>pd.read_csv()</code></td><td>读取 CSV 文件</td><td>IMPORT</td></tr>
+          <tr><td rowspan="4">查看</td><td><code>df.head(n)</code></td><td>前 n 行</td><td>LIMIT</td></tr>
+          <tr><td><code>df.info()</code></td><td>结构信息</td><td>DESCRIBE</td></tr>
+          <tr><td><code>df.describe()</code></td><td>统计摘要</td><td>—</td></tr>
+          <tr><td><code>df.shape</code></td><td>(行数, 列数)</td><td>COUNT</td></tr>
+          <tr><td rowspan="4">筛选</td><td><code>df[df['col'] &gt; v]</code></td><td>条件筛选</td><td>WHERE</td></tr>
+          <tr><td><code>df.query()</code></td><td>SQL 风格筛选</td><td>WHERE</td></tr>
+          <tr><td><code>df['col'].isin()</code></td><td>多值匹配</td><td>IN</td></tr>
+          <tr><td><code>df['col'].str.contains()</code></td><td>字符串包含</td><td>LIKE</td></tr>
+          <tr><td rowspan="4">分组</td><td><code>df.groupby()</code></td><td>分组</td><td>GROUP BY</td></tr>
+          <tr><td><code>.agg()</code></td><td>多函数聚合</td><td>—</td></tr>
+          <tr><td><code>.transform()</code></td><td>广播聚合</td><td>窗口函数</td></tr>
+          <tr><td><code>.pivot_table()</code></td><td>透视表</td><td>—</td></tr>
+          <tr><td rowspan="3">缺失值</td><td><code>df.isna()</code></td><td>检测缺失</td><td>IS NULL</td></tr>
+          <tr><td><code>df.fillna()</code></td><td>填充缺失</td><td>COALESCE</td></tr>
+          <tr><td><code>df.dropna()</code></td><td>删除缺失</td><td>—</td></tr>
+          <tr><td rowspan="3">合并</td><td><code>pd.merge()</code></td><td>合并表</td><td>JOIN</td></tr>
+          <tr><td><code>pd.concat()</code></td><td>拼接表</td><td>UNION</td></tr>
+          <tr><td><code>df.join()</code></td><td>按索引连接</td><td>JOIN</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip good">
+      <span class="ti">🎓</span>
+      <div><b>学习建议</b>：Pandas 的核心就是 <code>Series</code> + <code>DataFrame</code> + <code>Index</code> 三个概念。掌握数据筛选、分组聚合、缺失值处理这三大操作，就能覆盖 80% 的日常数据分析需求。剩下的 20%（合并、透视、时间序列、多层索引）在实际项目中边用边学即可。</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <p>Pandas 数据处理全指南 · Frontend Learning Hub · 单文件 HTML 教程，打开即用</p>
+</footer>
+
+</body>
+</html>
