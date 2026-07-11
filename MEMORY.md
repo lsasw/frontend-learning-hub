@@ -1,6 +1,6 @@
 # Frontend Learning Hub · 项目记忆
 
-> 最后更新：2026-07-09 | 版本：v2.0
+> 最后更新：2026-07-11 | 版本：v2.0
 
 ---
 
@@ -46,7 +46,7 @@
 - 页面刷新保持当前状态
 - 首页卡片和侧边栏导航共享同一套路由逻辑
 
-### 3.3 教程内容体系（16 篇）
+### 3.3 教程内容体系（36 篇）
 
 | 分类 | 教程 | 文件名 |
 |------|------|--------|
@@ -54,17 +54,36 @@
 | | LangChain + LangGraph | `LangChain-LangGraph-Python-教程.html` |
 | | Dify × n8n | `Dify-n8n-实战教程.html` |
 | | RAG 检索增强生成 | `RAG-检索增强生成-学习指南.html` |
+| | RAG 进阶全攻略 | `RAG-检索增强生成-进阶全攻略.html` |
+| | LangChain 深入学习 | `LangChain-深入学习教程.html` |
+| | LangGraph 状态图编排 | `LangGraph-状态图编排教程.html` |
+| | LlamaIndex 数据框架 | `LlamaIndex-数据框架教程.html` |
+| | Transformer 架构解析 | `Transformer-架构解析.html` |
+| | 大模型微调技术 | `大模型微调技术解析.html` |
+| | ML & DL 理论基础 | `机器学习与深度学习-理论基础全指南.html` |
+| | AI Agent 开发概念全指南 | `AI-Agent-开发概念全指南.html` |
 | 🛠️ AI 开发工具 | AI 编程 Token 节省 | `AI编码Token节省工具.html` |
 | | AI 前端工程生态 | `AI前端工程生态.html` |
 | 🐍 Python 后端 | Python 后端技术栈全景图 | `Python-后端技术栈全景图.html` |
+| | Python3 语法讲解与语法糖 | `Python3-语法讲解与语法糖.html` |
+| | Pandas 数据处理 | `Pandas-数据处理全指南.html` |
+| | NumPy 科学计算 | `NumPy-科学计算全指南.html` |
+| 📊 大数据处理 | Spark & Flink | `Spark-Flink-大数据处理教程.html` |
 | ☕ Java 进阶 | JUC 并发工具包 | `Java-JUC-并发工具包教程.html` |
 | | JVM 虚拟机 | `Java-JVM-虚拟机教程.html` |
 | | Spring 全家桶 | `Spring-全家桶-核心组件详解.html` |
 | | Java vs Python 异步 | `Java-vs-Python-异步编程对比.html` |
 | | Java 核心问题深度分析 | `Java-核心问题深度分析.html` |
+| | 分布式锁 Redisson | `Java-分布式锁-Redisson深度解析.html` |
+| | 集合 & JUC & Python 关键字 | `Java集合-JUC-Python关键字-综合教程.html` |
 | 🗄️ 基础设施 | 分布式系统 | `分布式系统-交互式学习平台.html` |
 | | Redis | `Redis-交互式学习指南.html` |
 | | 消息队列（3 篇） | `消息队列系统-综合演示平台.html` / `消息队列-核心概念入门.html` / `消息队列-防重复消费详解.html` |
+| 📐 系统架构 | 系统架构师知识体系 | `系统架构师-知识体系全指南.html` |
+| | Docker & Kubernetes | `Docker-Kubernetes-容器化与编排指南.html` |
+| | 后端面试知识体系 | `后端技术栈知识体系-面试分析与故障排查.html` |
+| | 分布式服务化拆分路线 | `分布式服务化拆分路线.html` |
+| | 高并发系统设计 | `高并发系统设计-实施步骤全指南.html` |
 
 ---
 
@@ -76,7 +95,7 @@ frontend-learning-hub/
 ├── MEMORY.md                          # 📋 本项目记忆文件
 ├── README.md                          # GitHub 仓库 README
 │
-├── [教程文件].html                    # 16 个单文件教程，命名规则：
+├── [教程文件].html                    # 36 个单文件教程，命名规则：
 │   ├── MetaGPT-CrewAI-分析报告.html   #   中文描述性命名
 │   ├── Java-JUC-并发工具包教程.html   #   分类前缀 + 主题 + 后缀
 │   ├── Redis-交互式学习指南.html      #   便于识别和排序

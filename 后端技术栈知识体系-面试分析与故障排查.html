@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后端技术栈知识体系 · 面试分析与故障排查</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   CSS Variables
+   ═══════════════════════════════════════════════════ */
+:root {
+  --java: #2563eb;
+  --java-dark: #1d4ed8;
+  --java-light: #dbeafe;
+  --java-bg: #eff6ff;
+  --dist: #7c3aed;
+  --dist-dark: #6d28d9;
+  --dist-light: #ede9fe;
+  --dist-bg: #f5f3ff;
+  --ai: #0d9488;
+  --ai-dark: #0f766e;
+  --ai-light: #ccfbf1;
+  --ai-bg: #f0fdfa;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #1a1a2e;
+  --text2: #5a6170;
+  --text3: #9ca3af;
+  --code-bg: #1a1a2e;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+  --transition: .22s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════════════════════════════════════════════
+   Top Nav
+   ═══════════════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  height:54px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.nav .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;color:var(--java);text-decoration:none;white-space:nowrap}
+.nav .logo svg{width:26px;height:26px;flex-shrink:0}
+.nav .spacer{flex:1}
+.nav .nav-anchors{display:flex;gap:4px;overflow-x:auto;padding-right:8px}
+.nav .nav-anchors a{
+  text-decoration:none;font-size:.78rem;padding:5px 12px;border-radius:20px;
+  color:var(--text2);white-space:nowrap;transition:all var(--transition);font-weight:500;
+}
+.nav .nav-anchors a:hover,.nav .nav-anchors a.active-nav{background:var(--java-light);color:var(--java)}
+.nav .nav-anchors a.ja:hover,.nav .nav-anchors a.ja.active-nav{background:var(--java-light);color:var(--java)}
+.nav .nav-anchors a.di:hover,.nav .nav-anchors a.di.active-nav{background:var(--dist-light);color:var(--dist)}
+.nav .nav-anchors a.ia:hover,.nav .nav-anchors a.ia.active-nav{background:var(--ai-light);color:var(--ai)}
+.nav .hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);font-size:1.3rem}
+
+/* ═══════════════════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════════════════ */
+.hero{
+  background:linear-gradient(135deg,var(--java-bg) 0%,var(--dist-bg) 50%,var(--ai-bg) 100%);
+  padding:56px 24px 44px;text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(37,99,235,.12) 0%,transparent 70%);border-radius:50%;
+}
+.hero::after{
+  content:'';position:absolute;bottom:-40px;left:-40px;width:180px;height:180px;
+  background:radial-gradient(circle,rgba(13,148,136,.1) 0%,transparent 70%);border-radius:50%;
+}
+.hero h1{font-size:2.2rem;font-weight:900;letter-spacing:-.5px;position:relative;z-index:1}
+.hero .lead{font-size:1.02rem;color:var(--text2);margin-top:12px;max-width:680px;margin-inline:auto;position:relative;z-index:1;line-height:1.75}
+.hero .tags{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;position:relative;z-index:1}
+.hero .tags .ht{
+  padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;
+  border:1.5px solid transparent;
+}
+.hero .tags .ht.java{background:var(--java-light);color:var(--java-dark);border-color:rgba(37,99,235,.25)}
+.hero .tags .ht.dist{background:var(--dist-light);color:var(--dist-dark);border-color:rgba(124,58,237,.25)}
+.hero .tags .ht.ai{background:var(--ai-light);color:var(--ai-dark);border-color:rgba(13,148,136,.25)}
+
+/* ═══════════════════════════════════════════════════
+   Sections
+   ═══════════════════════════════════════════════════ */
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px 60px}
+.sec{margin-top:48px}
+.sec:first-child{margin-top:36px}
+.sec-title{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;
+  padding-bottom:14px;border-bottom:2px solid var(--border);
+}
+.sec-title .num{
+  width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-weight:900;font-size:.9rem;color:#fff;flex-shrink:0;
+}
+.sec-title .num.java-bg{background:var(--java)}
+.sec-title .num.dist-bg{background:var(--dist)}
+.sec-title .num.ai-bg{background:var(--ai)}
+.sec-title h2{font-size:1.35rem;font-weight:750}
+.sec-title h2 .ic{margin-right:4px}
+
+/* ═══════════════════════════════════════════════════
+   Cards
+   ═══════════════════════════════════════════════════ */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px 28px;
+  margin-bottom:16px;transition:all var(--transition);
+}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.card p{font-size:.9rem;color:var(--text2);line-height:1.7}
+
+/* ═══════════════════════════════════════════════════
+   Mind Map Section (Section 1)
+   ═══════════════════════════════════════════════════ */
+.mindmap-wrap{position:relative;padding:20px 0}
+.mindmap-wrap svg{width:100%;height:auto;display:block}
+
+/* Topic Cards Grid */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.topic-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px 22px;
+  border-left:4px solid var(--java);transition:all var(--transition);
+}
+.topic-card.dist{border-left-color:var(--dist)}
+.topic-card.ai{border-left-color:var(--ai)}
+.topic-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.topic-card h4{font-size:.95rem;font-weight:700;margin-bottom:6px}
+.topic-card p{font-size:.82rem;color:var(--text2);line-height:1.6}
+.topic-card .sub-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.topic-card .sub-item{
+  font-size:.72rem;padding:3px 10px;border-radius:12px;
+  font-weight:500;white-space:nowrap;
+}
+.topic-card .sub-item.s-java{background:var(--java-light);color:var(--java-dark)}
+.topic-card .sub-item.s-dist{background:var(--dist-light);color:var(--dist-dark)}
+.topic-card .sub-item.s-ai{background:var(--ai-light);color:var(--ai-dark)}
+
+/* ═══════════════════════════════════════════════════
+   Skill Tree (Section 2)
+   ═══════════════════════════════════════════════════ */
+.skill-tree{margin-top:8px}
+.skill-level{margin-bottom:24px}
+.skill-level .level-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  padding:10px 16px;border-radius:var(--radius-sm);
+  font-weight:700;font-size:.92rem;
+}
+.level-header.l-junior{background:var(--java-light);color:var(--java-dark)}
+.level-header.l-mid{background:var(--dist-light);color:var(--dist-dark)}
+.level-header.l-senior{background:var(--ai-light);color:var(--ai-dark)}
+.level-header .lv-badge{
+  font-size:.68rem;padding:2px 10px;border-radius:10px;
+  color:#fff;font-weight:700;
+}
+.level-header.l-junior .lv-badge{background:var(--java)}
+.level-header.l-mid .lv-badge{background:var(--dist)}
+.level-header.l-senior .lv-badge{background:var(--ai)}
+.skill-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.skill-node{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  transition:all var(--transition);position:relative;
+}
+.skill-node:hover{box-shadow:var(--shadow-md)}
+.skill-node .sn-title{font-size:.84rem;font-weight:700;margin-bottom:4px}
+.skill-node .sn-desc{font-size:.74rem;color:var(--text2);line-height:1.5}
+.skill-node .sn-dep{font-size:.68rem;color:var(--text3);margin-top:6px;font-style:italic}
+.skill-node::before{
+  content:'';position:absolute;top:-10px;left:20px;width:8px;height:8px;
+  border-radius:50%;border:2px solid var(--border);background:var(--surface);
+}
+.skill-node.java-node::before{border-color:var(--java)}
+.skill-node.dist-node::before{border-color:var(--dist)}
+.skill-node.ai-node::before{border-color:var(--ai)}
+.dep-line{
+  display:flex;align-items:center;gap:4px;padding:2px 0;
+  font-size:.7rem;color:var(--text3);
+}
+
+/* ═══════════════════════════════════════════════════
+   Interview Q&A Accordion (Section 3)
+   ═══════════════════════════════════════════════════ */
+.domain-section{margin-bottom:32px}
+.domain-title{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+  font-size:1.1rem;font-weight:750;
+}
+.domain-title .dot{
+  width:14px;height:14px;border-radius:4px;flex-shrink:0;
+}
+.domain-title .dot.d-java{background:var(--java)}
+.domain-title .dot.d-dist{background:var(--dist)}
+.domain-title .dot.d-ai{background:var(--ai)}
+
+.accordion{margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)}
+.accordion-header{
+  padding:16px 20px;cursor:pointer;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;transition:background var(--transition);
+  user-select:none;font-size:.9rem;font-weight:600;
+}
+.accordion-header:hover{background:var(--bg)}
+.accordion-header .q-tag{
+  font-size:.66rem;padding:2px 8px;border-radius:10px;font-weight:700;
+  white-space:nowrap;flex-shrink:0;
+}
+.accordion-header .q-tag.q-java{background:var(--java-light);color:var(--java-dark)}
+.accordion-header .q-tag.q-dist{background:var(--dist-light);color:var(--dist-dark)}
+.accordion-header .q-tag.q-ai{background:var(--ai-light);color:var(--ai-dark)}
+.accordion-header .arrow{font-size:.7rem;transition:transform var(--transition);color:var(--text3);flex-shrink:0}
+.accordion.open .accordion-header .arrow{transform:rotate(180deg)}
+.accordion-body{
+  max-height:0;overflow:hidden;transition:max-height .35s ease;
+  border-top:0px solid var(--border);
+}
+.accordion.open .accordion-body{
+  max-height:2000px;border-top-width:1px;
+}
+.accordion-body-inner{padding:16px 20px 20px;font-size:.85rem;color:var(--text2);line-height:1.75}
+.accordion-body-inner ul{padding-left:20px}
+.accordion-body-inner li{margin-bottom:6px}
+.accordion-body-inner strong{color:var(--text)}
+.accordion-body-inner .highlight{
+  display:inline-block;padding:1px 8px;border-radius:4px;
+  font-family:var(--mono);font-size:.78rem;margin:0 2px;
+}
+.accordion-body-inner .highlight.h-java{background:var(--java-light);color:var(--java-dark)}
+.accordion-body-inner .highlight.h-dist{background:var(--dist-light);color:var(--dist-dark)}
+.accordion-body-inner .highlight.h-ai{background:var(--ai-light);color:var(--ai-dark)}
+.accordion-body-inner .point-box{
+  background:var(--bg);border-radius:var(--radius-sm);padding:12px 16px;
+  margin:8px 0;border-left:3px solid var(--java);
+}
+.accordion-body-inner .point-box.p-dist{border-left-color:var(--dist)}
+.accordion-body-inner .point-box.p-ai{border-left-color:var(--ai)}
+
+/* ═══════════════════════════════════════════════════
+   Risk Analysis (Section 4)
+   ═══════════════════════════════════════════════════ */
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.risk-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;transition:all var(--transition);
+}
+.risk-card:hover{box-shadow:var(--shadow-md)}
+.risk-card .rc-header{
+  padding:16px 20px;display:flex;align-items:center;gap:10px;
+  font-weight:700;font-size:.9rem;
+}
+.risk-card .rc-header.rc-java{background:var(--java-light);color:var(--java-dark)}
+.risk-card .rc-header.rc-dist{background:var(--dist-light);color:var(--dist-dark)}
+.risk-card .rc-header.rc-ai{background:var(--ai-light);color:var(--ai-dark)}
+.risk-card .rc-header .rc-emoji{font-size:1.2rem}
+.risk-card .rc-body{padding:16px 20px;font-size:.82rem;color:var(--text2);line-height:1.7}
+.risk-card .rc-body .rc-section{margin-bottom:12px}
+.risk-card .rc-body .rc-section:last-child{margin-bottom:0}
+.risk-card .rc-body .rc-label{
+  font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:4px;
+}
+.risk-card .rc-body ul{padding-left:18px}
+.risk-card .rc-body li{margin-bottom:4px}
+
+/* ═══════════════════════════════════════════════════
+   Code block
+   ═══════════════════════════════════════════════════ */
+.code{
+  background:var(--code-bg);border-radius:var(--radius-sm);
+  margin:12px 0;overflow:hidden;position:relative;
+}
+.code .lang{
+  position:absolute;top:8px;right:60px;font-size:.64rem;
+  color:rgba(255,255,255,.4);font-family:var(--mono);text-transform:uppercase;
+}
+.code .copy-btn{
+  position:absolute;top:8px;right:12px;font-size:.7rem;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.6);padding:3px 10px;border-radius:4px;
+  cursor:pointer;transition:all var(--transition);
+}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.code pre{
+  padding:36px 16px 16px;overflow-x:auto;color:#e2e8f0;
+  font-family:var(--mono);font-size:.78rem;line-height:1.65;margin:0;
+}
+
+/* ═══════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════ */
+.footer{
+  text-align:center;padding:24px;color:var(--text3);font-size:.78rem;
+  border-top:1px solid var(--border);margin-top:20px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+  .hero .lead{font-size:.88rem}
+  .nav .hamburger{display:block}
+  .nav .nav-anchors{display:none;position:absolute;top:54px;left:0;right:0;
+    background:var(--surface);border-bottom:1px solid var(--border);
+    flex-direction:column;padding:8px;box-shadow:var(--shadow-md);
+  }
+  .nav .nav-anchors.show{display:flex}
+  .topic-grid{grid-template-columns:1fr}
+  .skill-cards{grid-template-columns:1fr}
+  .risk-grid{grid-template-columns:1fr}
+  .mindmap-wrap svg{height:auto}
+  .wrap{padding:0 16px 40px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════ -->
+<nav class="nav" id="topNav">
+  <a class="logo" href="index.html">
+    <svg viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#2563eb"/><text x="16" y="22" text-anchor="middle" fill="#fff" font-size="16" font-weight="800">FH</text></svg>
+    Frontend Learning Hub
+  </a>
+  <div class="spacer"></div>
+  <button class="hamburger" id="hamburger" aria-label="菜单">☰</button>
+  <div class="nav-anchors" id="navAnchors">
+    <a href="#overview" class="active-nav">知识总览</a>
+    <a href="#skilltree">技能树</a>
+    <a href="#interview-ja" class="ja">面试·Java</a>
+    <a href="#interview-di" class="di">面试·分布式</a>
+    <a href="#interview-ia" class="ia">面试·AI</a>
+    <a href="#risk">故障排查</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section class="hero">
+  <h1>后端技术栈 · 知识体系构建与面试分析</h1>
+  <p class="lead">
+    以 Java 后端开发岗位为核心，系统梳理<strong>Java核心开发</strong>、<strong>分布式架构</strong>、<strong>AI应用开发</strong>
+    三大领域的技术栈体系，覆盖从初级到高级的能力进阶路径、高频面试题深度解析，以及典型线上故障排查方案。
+  </p>
+  <div class="tags">
+    <span class="ht java">☕ Java 核心开发</span>
+    <span class="ht dist">🌐 分布式架构</span>
+    <span class="ht ai">🤖 AI 应用开发</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<div class="wrap">
+
+<!-- ────────────────────────────────────────────────────
+   Section 1: 知识体系总览
+   ──────────────────────────────────────────────────── -->
+<section class="sec" id="overview">
+  <div class="sec-title">
+    <div class="num java-bg">1</div>
+    <h2><span class="ic">🧭</span> 知识体系全景总览</h2>
+  </div>
+
+  <!-- Mind Map SVG -->
+  <div class="card" style="padding:12px">
+    <div class="mindmap-wrap">
+      <svg viewBox="0 0 1060 620" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow1"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity=".12"/></filter>
+          <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#2563eb"/>
+          </marker>
+          <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#7c3aed"/>
+          </marker>
+          <marker id="arrowTeal" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0d9488"/>
+          </marker>
+        </defs>
+
+        <!-- Central Node -->
+        <rect x="430" y="270" width="200" height="80" rx="14" fill="#1a1a2e" filter="url(#shadow1)"/>
+        <text x="530" y="304" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">后端技术栈</text>
+        <text x="530" y="326" text-anchor="middle" fill="#94a3b8" font-size="11">知识体系全景</text>
+
+        <!-- Lines from center to three domains -->
+        <line x1="430" y1="290" x2="260" y2="130" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+        <line x1="530" y1="270" x2="530" y2="100" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+        <line x1="630" y1="290" x2="800" y2="130" stroke="#0d9488" stroke-width="2" marker-end="url(#arrowTeal)"/>
+
+        <!-- Domain 1: Java -->
+        <rect x="100" y="30" width="320" height="60" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2" filter="url(#shadow1)"/>
+        <text x="260" y="56" text-anchor="middle" fill="#1d4ed8" font-size="14" font-weight="800">☕ Java 核心开发</text>
+        <text x="260" y="76" text-anchor="middle" fill="#3b82f6" font-size="10">JVM · 并发编程 · 设计模式 · Spring 生态</text>
+
+        <!-- Sub-nodes Java -->
+        <rect x="30" y="120" width="150" height="36" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="105" y="142" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="600">JVM 调优</text>
+        <line x1="170" y1="90" x2="120" y2="120" stroke="#93c5fd" stroke-width="1"/>
+
+        <rect x="200" y="120" width="150" height="36" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="275" y="142" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="600">并发编程</text>
+        <line x1="260" y1="90" x2="275" y2="120" stroke="#93c5fd" stroke-width="1"/>
+
+        <rect x="110" y="175" width="150" height="36" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="185" y="197" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="600">设计模式</text>
+
+        <rect x="280" y="175" width="150" height="36" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="355" y="197" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="600">Spring 全家桶</text>
+
+        <!-- Domain 2: Distributed -->
+        <rect x="390" y="30" width="280" height="60" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow1)"/>
+        <text x="530" y="56" text-anchor="middle" fill="#6d28d9" font-size="14" font-weight="800">🌐 分布式架构</text>
+        <text x="530" y="76" text-anchor="middle" fill="#8b5cf6" font-size="10">微服务 · Redis · 消息队列 · 数据库调优</text>
+
+        <!-- Sub-nodes Distributed -->
+        <rect x="370" y="110" width="130" height="34" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="435" y="131" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">Spring Cloud</text>
+        <line x1="480" y1="90" x2="435" y2="110" stroke="#c4b5fd" stroke-width="1"/>
+
+        <rect x="515" y="110" width="140" height="34" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="585" y="131" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">Dubbo RPC</text>
+        <line x1="560" y1="90" x2="585" y2="110" stroke="#c4b5fd" stroke-width="1"/>
+
+        <rect x="400" y="165" width="130" height="34" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="465" y="186" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">Redis 集群</text>
+
+        <rect x="545" y="165" width="130" height="34" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="610" y="186" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">RabbitMQ</text>
+
+        <rect x="470" y="215" width="130" height="34" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="535" y="236" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="600">MySQL 调优</text>
+
+        <!-- Domain 3: AI -->
+        <rect x="670" y="30" width="320" height="60" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="2" filter="url(#shadow1)"/>
+        <text x="830" y="56" text-anchor="middle" fill="#0f766e" font-size="14" font-weight="800">🤖 AI 应用开发</text>
+        <text x="830" y="76" text-anchor="middle" fill="#14b8a6" font-size="10">LLM 工程 · LangChain/Spring AI · 向量数据库 · Agent</text>
+
+        <!-- Sub-nodes AI -->
+        <rect x="680" y="120" width="140" height="36" rx="8" fill="#fff" stroke="#0d9488" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="750" y="142" text-anchor="middle" fill="#115e59" font-size="11" font-weight="600">LLM 工程化</text>
+        <line x1="780" y1="90" x2="750" y2="120" stroke="#99f6e4" stroke-width="1"/>
+
+        <rect x="840" y="120" width="150" height="36" rx="8" fill="#fff" stroke="#0d9488" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="915" y="142" text-anchor="middle" fill="#115e59" font-size="11" font-weight="600">LangChain/Spring AI</text>
+        <line x1="860" y1="90" x2="915" y2="120" stroke="#99f6e4" stroke-width="1"/>
+
+        <rect x="760" y="175" width="140" height="36" rx="8" fill="#fff" stroke="#0d9488" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="830" y="197" text-anchor="middle" fill="#115e59" font-size="11" font-weight="600">向量数据库</text>
+
+        <rect x="915" y="175" width="140" height="36" rx="8" fill="#fff" stroke="#0d9488" stroke-width="1" filter="url(#shadow1)"/>
+        <text x="985" y="197" text-anchor="middle" fill="#115e59" font-size="11" font-weight="600">Agent 编排</text>
+
+        <!-- Cross-domain connections -->
+        <line x1="260" y1="120" x2="435" y2="165" stroke="#94a3b8" stroke-width=".8" stroke-dasharray="4,3" opacity=".5"/>
+        <line x1="585" y1="165" x2="750" y2="175" stroke="#94a3b8" stroke-width=".8" stroke-dasharray="4,3" opacity=".5"/>
+
+        <!-- Bottom: foundation -->
+        <rect x="430" y="390" width="200" height="32" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="530" y="411" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="500">操作系统 · 网络协议 · 数据结构 · 算法</text>
+        <line x1="530" y1="350" x2="530" y2="390" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+
+        <!-- Level annotations -->
+        <text x="25" y="460" fill="#2563eb" font-size="11" font-weight="600">🟦 初级 — 掌握语法/框架基础</text>
+        <text x="25" y="482" fill="#7c3aed" font-size="11" font-weight="600">🟪 中级 — 架构设计/性能优化</text>
+        <text x="25" y="504" fill="#0d9488" font-size="11" font-weight="600">🟩 高级 — AI融合/系统整体把控</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Three domain breakdown cards -->
+  <div class="topic-grid">
+    <div class="topic-card">
+      <h4>☕ Java 核心开发</h4>
+      <p>基础语法、面向对象、集合框架、IO/NIO、JVM原理与调优、并发编程(JUC)、设计模式(23种)实践、Spring Boot/Cloud 全家桶、MyBatis/JPA持久层等。</p>
+      <div class="sub-items">
+        <span class="sub-item s-java">JVM 调优</span>
+        <span class="sub-item s-java">JUC 并发</span>
+        <span class="sub-item s-java">Spring 生态</span>
+        <span class="sub-item s-java">设计模式</span>
+      </div>
+    </div>
+    <div class="topic-card dist">
+      <h4>🌐 分布式架构</h4>
+      <p>微服务治理(Spring Cloud/Dubbo)、分布式缓存(Redis集群)、消息队列(RabbitMQ/Kafka)、关系型数据库调优(MySQL)、分布式事务(Seata)、服务网格等。</p>
+      <div class="sub-items">
+        <span class="sub-item s-dist">Spring Cloud</span>
+        <span class="sub-item s-dist">Redis 集群</span>
+        <span class="sub-item s-dist">RabbitMQ</span>
+        <span class="sub-item s-dist">MySQL 调优</span>
+      </div>
+    </div>
+    <div class="topic-card ai">
+      <h4>🤖 AI 应用开发</h4>
+      <p>LLM 大模型应用工程化、Prompt Engineering、LangChain/Spring AI 框架、RAG 检索增强生成、向量数据库(Milvus/Pinecone)、多智能体编排与协同。</p>
+      <div class="sub-items">
+        <span class="sub-item s-ai">LLM 工程</span>
+        <span class="sub-item s-ai">LangChain</span>
+        <span class="sub-item s-ai">向量数据库</span>
+        <span class="sub-item s-ai">Agent 编排</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────
+   Section 2: 技能树可视化
+   ──────────────────────────────────────────────────── -->
+<section class="sec" id="skilltree">
+  <div class="sec-title">
+    <div class="num dist-bg">2</div>
+    <h2><span class="ic">🌲</span> 技能树 · 能力进阶路径</h2>
+  </div>
+
+  <div class="card">
+    <p>以下按 <strong>初级→中级→高级</strong> 三个层次展示各技术栈的能力进阶路径。每条线代表一个技术方向，节点间的依赖关系反映实际的学习前置条件。</p>
+  </div>
+
+  <div class="skill-tree">
+    <!-- Junior Level -->
+    <div class="skill-level">
+      <div class="level-header l-junior">
+        <span class="lv-badge">初级</span> 基础构建期 · 掌握核心语法与框架基本使用
+      </div>
+      <div class="skill-cards">
+        <div class="skill-node java-node">
+          <div class="sn-title">Java 基础 &amp; OOP</div>
+          <div class="sn-desc">集合框架、异常处理、IO流、泛型、注解、Lambda表达式</div>
+        </div>
+        <div class="skill-node java-node">
+          <div class="sn-title">Spring Boot 入门</div>
+          <div class="sn-desc">IoC/DI、AOP、自动配置、RESTful API、基础CRUD</div>
+          <div class="sn-dep">依赖：Java 基础</div>
+        </div>
+        <div class="skill-node java-node">
+          <div class="sn-title">MySQL 基础</div>
+          <div class="sn-desc">SQL 编写、表设计、索引基础、事务隔离级别</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">Redis 基础</div>
+          <div class="sn-desc">5种数据类型、缓存穿透/击穿/雪崩概念、过期策略</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">RabbitMQ 入门</div>
+          <div class="sn-desc">消息模型、交换机类型、ACK机制、基本Spring集成</div>
+        </div>
+        <div class="skill-node ai-node">
+          <div class="sn-title">LLM 基础认知</div>
+          <div class="sn-desc">Transformer架构理解、Prompt基础、API调用</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mid Level -->
+    <div class="skill-level">
+      <div class="level-header l-mid">
+        <span class="lv-badge">中级</span> 架构深化期 · 性能调优与分布式设计
+      </div>
+      <div class="skill-cards">
+        <div class="skill-node java-node">
+          <div class="sn-title">JVM 原理与调优</div>
+          <div class="sn-desc">内存模型、GC算法与选择、类加载机制、JVM参数调优</div>
+          <div class="sn-dep">前置：Java基础 · 有线上问题排查经验</div>
+        </div>
+        <div class="skill-node java-node">
+          <div class="sn-title">并发编程（JUC）</div>
+          <div class="sn-desc">线程池、AQS、Lock、CAS、volatile、并发集合、Fork/Join</div>
+          <div class="sn-dep">前置：Java基础 · 操作系统线程模型</div>
+        </div>
+        <div class="skill-node java-node">
+          <div class="sn-title">设计模式实践</div>
+          <div class="sn-desc">工厂/单例/策略/观察者/模板/责任链在Spring中的落地</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">Spring Cloud 微服务</div>
+          <div class="sn-desc">Nacos、Gateway、Feign、Sentinel、Sleuth链路追踪</div>
+          <div class="sn-dep">前置：Spring Boot · 分布式理论基础</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">MySQL 深度调优</div>
+          <div class="sn-desc">Explain执行计划、索引优化、分库分表、主从复制</div>
+          <div class="sn-dep">前置：MySQL基础 · SQL熟练</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">Redis 集群与实战</div>
+          <div class="sn-desc">哨兵/Cluster模式、分布式锁、Lua脚本、Stream消息</div>
+          <div class="sn-dep">前置：Redis基础 · 分布式理论</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">RabbitMQ 高级</div>
+          <div class="sn-desc">死信队列、延迟消息、消息可靠性、集群部署方案</div>
+        </div>
+        <div class="skill-node ai-node">
+          <div class="sn-title">LangChain 开发</div>
+          <div class="sn-desc">Chain编排、Tool调用、Memory管理、Callback机制</div>
+          <div class="sn-dep">前置：LLM基础 · Python</div>
+        </div>
+        <div class="skill-node ai-node">
+          <div class="sn-title">RAG 系统设计</div>
+          <div class="sn-desc">文档切分策略、Embedding选型、检索排序、评估体系</div>
+          <div class="sn-dep">前置：向量数据库基础</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Senior Level -->
+    <div class="skill-level">
+      <div class="level-header l-senior">
+        <span class="lv-badge">高级</span> 技术融合期 · AI 赋能与系统整体把控
+      </div>
+      <div class="skill-cards">
+        <div class="skill-node java-node">
+          <div class="sn-title">高并发系统设计</div>
+          <div class="sn-desc">秒杀架构、限流降级熔断、全链路压测、最终一致性方案</div>
+          <div class="sn-dep">前置：JUC + 分布式组件全栈</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">分布式事务方案</div>
+          <div class="sn-desc">Seata AT/TCC/Saga、RocketMQ事务消息、本地消息表</div>
+          <div class="sn-dep">前置：微服务架构 · 多数据源场景</div>
+        </div>
+        <div class="skill-node dist-node">
+          <div class="sn-title">服务网格 &amp; K8s</div>
+          <div class="sn-desc">Istio/Envoy、K8s编排、Helm部署、云原生架构设计</div>
+        </div>
+        <div class="skill-node ai-node">
+          <div class="sn-title">多 Agent 编排</div>
+          <div class="sn-desc">Plan-Execute模式、Agent间通信、任务分解、反思机制</div>
+          <div class="sn-dep">前置：LangChain · Agent基础 · 系统工程思维</div>
+        </div>
+        <div class="skill-node ai-node">
+          <div class="sn-title">LLM 生产化部署</div>
+          <div class="sn-desc">vLLM推理加速、模型量化、GPU调度、Prompt版本管理</div>
+          <div class="sn-dep">前置：LLM工程 · Linux运维</div>
+        </div>
+        <div class="skill-node ai-node">
+          <div class="sn-title">AI + 传统业务融合</div>
+          <div class="sn-desc">智能客服、代码生成、自动化测试、智能运维AIOps</div>
+          <div class="sn-dep">前置：全栈技术栈 · 业务理解</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────
+   Section 3: 常见面试问题分析
+   ──────────────────────────────────────────────────── -->
+<section class="sec" id="interview-ja">
+  <div class="sec-title">
+    <div class="num java-bg">3</div>
+    <h2><span class="ic">🎯</span> 常见面试问题深度分析</h2>
+  </div>
+
+  <!-- ══ Java 领域 ══ -->
+  <div class="domain-section" id="interview-ja">
+    <div class="domain-title"><span class="dot d-java"></span> Java 核心开发 · 高频面试题</div>
+
+    <!-- Q1 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>JVM 内存模型是怎样的？如何排查和解决 OOM 问题？</span>
+        <span class="q-tag q-java">JVM</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：</strong></p>
+        <ul>
+          <li><strong>JVM 内存分区：</strong>堆(新生代Eden+S0+S1/老年代)、方法区(元空间)、虚拟机栈、本地方法栈、程序计数器</li>
+          <li><strong>堆外内存：</strong>DirectByteBuffer、Netty的堆外内存泄漏排查</li>
+          <li><strong>OOM 类型：</strong><span class="highlight h-java">java.lang.OutOfMemoryError: Java heap space</span> / <span class="highlight h-java">GC overhead limit exceeded</span> / <span class="highlight h-java">Direct buffer memory</span></li>
+        </ul>
+        <div class="point-box">
+          <strong>💡 调优实战：</strong><br>
+          ① <code>jps -l</code> 定位进程 → ② <code>jmap -heap PID</code> 查看堆配置 → ③ <code>jmap -histo:live PID</code> 查看对象分布 → ④ <code>jstack PID</code> 分析线程 → ⑤ 调整 <code>-Xmx -Xms -Xmn</code>参数 → ⑥ GC日志分析（<code>-XX:+PrintGCDetails</code>）
+        </div>
+        <div class="point-box">
+          <strong>🔧 调优参数速查：</strong><br>
+          <span class="highlight h-java">-Xms2g -Xmx2g</span> 初始/最大堆 · <span class="highlight h-java">-Xmn1g</span> 新生代 · <span class="highlight h-java">-XX:+UseG1GC</span> G1收集器 · <span class="highlight h-java">-XX:MaxGCPauseMillis=200</span> 目标暂停时间
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>如何设计一个支持千万级并发的秒杀系统？</span>
+        <span class="q-tag q-java">高并发</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：系统分层架构与流量管控</strong></p>
+        <div class="point-box">
+          <strong>🏗️ 分层架构方案：</strong><br>
+          <strong>① 前端层：</strong>CDN静态化 + 按钮防重复(置灰+Token) + 验证码削峰<br>
+          <strong>② 网关层：</strong>Nginx限流(limit_req) + 黑名单/IP频控<br>
+          <strong>③ 服务层：</strong>Sentinel熔断降级 + 本地缓存(Caffeine) + Redis预减库存<br>
+          <strong>④ 数据层：</strong>Redis Lua原子扣减 + 异步MQ下单 + 数据库最终一致性
+        </div>
+        <div class="point-box">
+          <strong>🔑 关键技术点：</strong><br>
+          热点数据分离 · 读写分离 · 库存预热到Redis · 订单异步化 · 兜底方案(熔断后返回友好提示) · 全链路压测验证
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>Spring Bean 的生命周期是怎样的？循环依赖如何解决？</span>
+        <span class="q-tag q-java">Spring</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：Spring IoC 容器原理</strong></p>
+        <ul>
+          <li><strong>Bean 生命周期：</strong>实例化 → 属性填充 → Aware回调 → BeanPostProcessor前置 → InitializingBean → 自定义init → BeanPostProcessor后置 → 就绪 → DisposableBean → 自定义destroy</li>
+          <li><strong>循环依赖解决：</strong>三级缓存机制</li>
+        </ul>
+        <div class="point-box">
+          <strong>🔄 三级缓存原理：</strong><br>
+          <span class="highlight h-java">singletonObjects</span>(一级·成品) → <span class="highlight h-java">earlySingletonObjects</span>(二级·半成品) → <span class="highlight h-java">singletonFactories</span>(三级·工厂)<br>
+          A ← → B 循环依赖时：A实例化→放入三级缓存→填充属性时发现依赖B→B实例化→B填充属性时从三级缓存获取A的早期引用→B完成→A完成
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>synchronized 和 ReentrantLock 的区别？AQS 原理是什么？</span>
+        <span class="q-tag q-java">并发</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：锁机制与AQS框架理解</strong></p>
+        <ul>
+          <li><strong>synchronized：</strong>JVM内置，自动加锁/释放，非公平，1.6后引入偏向锁/轻量级锁优化</li>
+          <li><strong>ReentrantLock：</strong>API层面，支持公平锁、可中断、tryLock超时、多条件变量Condition</li>
+          <li><strong>AQS原理：</strong>volatile int state + CLH队列(FIFO) + CAS修改状态。acquire()尝试获取锁→失败进入等待队列→前驱节点唤醒</li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ══ 分布式领域 ══ -->
+  <div class="domain-section" id="interview-di">
+    <div class="domain-title"><span class="dot d-dist"></span> 分布式架构 · 高频面试题</div>
+
+    <!-- Q5 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>分布式事务如何保证数据一致性？Seata AT/TCC/Saga 模式对比</span>
+        <span class="q-tag q-dist">分布式事务</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：分布式事务方案选型与对比</strong></p>
+        <div class="point-box p-dist">
+          <strong>📊 三种模式对比：</strong><br>
+          <strong>AT 模式(自动)：</strong>基于undo_log回滚，业务无侵入，但依赖数据库ACID，适合单服务多DB<br>
+          <strong>TCC 模式(Try-Confirm-Cancel)：</strong>业务需实现三阶段接口，性能好，适合高并发扣减类<br>
+          <strong>Saga 模式(长事务)：</strong>正向补偿+逆向补偿编排，适合长流程，最终一致性
+        </div>
+        <div class="point-box p-dist">
+          <strong>🏆 选型建议：</strong><br>
+          资金类操作 → TCC · 普通业务 → AT · 长流程调用链 → Saga · 简单场景 → 本地消息表 + 最大努力通知
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>Redis 缓存穿透/击穿/雪崩的区别与解决方案？</span>
+        <span class="q-tag q-dist">Redis</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：缓存三大经典问题</strong></p>
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin:8px 0">
+          <tr style="background:#f8fafc"><th style="padding:8px;border:1px solid #e2e8f0;text-align:left">问题</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:left">场景</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:left">解决方案</th></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0"><strong>缓存穿透</strong></td><td style="padding:8px;border:1px solid #e2e8f0">查询不存在的数据</td><td style="padding:8px;border:1px solid #e2e8f0">布隆过滤器 + 空值缓存(短TTL)</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0"><strong>缓存击穿</strong></td><td style="padding:8px;border:1px solid #e2e8f0">热点key过期瞬间</td><td style="padding:8px;border:1px solid #e2e8f0">互斥锁(mutex) + 逻辑过期 + 永不过期</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0"><strong>缓存雪崩</strong></td><td style="padding:8px;border:1px solid #e2e8f0">大量key同时过期/Redis宕机</td><td style="padding:8px;border:1px solid #e2e8f0">过期时间随机化 + 集群高可用 + 限流降级</td></tr>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>MySQL 慢查询如何排查？Explain 执行计划如何解读？</span>
+        <span class="q-tag q-dist">数据库</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：SQL优化与执行计划分析</strong></p>
+        <ul>
+          <li><strong>慢查询定位：</strong><span class="highlight h-dist">slow_query_log</span> 开启慢日志 → <span class="highlight h-dist">long_query_time</span> 设置阈值 → mysqldumpslow/pt-query-digest分析</li>
+          <li><strong>Explain 关键字段：</strong><span class="highlight h-dist">type</span>(ALL→index→range→ref→eq_ref→const) · <span class="highlight h-dist">key</span>(实际使用的索引) · <span class="highlight h-dist">rows</span>(扫描行数) · <span class="highlight h-dist">Extra</span>(Using filesort/Using temporary 表示需优化)</li>
+        </ul>
+      </div></div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>消息队列如何保证消息不丢失、不重复消费？</span>
+        <span class="q-tag q-dist">消息队列</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：MQ可靠性保障</strong></p>
+        <div class="point-box p-dist">
+          <strong>📨 消息不丢失（全链路）：</strong><br>
+          ① 生产者：确认机制(publisher-confirm) + 失败重试<br>
+          ② Broker：持久化 + 镜像集群 + 同步刷盘<br>
+          ③ 消费者：手动ACK + 消费完成后再确认
+        </div>
+        <div class="point-box p-dist">
+          <strong>🔄 防重复消费（幂等性）：</strong><br>
+          ① 数据库唯一约束(insert ignore) · ② Redis setnx · ③ 业务唯一ID + 状态机 · ④ 乐观锁(version)
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ══ AI 领域 ══ -->
+  <div class="domain-section" id="interview-ia">
+    <div class="domain-title"><span class="dot d-ai"></span> AI 应用开发 · 高频面试题</div>
+
+    <!-- Q9 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>RAG 系统的完整架构是怎样的？如何优化检索质量？</span>
+        <span class="q-tag q-ai">RAG</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：RAG全链路设计与优化</strong></p>
+        <div class="point-box p-ai">
+          <strong>🏗️ RAG 完整架构：</strong><br>
+          ① <strong>离线索引层：</strong>文档解析(PDF/Word/HTML) → 智能切分(语义/递归/滑动窗口) → Embedding向量化(BGE/text2vec) → 向量数据库存储(Milvus/Pinecone/Qdrant)<br>
+          ② <strong>在线检索层：</strong>Query改写(HyDE/多轮改写) → 混合检索(向量+关键词BM25) → 重排序(Reranker) → Top-K截取<br>
+          ③ <strong>生成层：</strong>Prompt模板 → 上下文注入 → LLM生成 → 引用溯源
+        </div>
+        <div class="point-box p-ai">
+          <strong>🔧 优化策略：</strong><br>
+          Chunk大小调优(512-1024 tokens) · 父子文档检索(Small-to-Big) · 多路召回融合 · 查询改写缓解指代消解 · 评估体系(RAGAS)
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Q10 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>多智能体(Multi-Agent)编排的核⼼挑战与设计模式？</span>
+        <span class="q-tag q-ai">Agent</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：Agent协同机制设计</strong></p>
+        <ul>
+          <li><strong>设计模式：</strong>顺序执行(Sequential) · 辩论式(Debate，如ChatDev) · 分层式(Hierarchical，领导者分配任务) · 自由协作(如AutoGen群聊)</li>
+          <li><strong>核心挑战：</strong>上下文窗口管理 · Agent间通信协议 · 任务分解粒度 · 错误传播与回滚 · Token成本控制</li>
+        </ul>
+        <div class="point-box p-ai">
+          <strong>🎯 关键设计决策：</strong><br>
+          集中式调度 vs 去中心化协商 · 共享记忆 vs 独立上下文 · 预定义流程(CrewAI Pipeline) vs LLM自主规划(ReAct)
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Q11 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>LangChain 的核心组件有哪些？与 Spring AI 对比如何？</span>
+        <span class="q-tag q-ai">框架</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：AI框架架构对比</strong></p>
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin:8px 0">
+          <tr style="background:#f8fafc"><th style="padding:8px;border:1px solid #e2e8f0;text-align:left">维度</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:left">LangChain</th><th style="padding:8px;border:1px solid #e2e8f0;text-align:left">Spring AI</th></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0">语言</td><td style="padding:8px;border:1px solid #e2e8f0">Python/JS</td><td style="padding:8px;border:1px solid #e2e8f0">Java</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0">生态</td><td style="padding:8px;border:1px solid #e2e8f0">最丰富，社区活跃</td><td style="padding:8px;border:1px solid #e2e8f0">Spring生态集成，快速落地</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0">核心组件</td><td style="padding:8px;border:1px solid #e2e8f0">Chain/Agent/Tool/Memory/Retriever</td><td style="padding:8px;border:1px solid #e2e8f0">ChatClient/Embedding/VectorStore/Advisor</td></tr>
+          <tr><td style="padding:8px;border:1px solid #e2e8f0">适合场景</td><td style="padding:8px;border:1px solid #e2e8f0">快速原型、研究探索</td><td style="padding:8px;border:1px solid #e2e8f0">企业级Java项目集成</td></tr>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- Q12 -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>向量数据库的选型考量？Milvus vs Pinecone vs Qdrant 对比</span>
+        <span class="q-tag q-ai">向量数据库</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <p><strong>核心考点：向量数据库技术选型</strong></p>
+        <ul>
+          <li><strong>Milvus：</strong>开源、高性能、分布式架构、支持多种索引(IVF/HNSW/DiskANN)、适合大规模生产环境</li>
+          <li><strong>Pinecone：</strong>全托管SaaS、零运维、自带Embedding、适合快速起步和中小规模</li>
+          <li><strong>Qdrant：</strong>Rust编写、高性能、支持过滤+向量混合查询、量化压缩、适合中等规模</li>
+        </ul>
+        <div class="point-box p-ai">
+          <strong>📋 选型决策树：</strong><br>
+          数据量 &lt;100万 & 零运维需求 → Pinecone · 100万-1亿 & 需要过滤 → Qdrant · &gt;1亿 & 需自建 → Milvus · Java生态 → 考虑Elasticsearch + 向量插件
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────
+   Section 4: 技术风险与方案设计
+   ──────────────────────────────────────────────────── -->
+<section class="sec" id="risk">
+  <div class="sec-title">
+    <div class="num ai-bg">4</div>
+    <h2><span class="ic">🛡️</span> 技术风险 · 线上故障排查与方案设计</h2>
+  </div>
+
+  <div class="card">
+    <p>以下梳理了后端系统中最常见的线上故障场景，每个场景包含<strong>故障现象、排查思路、应急方案、根因修复</strong>四个维度，覆盖从"救火"到"防火"的完整链路。</p>
+  </div>
+
+  <div class="risk-grid">
+    <!-- Risk 1 -->
+    <div class="risk-card">
+      <div class="rc-header rc-java"><span class="rc-emoji">🔥</span> CPU 突然飙升 100%</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>服务响应变慢→超时→上游熔断→雪崩。CPU被打满，所有请求排队。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li><code>top -Hp PID</code> 定位高CPU线程</li>
+            <li><code>printf '%x\n' TID</code> 转16进制 → <code>jstack PID | grep -A20 0xTID</code></li>
+            <li>检查GC日志：是否频繁Full GC</li>
+            <li>Arthas <code>thread -n 3</code> 快速定位</li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>限流降级→重启应急→回滚可疑发布→扩容缓冲</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 2 -->
+    <div class="risk-card">
+      <div class="rc-header rc-java"><span class="rc-emoji">💧</span> 内存泄漏导致 OOM</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>服务运行一段时间后OOM Kill，堆内存使用率持续上升不下降，Full GC后仍接近上限。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li><code>jmap -dump:live,file=heap.hprof PID</code> 导出堆转储</li>
+            <li>MAT/JProfiler 分析：按Retained Size找大对象</li>
+            <li>ThreadLocal未清理、静态集合持续增长、连接池泄漏</li>
+            <li>Arthas <code>vmtool</code> 动态检查对象引用链</li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>重启服务→调整-Xmx临时缓解→修复后灰度发布</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 3 -->
+    <div class="risk-card">
+      <div class="rc-header rc-dist"><span class="rc-emoji">🐢</span> 数据库慢查询拖垮服务</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>接口超时→数据库连接池耗尽→服务不可用。常由新上线的未优化SQL或数据量增长触发。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li>慢查询日志定位具体SQL</li>
+            <li>EXPLAIN分析执行计划 → 关注type/rows/Extra</li>
+            <li>检查是否缺索引或索引失效(隐式类型转换/函数)</li>
+            <li>检查连接数：<code>SHOW PROCESSLIST</code> / <code>SHOW STATUS LIKE 'Threads_connected'</code></li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>kill慢查询→紧急加索引→限流→读写分离→分库分表（长期）</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 4 -->
+    <div class="risk-card">
+      <div class="rc-header rc-dist"><span class="rc-emoji">🔴</span> Redis 集群故障</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>缓存命中率骤降→请求直击DB→数据库压力暴增→全链路超时。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li>检查Redis连通性：<code>redis-cli PING</code></li>
+            <li>检查内存使用：<code>INFO memory</code> → maxmemory是否触发淘汰</li>
+            <li>检查主从同步：<code>INFO replication</code> → offset差距</li>
+            <li>慢日志：<code>slowlog get 10</code> → keys*/hgetall大key</li>
+            <li>大Key扫描：<code>redis-cli --bigkeys</code></li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>故障转移(Sentinel自动)→DB限流保护→缓存预热→大Key拆分</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 5 -->
+    <div class="risk-card">
+      <div class="rc-header rc-dist"><span class="rc-emoji">📨</span> 消息队列积压</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>消费者处理速度跟不上生产速度→消息大量积压→下游业务延迟甚至数据丢失。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li>检查消费者是否存活(节点宕机/消费线程死锁)</li>
+            <li>检查消费逻辑是否有慢操作(DB慢查询/外部API超时)</li>
+            <li>检查prefetch count是否合理</li>
+            <li>检查是否有消息被Nack后无限重试</li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>临时扩容消费者→批量消费优化→降级跳过非关键消息→死信队列兜底</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 6 -->
+    <div class="risk-card">
+      <div class="rc-header rc-ai"><span class="rc-emoji">🤖</span> LLM 调用超时/幻觉</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>AI接口响应超时(30s+)、返回内容不可靠(幻觉)、Token消耗暴增、线上回答质量波动。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li>监控LLM API延迟分布(P50/P95/P99)</li>
+            <li>检查Prompt是否因上下文过长导致Token激增</li>
+            <li>RAG场景检索结果是否相关(评估召回率/准确率)</li>
+            <li>温度参数是否过高导致输出不稳定</li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>超时降级返回缓存/默认回答→切备用模型→缩短上下文→强制引用溯源→人工兜底</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 7 -->
+    <div class="risk-card">
+      <div class="rc-header rc-ai"><span class="rc-emoji">🌀</span> Agent 多步推理失控</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>Agent陷入无限循环、调用链过长导致Token枯竭、多个Agent产生冲突决策、用户等待时间过长。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li>设置max_iterations硬限制防止死循环</li>
+            <li>记录每步thought+action+observation用于回溯</li>
+            <li>监控Token消耗速率 → 检测异常agent</li>
+            <li>检查Agent间通信是否有丢失/重复</li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>强制中断超时Agent→降级为单Agent或直接LLM→缩短规划窗口→人工介入复杂决策</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk 8 -->
+    <div class="risk-card">
+      <div class="rc-header rc-ai"><span class="rc-emoji">📉</span> 向量检索精度下降</div>
+      <div class="rc-body">
+        <div class="rc-section">
+          <div class="rc-label">故障现象</div>
+          <p>RAG系统回答质量下降、检索结果与Query不匹配、用户反馈"答非所问"增多。</p>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">排查思路</div>
+          <ul>
+            <li>检查Embedding模型是否变更(版本/维度)</li>
+            <li>检查Chunk切分策略是否适合当前文档类型</li>
+            <li>对比RAGAS评估指标(忠实度/相关性)</li>
+            <li>检查向量索引是否需要重建</li>
+          </ul>
+        </div>
+        <div class="rc-section">
+          <div class="rc-label">应急方案</div>
+          <p>A/B测试切换检索策略→调整Chunk大小→引入Reranker→回滚Embedding模型版本</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;border-left:4px solid var(--dist);background:var(--dist-bg)">
+    <h3 style="color:var(--dist-dark)">🚨 故障排查通用方法论</h3>
+    <p style="margin-top:8px">
+      <strong>① 止损优先：</strong>先恢复服务，再排查根因（限流→降级→回滚→重启→扩容）<br>
+      <strong>② 三板斧：</strong>监控看板(整体) → 日志查询(异常) → 链路追踪(定位) — Grafana + ELK + SkyWalking<br>
+      <strong>③ 黄金信号：</strong>关注 RED 指标（Rate请求速率、Errors错误率、Duration延迟）<br>
+      <strong>④ 事后复盘：</strong>5Why分析法 + 改进措施落地 + 监控告警补齐
+    </p>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer class="footer">
+  <span>© 2026 Frontend Learning Hub</span>
+  <span>·</span>
+  <span>后端技术栈知识体系 · 面试分析 · 故障排查</span>
+  <span>·</span>
+  <a href="index.html" style="color:var(--text3)">返回门户</a>
+</footer>
+
+<!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+<script>
+/* ── Accordion Toggle ── */
+function toggleAccordion(header){
+  const el = header.parentElement;
+  el.classList.toggle('open');
+}
+
+/* ── Code Copy ── */
+function copyCode(btn){
+  const code = btn.parentElement.querySelector('pre').innerText;
+  navigator.clipboard.writeText(code).then(()=>{
+    btn.textContent='已复制!';
+    setTimeout(()=>btn.textContent='复制',1500);
+  }).catch(()=>{
+    btn.textContent='失败';
+    setTimeout(()=>btn.textContent='复制',1500);
+  });
+}
+
+/* ── Nav Highlight (IntersectionObserver) ── */
+(function(){
+  const sections = document.querySelectorAll('section[id], .domain-section[id]');
+  const navLinks = document.querySelectorAll('#navAnchors a');
+
+  // Skip if no sections
+  if(sections.length === 0) return;
+
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const id = entry.target.id;
+        navLinks.forEach(link=>{
+          link.classList.remove('active-nav');
+          if(link.getAttribute('href') === '#' + id){
+            link.classList.add('active-nav');
+          }
+        });
+      }
+    });
+  },{rootMargin:'-80px 0px -70% 0px',threshold:0});
+
+  sections.forEach(s=>observer.observe(s));
+
+  // Smooth scroll for nav anchors
+  navLinks.forEach(link=>{
+    link.addEventListener('click',function(e){
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if(target){
+        target.scrollIntoView({behavior:'smooth',block:'start'});
+        // Close mobile nav if open
+        document.getElementById('navAnchors').classList.remove('show');
+      }
+    });
+  });
+})();
+
+/* ── Mobile Hamburger ── */
+document.getElementById('hamburger').addEventListener('click',function(){
+  const nav = document.getElementById('navAnchors');
+  nav.classList.toggle('show');
+  this.textContent = nav.classList.contains('show') ? '✕' : '☰';
+});
+</script>
+
+</body>
+</html>

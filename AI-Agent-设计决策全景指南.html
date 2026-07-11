@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 设计决策全景指南 · 形态·框架·语言·从零构建</title>
+<style>
+/* ═══════════════════════════════════════════
+   CSS Variables & Reset
+   ═══════════════════════════════════════════ */
+:root {
+  --pri: #7c3aed;
+  --pri-dark: #6d28d9;
+  --pri-light: #ede9fe;
+  --pri-lighter: #f5f3ff;
+  --bg: #f8fafc;
+  --surface: #fff;
+  --border: #e2e8f0;
+  --text: #1a1a2e;
+  --text2: #5a6170;
+  --text3: #9ca3af;
+  --code-bg: #1a1a2e;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+  --transition: .2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--pri);text-decoration:none}
+
+/* ═══════════════════════════════════════════
+   Top Navigation
+   ═══════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;height:56px;
+  display:flex;align-items:center;gap:12px;
+}
+.nav .logo{
+  font-weight:800;font-size:.95rem;
+  color:var(--pri);
+  display:flex;align-items:center;gap:8px;
+}
+.nav .logo svg{width:26px;height:26px}
+.nav .toc{display:flex;gap:4px;margin-left:8px;overflow-x:auto;flex:1}
+.nav .toc a{
+  font-size:.78rem;color:var(--text2);
+  padding:4px 12px;border-radius:20px;
+  white-space:nowrap;transition:var(--transition);
+}
+.nav .toc a:hover,.nav .toc a.active{background:var(--pri-light);color:var(--pri);font-weight:600}
+@media(max-width:768px){
+  .nav{padding:0 14px}
+  .nav .toc{display:none}
+}
+
+/* ═══════════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════════ */
+.hero{
+  background:linear-gradient(135deg,var(--pri-light) 0%,var(--pri-lighter) 50%,#e0e7ff 100%);
+  padding:56px 24px 48px;text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.hero .badge{
+  display:inline-block;font-size:.7rem;font-weight:700;
+  background:var(--pri);color:#fff;
+  padding:3px 14px;border-radius:20px;
+  letter-spacing:1px;margin-bottom:16px;
+}
+.hero h1{
+  font-size:2.1rem;font-weight:900;
+  letter-spacing:-.5px;color:var(--text);
+  max-width:800px;margin:0 auto 12px;
+}
+.hero .sub{
+  font-size:1.02rem;color:var(--text2);
+  max-width:680px;margin:0 auto;
+  line-height:1.7;
+}
+.hero .tags{
+  display:flex;gap:8px;justify-content:center;
+  flex-wrap:wrap;margin-top:20px;
+}
+.hero .tag{
+  font-size:.72rem;padding:4px 14px;
+  border-radius:16px;font-weight:600;
+  background:var(--surface);color:var(--pri);
+  border:1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════
+   Main Content
+   ═══════════════════════════════════════════ */
+.wrap{max-width:960px;margin:0 auto;padding:40px 24px 60px}
+.sec{margin-bottom:48px}
+.sec:last-child{margin-bottom:0}
+
+.sec-title{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;padding-bottom:12px;
+  border-bottom:2px solid var(--border);
+}
+.sec-title .num{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:10px;
+  background:var(--pri);color:#fff;
+  font-weight:800;font-size:.9rem;flex-shrink:0;
+}
+.sec-title h2{
+  font-size:1.3rem;font-weight:800;
+  color:var(--text);
+}
+
+/* ═══════════════════════════════════════════
+   Cards
+   ═══════════════════════════════════════════ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px 28px;
+  margin-bottom:20px;
+  transition:var(--transition);
+}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{
+  font-size:1.02rem;font-weight:700;
+  margin-bottom:8px;color:var(--text);
+}
+.card h4{
+  font-size:.88rem;font-weight:700;
+  margin:16px 0 8px;
+  color:var(--pri-dark);
+}
+.card p{font-size:.88rem;color:var(--text2);line-height:1.7}
+.card ul,.card ol{
+  font-size:.86rem;color:var(--text2);
+  padding-left:20px;margin:8px 0;
+}
+.card li{margin-bottom:6px}
+
+/* ═══════════════════════════════════════════
+   Comparison Tables
+   ═══════════════════════════════════════════ */
+.tbl-wrap{
+  overflow-x:auto;margin:16px 0;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--surface);
+}
+table{
+  width:100%;border-collapse:collapse;
+  font-size:.84rem;min-width:560px;
+}
+thead th{
+  background:var(--pri-lighter);
+  color:var(--pri-dark);
+  font-weight:700;text-align:left;
+  padding:12px 16px;font-size:.78rem;
+  text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:2px solid var(--pri-light);
+}
+tbody td{
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  color:var(--text2);vertical-align:top;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--pri-lighter)}
+td:first-child{font-weight:600;color:var(--text);white-space:nowrap}
+td .win{color:#059669;font-weight:600}
+td .lose{color:#dc2626}
+td .draw{color:#b45309}
+td .star{color:#f59e0b}
+
+/* ═══════════════════════════════════════════
+   Tips
+   ═══════════════════════════════════════════ */
+.tip{
+  padding:14px 18px;border-radius:var(--radius-sm);
+  margin:16px 0;font-size:.84rem;
+  border-left:4px solid;
+  line-height:1.65;
+}
+.tip.blue{background:#eff6ff;border-color:var(--pri);color:#1e40af}
+.tip.green{background:#ecfdf5;border-color:#059669;color:#065f46}
+.tip.warn{background:#fffbeb;border-color:#f59e0b;color:#b45309}
+.tip.info{background:var(--pri-lighter);border-color:var(--pri);color:var(--pri-dark)}
+
+/* ═══════════════════════════════════════════
+   Grids
+   ═══════════════════════════════════════════ */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* ═══════════════════════════════════════════
+   SVG Viz Container
+   ═══════════════════════════════════════════ */
+.viz{
+  text-align:center;padding:20px 0;margin:16px 0;
+}
+.viz svg{max-width:100%;height:auto}
+
+/* ═══════════════════════════════════════════
+   Code Block
+   ═══════════════════════════════════════════ */
+.code{
+  background:var(--code-bg);
+  border-radius:var(--radius-sm);
+  margin:16px 0;
+  position:relative;
+  overflow:hidden;
+}
+.code .lang{
+  position:absolute;top:10px;left:16px;
+  font-size:.68rem;font-weight:700;
+  color:var(--text3);text-transform:uppercase;
+  letter-spacing:1px;
+}
+.code .copy-btn{
+  position:absolute;top:8px;right:12px;
+  background:rgba(255,255,255,.1);
+  color:#cbd5e0;border:1px solid rgba(255,255,255,.15);
+  padding:3px 12px;border-radius:4px;
+  font-size:.72rem;cursor:pointer;
+  transition:all .2s;
+}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.code .copy-btn.copied{background:rgba(5,150,105,.3);border-color:#059669;color:#6ee7b7}
+.code pre{
+  padding:44px 20px 20px;margin:0;
+  font-family:var(--mono);
+  font-size:.82rem;line-height:1.6;
+  color:#e2e8f0;overflow-x:auto;
+  white-space:pre-wrap;word-break:break-word;
+}
+
+/* ═══════════════════════════════════════════
+   Flow Steps
+   ═══════════════════════════════════════════ */
+.flow-steps{
+  display:flex;flex-direction:column;gap:0;margin:20px 0;
+}
+.flow-step{
+  display:flex;gap:16px;align-items:flex-start;
+  position:relative;
+}
+.flow-step .dot{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--pri);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.78rem;flex-shrink:0;
+  margin-top:2px;z-index:1;
+}
+.flow-step .dot.dim{background:var(--text3)}
+.flow-step .line{
+  position:absolute;left:13px;top:32px;
+  width:2px;height:calc(100% - 8px);
+  background:var(--pri-light);
+}
+.flow-step:last-child .line{display:none}
+.flow-step .body{padding-bottom:20px}
+.flow-step .body h4{font-size:.88rem;font-weight:700;margin-bottom:4px;color:var(--text)}
+.flow-step .body p{font-size:.82rem;color:var(--text2)}
+
+/* ═══════════════════════════════════════════
+   Checklist
+   ═══════════════════════════════════════════ */
+.checklist{
+  list-style:none;padding:0;margin:12px 0;
+}
+.checklist li{
+  padding:8px 0 8px 28px;position:relative;
+  font-size:.86rem;color:var(--text2);
+  border-bottom:1px solid var(--border);
+}
+.checklist li:last-child{border-bottom:none}
+.checklist li::before{
+  content:'✓';position:absolute;left:0;
+  color:var(--pri);font-weight:800;font-size:.9rem;
+}
+
+/* ═══════════════════════════════════════════
+   Decision Matrix Card
+   ═══════════════════════════════════════════ */
+.matrix-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  font-size:.84rem;
+}
+.matrix-row:last-child{border-bottom:none}
+.matrix-row .label{width:140px;font-weight:700;flex-shrink:0}
+.matrix-row .bars{flex:1;display:flex;height:8px;border-radius:4px;overflow:hidden;background:#f1f5f9}
+.matrix-row .bar{height:100%}
+.matrix-row .bar.a{background:var(--pri)}
+.matrix-row .bar.b{background:#f59e0b}
+.matrix-row .bar.c{background:#06b6d4}
+.matrix-row .scores{display:flex;gap:8px;font-size:.72rem;font-weight:700}
+.matrix-row .scores span{padding:1px 8px;border-radius:10px}
+.matrix-row .scores .s-a{background:var(--pri-light);color:var(--pri)}
+.matrix-row .scores .s-b{background:#fef3c7;color:#b45309}
+.matrix-row .scores .s-c{background:#cffafe;color:#0e7490}
+
+/* ═══════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════ */
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+  .hero .sub{font-size:.88rem}
+  .sec-title h2{font-size:1.1rem}
+  .card{padding:18px 20px}
+  .grid2{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr}
+  .wrap{padding:24px 14px 40px}
+  .matrix-row{flex-wrap:wrap}
+  .matrix-row .label{width:100%}
+}
+
+@media(max-width:480px){
+  .nav{padding:0 10px}
+  .hero{padding:40px 14px 32px}
+  .hero h1{font-size:1.3rem}
+  table{font-size:.76rem}
+  thead th,tbody td{padding:8px 10px}
+}
+
+/* Print styles */
+@media print{
+  .nav{position:static}
+  .hero{background:#fff;border-bottom:2px solid #000}
+  .wrap{padding:0}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav class="nav" id="topNav">
+  <a href="index.html" class="logo" title="返回 Frontend Learning Hub">
+    <svg viewBox="0 0 26 26" fill="none">
+      <rect x="2" y="2" width="22" height="22" rx="5" fill="var(--pri-light)"/>
+      <path d="M7 17V8l5.5 4.5L7 17z" fill="var(--pri)"/>
+      <path d="M12.5 17v-3.5L16 11.5v5.5z" fill="var(--pri-dark)"/>
+    </svg>
+    返回门户
+  </a>
+  <div class="toc">
+    <a href="#sec1">形态选择</a>
+    <a href="#sec2">技术路线</a>
+    <a href="#sec3">语言选择</a>
+    <a href="#sec4">从零准备</a>
+    <a href="#sec5">综合决策</a>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="badge">ARCHITECTURE DECISION</div>
+  <h1>AI Agent 设计决策全景指南</h1>
+  <p class="sub">
+    从形态选择到技术路线，从框架适配到从零构建——全方位拆解一个「功能全面」的 AI Agent
+    在工程落地前必须回答的核心决策问题。
+  </p>
+  <div class="tags">
+    <span class="tag">CLI vs Desktop</span>
+    <span class="tag">框架 vs 裸写</span>
+    <span class="tag">TypeScript</span>
+    <span class="tag">Architecture</span>
+    <span class="tag">从零构建</span>
+    <span class="tag">MCP / A2A</span>
+  </div>
+</section>
+
+<!-- ═══════════ CONTENT ═══════════ -->
+<div class="wrap">
+
+<!-- ==========================================
+     SECTION 1 — 形态选择
+     ========================================== -->
+<section class="sec" id="sec1">
+  <div class="sec-title">
+    <div class="num">1</div>
+    <h2>形态选择：CLI 工具 vs 桌面应用 vs Web 应用</h2>
+  </div>
+
+  <div class="card">
+    <h3>核心问题：Agent 该以什么形态呈现？</h3>
+    <p>
+      形态选择决定了交互范式、部署策略和用户心智。CLI、桌面应用、Web 应用各有其不可替代的定位——选错形态，后续迭代成本呈指数级增长。
+    </p>
+  </div>
+
+  <!-- 对比表格 -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>决策维度</th>
+          <th>CLI 工具</th>
+          <th>桌面应用 (Electron/Tauri)</th>
+          <th>Web 应用 (SPA)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>开发成本</td>
+          <td class="win">最低 — 纯文本交互，无需 GUI</td>
+          <td class="draw">中等 — 需处理跨平台兼容</td>
+          <td class="draw">中等 — 前后端分离架构</td>
+        </tr>
+        <tr>
+          <td>用户体验</td>
+          <td class="lose">受限 — 纯文本，学习曲线陡</td>
+          <td class="win">最佳 — 原生感 + 系统级能力</td>
+          <td class="win">优秀 — 随时随地，零安装</td>
+        </tr>
+        <tr>
+          <td>部署难度</td>
+          <td class="win">最简单 — npm/pip/pack</td>
+          <td class="lose">最复杂 — 平台签名 + 自动更新</td>
+          <td class="draw">中等 — CI/CD + CDN</td>
+        </tr>
+        <tr>
+          <td>系统权限</td>
+          <td class="win">完全 — 文件/网络/进程全访问</td>
+          <td class="win">完全 — Native API + Node.js</td>
+          <td class="lose">受限 — 浏览器沙箱限制</td>
+        </tr>
+        <tr>
+          <td>更新机制</td>
+          <td>npm/pip 更新，用户主动</td>
+          <td class="win">自动更新框架成熟</td>
+          <td class="win">静默更新，用户无感</td>
+        </tr>
+        <tr>
+          <td>多模态能力</td>
+          <td class="lose">有限 — 终端图片支持弱</td>
+          <td class="win">完整 — 音频/视频/图片原生</td>
+          <td class="win">完整 — Web API 日趋成熟</td>
+        </tr>
+        <tr>
+          <td>离线能力</td>
+          <td class="win">天然支持</td>
+          <td class="win">天然支持</td>
+          <td class="lose">依赖 Service Worker</td>
+        </tr>
+        <tr>
+          <td>团队协作</td>
+          <td class="lose">不适用（单机）</td>
+          <td>有限 — 需额外服务端</td>
+          <td class="win">天然强 — 共享链接 + 实时协作</td>
+        </tr>
+        <tr>
+          <td>适用场景</td>
+          <td>自动化脚本、CI/CD 集成、开发者工具</td>
+          <td>IDE 插件、本地 Agent 助手、隐私敏感场景</td>
+          <td>协作型 Agent、对外服务、SaaS 产品</td>
+        </tr>
+        <tr>
+          <td>典型代表</td>
+          <td>Claude Code、GitHub Copilot CLI、aider</td>
+          <td>Cursor、Windsurf、Copilot 桌面</td>
+          <td>ChatGPT、Claude.ai、Copilot Chat</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip green">
+    <strong>推荐策略：先 CLI 验证核心逻辑，再按需扩展 UI 层。</strong>
+    绝大多数成功的 Agent 产品（Claude Code、Cursor、aider）都遵循这一路径——CLI 让你最快拿到反馈循环，GUI 是锦上添花而非雪中送炭。
+  </div>
+
+  <!-- 决策流程图 SVG -->
+  <div class="card">
+    <h3>形态选择决策流程</h3>
+    <div class="viz">
+      <svg viewBox="0 0 720 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#7c3aed"/></marker>
+          <filter id="shadow1"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity=".1"/></filter>
+        </defs>
+
+        <!-- Start -->
+        <rect x="290" y="10" width="140" height="38" rx="19" fill="#7c3aed" filter="url(#shadow1)"/>
+        <text x="360" y="35" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">开始决策</text>
+
+        <line x1="360" y1="48" x2="360" y2="72" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <!-- Q1 -->
+        <rect x="235" y="74" width="250" height="44" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="360" y="94" text-anchor="middle" fill="#7c3aed" font-size="12" font-weight="700">目标用户是开发者？</text>
+        <text x="360" y="110" text-anchor="middle" fill="#6d28d9" font-size="10">用于自动化/CI/CD/命令行？</text>
+
+        <!-- Yes branch -->
+        <line x1="250" y1="118" x2="160" y2="160" stroke="#059669" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="200" y="134" fill="#059669" font-size="11" font-weight="700">是</text>
+
+        <rect x="70" y="162" width="180" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="160" y="182" text-anchor="middle" fill="#059669" font-size="13" font-weight="700">选择 CLI</text>
+        <text x="160" y="198" text-anchor="middle" fill="#065f46" font-size="10">最快验证、最低成本</text>
+
+        <!-- No branch -->
+        <line x1="485" y1="118" x2="560" y2="160" stroke="#dc2626" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="525" y="134" fill="#dc2626" font-size="11" font-weight="700">否</text>
+
+        <!-- Q2 -->
+        <rect x="395" y="162" width="250" height="44" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="520" y="182" text-anchor="middle" fill="#b45309" font-size="12" font-weight="700">需要离线/系统级权限？</text>
+        <text x="520" y="198" text-anchor="middle" fill="#92400e" font-size="10">文件系统、本地进程、音频设备</text>
+
+        <!-- Yes branch 2 -->
+        <line x1="460" y1="206" x2="380" y2="260" stroke="#059669" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="415" y="226" fill="#059669" font-size="11" font-weight="700">是</text>
+
+        <rect x="290" y="262" width="180" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="380" y="282" text-anchor="middle" fill="#059669" font-size="13" font-weight="700">选择桌面应用</text>
+        <text x="380" y="298" text-anchor="middle" fill="#065f46" font-size="10">Electron / Tauri</text>
+
+        <!-- No branch 2 -->
+        <line x1="580" y1="206" x2="620" y2="260" stroke="#dc2626" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="605" y="226" fill="#dc2626" font-size="11" font-weight="700">否</text>
+
+        <!-- Q3 -->
+        <rect x="395" y="262" width="250" height="44" rx="8" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="520" y="282" text-anchor="middle" fill="#0369a1" font-size="12" font-weight="700">需要多人协作/分享？</text>
+        <text x="520" y="298" text-anchor="middle" fill="#0284c7" font-size="10">共享会话、团队空间</text>
+
+        <!-- Yes branch 3 -->
+        <line x1="580" y1="306" x2="650" y2="360" stroke="#059669" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="620" y="326" fill="#059669" font-size="11" font-weight="700">是</text>
+
+        <rect x="560" y="362" width="180" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="650" y="382" text-anchor="middle" fill="#059669" font-size="13" font-weight="700">选择 Web 应用</text>
+        <text x="650" y="398" text-anchor="middle" fill="#065f46" font-size="10">SaaS、多人协作</text>
+
+        <!-- No branch 3 -->
+        <line x1="460" y1="306" x2="380" y2="360" stroke="#dc2626" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="415" y="326" fill="#dc2626" font-size="11" font-weight="700">否</text>
+
+        <rect x="290" y="362" width="180" height="44" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="380" y="382" text-anchor="middle" fill="#475569" font-size="13" font-weight="700">回到核心需求</text>
+        <text x="380" y="398" text-anchor="middle" fill="#64748b" font-size="10">重新评估用户场景</text>
+
+        <!-- Legend -->
+        <rect x="12" y="430" width="220" height="42" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+        <rect x="22" y="442" width="12" height="12" rx="3" fill="#7c3aed"/>
+        <text x="42" y="453" font-size="11" fill="#475569">决策节点</text>
+        <rect x="112" y="442" width="12" height="12" rx="3" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+        <text x="132" y="453" font-size="11" fill="#475569">推荐形态</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     SECTION 2 — 技术路线
+     ========================================== -->
+<section class="sec" id="sec2">
+  <div class="sec-title">
+    <div class="num">2</div>
+    <h2>技术路线：使用框架 vs 从零编码</h2>
+  </div>
+
+  <div class="card">
+    <h3>核心问题：站在巨人的肩膀上，还是自己造轮子？</h3>
+    <p>
+      当前主流 Agent 框架（LangChain、CrewAI、AutoGen、Semantic Kernel）已提供成熟抽象的
+      工具调用、记忆管理、多 Agent 编排等能力。但框架并非银弹——理解它们的代价和局限，才能做出正确选择。
+    </p>
+  </div>
+
+  <!-- 框架全景对比 -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>对比维度</th>
+          <th>使用框架</th>
+          <th>从零编码</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>开发效率</td>
+          <td class="win">极高 — 脚手架、链式调用、内置工具</td>
+          <td class="lose">低 — 一切从零开始，需自行实现基础设施</td>
+        </tr>
+        <tr>
+          <td>灵活性/控制力</td>
+          <td class="lose">受限于框架抽象层，黑盒调试困难</td>
+          <td class="win">完全控制 — 每一行代码都是你的</td>
+        </tr>
+        <tr>
+          <td>学习曲线</td>
+          <td class="draw">中等 — 需理解框架概念模型（Chain/Agent/Memory）</td>
+          <td class="lose">陡峭 — 需深入理解 LLM/工具调用/记忆原理</td>
+        </tr>
+        <tr>
+          <td>维护成本</td>
+          <td class="lose">高 — 框架版本升级可能 breaking change</td>
+          <td class="win">可控 — 更新节奏自主决定</td>
+        </tr>
+        <tr>
+          <td>生产稳定性</td>
+          <td class="draw">依赖框架质量——LangChain 以 bug 多著称</td>
+          <td class="win">自主保障 — 但需投入大量测试资源</td>
+        </tr>
+        <tr>
+          <td>社区/生态</td>
+          <td class="win">丰富的插件、模板、最佳实践</td>
+          <td class="lose">需要自己积累和沉淀</td>
+        </tr>
+        <tr>
+          <td>调试体验</td>
+          <td class="lose">多层回调，堆栈复杂，trace 难追踪</td>
+          <td class="win">线性逻辑，逐行可控</td>
+        </tr>
+        <tr>
+          <td>Token 优化</td>
+          <td class="lose">框架提示词模板不可控，Token 浪费严重</td>
+          <td class="win">精确控制每一条 prompt</td>
+        </tr>
+        <tr>
+          <td>适用场景</td>
+          <td>快速原型、探索性项目、团队经验不足</td>
+          <td>生产级产品、高定制需求、性能敏感场景</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 主流框架速览 -->
+  <div class="grid3">
+    <div class="card" style="text-align:center">
+      <h4 style="color:#059669">🦜 LangChain</h4>
+      <p style="font-size:.82rem">
+        最成熟的 LLM 应用框架。<br>
+        <strong>优势：</strong>生态丰富、社区活跃<br>
+        <strong>风险：</strong>过度抽象、不稳定 API<br>
+        <strong>适合：</strong>快速原型、RAG 项目
+      </p>
+    </div>
+    <div class="card" style="text-align:center">
+      <h4 style="color:#2563eb">🤖 CrewAI</h4>
+      <p style="font-size:.82rem">
+        角色驱动的多 Agent 编排。<br>
+        <strong>优势：</strong>角色建模直观<br>
+        <strong>风险：</strong>依赖 OpenAI，灵活性不足<br>
+        <strong>适合：</strong>多 Agent 协作场景
+      </p>
+    </div>
+    <div class="card" style="text-align:center">
+      <h4 style="color:#7c3aed">🔧 从零构建</h4>
+      <p style="font-size:.82rem">
+        LLM SDK + 自己的架构。<br>
+        <strong>优势：</strong>完全可控、性能最优<br>
+        <strong>风险：</strong>开发周期长，需深厚功底<br>
+        <strong>适合：</strong>生产级产品、深度定制
+      </p>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <strong>重要提醒：</strong>框架不是"开箱即用"的银弹。LangChain 的 issue tracker 在 2024 年超过 2000+ 未关闭问题。
+    如果你是做生产级产品而非 Demo，强烈建议认真评估「裸写」方案的可行性。
+  </div>
+
+  <!-- 技术路线决策图 -->
+  <div class="card">
+    <h3>技术路线决策流程</h3>
+    <div class="viz">
+      <svg viewBox="0 0 720 370" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#7c3aed"/></marker>
+          <filter id="shadow2"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity=".1"/></filter>
+        </defs>
+
+        <rect x="270" y="10" width="180" height="38" rx="19" fill="#7c3aed" filter="url(#shadow2)"/>
+        <text x="360" y="35" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">选择技术路线</text>
+
+        <line x1="360" y1="48" x2="360" y2="70" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr2)"/>
+
+        <!-- Q1: 快速验证? -->
+        <rect x="225" y="72" width="270" height="44" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow2)"/>
+        <text x="360" y="92" text-anchor="middle" fill="#7c3aed" font-size="12" font-weight="700">项目阶段：快速验证概念？</text>
+        <text x="360" y="108" text-anchor="middle" fill="#6d28d9" font-size="10">是 MVP/Demo，还是生产级产品？</text>
+
+        <line x1="220" y1="116" x2="120" y2="155" stroke="#059669" stroke-width="2" marker-end="url(#arr2)"/>
+        <text x="165" y="130" fill="#059669" font-size="11" font-weight="700">Demo/MVP</text>
+
+        <rect x="30" y="157" width="180" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" filter="url(#shadow2)"/>
+        <text x="120" y="177" text-anchor="middle" fill="#059669" font-size="13" font-weight="700">用框架快速搭建</text>
+        <text x="120" y="193" text-anchor="middle" fill="#065f46" font-size="10">LangChain / CrewAI</text>
+
+        <line x1="500" y1="116" x2="600" y2="155" stroke="#dc2626" stroke-width="2" marker-end="url(#arr2)"/>
+        <text x="555" y="130" fill="#dc2626" font-size="11" font-weight="700">生产级</text>
+
+        <rect x="510" y="157" width="180" height="44" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow2)"/>
+        <text x="600" y="177" text-anchor="middle" fill="#b45309" font-size="12" font-weight="700">有深度定制需求？</text>
+        <text x="600" y="193" text-anchor="middle" fill="#92400e" font-size="10">特殊工具链/自有模型/性能敏感</text>
+
+        <line x1="530" y1="201" x2="450" y2="240" stroke="#059669" stroke-width="2" marker-end="url(#arr2)"/>
+        <text x="485" y="215" fill="#059669" font-size="11" font-weight="700">是</text>
+
+        <rect x="360" y="242" width="180" height="44" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" filter="url(#shadow2)"/>
+        <text x="450" y="262" text-anchor="middle" fill="#059669" font-size="13" font-weight="700">从零编码</text>
+        <text x="450" y="278" text-anchor="middle" fill="#065f46" font-size="10">完全控制，无框架束缚</text>
+
+        <line x1="670" y1="201" x2="700" y2="240" stroke="#dc2626" stroke-width="2" marker-end="url(#arr2)"/>
+        <text x="690" y="215" fill="#dc2626" font-size="11" font-weight="700">否</text>
+
+        <rect x="600" y="242" width="180" height="44" rx="8" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="1.5" filter="url(#shadow2)"/>
+        <text x="690" y="262" text-anchor="middle" fill="#0369a1" font-size="13" font-weight="700">轻量级框架</text>
+        <text x="690" y="278" text-anchor="middle" fill="#0284c7" font-size="10">Vercel AI SDK / OpenAI SDK</text>
+
+        <!-- Strategic note -->
+        <rect x="160" y="305" width="400" height="52" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow2)"/>
+        <text x="360" y="325" text-anchor="middle" fill="#5a6170" font-size="12" font-weight="700">💡 渐进式策略：框架起步 → 验证 PMF → 逐步替换为自研模块</text>
+        <text x="360" y="345" text-anchor="middle" fill="#9ca3af" font-size="11">大多数成功产品（Cursor、Replit Agent）都走了这条路</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     SECTION 3 — 语言选择
+     ========================================== -->
+<section class="sec" id="sec3">
+  <div class="sec-title">
+    <div class="num">3</div>
+    <h2>语言选择：TypeScript 与其他主流语言深度对比</h2>
+  </div>
+
+  <div class="card">
+    <h3>核心问题：Agent 开发最适合用什么语言？</h3>
+    <p>
+      语言选择应基于目标形态和使用场景——Web 应用天然偏向 TypeScript，后端服务 Python 生态更成熟，
+      桌面应用 TypeScript/Electron 是主流方案。没有绝对的优胜语言，但有明显的最优解。
+    </p>
+  </div>
+
+  <!-- 语言能力评分矩阵 -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>评估维度</th>
+          <th>TypeScript</th>
+          <th>Python</th>
+          <th>Go</th>
+          <th>Rust</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AI/LLM 生态</td>
+          <td class="star">★★★★ 快速增长（Vercel AI SDK、LangChain.js）</td>
+          <td class="star">★★★★★ 最成熟（LangChain/LlamaIndex/HuggingFace）</td>
+          <td class="star">★★ 有限</td>
+          <td class="star">★★ 有限</td>
+        </tr>
+        <tr>
+          <td>前端/UI 统一</td>
+          <td class="star">★★★★★ 全栈同语言，零上下文切换</td>
+          <td class="star">★★ 需额外前端栈</td>
+          <td class="star">★★ 需额外前端栈</td>
+          <td class="star">★ 需额外前端栈</td>
+        </tr>
+        <tr>
+          <td>类型安全</td>
+          <td class="star">★★★★★ 结构化类型系统</td>
+          <td class="star">★★★ 类型注解（非强制）</td>
+          <td class="star">★★★★ 静态强类型</td>
+          <td class="star">★★★★★ 零成本抽象 + 所有权</td>
+        </tr>
+        <tr>
+          <td>异步/并发</td>
+          <td class="star">★★★★ Promise/async-await 成熟</td>
+          <td class="star">★★★ asyncio（GIL 限制）</td>
+          <td class="star">★★★★★ goroutine + channel</td>
+          <td class="star">★★★★★ tokio 异步运行时</td>
+        </tr>
+        <tr>
+          <td>CLI 构建</td>
+          <td class="star">★★★★ Commander/Clipanion/oclif</td>
+          <td class="star">★★★★ Click/Typer/argparse</td>
+          <td class="star">★★★★★ Cobra 最成熟</td>
+          <td class="star">★★★★ Clap 高性能</td>
+        </tr>
+        <tr>
+          <td>桌面应用</td>
+          <td class="star">★★★★★ Electron/Tauri（实际霸主）</td>
+          <td class="star">★★ PyQt/tkinter（体验差）</td>
+          <td class="star">★★★ Wails（小生态）</td>
+          <td class="star">★★★ Tauri 后端（Svelte/React 前端）</td>
+        </tr>
+        <tr>
+          <td>Web 全栈</td>
+          <td class="star">★★★★★ Next.js/Remix 一统</td>
+          <td class="star">★★★★ FastAPI/Django 成熟</td>
+          <td class="star">★★★ Gin/Echo + 前端分离</td>
+          <td class="star">★★★ Actix/Axum + 前端分离</td>
+        </tr>
+        <tr>
+          <td>流式处理 (SSE)</td>
+          <td class="star">★★★★★ EventSource/fetch stream 原生</td>
+          <td class="star">★★★★ sse-starlette/FastAPI</td>
+          <td class="star">★★★ 需手动实现</td>
+          <td class="star">★★★ 需手动实现</td>
+        </tr>
+        <tr>
+          <td>社区/招聘</td>
+          <td class="star">★★★★★ 前端市场巨大</td>
+          <td class="star">★★★★★ AI/数据领域首选</td>
+          <td class="star">★★★★ 后端/基础设施</td>
+          <td class="star">★★★ 系统/工具链</td>
+        </tr>
+        <tr>
+          <td>最佳场景</td>
+          <td style="font-weight:700;color:var(--pri)">Web Agent、桌面 Agent、全栈产品</td>
+          <td style="font-weight:700;color:#059669">AI 后端服务、数据处理、快速原型</td>
+          <td>高性能 Agent 网关、工具服务</td>
+          <td>性能极致场景、Wasm 边缘部署</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>TypeScript 的独特优势：Agent 开发者的「瑞士军刀」</h3>
+    <div class="grid2">
+      <div>
+        <h4>🔗 全栈同语言</h4>
+        <p style="font-size:.84rem">前端 UI + 后端 Agent 逻辑 + CLI 工具 —— 一套 TypeScript 代码库全部搞定。减少上下文切换，共享类型定义，降低团队认知负担。</p>
+
+        <h4>⚡ 一流的流式体验</h4>
+        <p style="font-size:.84rem">浏览器原生 <code>ReadableStream</code> + <code>EventSource</code>，SSE 流式输出零摩擦。Vercel AI SDK 的 <code>useChat</code> hook 让流式对话只需 10 行代码。</p>
+
+        <h4>🔧 工具链成熟</h4>
+        <p style="font-size:.84rem">ESLint/Prettier/tsup/vitest —— 从开发到构建到测试，生态极其成熟。pnpm workspace 管理 monorepo 丝般顺滑。</p>
+      </div>
+      <div>
+        <h4>🖥️ 桌面应用统治力</h4>
+        <p style="font-size:.84rem">Electron + Tauri 覆盖了 90% 的桌面 Agent 产品（Cursor、Windsurf、VS Code Copilot）。没有其他语言能在此领域与 TS 竞争。</p>
+
+        <h4>🏗️ 类型安全 = 少 Bug</h4>
+        <p style="font-size:.84rem">Agent 系统中充斥着复杂的 JSON schema、工具定义、消息格式。TypeScript 的类型系统可以在编译期就拦截 90% 的数据结构错误。</p>
+
+        <h4>🌍 边缘部署</h4>
+        <p style="font-size:.84rem">Cloudflare Workers、Vercel Edge、Deno Deploy —— 在全球边缘运行 Agent 逻辑，极低延迟。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip blue">
+    <strong>结论：</strong>如果你的 Agent 产品需要 UI，TypeScript 就是最优解。
+    如果纯后端 / 数据处理 / 快速原型，Python 更合适。但现代趋势是：核心 Agent 逻辑用 Python（模型调用、数据处理），
+    Agent 外壳和交互层用 TypeScript——两者通过 HTTP/gRPC 解耦。
+  </div>
+</section>
+
+<!-- ==========================================
+     SECTION 4 — 从零开发的准备工作
+     ========================================== -->
+<section class="sec" id="sec4">
+  <div class="sec-title">
+    <div class="num">4</div>
+    <h2>从零开发：完整准备清单与实施路径</h2>
+  </div>
+
+  <div class="card">
+    <h3>核心问题：不依赖框架，从零写一个 Agent，需要准备什么？</h3>
+    <p>
+      从零构建不是"重写 LangChain"——而是精确选择 LLM SDK 作为最小依赖，围绕它构建你真正需要的
+      工具链、记忆系统和编排层。以下是完整的前期准备清单。
+    </p>
+  </div>
+
+  <!-- 准备清单流程 -->
+  <div class="card">
+    <h3>六步准备清单</h3>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="dot">1</div>
+        <div class="line"></div>
+        <div class="body">
+          <h4>项目架构设计</h4>
+          <p>
+            <strong>Monorepo 结构规划：</strong>packages/core（Agent 引擎）、packages/tools（工具集）、
+            packages/memory（记忆系统）、packages/ui（前端界面）、apps/cli（命令行入口）、apps/desktop（桌面应用）。<br>
+            <strong>核心设计模式：</strong>依赖注入（管理 LLM/工具/记忆的依赖关系）、
+            责任链模式（工具调用匹配）、观察者模式（事件流/SSE 推送）。<br>
+            <strong>关键决策：</strong>LLM Provider 抽象层设计（统一 OpenAI/Anthropic/本地模型的接口）。
+          </p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="dot">2</div>
+        <div class="line"></div>
+        <div class="body">
+          <h4>核心模块划分</h4>
+          <p>
+            <strong>必备 6 大模块：</strong><br>
+            ① LLM Client — 封装 API 调用、流式/非流式、重试、超时<br>
+            ② Tool Manager — 工具注册、Schema 定义、参数校验、沙箱执行<br>
+            ③ Memory System — 短期（对话历史窗口）、中期（会话摘要）、长期（向量存储）<br>
+            ④ Prompt Engine — 系统提示词模板、变量注入、Token 计数<br>
+            ⑤ Agent Loop — ReAct/Tool-use 循环控制、终止条件、安全护栏<br>
+            ⑥ Event Bus — 统一事件流，驱动 SSE 推送到前端
+          </p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="dot">3</div>
+        <div class="line"></div>
+        <div class="body">
+          <h4>通信协议规划</h4>
+          <p>
+            <strong>Agent ↔ 前端：</strong>SSE（Server-Sent Events）为主流选择——单向流式推送，浏览器原生支持，实现简单。
+            WebSocket 适合需要双向实时通信的场景（如中断生成、实时修改提示词）。<br>
+            <strong>Agent ↔ 工具：</strong>JSON Schema 定义工具接口，MCP（Model Context Protocol）或直接 HTTP/gRPC 调用。<br>
+            <strong>Agent ↔ Agent：</strong>A2A（Agent-to-Agent）协议——Google 提出的标准，或自定义事件协议。<br>
+            <strong>消息格式：</strong>统一使用 OpenAI Chat Completions 消息格式作为内部标准（system/user/assistant/tool 角色）。
+          </p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="dot">4</div>
+        <div class="line"></div>
+        <div class="body">
+          <h4>错误处理与韧性策略</h4>
+          <p>
+            <strong>分级处理：</strong>L1 瞬时错误（网络超时、rate limit）→ 指数退避重试；
+            L2 模型错误（非法 JSON、幻觉工具名）→ 重新提示 + 格式约束；
+            L3 工具执行错误（权限、超时、崩溃）→ 优雅降级 + 用户通知。<br>
+            <strong>兜底策略：</strong>工具调用失败后的 fallback 行为定义（返回错误信息给模型重试 / 跳过该工具 / 终止对话）。<br>
+            <strong>监控埋点：</strong>每次 LLM 调用的延迟、Token 消耗、成功率需有统计。
+          </p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="dot">5</div>
+        <div class="line"></div>
+        <div class="body">
+          <h4>测试方案</h4>
+          <p>
+            <strong>单元测试：</strong>各模块独立可测——Memory 的增删查、Tool Manager 的注册与校验、Prompt 模板渲染。<br>
+            <strong>集成测试：</strong>Mock LLM（返回固定响应），验证 Agent Loop 的控制流、工具调用链。<br>
+            <strong>E2E 测试：</strong>真实 LLM 调用 + 真实工具执行——评估 Agent 的任务完成率和准确率。<br>
+            <strong>评估框架：</strong>建立 Agent 质量评估 benchmark（任务成功率 / Token 效率 / 平均延迟 / 幻觉率）。<br>
+            <strong>Prompt 版本管理：</strong>像管理代码一样管理 prompt——Git 版本控制 + A/B 测试。
+          </p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="dot">6</div>
+        <div class="body">
+          <h4>开发环境与工具链</h4>
+          <p>
+            <strong>必备工具：</strong>pnpm workspace（monorepo）、ESLint + Prettier（代码规范）、
+            vitest（测试）、tsup（构建）、changesets（版本管理）。<br>
+            <strong>开发辅助：</strong>LangSmith / LangFuse / Phoenix（LLM 调用追踪与调试）、
+            PromptLayer（提示词管理）。<br>
+            <strong>CI/CD：</strong>GitHub Actions 自动化测试 + 构建 + 发布。桌面应用额外需要 electron-builder 的签名流水线。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 最小可行架构 -->
+  <div class="card">
+    <h3>推荐的最小可行架构</h3>
+    <div class="viz">
+      <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow3"><feDropShadow dx="0" dy="1" stdDeviation="3" flood-opacity=".08"/></filter>
+        </defs>
+
+        <!-- UI Layer -->
+        <rect x="220" y="10" width="280" height="48" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" filter="url(#shadow3)"/>
+        <text x="360" y="40" text-anchor="middle" fill="#166534" font-size="13" font-weight="700">UI 层（CLI / Web / Desktop）</text>
+
+        <line x1="360" y1="58" x2="360" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+
+        <!-- API / Event Layer -->
+        <rect x="220" y="82" width="280" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow3)"/>
+        <text x="360" y="106" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="700">SSE Event Bus / API Gateway</text>
+        <text x="360" y="122" text-anchor="middle" fill="#3b82f6" font-size="10">事件驱动，解耦 UI 与 Agent 核心</text>
+
+        <line x1="360" y1="130" x2="360" y2="152" stroke="#94a3b8" stroke-width="1.5"/>
+
+        <!-- Agent Core -->
+        <rect x="140" y="154" width="440" height="72" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow3)"/>
+        <text x="360" y="178" text-anchor="middle" fill="#6d28d9" font-size="14" font-weight="800">Agent 核心引擎</text>
+        <text x="360" y="196" text-anchor="middle" fill="#7c3aed" font-size="10">Agent Loop → Tool Resolver → Memory Manager → Prompt Builder</text>
+        <text x="360" y="212" text-anchor="middle" fill="#7c3aed" font-size="10">（纯 TypeScript，仅依赖 OpenAI/Anthropic SDK）</text>
+
+        <!-- Three branches down -->
+        <line x1="240" y1="226" x2="160" y2="260" stroke="#f59e0b" stroke-width="1.5"/>
+        <line x1="360" y1="226" x2="360" y2="260" stroke="#06b6d4" stroke-width="1.5"/>
+        <line x1="480" y1="226" x2="560" y2="260" stroke="#22c55e" stroke-width="1.5"/>
+
+        <!-- LLM -->
+        <rect x="90" y="262" width="140" height="48" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow3)"/>
+        <text x="160" y="286" text-anchor="middle" fill="#92400e" font-size="12" font-weight="700">LLM Providers</text>
+        <text x="160" y="302" text-anchor="middle" fill="#b45309" font-size="9">OpenAI / Claude / 本地模型</text>
+
+        <!-- Memory -->
+        <rect x="290" y="262" width="140" height="48" rx="8" fill="#cffafe" stroke="#06b6d4" stroke-width="1.5" filter="url(#shadow3)"/>
+        <text x="360" y="286" text-anchor="middle" fill="#155e75" font-size="12" font-weight="700">Memory Store</text>
+        <text x="360" y="302" text-anchor="middle" fill="#0e7490" font-size="9">短期会话 / 长期向量 / 摘要</text>
+
+        <!-- Tools -->
+        <rect x="490" y="262" width="140" height="48" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5" filter="url(#shadow3)"/>
+        <text x="560" y="286" text-anchor="middle" fill="#166534" font-size="12" font-weight="700">Tool Registry</text>
+        <text x="560" y="302" text-anchor="middle" fill="#16a34a" font-size="9">MCP / HTTP / Shell / DB</text>
+
+        <!-- Infrastructure -->
+        <rect x="190" y="335" width="340" height="42" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+        <text x="360" y="362" text-anchor="middle" fill="#94a3b8" font-size="11">基础设施：pnpm monorepo · vitest · tsup · Docker · GitHub Actions</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 代码示例：最小 Agent Loop -->
+  <div class="card">
+    <h3>从零开始：最小可用 Agent Loop 代码骨架</h3>
+    <div class="code">
+      <div class="lang">TypeScript</div>
+      <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      <pre>// ── 最小 Agent Loop 骨架（不到 100 行）──
+interface AgentConfig {
+  model: string;
+  maxSteps: number;
+  tools: Tool[];
+  systemPrompt: string;
+}
+
+interface Tool {
+  name: string;
+  description: string;
+  parameters: JSONSchema;
+  execute(args: Record&lt;string, unknown&gt;): Promise&lt;string&gt;;
+}
+
+async function agentLoop(
+  config: AgentConfig,
+  userMessage: string
+): Promise&lt;string&gt; {
+  const messages: Message[] = [
+    { role: 'system', content: config.systemPrompt },
+    { role: 'user', content: userMessage },
+  ];
+
+  let step = 0;
+
+  while (step &lt; config.maxSteps) {
+    step++;
+    const response = await callLLM(config.model, messages);
+
+    if (response.finishReason === 'stop') {
+      return response.content;  // 最终回复
+    }
+
+    if (response.finishReason === 'tool_calls') {
+      // 执行工具调用
+      for (const tc of response.toolCalls) {
+        const tool = config.tools.find(t =&gt; t.name === tc.name);
+        if (!tool) throw new Error(`Unknown tool: ${tc.name}`);
+
+        const result = await tool.execute(tc.arguments);
+        messages.push({
+          role: 'tool',
+          tool_call_id: tc.id,
+          content: result,
+        });
+      }
+      // 将模型响应（含 tool_calls）加入历史
+      messages.push({
+        role: 'assistant',
+        content: null,
+        tool_calls: response.toolCalls,
+      });
+      continue; // 继续循环
+    }
+
+    throw new Error(`Unexpected finish reason: ${response.finishReason}`);
+  }
+
+  throw new Error(`Agent exceeded max steps (${config.maxSteps})`);
+}</pre>
+    </div>
+    <p style="font-size:.84rem;color:var(--text2);margin-top:8px">
+      核心逻辑不到 100 行——这正是不用框架的魅力所在。
+      在此基础上扩展 Memory 管理、流式输出、并行工具调用、安全护栏，每一步都完全可控。
+    </p>
+  </div>
+</section>
+
+<!-- ==========================================
+     SECTION 5 — 综合决策框架
+     ========================================== -->
+<section class="sec" id="sec5">
+  <div class="sec-title">
+    <div class="num">5</div>
+    <h2>综合决策框架：一张表做完全部选择</h2>
+  </div>
+
+  <div class="card">
+    <h3>按场景推荐的最优组合</h3>
+    <p>
+      将前面四个维度的决策综合起来，下面是针对不同典型场景的推荐技术栈组合。
+    </p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>场景</th>
+          <th>推荐形态</th>
+          <th>技术路线</th>
+          <th>推荐语言</th>
+          <th>关键依赖</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>👨‍💻 开发者 CLI Agent<br><small>（类似 Claude Code）</small></td>
+          <td>CLI</td>
+          <td>从零编码</td>
+          <td>TypeScript</td>
+          <td>OpenAI SDK + Commander.js + ink (React 终端 UI)</td>
+        </tr>
+        <tr>
+          <td>🖥️ AI 编程 IDE<br><small>（类似 Cursor）</small></td>
+          <td>桌面应用</td>
+          <td>从零编码</td>
+          <td>TypeScript</td>
+          <td>Electron/Tauri + Monaco Editor + 自研 Agent 引擎</td>
+        </tr>
+        <tr>
+          <td>🌐 SaaS AI 助手<br><small>（类似 ChatGPT）</small></td>
+          <td>Web 应用</td>
+          <td>轻量框架</td>
+          <td>TypeScript</td>
+          <td>Next.js + Vercel AI SDK + Prisma + PostgreSQL</td>
+        </tr>
+        <tr>
+          <td>🤖 企业内部 Agent 平台<br><small>（多 Agent 协作）</small></td>
+          <td>Web 应用</td>
+          <td>框架起步</td>
+          <td>Python 后端 + TS 前端</td>
+          <td>LangChain/CrewAI + FastAPI + React + SSE</td>
+        </tr>
+        <tr>
+          <td>⚙️ 自动化工作流 Agent<br><small>（CI/CD、数据处理）</small></td>
+          <td>CLI</td>
+          <td>从零编码</td>
+          <td>Python</td>
+          <td>OpenAI SDK + Click + APScheduler</td>
+        </tr>
+        <tr>
+          <td>📱 移动端 Agent<br><small>（AI 助手 App）</small></td>
+          <td>Web + PWA</td>
+          <td>轻量框架</td>
+          <td>TypeScript</td>
+          <td>React Native / Expo + 云端 Agent API</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 最后总结 -->
+  <div class="card">
+    <h3>核心原则总结</h3>
+    <div class="grid2">
+      <div>
+        <h4>🎯 先从最简单形态开始</h4>
+        <p style="font-size:.84rem">
+          CLI 验证核心逻辑 → Web/Desktop 扩展 UI 层。不要一开始就想做出完美的产品——先用最少的代码验证 Agent 的核心能力。
+        </p>
+      </div>
+      <div>
+        <h4>🧩 框架是梯子不是拐杖</h4>
+        <p style="font-size:.84rem">
+          用框架快速起步，但随时准备替换。最好的 Agent 产品最终都会走向「轻 SDK + 自研架构」的路线。
+        </p>
+      </div>
+      <div>
+        <h4>🔤 TypeScript 是 AI 产品首选</h4>
+        <p style="font-size:.84rem">
+          全栈同语言 + 成熟的 Web/桌面生态 + 类型安全 —— 如果你要做一个带 UI 的 Agent 产品，TS 几乎是最优解。
+        </p>
+      </div>
+      <div>
+        <h4>📐 架构先于代码</h4>
+        <p style="font-size:.84rem">
+          Agent 系统的复杂性不在于 LLM 调用本身，而在于工具链管理、记忆系统、错误韧性和事件流——这些都需要在写代码前想清楚。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip green">
+    <strong>开始行动：</strong>从本文的「最小 Agent Loop」代码骨架出发，逐步添加 Memory、工具管理、流式输出。
+    第一周：跑通 CLI demo。第二周：接入真实工具。第三周：加上 Web UI。一个月内，你会拥有一个完全自主可控的 Agent 系统。
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer style="text-align:center;padding:32px 20px;color:var(--text3);font-size:.78rem;border-top:1px solid var(--border);background:var(--surface)">
+  <p>AI Agent 设计决策全景指南 · Frontend Learning Hub · 2026</p>
+  <p style="margin-top:4px">所有内容仅供学习参考，技术选型请结合实际场景评估</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   Navigation Active State
+   ═══════════════════════════════════════════ */
+(function(){
+  const tocLinks = document.querySelectorAll('.nav .toc a');
+  const sections = document.querySelectorAll('.sec[id]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(link => {
+          link.classList.toggle('active',
+            link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-80px 0px -60% 0px' });
+
+  sections.forEach(sec => observer.observe(sec));
+})();
+
+/* ═══════════════════════════════════════════
+   Code Copy
+   ═══════════════════════════════════════════ */
+function copyCode(btn){
+  const pre = btn.closest('.code').querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已复制!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '复制';
+      btn.classList.remove('copied');
+    }, 1800);
+  }).catch(() => {
+    btn.textContent = '失败';
+    setTimeout(() => { btn.textContent = '复制'; }, 1200);
+  });
+}
+</script>
+
+</body>
+</html>

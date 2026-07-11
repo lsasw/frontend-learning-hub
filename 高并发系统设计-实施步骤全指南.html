@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高并发系统设计 · 实施步骤全指南</title>
+<style>
+:root {
+  --hc: #0ea5e9; --hc-dark: #0284c7; --hc-light: #e0f2fe; --hc-lighter: #f0f9ff;
+  --bg: #f8fafc; --surface: #fff; --border: #e2e8f0;
+  --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+  --green: #059669; --green-light: #d1fae5;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --purple: #7c3aed; --purple-light: #ede9fe;
+  --orange: #ea580c; --orange-light: #fed7aa;
+  --red: #dc2626; --red-light: #fee2e2;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --cyan: #0891b2; --cyan-light: #cffafe;
+  --teal: #0d9488; --teal-light: #ccfbf1;
+  --code-bg: #1e293b;
+  --radius: 14px; --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.78}
+
+/* === NAV === */
+.nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:2px;padding:0 16px;overflow-x:auto;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.nav .logo{font-weight:900;font-size:1.05rem;color:var(--hc-dark);padding:14px 0;margin-right:12px;display:flex;align-items:center;gap:8px;flex-shrink:0;text-decoration:none}
+.nav .logo svg{width:22px;height:22px}
+.nav a{text-decoration:none;color:var(--text2);font-size:.82rem;font-weight:500;padding:8px 14px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.nav a:hover,.nav a.active{background:var(--hc-light);color:var(--hc-dark)}
+
+/* === HERO === */
+.hero{background:linear-gradient(135deg,#0c4a6e 0%,#0284c7 40%,#0ea5e9 100%);color:#fff;padding:64px 32px 52px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:600px;height:600px;background:radial-gradient(circle,rgba(255,255,255,.08) 0%,transparent 70%);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-30%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(14,165,233,.15) 0%,transparent 70%);border-radius:50%}
+.hero h1{font-size:2.6rem;font-weight:900;letter-spacing:-1px;line-height:1.2;position:relative;z-index:1}
+.hero .sub{font-size:1.05rem;opacity:.92;margin-top:14px;max-width:680px;margin-inline:auto;position:relative;z-index:1}
+.hero .tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:22px;position:relative;z-index:1}
+.hero .tag{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);padding:5px 16px;border-radius:20px;font-size:.78rem;border:1px solid rgba(255,255,255,.22)}
+
+.wrap{max-width:1140px;margin:0 auto;padding:28px 20px 60px}
+
+/* === SECTION === */
+.sec{margin-top:44px;scroll-margin-top:72px}
+.sec-title{font-size:1.6rem;font-weight:800;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid var(--hc);display:flex;align-items:center;gap:14px}
+.sec-title .n{background:var(--hc);color:#fff;min-width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:.92rem;font-weight:700;flex-shrink:0}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:16px;box-shadow:var(--shadow);transition:box-shadow .25s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card h3{font-size:1.05rem;margin-bottom:10px;color:var(--hc-dark);display:flex;align-items:center;gap:8px}
+.card h3 .ic{font-size:1.2rem}
+.card p{font-size:.86rem;margin-bottom:8px;color:var(--text2)}
+
+/* === TIP === */
+.tip{padding:12px 16px;border-radius:var(--radius-sm);margin:12px 0;font-size:.84rem;display:flex;gap:10px;align-items:flex-start}
+.tip .ti{flex-shrink:0;font-size:1.1rem}
+.tip.info{background:var(--hc-lighter);border-left:4px solid var(--hc)}
+.tip.warn{background:var(--amber-light);border-left:4px solid var(--amber)}
+.tip.good{background:var(--green-light);border-left:4px solid var(--green)}
+.tip.blue{background:var(--blue-light);border-left:4px solid var(--blue)}
+.tip.red{background:var(--red-light);border-left:4px solid var(--red)}
+.tip.danger{background:#fef2f2;border-left:4px solid var(--red)}
+.tip b{font-weight:700}
+
+/* === CODE === */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);padding:16px 20px;margin:12px 0;overflow-x:auto;position:relative}
+.code .lang{position:absolute;top:8px;right:16px;font-size:.62rem;color:#64748b;text-transform:uppercase;letter-spacing:1px}
+.code pre{font-family:var(--mono);font-size:.78rem;color:#e2e8f0;white-space:pre;line-height:1.72}
+.kw{color:#c084fc}.str{color:#86efac}.cmt{color:#475569;font-style:italic}
+.fn{color:#7dd3fc}.num{color:#fdba74}.typ{color:#fde68a}.op{color:#f0abfc}
+.copy-btn{position:absolute;top:8px;right:48px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#94a3b8;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:.66rem;transition:.2s;z-index:1}
+.copy-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+
+/* === TABLE === */
+.tbl-wrap{overflow-x:auto;margin:12px 0;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--hc-lighter);color:var(--hc-dark);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid var(--hc);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even){background:#f8fafc}
+td code{background:var(--hc-light);color:var(--hc-dark);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.76rem}
+
+/* === FLOW === */
+.flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:16px;background:var(--hc-lighter);border-radius:var(--radius-sm);margin:12px 0;font-size:.78rem;overflow-x:auto}
+.flow-node{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 14px;white-space:nowrap;font-weight:600;font-size:.76rem;text-align:center;transition:all .2s}
+.flow-node:hover{transform:translateY(-2px)}
+.flow-node.blue{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
+.flow-node.green{border-color:var(--green);background:var(--green-light);color:#064e3b}
+.flow-node.orange{border-color:var(--orange);background:var(--orange-light);color:#7c2d12}
+.flow-node.red{border-color:var(--red);background:var(--red-light);color:#991b1b}
+.flow-node.purple{border-color:var(--purple);background:var(--purple-light);color:#5b21b6}
+.flow-node.teal{border-color:var(--teal);background:var(--teal-light);color:#115e59}
+.flow-arrow{color:var(--text3);font-size:1.1rem;font-weight:700;flex-shrink:0}
+
+/* === GRID === */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+@media(max-width:768px){.grid2{grid-template-columns:1fr}}
+
+/* === STEP CARD === */
+.step-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--hc);border-radius:var(--radius-sm);padding:20px 24px;transition:all .25s}
+.step-card:hover{border-left-color:var(--hc-dark);box-shadow:var(--shadow)}
+.step-card h4{font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.step-card .step-n{background:var(--hc);color:#fff;width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+.step-card p{font-size:.83rem;color:var(--text2);margin-bottom:6px}
+
+/* === PITFALL === */
+.pitfall{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:16px 20px;margin:12px 0}
+.pitfall .ph{color:var(--red);font-weight:700;font-size:.88rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pitfall .ph .ic{font-size:1.1rem}
+.pitfall ul{list-style:none;padding-left:0}
+.pitfall li{font-size:.82rem;color:#7f1d1d;padding:4px 0 4px 20px;position:relative}
+.pitfall li::before{content:'✕';position:absolute;left:0;color:var(--red);font-weight:700}
+
+/* === BEST PRACTICE === */
+.best{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:16px 20px;margin:12px 0}
+.best .bh{color:var(--green);font-weight:700;font-size:.88rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.best .bh .ic{font-size:1.1rem}
+.best ul{list-style:none;padding-left:0}
+.best li{font-size:.82rem;color:#064e3b;padding:4px 0 4px 20px;position:relative}
+.best li::before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:700}
+
+/* === ACCORDION === */
+.acc{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin:12px 0}
+.acc-h{cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--hc-lighter);font-weight:600;font-size:.88rem;user-select:none;transition:.2s}
+.acc-h:hover{background:var(--hc-light)}
+.acc-h .arrow{transition:transform .3s;margin-left:auto;color:var(--text3)}
+.acc-h.open .arrow{transform:rotate(90deg)}
+.acc-b{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.acc-b.open{max-height:800px}
+.acc-b-inner{padding:16px 20px;font-size:.84rem;color:var(--text2)}
+
+/* === INTERACTIVE: QPS CALCULATOR === */
+.calc-box{background:var(--surface);border:2px solid var(--hc);border-radius:var(--radius);padding:24px;margin:16px 0}
+.calc-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.calc-row label{font-size:.84rem;font-weight:600;min-width:140px;color:var(--text)}
+.calc-row input{flex:1;min-width:120px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.84rem;font-family:var(--mono);outline:none;transition:border .2s}
+.calc-row input:focus{border-color:var(--hc);box-shadow:0 0 0 3px var(--hc-light)}
+.calc-row select{padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.84rem;outline:none}
+.calc-result{background:var(--hc-lighter);border-radius:var(--radius-sm);padding:16px 20px;margin-top:16px}
+.calc-result .rl{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)}
+.calc-result .rl:last-child{border-bottom:none}
+.calc-result .rl .lbl{font-size:.82rem;color:var(--text2)}
+.calc-result .rl .val{font-size:.92rem;font-weight:700;font-family:var(--mono);color:var(--hc-dark)}
+.calc-result .rl .val.red{color:var(--red)}
+.calc-result .rl .val.green{color:var(--green)}
+.calc-result .rl .val.orange{color:var(--orange)}
+
+/* === INTERACTIVE: CIRCUIT BREAKER === */
+.cb-demo{background:var(--code-bg);border-radius:var(--radius);padding:24px;margin:16px 0;color:#e2e8f0}
+.cb-demo .cb-title{font-size:.92rem;font-weight:700;margin-bottom:16px;color:#7dd3fc}
+.cb-states{display:flex;gap:12px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.cb-state{padding:14px 24px;border-radius:10px;font-weight:700;font-size:.84rem;cursor:pointer;transition:all .3s;border:2px solid transparent;text-align:center;min-width:100px}
+.cb-state.closed{background:rgba(5,150,105,.15);border-color:var(--green);color:#86efac}
+.cb-state.half-open{background:rgba(217,119,6,.15);border-color:var(--amber);color:#fdba74}
+.cb-state.open{background:rgba(220,38,38,.15);border-color:var(--red);color:#fca5a5}
+.cb-state.active{transform:scale(1.08);box-shadow:0 0 20px rgba(255,255,255,.1)}
+.cb-info{background:#0f172a;border-radius:8px;padding:14px 18px;font-size:.8rem;line-height:1.7}
+.cb-info .line{margin-bottom:4px}
+.cb-info .lbl{color:#64748b;display:inline-block;min-width:100px}
+.cb-info .val{color:#e2e8f0;font-weight:600}
+.cb-controls{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.cb-btn{padding:8px 18px;border:none;border-radius:6px;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.cb-btn.success{background:var(--green);color:#fff}
+.cb-btn.success:hover{background:#047857}
+.cb-btn.fail{background:var(--red);color:#fff}
+.cb-btn.fail:hover{background:#b91c1c}
+.cb-btn.reset{background:var(--amber);color:#fff}
+.cb-btn.reset:hover{background:#b45309}
+
+/* === ARCHITECTURE DIAGRAM === */
+.arch-diagram{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin:16px 0;overflow-x:auto}
+.arch-layer{display:flex;align-items:stretch;gap:8px;margin-bottom:8px;min-width:700px}
+.arch-layer-label{display:flex;align-items:center;justify-content:center;width:90px;font-size:.74rem;font-weight:700;color:#fff;border-radius:6px;writing-mode:vertical-lr;text-orientation:upright;letter-spacing:2px;flex-shrink:0}
+.arch-layer-content{flex:1;display:flex;gap:6px;align-items:center}
+.arch-box{flex:1;padding:10px 12px;border-radius:6px;font-size:.74rem;text-align:center;font-weight:600;border:1.5px solid;transition:all .2s;cursor:default}
+.arch-box:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.arch-box.blue{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+.arch-box.green{background:var(--green-light);border-color:var(--green);color:#064e3b}
+.arch-box.purple{background:var(--purple-light);border-color:var(--purple);color:#5b21b6}
+.arch-box.orange{background:var(--orange-light);border-color:var(--orange);color:#7c2d12}
+.arch-box.teal{background:var(--teal-light);border-color:var(--teal);color:#115e59}
+.arch-box.gray{background:#f1f5f9;border-color:var(--text3);color:var(--text2)}
+.arch-box.cyan{background:var(--cyan-light);border-color:var(--cyan);color:#155e75}
+.arch-conn{text-align:center;font-size:1rem;color:var(--text3);margin:2px 0}
+
+/* === COMPARISON === */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:768px){.compare{grid-template-columns:1fr}}
+.compare-col{border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.compare-col .ch{padding:12px 18px;font-weight:700;font-size:.9rem;text-align:center}
+.compare-col.left .ch{background:var(--blue-light);color:var(--blue)}
+.compare-col.right .ch{background:var(--green-light);color:var(--green)}
+.compare-col .cb{padding:16px 20px;font-size:.82rem}
+.compare-col .cb p{margin-bottom:6px}
+.compare-col ul{list-style:none;padding-left:0}
+.compare-col li{padding:3px 0 3px 18px;position:relative;font-size:.8rem}
+.compare-col.left li::before{content:'→';position:absolute;left:0;color:var(--blue)}
+.compare-col.right li::before{content:'→';position:absolute;left:0;color:var(--green)}
+
+/* === METRIC CARD === */
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 20px;text-align:center;transition:all .25s}
+.metric-card:hover{border-color:var(--hc);box-shadow:0 2px 12px rgba(14,165,233,.1)}
+.metric-card .mv{font-size:1.6rem;font-weight:900;color:var(--hc-dark);font-family:var(--mono)}
+.metric-card .ml{font-size:.76rem;color:var(--text3);margin-top:4px}
+.metric-card .md{font-size:.74rem;color:var(--text2);margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
+
+/* === BADGE === */
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600}
+.badge.blue{background:var(--blue-light);color:var(--blue)}
+.badge.green{background:var(--green-light);color:var(--green)}
+.badge.orange{background:var(--orange-light);color:var(--orange)}
+.badge.red{background:var(--red-light);color:var(--red)}
+.badge.purple{background:var(--purple-light);color:var(--purple)}
+.badge.teal{background:var(--teal-light);color:var(--teal)}
+.badge.gray{background:#f1f5f9;color:var(--text2)}
+
+/* === MISC === */
+.svg-box{text-align:center;overflow-x:auto;padding:8px 0}
+.sub-title{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--text);padding-left:12px;border-left:4px solid var(--hc)}
+.callout{background:linear-gradient(135deg,var(--hc-lighter),#fff);border:1px solid var(--hc-light);border-radius:var(--radius);padding:20px 24px;margin:16px 0}
+.callout h4{font-size:.95rem;color:var(--hc-dark);margin-bottom:8px}
+.callout p{font-size:.84rem;color:var(--text2)}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 28px;margin-bottom:32px}
+.toc h3{font-size:.95rem;color:var(--hc-dark);margin-bottom:12px}
+.toc ol{padding-left:20px}
+.toc li{font-size:.84rem;padding:3px 0}
+.toc a{text-decoration:none;color:var(--text2);transition:color .2s}
+.toc a:hover{color:var(--hc-dark)}
+.kv{display:flex;gap:8px;align-items:flex-start;margin:4px 0;font-size:.82rem}
+.kv .k{font-weight:600;color:var(--text);min-width:80px;flex-shrink:0}
+.kv .v{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav">
+  <a href="index.html" class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    高并发系统设计
+  </a>
+  <a href="#sec1" class="active">需求分析</a>
+  <a href="#sec2">架构选型</a>
+  <a href="#sec3">分层设计</a>
+  <a href="#sec4">限流降级熔断</a>
+  <a href="#sec5">消息队列削峰</a>
+  <a href="#sec6">分布式锁</a>
+  <a href="#sec7">最终一致性</a>
+  <a href="#sec8">监控运维</a>
+  <a href="#sec9">演进路线</a>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <h1>⚡ 高并发系统设计 · 实施步骤全指南</h1>
+  <p class="sub">从需求分析到监控运维，系统讲解高并发系统设计的完整实施路径。覆盖 QPS 预估、架构选型、分层设计、限流降级熔断、消息队列削峰、分布式锁、最终一致性与全链路监控。</p>
+  <div class="tags">
+    <span class="tag">QPS 10万+</span>
+    <span class="tag">微服务架构</span>
+    <span class="tag">分库分表</span>
+    <span class="tag">限流降级</span>
+    <span class="tag">最终一致性</span>
+    <span class="tag">全链路追踪</span>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ═══════ TOC ═══════ -->
+<div class="toc">
+  <h3>📋 目录导航</h3>
+  <ol>
+    <li><a href="#sec1">需求分析 — QPS 预估与数据量估算</a></li>
+    <li><a href="#sec2">架构选型 — 微服务/单体、同步/异步</a></li>
+    <li><a href="#sec3">分层设计 — 接入层 / 应用层 / 数据层</a></li>
+    <li><a href="#sec4">关键技术 I — 限流、降级、熔断</a></li>
+    <li><a href="#sec5">关键技术 II — 消息队列削峰填谷</a></li>
+    <li><a href="#sec6">关键技术 III — 分布式锁</a></li>
+    <li><a href="#sec7">关键技术 IV — 最终一致性方案</a></li>
+    <li><a href="#sec8">监控运维 — 全链路追踪 / 指标监控 / 日志聚合</a></li>
+    <li><a href="#sec9">演进路线 — 从单机到十万级并发</a></li>
+  </ol>
+</div>
+
+<!-- ═══════ SECTION 1: 需求分析 ═══════ -->
+<section class="sec" id="sec1">
+  <h2 class="sec-title"><span class="n">1</span> 需求分析 — QPS 预估与数据量估算</h2>
+
+  <div class="card">
+    <h3><span class="ic">🎯</span> 核心原则：先量化，再设计</h3>
+    <p>高并发系统设计的第一步不是选技术栈，而是<strong>量化业务指标</strong>。没有精确的数字估算，所有的架构决策都是空中楼阁。需要回答三个核心问题：<strong>系统要承受多少并发？数据量增长多快？延迟要求是什么？</strong></p>
+  </div>
+
+  <div class="sub-title">1.1 QPS 预估方法论</div>
+
+  <div class="grid2">
+    <div class="step-card">
+      <h4><span class="step-n">1</span> 日均请求量推算</h4>
+      <p><strong>公式：</strong>日总请求 = DAU × 人均请求次数</p>
+      <p>示例：DAU 1000万，人均 50 次 → 日总请求 5亿次</p>
+    </div>
+    <div class="step-card">
+      <h4><span class="step-n">2</span> 峰值 QPS 计算</h4>
+      <p><strong>公式：</strong>峰值 QPS = 日总请求 ÷ 有效秒数 × 峰谷比</p>
+      <p>流量通常集中在上架时间的 3-4 小时内</p>
+    </div>
+    <div class="step-card">
+      <h4><span class="step-n">3</span> 读写分离估算</h4>
+      <p><strong>公式：</strong>读 QPS : 写 QPS ≈ 10:1 ~ 20:1</p>
+      <p>电商场景读多写少，IM 场景可能读写均衡</p>
+    </div>
+    <div class="step-card">
+      <h4><span class="step-n">4</span> 容量冗余规划</h4>
+      <p><strong>公式：</strong>设计容量 = 峰值 QPS × 1.5~2 倍冗余</p>
+      <p>为突发流量（秒杀、推广）留出 Buffer</p>
+    </div>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><b>实战经验：</b>电商大促场景的流量分布通常遵循「28 原则」——80% 的流量集中在 20% 的时间段。以双 11 为例，零点前 10 分钟的 QPS 可能是全天平均 QPS 的 50-100 倍。<strong>峰值估算公式：</strong>峰值 QPS = 日均 QPS × 峰谷比（通常 5~10 倍，大促场景 50~100 倍）。</div>
+  </div>
+
+  <!-- Interactive QPS Calculator -->
+  <div class="calc-box">
+    <h3 style="margin-bottom:16px;color:var(--hc-dark)"><span class="ic">🧮</span> 交互式 QPS 计算器</h3>
+    <div class="calc-row">
+      <label>DAU（日活用户）</label>
+      <input type="number" id="calcDAU" value="10000000" placeholder="如 10000000">
+    </div>
+    <div class="calc-row">
+      <label>人均请求次数</label>
+      <input type="number" id="calcReqPerUser" value="50" placeholder="如 50">
+    </div>
+    <div class="calc-row">
+      <label>流量集中时长（小时）</label>
+      <input type="number" id="calcPeakHours" value="4" placeholder="如 4">
+    </div>
+    <div class="calc-row">
+      <label>峰谷比（倍数）</label>
+      <input type="number" id="calcPeakRatio" value="5" placeholder="如 5" step="0.5">
+    </div>
+    <div class="calc-row">
+      <label>读写比（读:写）</label>
+      <select id="calcReadWrite">
+        <option value="10">10:1</option>
+        <option value="20" selected>20:1</option>
+        <option value="5">5:1</option>
+        <option value="1">1:1</option>
+      </select>
+    </div>
+    <div class="calc-result" id="calcResult">
+      <div class="rl"><span class="lbl">日均总请求量</span><span class="val" id="rDailyTotal">-</span></div>
+      <div class="rl"><span class="lbl">平均 QPS</span><span class="val" id="rAvgQPS">-</span></div>
+      <div class="rl"><span class="lbl">峰值 QPS</span><span class="val red" id="rPeakQPS">-</span></div>
+      <div class="rl"><span class="lbl">设计容量（2倍冗余）</span><span class="val orange" id="rDesignCap">-</span></div>
+      <div class="rl"><span class="lbl">峰值读 QPS</span><span class="val" id="rReadQPS">-</span></div>
+      <div class="rl"><span class="lbl">峰值写 QPS</span><span class="val" id="rWriteQPS">-</span></div>
+      <div class="rl"><span class="lbl">建议 MySQL 实例数（单实例 5000 QPS）</span><span class="val green" id="rMySQLCount">-</span></div>
+      <div class="rl"><span class="lbl">建议 Redis 分片数（单分片 10万 QPS）</span><span class="val green" id="rRedisCount">-</span></div>
+    </div>
+  </div>
+
+  <div class="sub-title">1.2 数据量估算</div>
+
+  <div class="grid3">
+    <div class="metric-card">
+      <div class="mv">~50GB</div>
+      <div class="ml">日新增数据量</div>
+      <div class="md">DAU 1000万 × 5KB/请求</div>
+    </div>
+    <div class="metric-card">
+      <div class="mv">~18TB</div>
+      <div class="ml">年累计数据量</div>
+      <div class="md">50GB × 365 天</div>
+    </div>
+    <div class="metric-card">
+      <div class="mv">2000万</div>
+      <div class="ml">单表行数警戒线</div>
+      <div class="md">MySQL B+Tree 3-4 层</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="ic">📊</span> 数据量估算的关键维度</h3>
+    <div class="kv"><span class="k">结构化</span><span class="v">MySQL/PG：用户、订单、支付 — 按 <code>行数 × 平均行大小</code> 估算</span></div>
+    <div class="kv"><span class="k">半结构化</span><span class="v">MongoDB/ES：日志、行为 — 按 <code>文档数 × 平均文档大小 × 压缩比(0.3~0.5)</code></span></div>
+    <div class="kv"><span class="k">非结构化</span><span class="v">OSS/S3：图片、视频 — 按 <code>文件数 × 平均文件大小</code></span></div>
+    <div class="kv"><span class="k">缓存</span><span class="v">Redis：热点数据 — 按 <code>key 数 × 平均 value 大小 × 1.2(元数据开销)</code></span></div>
+  </div>
+
+  <div class="sub-title">1.3 延迟要求</div>
+
+  <table>
+    <thead>
+      <tr><th>接口类型</th><th>P99 延迟</th><th>P999 延迟</th><th>典型场景</th><th>技术手段</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>超低延迟</td><td><code>&lt; 10ms</code></td><td><code>&lt; 50ms</code></td><td>行情推送、风控决策</td><td>本地缓存 + 内存计算</td></tr>
+      <tr><td>低延迟</td><td><code>&lt; 100ms</code></td><td><code>&lt; 200ms</code></td><td>商品详情、搜索</td><td>Redis 缓存 + ES</td></tr>
+      <tr><td>普通延迟</td><td><code>&lt; 500ms</code></td><td><code>&lt; 1s</code></td><td>订单创建、支付</td><td>DB 读写 + MQ 异步</td></tr>
+      <tr><td>可容忍延迟</td><td><code>&lt; 3s</code></td><td><code>&lt; 5s</code></td><td>报表导出、批量操作</td><td>异步任务 + 轮询</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>只看平均值不看分位数：</b>平均延迟 100ms 不代表用户体验好，P99 可能已经 2s。必须关注 P99/P999。</li>
+      <li><b>忽略长尾效应：</b>GC 停顿、网络抖动、慢查询会导致尾部延迟飙升。1% 的慢请求可能影响 20%+ 的用户感知。</li>
+      <li><b>低估数据增长速度：</b>按当前数据量设计，半年后单表就超警戒线。必须按 <strong>1 年后的预期数据量</strong> 设计分片规则。</li>
+      <li><b>混用读延迟和写延迟要求：</b>读写延迟要求不同，架构设计应分别处理。不要用同一套方案应对所有场景。</li>
+      <li><b>忽略网络开销：</b>跨可用区延迟 1-2ms，跨地域 30-100ms。微服务拆分过细会导致网络延迟累积。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li>建立<strong>三档容量规划</strong>：日常容量 / 大促容量 / 极限容量，分别对应不同的扩缩容策略</li>
+      <li>用<strong>历史数据 + 业务预测</strong>双维度估算，不要只看历史趋势，要考虑业务增长曲线</li>
+      <li>把<strong>峰值 QPS × 2</strong>作为设计目标，预留突发流量 Buffer</li>
+      <li>制定<strong>数据归档策略</strong>：热数据（3个月）→ 温数据（1年）→ 冷数据（归档到 OSS/HDFS）</li>
+      <li>定期做<strong>全链路压测</strong>验证容量估算，至少每季度一次</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 2: 架构选型 ═══════ -->
+<section class="sec" id="sec2">
+  <h2 class="sec-title"><span class="n">2</span> 架构选型 — 微服务/单体、同步/异步</h2>
+
+  <div class="card">
+    <h3><span class="ic">🏗️</span> 核心决策：没有银弹，只有权衡</h3>
+    <p>架构选型的本质是<strong>在复杂度和扩展性之间找平衡点</strong>。过早微服务化会增加运维成本，过晚拆分会阻碍团队协作。关键判断标准：团队规模、业务复杂度、并发量级。</p>
+  </div>
+
+  <div class="sub-title">2.1 单体 vs 微服务</div>
+
+  <div class="compare">
+    <div class="compare-col left">
+      <div class="ch">🏢 单体架构</div>
+      <div class="cb">
+        <p><b>适用阶段：</b>0 → 1 创业期，DAU &lt; 50万</p>
+        <p><b>优势：</b></p>
+        <ul>
+          <li>开发简单，部署一个包搞定</li>
+          <li>模块间调用是本地方法，零网络开销</li>
+          <li>调试方便，一个 IDE 看全貌</li>
+          <li>运维成本低，一套监控即可</li>
+        </ul>
+        <p style="margin-top:8px"><b>劣势：</b></p>
+        <ul>
+          <li>代码膨胀后难以维护</li>
+          <li>技术栈受限，无法混用语言</li>
+          <li>扩容只能整体扩，浪费资源</li>
+          <li>局部故障可能拖垮全局</li>
+        </ul>
+      </div>
+    </div>
+    <div class="compare-col right">
+      <div class="ch">🔧 微服务架构</div>
+      <div class="cb">
+        <p><b>适用阶段：</b>业务成熟期，DAU &gt; 100万，团队 &gt; 20人</p>
+        <p><b>优势：</b></p>
+        <ul>
+          <li>独立部署、独立扩缩容</li>
+          <li>技术栈自由，按场景选型</li>
+          <li>故障隔离，局部不拖全局</li>
+          <li>团队边界清晰，并行开发</li>
+        </ul>
+        <p style="margin-top:8px"><b>劣势：</b></p>
+        <ul>
+          <li>分布式事务复杂度高</li>
+          <li>网络调用有延迟和不可靠性</li>
+          <li>运维成本骤增（监控/日志/链路）</li>
+          <li>服务间依赖管理困难</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip blue">
+    <span class="ti">📐</span>
+    <div><b>拆分时机判断标准（满足 2 条以上再拆）：</b><br>
+    ① 代码量超过 10 万行，编译时间 &gt; 5 分钟<br>
+    ② 团队超过 15 人，出现跨团队协作瓶颈<br>
+    ③ 不同模块的并发量差异超过 10 倍<br>
+    ④ 不同模块的技术栈需求不同（如 AI 模块需要 Python，交易模块需要 Java）<br>
+    ⑤ 局部故障频发，影响全局可用性</div>
+  </div>
+
+  <div class="sub-title">2.2 同步 vs 异步</div>
+
+  <table>
+    <thead>
+      <tr><th>维度</th><th>同步调用</th><th>异步消息</th><th>选型建议</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>响应延迟</b></td>
+        <td>所有下游 RT 之和</td>
+        <td>仅本地处理时间</td>
+        <td>用户感知路径用同步，后台处理用异步</td>
+      </tr>
+      <tr>
+        <td><b>可用性</b></td>
+        <td>任一下游宕机即失败</td>
+        <td>MQ 宕机才失败（MQ 可集群）</td>
+        <td>核心链路降级为异步可提升可用性</td>
+      </tr>
+      <tr>
+        <td><b>数据一致性</b></td>
+        <td>强一致（同事务）</td>
+        <td>最终一致（需补偿）</td>
+        <td>资金交易用同步，通知/日志用异步</td>
+      </tr>
+      <tr>
+        <td><b>吞吐量</b></td>
+        <td>受最慢下游限制</td>
+        <td>MQ 削峰后可线性扩展</td>
+        <td>秒杀/大促场景必须异步削峰</td>
+      </tr>
+      <tr>
+        <td><b>复杂度</b></td>
+        <td>低，调用链清晰</td>
+        <td>高，需处理幂等/乱序/积压</td>
+        <td>异步引入的复杂度不容低估</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="flow">
+    <span class="flow-node blue">用户请求</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node green">同步：创建订单</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node teal">返回成功</span>
+    <span class="flow-arrow">⇢</span>
+    <span class="flow-node orange">异步：扣库存</span>
+    <span class="flow-arrow">⇢</span>
+    <span class="flow-node orange">异步：发优惠券</span>
+    <span class="flow-arrow">⇢</span>
+    <span class="flow-node orange">异步：发通知</span>
+    <span class="flow-arrow">⇢</span>
+    <span class="flow-node purple">异步：数据统计</span>
+  </div>
+
+  <div class="callout">
+    <h4>🔑 架构选型黄金法则</h4>
+    <p><strong>能单体就别微服务，能同步就别异步。</strong> 每引入一个分布式组件，就多一个故障点。但一旦并发量或团队规模到了临界点，就必须果断拆分——拖延只会让技术债越滚越大。<strong>正确的演进路径是：单体 → 模块化单体 → 服务化 → 微服务</strong>，而不是一步到位。</p>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>过早微服务化：</b>5 个人的团队搞 20 个微服务，80% 时间在处理服务间通信问题。</li>
+      <li><b>拆分粒度过细：</b>一个 CRUD 操作拆成一个服务，网络开销远大于业务逻辑耗时。</li>
+      <li><b>盲目追新：</b>K8s + Service Mesh + 事件驱动，技术栈看起来很酷，但团队 hold 不住。</li>
+      <li><b>异步滥用：</b>把本应同步返回结果的操作异步化，导致用户体验变差，还要额外做轮询。</li>
+      <li><b>忽略数据一致性：</b>异步化后忘记做幂等和补偿，导致数据不一致。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 3: 分层设计 ═══════ -->
+<section class="sec" id="sec3">
+  <h2 class="sec-title"><span class="n">3</span> 分层设计 — 接入层 / 应用层 / 数据层</h2>
+
+  <div class="card">
+    <h3><span class="ic">🧱</span> 高并发系统标准三层架构</h3>
+    <p>每一层解决不同维度的问题：接入层解决<strong>流量分发</strong>，应用层解决<strong>业务处理</strong>，数据层解决<strong>存储瓶颈</strong>。三层协同，逐层消化并发压力。</p>
+  </div>
+
+  <!-- Architecture Diagram -->
+  <div class="arch-diagram">
+    <div class="arch-layer">
+      <div class="arch-layer-label" style="background:var(--blue)">接入层</div>
+      <div class="arch-layer-content">
+        <div class="arch-box gray">DNS 轮询</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box blue">CDN 边缘缓存</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box blue">F5 / LVS (四层LB)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box blue">Nginx (七层LB)</div>
+      </div>
+    </div>
+    <div class="arch-conn">↓</div>
+    <div class="arch-layer">
+      <div class="arch-layer-label" style="background:var(--green)">应用层</div>
+      <div class="arch-layer-content">
+        <div class="arch-box green">网关 (限流/鉴权)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box green">用户服务</div>
+        <div class="arch-box green">商品服务</div>
+        <div class="arch-box green">订单服务</div>
+        <div class="arch-box green">支付服务</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box teal">本地缓存 Caffeine</div>
+      </div>
+    </div>
+    <div class="arch-conn">↓</div>
+    <div class="arch-layer">
+      <div class="arch-layer-label" style="background:var(--purple)">数据层</div>
+      <div class="arch-layer-content">
+        <div class="arch-box purple">Redis 集群 (分片)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box orange">MySQL 主从 (读写分离)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box orange">分库分表 (ShardingSphere)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box cyan">ES / MongoDB</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box gray">OSS / S3</div>
+      </div>
+    </div>
+    <div class="arch-conn">↓</div>
+    <div class="arch-layer">
+      <div class="arch-layer-label" style="background:var(--orange)">异步层</div>
+      <div class="arch-layer-content">
+        <div class="arch-box orange">Kafka (削峰/解耦)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box orange">RocketMQ (事务消息)</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box orange">消费者集群</div>
+        <div class="arch-box gray">→</div>
+        <div class="arch-box teal">定时任务 / 补偿</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-title">3.1 接入层：负载均衡</div>
+
+  <div class="grid3">
+    <div class="step-card">
+      <h4>DNS 轮询</h4>
+      <p>最外层分流，一个域名映射多个 IP。简单但无法感知服务器健康状态。</p>
+    </div>
+    <div class="step-card">
+      <h4>CDN 边缘缓存</h4>
+      <p>静态资源（图片/JS/CSS）缓存到边缘节点，减少源站压力。命中率 &gt; 95% 是目标。</p>
+    </div>
+    <div class="step-card">
+      <h4>四层负载 (LVS/F5)</h4>
+      <p>基于 IP+端口转发，吞吐量极高（百万级 PPS），不感知协议内容。</p>
+    </div>
+    <div class="step-card">
+      <h4>七层负载 (Nginx)</h4>
+      <p>基于 HTTP 协议转发，支持路径路由、灰度发布、SSL 卸载、限流。</p>
+    </div>
+    <div class="step-card">
+      <h4>API 网关</h4>
+      <p>统一鉴权、限流、熔断、日志。Spring Cloud Gateway / Kong / APISIX。</p>
+    </div>
+    <div class="step-card">
+      <h4>健康检查</h4>
+      <p>主动探测 + 被动检测，自动剔除不健康节点，恢复后自动加回。</p>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">nginx.conf</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt"># Nginx 七层负载均衡 + 健康检查 + 限流</span>
+upstream api_backend {
+    <span class="kw">least_conn</span>;                    <span class="cmt"># 最少连接数策略</span>
+    
+    server <span class="str">10.0.1.1:8080</span> weight=<span class="num">3</span> max_fails=<span class="num">3</span> fail_timeout=<span class="num">30s</span>;
+    server <span class="str">10.0.1.2:8080</span> weight=<span class="num">3</span> max_fails=<span class="num">3</span> fail_timeout=<span class="num">30s</span>;
+    server <span class="str">10.0.1.3:8080</span> weight=<span class="num">2</span> max_fails=<span class="num">3</span> fail_timeout=<span class="num">30s</span> backup;  <span class="cmt"># 备用节点</span>
+    
+    keepalive <span class="num">32</span>;                    <span class="cmt"># 保持长连接，减少握手开销</span>
+}
+
+<span class="cmt"># 限流：每个 IP 每秒最多 10 个请求</span>
+limit_req_zone $binary_remote_addr zone=api_limit:<span class="num">10m</span> rate=<span class="num">10r/s</span>;
+
+server {
+    listen <span class="num">443</span> ssl http2;
+    
+    location /api/ {
+        limit_req zone=api_limit burst=<span class="num">20</span> nodelay;  <span class="cmt"># 突发流量允许 20 个排队</span>
+        proxy_pass http://api_backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_connect_timeout <span class="num">2s</span>;     <span class="cmt"># 连接超时</span>
+        proxy_read_timeout <span class="num">5s</span>;        <span class="cmt"># 读取超时</span>
+    }
+}</pre>
+  </div>
+
+  <div class="sub-title">3.2 应用层：无状态化与缓存策略</div>
+
+  <div class="card">
+    <h3><span class="ic">🔓</span> 无状态化设计</h3>
+    <p><strong>核心思想：</strong>应用服务器不存储任何会话状态，所有状态外部化到 Redis/DB。这样任何一台应用服务器宕机，请求可以被无缝转发到其他节点。</p>
+    <div class="kv"><span class="k">Session</span><span class="v">存入 Redis（Spring Session / JWT Token），不要存本地内存</span></div>
+    <div class="kv"><span class="k">缓存</span><span class="v">本地缓存仅做只读缓存（启动时加载），可变数据走 Redis</span></div>
+    <div class="kv"><span class="k">文件</span><span class="v">上传到 OSS/S3，不要存本地磁盘</span></div>
+    <div class="kv"><span class="k">配置</span><span class="v">走配置中心（Nacos/Apollo），不要写死在本地</span></div>
+  </div>
+
+  <div class="sub-title" style="margin-top:20px">多级缓存架构</div>
+
+  <div class="flow">
+    <span class="flow-node green">请求进入</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node teal">L1: 本地缓存 Caffeine (1ms)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node purple">L2: Redis 集群 (2-5ms)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node orange">L3: DB 查询 + 回写缓存</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>缓存层</th><th>技术选型</th><th>容量</th><th>延迟</th><th>适用场景</th><th>失效策略</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>L1 本地缓存</b></td><td>Caffeine / Guava</td><td>百MB级</td><td><code>&lt; 1ms</code></td><td>配置字典、热点数据</td><td>TTL + 主动失效</td></tr>
+      <tr><td><b>L2 分布式缓存</b></td><td>Redis Cluster</td><td>GB~TB级</td><td><code>2-5ms</code></td><td>用户会话、商品信息</td><td>TTL + LRU 淘汰</td></tr>
+      <tr><td><b>L3 CDN 缓存</b></td><td>CloudFlare / 阿里CDN</td><td>TB级</td><td><code>&lt; 5ms</code></td><td>静态资源、HTML 页面</td><td>边缘 TTL</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code">
+    <span class="lang">Java</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// 多级缓存实现：Caffeine + Redis 协同</span>
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="typ">MultiLevelCache</span> {
+    
+    <span class="cmt">// L1: 本地缓存 — Caffeine</span>
+    <span class="kw">private final</span> <span class="typ">Cache</span>&lt;<span class="typ">String</span>, <span class="typ">Object</span>&gt; localCache = <span class="typ">Caffeine</span>.newBuilder()
+        .maximumSize(<span class="num">10_000</span>)
+        .expireAfterWrite(<span class="num">60</span>, <span class="typ">TimeUnit</span>.SECONDS)  <span class="cmt">// 本地缓存 60s</span>
+        .recordStats()
+        .build();
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">RedisTemplate</span>&lt;<span class="typ">String</span>, <span class="typ">Object</span>&gt; redisTemplate;
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">ProductMapper</span> productMapper;
+    
+    <span class="kw">public</span> <span class="typ">Product</span> <span class="fn">getProduct</span>(<span class="typ">Long</span> id) {
+        <span class="typ">String</span> key = <span class="str">"product:"</span> + id;
+        
+        <span class="cmt">// L1: 先查本地缓存</span>
+        <span class="typ">Product</span> product = (<span class="typ">Product</span>) localCache.getIfPresent(key);
+        <span class="kw">if</span> (product != <span class="kw">null</span>) <span class="kw">return</span> product;
+        
+        <span class="cmt">// L2: 再查 Redis</span>
+        product = (<span class="typ">Product</span>) redisTemplate.opsForValue().get(key);
+        <span class="kw">if</span> (product != <span class="kw">null</span>) {
+            localCache.put(key, product);  <span class="cmt">// 回填 L1</span>
+            <span class="kw">return</span> product;
+        }
+        
+        <span class="cmt">// L3: 查 DB 并回写缓存（加锁防击穿）</span>
+        <span class="kw">synchronized</span> (<span class="kw">this</span>) {
+            product = productMapper.selectById(id);
+            <span class="kw">if</span> (product != <span class="kw">null</span>) {
+                redisTemplate.opsForValue().set(key, product, <span class="num">30</span>, <span class="typ">TimeUnit</span>.MINUTES);
+                localCache.put(key, product);
+            }
+        }
+        <span class="kw">return</span> product;
+    }
+}</pre>
+  </div>
+
+  <div class="grid3">
+    <div class="pitfall">
+      <div class="ph"><span class="ic">🔥</span> 缓存穿透</div>
+      <ul>
+        <li>查询不存在的 key，每次打到 DB</li>
+        <li><b>解法：</b>空值缓存 + 布隆过滤器</li>
+      </ul>
+    </div>
+    <div class="pitfall">
+      <div class="ph"><span class="ic">💥</span> 缓存击穿</div>
+      <ul>
+        <li>热点 key 过期瞬间，大量请求打到 DB</li>
+        <li><b>解法：</b>互斥锁 + 永不过期 + 后台刷新</li>
+      </ul>
+    </div>
+    <div class="pitfall">
+      <div class="ph"><span class="ic">❄️</span> 缓存雪崩</div>
+      <ul>
+        <li>大量 key 同时过期，DB 瞬间过载</li>
+        <li><b>解法：</b>TTL 加随机偏移 + 多级缓存</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sub-title">3.3 数据层：分库分表与读写分离</div>
+
+  <div class="grid2">
+    <div class="step-card">
+      <h4><span class="step-n">A</span> 读写分离</h4>
+      <p><strong>主库写，从库读</strong>，通过 binlog 同步。读 QPS 可线性扩展。</p>
+      <p><b>注意：</b>主从延迟 0.1-1s，写后读需走主库</p>
+    </div>
+    <div class="step-card">
+      <h4><span class="step-n">B</span> 垂直分库</h4>
+      <p>按业务拆分：用户库、商品库、订单库。降低单库压力和耦合。</p>
+      <p><b>注意：</b>跨库 JOIN 失效，需应用层组装</p>
+    </div>
+    <div class="step-card">
+      <h4><span class="step-n">C</span> 水平分表</h4>
+      <p>单表数据量超 2000万行时按 sharding key 拆分。order_id % 16 = 16 张表。</p>
+      <p><b>注意：</b>跨页查询、聚合统计变复杂</p>
+    </div>
+    <div class="step-card">
+      <h4><span class="step-n">D</span> 分片键选择</h4>
+      <p>选择查询最频繁的字段作为分片键（如 user_id）。</p>
+      <p><b>注意：</b>避免热点分片，均匀分布数据</p>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">SQL / ShardingSphere</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">-- 分库分表策略示例：订单表按 user_id 取模分 16 库 × 8 表 = 128 张表</span>
+<span class="cmt">-- ShardingSphere 配置</span>
+
+spring.shardingsphere.datasource.names=ds_0,ds_1,...,ds_15
+
+<span class="cmt">-- 分库策略：user_id % 16</span>
+spring.shardingsphere.rules.sharding.tables.t_order.database-strategy.standard.sharding-column=user_id
+spring.shardingsphere.rules.sharding.tables.t_order.database-strategy.standard.sharding-algorithm-name=order_db_mod
+
+<span class="cmt">-- 分表策略：user_id / 16 % 8</span>
+spring.shardingsphere.rules.sharding.tables.t_order.table-strategy.standard.sharding-column=user_id
+spring.shardingsphere.rules.sharding.tables.t_order.table-strategy.standard.sharding-algorithm-name=order_table_mod
+
+<span class="cmt">-- 读写分离配置</span>
+spring.shardingsphere.rules.readwrite-splitting.data-sources.ds_0.write-data-source-name=ds_0_master
+spring.shardingsphere.rules.readwrite-splitting.data-sources.ds_0.read-data-source-names=ds_0_slave_0,ds_0_slave_1
+spring.shardingsphere.rules.readwrite-splitting.data-sources.ds_0.load-balancer-name=round_robin</pre>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚠️</span>
+    <div><b>分库分表后的难题与对策：</b><br>
+    <strong>① 跨库 JOIN：</strong>禁止跨库 JOIN，改用应用层组装或数据冗余<br>
+    <strong>② 分布式事务：</strong>用 Seata AT/TCC 或事务消息保证最终一致<br>
+    <strong>③ 全局 ID：</strong>用雪花算法（Snowflake）或 Leaf 生成唯一 ID<br>
+    <strong>④ 跨分片查询：</strong>分页查询需先查各分片再合并，深度翻页用游标方案<br>
+    <strong>⑤ 统计报表：</strong>分片数据同步到 ES/ClickHouse 做离线分析</div>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>过早分库分表：</b>单表 500万行就拆，实际上 MySQL 优化后千万级也能扛。拆了就回不去了。</li>
+      <li><b>分片键选错：</b>按 order_id 分片，但 90% 的查询按 user_id，导致全分片扫描。</li>
+      <li><b>忽略主从延迟：</b>写入后立即从从库读取，读到旧数据。必须<strong>写后读走主库</strong>。</li>
+      <li><b>缓存和 DB 不一致：</b>先更新 DB 再删缓存 vs 先删缓存再更新 DB，需根据场景选择并加延迟双删。</li>
+      <li><b>忽视连接池配置：</b>微服务拆分后 DB 连接数爆炸。10 个服务 × 20 实例 × 20 连接 = 4000 连接，MySQL 默认最大 151。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li><strong>接入层：</strong>四层 + 七层负载均衡组合使用，LVS 处理高吞吐，Nginx 处理智能路由</li>
+      <li><strong>应用层：</strong>必须无状态化，Session 外部化到 Redis，支持随时水平扩缩容</li>
+      <li><strong>缓存层：</strong>L1 本地缓存 + L2 Redis，热点数据本地化，减少网络开销</li>
+      <li><strong>数据层：</strong>读写分离 → 垂直分库 → 水平分表，按瓶颈逐步推进</li>
+      <li><strong>连接管理：</strong>统一连接池配置，按服务实例数计算总连接数，确保 &lt; MySQL max_connections × 0.6</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 4: 限流降级熔断 ═══════ -->
+<section class="sec" id="sec4">
+  <h2 class="sec-title"><span class="n">4</span> 关键技术 I — 限流、降级、熔断</h2>
+
+  <div class="card">
+    <h3><span class="ic">🛡️</span> 系统稳定性的三道防线</h3>
+    <p>高并发系统的核心挑战不是「跑得快」，而是<strong>「在异常情况下还能跑」</strong>。限流控制入口流量、降级牺牲非核心功能、熔断切断故障链路。三者协同构成系统的自我保护机制。</p>
+  </div>
+
+  <div class="grid3">
+    <div class="step-card" style="border-left-color:var(--blue)">
+      <h4>🚦 限流 (Rate Limiting)</h4>
+      <p><strong>目标：</strong>控制请求速率，防止系统过载</p>
+      <p><strong>层次：</strong>网关限流 → 应用限流 → DB 限流</p>
+      <p><strong>策略：</strong>QPS 限流 / 并发数限流 / 资源限流</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--orange)">
+      <h4>📉 降级 (Degradation)</h4>
+      <p><strong>目标：</strong>主动牺牲非核心功能保核心链路</p>
+      <p><strong>方式：</strong>自动降级（超时/异常率）+ 手动降级（开关）</p>
+      <p><strong>原则：</strong>先降级写操作，再降级读操作</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--red)">
+      <h4>⚡ 熔断 (Circuit Breaker)</h4>
+      <p><strong>目标：</strong>切断对异常服务的调用，快速失败</p>
+      <p><strong>状态：</strong>Closed → Open → Half-Open</p>
+      <p><strong>恢复：</strong>半开状态试探性放行，成功则恢复</p>
+    </div>
+  </div>
+
+  <div class="sub-title">4.1 限流算法对比</div>
+
+  <table>
+    <thead>
+      <tr><th>算法</th><th>原理</th><th>优点</th><th>缺点</th><th>适用场景</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>计数器</b></td><td>固定窗口内计数</td><td>实现简单</td><td>临界点突发流量</td><td>低频限流</td></tr>
+      <tr><td><b>滑动窗口</b></td><td>细分窗口滑动统计</td><td>平滑限流</td><td>内存开销略高</td><td>一般场景</td></tr>
+      <tr><td><b>漏桶</b></td><td>请求进桶，匀速出桶</td><td>绝对匀速</td><td>无法应对突发</td><td>秒杀排队</td></tr>
+      <tr><td><b>令牌桶</b></td><td>匀速发令牌，桶有上限</td><td>允许突发流量</td><td>实现较复杂</td><td>API 网关（最常用）</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code">
+    <span class="lang">Java / Sentinel</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// Sentinel 限流 + 熔断 + 降级 一体化配置</span>
+<span class="kw">@RestController</span>
+<span class="kw">public class</span> <span class="typ">OrderController</span> {
+    
+    <span class="kw">@GetMapping</span>(<span class="str">"/order/create"</span>)
+    <span class="kw">@SentinelResource</span>(
+        value = <span class="str">"createOrder"</span>,
+        blockHandler = <span class="str">"createOrderBlockHandler"</span>,      <span class="cmt">// 限流降级处理</span>
+        fallback = <span class="str">"createOrderFallback"</span>               <span class="cmt">// 异常降级处理</span>
+    )
+    <span class="kw">public</span> <span class="typ">Result</span> <span class="fn">createOrder</span>(<span class="typ">OrderRequest</span> req) {
+        <span class="kw">return</span> orderService.create(req);
+    }
+    
+    <span class="cmt">// 限流降级：返回友好提示</span>
+    <span class="kw">public</span> <span class="typ">Result</span> <span class="fn">createOrderBlockHandler</span>(<span class="typ">OrderRequest</span> req, <span class="typ">BlockException</span> ex) {
+        <span class="kw">return</span> <span class="typ">Result</span>.fail(<span class="str">"系统繁忙，请稍后重试"</span>);
+    }
+    
+    <span class="cmt">// 异常降级：返回默认值</span>
+    <span class="kw">public</span> <span class="typ">Result</span> <span class="fn">createOrderFallback</span>(<span class="typ">OrderRequest</span> req, <span class="typ">Throwable</span> e) {
+        log.error(<span class="str">"创建订单异常，降级处理"</span>, e);
+        <span class="kw">return</span> <span class="typ">Result</span>.fail(<span class="str">"服务暂时不可用"</span>);
+    }
+}
+
+<span class="cmt">// 熔断规则配置</span>
+<span class="typ">DegradeRule</span> rule = <span class="kw">new</span> <span class="typ">DegradeRule</span>(<span class="str">"createOrder"</span>)
+    .setGrade(<span class="typ">RuleConstant</span>.DEGRADE_GRADE_EXCEPTION_RATIO)  <span class="cmt">// 异常比例熔断</span>
+    .setCount(<span class="num">0.5</span>)           <span class="cmt">// 异常率 > 50%</span>
+    .setTimeWindow(<span class="num">10</span>)       <span class="cmt">// 熔断 10 秒</span>
+    .setMinRequestAmount(<span class="num">100</span>); <span class="cmt">// 最少 100 个请求才统计</span></pre>
+  </div>
+
+  <!-- Interactive Circuit Breaker Demo -->
+  <div class="cb-demo">
+    <div class="cb-title">⚡ 熔断器状态机交互演示</div>
+    <div class="cb-states">
+      <div class="cb-state closed active" id="cbClosed" onclick="cbSwitch('closed')">
+        ✅ Closed<br><span style="font-size:.68rem;font-weight:400">正常放行</span>
+      </div>
+      <div class="cb-state open" id="cbOpen" onclick="cbSwitch('open')">
+        🔴 Open<br><span style="font-size:.68rem;font-weight:400">快速失败</span>
+      </div>
+      <div class="cb-state half-open" id="cbHalfOpen" onclick="cbSwitch('half-open')">
+        🟡 Half-Open<br><span style="font-size:.68rem;font-weight:400">试探恢复</span>
+      </div>
+    </div>
+    <div class="cb-info" id="cbInfo">
+      <div class="line"><span class="lbl">当前状态：</span><span class="val" id="cbStateVal">Closed（闭合）</span></div>
+      <div class="line"><span class="lbl">请求行为：</span><span class="val" id="cbBehaviorVal">所有请求正常放行到下游服务</span></div>
+      <div class="line"><span class="lbl">触发条件：</span><span class="val" id="cbTriggerVal">异常率 &gt; 50% 或慢调用比例 &gt; 60%</span></div>
+      <div class="line"><span class="lbl">恢复机制：</span><span class="val" id="cbRecoveryVal">满足触发条件后转入 Open 状态</span></div>
+    </div>
+    <div class="cb-controls">
+      <button class="cb-btn success" onclick="cbRequest('success')">✓ 模拟成功请求</button>
+      <button class="cb-btn fail" onclick="cbRequest('fail')">✕ 模拟失败请求</button>
+      <button class="cb-btn reset" onclick="cbReset()">↻ 重置</button>
+    </div>
+    <div style="margin-top:12px;font-size:.74rem;color:#64748b" id="cbLog">
+      > 熔断器已就绪，当前状态：Closed
+    </div>
+  </div>
+
+  <div class="sub-title">4.2 降级策略设计</div>
+
+  <div class="card">
+    <h3><span class="ic">📉</span> 分级降级策略</h3>
+    <table>
+      <thead>
+        <tr><th>级别</th><th>触发条件</th><th>降级动作</th><th>影响范围</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge green">L1 轻度</span></td><td>CPU &gt; 70%</td><td>关闭推荐/广告等非核心功能</td><td>用户体验略降</td></tr>
+        <tr><td><span class="badge orange">L2 中度</span></td><td>CPU &gt; 80% 或 P99 &gt; 1s</td><td>关闭评论/评价/搜索排序</td><td>部分功能不可用</td></tr>
+        <tr><td><span class="badge red">L3 重度</span></td><td>CPU &gt; 90% 或 DB 连接耗尽</td><td>拒绝写请求，只保留核心读</td><td>只能浏览不能操作</td></tr>
+        <tr><td><span class="badge red">L4 极端</span></td><td>系统濒临崩溃</td><td>返回静态页面/兜底数据</td><td>基本不可用但存活</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>限流只做入口：</b>只在网关限流，内部服务无保护，一个慢查询拖垮整个调用链。应该<strong>每层都有限流</strong>。</li>
+      <li><b>熔断不恢复：</b>熔断后一直 Open，忘记 Half-Open 探测恢复。下游早已恢复但流量还是被拒绝。</li>
+      <li><b>降级粒度过粗：</b>一键降级所有非核心功能，但没区分哪些可降、哪些不可降。应<strong>按功能维度细分开关</strong>。</li>
+      <li><b>降级未演练：</b>线上从未触发过降级，真到用时发现降级逻辑有 bug，反而加剧故障。</li>
+      <li><b>忽略超时设置：</b>不设超时或超时设置过长（如 30s），导致线程池耗尽。HTTP 调用超时建议 &lt; 3s。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li>建立<strong>多级限流</strong>：网关限流（QPS）→ 服务限流（并发数）→ 资源限流（DB 连接/线程池）</li>
+      <li>熔断器配置<strong>三个核心参数</strong>：错误率阈值（如 50%）、最小请求数（如 20）、恢复超时（如 10s）</li>
+      <li>降级开关<strong>配置化</strong>：通过配置中心动态开关，不需要发版即可降级</li>
+      <li>定期做<strong>混沌工程演练</strong>：主动注入故障，验证限流降级熔断是否生效</li>
+      <li>所有<strong>外部调用都必须有超时 + 重试 + 熔断</strong>三件套，缺一不可</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 5: 消息队列削峰 ═══════ -->
+<section class="sec" id="sec5">
+  <h2 class="sec-title"><span class="n">5</span> 关键技术 II — 消息队列削峰填谷</h2>
+
+  <div class="card">
+    <h3><span class="ic">🏔️</span> 核心思想：用时间换空间</h3>
+    <p>消息队列在高并发系统中有四大作用：<strong>削峰填谷、异步解耦、最终一致、广播分发</strong>。秒杀场景下，10万 QPS 的写入请求通过 MQ 削峰后，后端只需处理 1万 QPS 的消费速度，保护 DB 不被打垮。</p>
+  </div>
+
+  <div class="flow">
+    <span class="flow-node red">秒杀请求 10万 QPS</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node orange">MQ 削峰（缓冲队列）</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node green">消费端 1万 QPS</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node teal">DB 写入</span>
+    <span class="flow-arrow">⇢</span>
+    <span class="flow-node purple">异步通知用户</span>
+  </div>
+
+  <div class="sub-title">5.1 MQ 选型对比</div>
+
+  <table>
+    <thead>
+      <tr><th>维度</th><th>Kafka</th><th>RocketMQ</th><th>RabbitMQ</th><th>Pulsar</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>吞吐量</b></td><td>百万级 TPS</td><td>十万级 TPS</td><td>万级 TPS</td><td>百万级 TPS</td></tr>
+      <tr><td><b>延迟</b></td><td>毫秒级</td><td>毫秒级</td><td>微秒级</td><td>毫秒级</td></tr>
+      <tr><td><b>事务消息</b></td><td>弱（0.11+）</td><td><span class="badge green">强</span></td><td>弱</td><td>中等</td></tr>
+      <tr><td><b>顺序消息</b></td><td>分区内有序</td><td><span class="badge green">分区内有序</span></td><td>队列内有序</td><td>分区内有序</td></tr>
+      <tr><td><b>延迟消息</b></td><td>不支持</td><td><span class="badge green">原生支持</span></td><td>插件支持</td><td>原生支持</td></tr>
+      <tr><td><b>适用场景</b></td><td>日志/大数据</td><td>电商/金融</td><td>企业应用</td><td>多云/大规模</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip blue">
+    <span class="ti">💡</span>
+    <div><b>选型建议：</b>电商交易场景首选 <strong>RocketMQ</strong>（事务消息 + 延迟消息 + 顺序消费原生支持）；日志/大数据场景首选 <strong>Kafka</strong>（超高吞吐 + 生态完善）；企业内部系统用 <strong>RabbitMQ</strong>（路由灵活 + 协议丰富）。</div>
+  </div>
+
+  <div class="sub-title">5.2 秒杀场景 MQ 削峰实现</div>
+
+  <div class="code">
+    <span class="lang">Java / RocketMQ</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// 秒杀场景：MQ 削峰 + 异步处理</span>
+
+<span class="cmt">// ===== 生产者：接收秒杀请求，写入 MQ =====</span>
+<span class="kw">@RestController</span>
+<span class="kw">public class</span> <span class="typ">SeckillController</span> {
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">RocketMQTemplate</span> mqTemplate;
+    
+    @Autowired
+    <span class="kw">private</span> <span class="typ">RedisTemplate</span> redisTemplate;
+    
+    <span class="kw">@PostMapping</span>(<span class="str">"/seckill"</span>)
+    <span class="kw">@SentinelResource</span>(<span class="str">"seckill"</span>, blockHandler = <span class="str">"seckillBlock"</span>)
+    <span class="kw">public</span> <span class="typ">Result</span> <span class="fn">seckill</span>(<span class="typ">SeckillRequest</span> req) {
+        <span class="cmt">// 1. 原子扣减库存（Redis Lua 脚本）</span>
+        <span class="typ">Boolean</span> success = redisTemplate.opsForValue()
+            .setIfAbsent(<span class="str">"seckill:user:"</span> + req.getUserId(), <span class="str">"1"</span>, <span class="num">24</span>, <span class="typ">TimeUnit</span>.HOURS);
+        <span class="kw">if</span> (!success) <span class="kw">return</span> <span class="typ">Result</span>.fail(<span class="str">"您已抢购过"</span>);
+        
+        <span class="typ">Long</span> stock = redisTemplate.opsForValue().decrement(<span class="str">"seckill:stock:"</span> + req.getGoodsId());
+        <span class="kw">if</span> (stock == <span class="kw">null</span> || stock &lt; <span class="num">0</span>) <span class="kw">return</span> <span class="typ">Result</span>.fail(<span class="str">"已售罄"</span>);
+        
+        <span class="cmt">// 2. 发送 MQ 消息（异步创建订单）</span>
+        <span class="typ">Message</span>&lt;<span class="typ">SeckillOrder</span>&gt; msg = <span class="kw">new</span> <span class="typ">Message</span>&lt;&gt;(
+            <span class="str">"seckill_topic"</span>,
+            <span class="str">"create_order"</span>,
+            <span class="kw">new</span> <span class="typ">SeckillOrder</span>(req.getGoodsId(), req.getUserId())
+        );
+        mqTemplate.asyncSend(msg, <span class="kw">new</span> <span class="typ">SendCallback</span>() {
+            <span class="kw">@Override</span> <span class="kw">public void</span> <span class="fn">onSuccess</span>(<span class="typ">SendResult</span> r) { log.info(<span class="str">"消息发送成功"</span>); }
+            <span class="kw">@Override</span> <span class="kw">public void</span> <span class="fn">onFailure</span>(<span class="typ">Throwable</span> e) { log.error(<span class="str">"消息发送失败"</span>, e); }
+        });
+        
+        <span class="cmt">// 3. 立即返回，告知用户"排队中"</span>
+        <span class="kw">return</span> <span class="typ">Result</span>.ok(<span class="str">"正在排队处理，请稍候"</span>);
+    }
+}
+
+<span class="cmt">// ===== 消费者：按 DB 承受能力消费消息 =====</span>
+<span class="kw">@Component</span>
+<span class="kw">@RocketMQMessageListener</span>(
+    topic = <span class="str">"seckill_topic"</span>,
+    consumerGroup = <span class="str">"seckill_consumer_group"</span>,
+    consumeMode = <span class="typ">ConsumeMode</span>.CONCURRENTLY,
+    consumeThreadMax = <span class="num">50</span>          <span class="cmt">// 控制消费速度 = 削峰</span>
+)
+<span class="kw">public class</span> <span class="typ">SeckillConsumer</span> <span class="kw">implements</span> <span class="typ">RocketMQListener</span>&lt;<span class="typ">SeckillOrder</span>&gt; {
+    
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">onMessage</span>(<span class="typ">SeckillOrder</span> order) {
+        <span class="kw">try</span> {
+            <span class="cmt">// 幂等检查（防止重复消费）</span>
+            <span class="kw">if</span> (orderService.existOrder(order.getUserId(), order.getGoodsId())) {
+                <span class="kw">return</span>;
+            }
+            <span class="cmt">// 创建订单（DB 写入）</span>
+            orderService.createOrder(order);
+        } <span class="kw">catch</span> (<span class="typ">Exception</span> e) {
+            log.error(<span class="str">"消费失败"</span>, e);
+            <span class="kw">throw</span> e;  <span class="cmt">// 抛出后 RocketMQ 自动重试</span>
+        }
+    }
+}</pre>
+  </div>
+
+  <div class="sub-title">5.3 消费者核心配置</div>
+
+  <div class="grid2">
+    <div class="step-card">
+      <h4>消费速度控制</h4>
+      <p><code>consumeThreadMax</code> 控制最大消费线程数</p>
+      <p><code>pullBatchSize</code> 控制每次拉取消息数</p>
+      <p>根据 DB 承受能力动态调整</p>
+    </div>
+    <div class="step-card">
+      <h4>幂等消费</h4>
+      <p>MQ 保证 at-least-once，必须幂等</p>
+      <p>方案：唯一键去重 / 状态机检查 / Redis 标记</p>
+      <p>消费前检查，消费后标记</p>
+    </div>
+    <div class="step-card">
+      <h4>重试与死信</h4>
+      <p>消费失败自动重试（默认 16 次）</p>
+      <p>超过重试次数进入死信队列</p>
+      <p>死信需人工介入或定时补偿</p>
+    </div>
+    <div class="step-card">
+      <h4>顺序消费</h4>
+      <p>同一订单的创建/支付/发货需顺序</p>
+      <p>用 orderId 作为 sharding key</p>
+      <p>同一 key 路由到同一队列</p>
+    </div>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>不处理消息积压：</b>生产速度远大于消费速度，积压越来越多。需监控积压量，达到阈值自动扩容消费者。</li>
+      <li><b>忘记幂等：</b>MQ 至少投递一次，不做幂等会导致重复下单/重复扣款。</li>
+      <li><b>消费失败不重试：</b>异常消息直接 ack 掉，数据永久丢失。应设重试 + 死信队列。</li>
+      <li><b>MQ 做强一致：</b>把 MQ 当数据库用，期望消息不丢不重。MQ 的定位是「最终一致」，不是「强一致」。</li>
+      <li><b>topic 过多：</b>每个业务场景建一个 topic，topic 数上千后 Kafka 性能骤降。应该用 tag 区分而非新建 topic。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li><strong>削峰关键：</strong>生产者无阻塞写入 MQ，消费者按 DB 能力限速消费。队列长度 = 削峰缓冲区</li>
+      <li><strong>幂等三重保障：</strong>业务唯一键 + Redis 去重标记 + DB 唯一索引</li>
+      <li><strong>积压监控：</strong>积压量 &gt; 1万条自动告警，&gt; 10万条自动扩容消费者实例</li>
+      <li><strong>消息可靠性：</strong>生产端用同步发送 + 重试，消费端手动 ack，MQ 开启持久化</li>
+      <li><strong>灰度消费：</strong>新功能上线时，按比例消费消息，灰度验证后再全量</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 6: 分布式锁 ═══════ -->
+<section class="sec" id="sec6">
+  <h2 class="sec-title"><span class="n">6</span> 关键技术 III — 分布式锁</h2>
+
+  <div class="card">
+    <h3><span class="ic">🔒</span> 为什么需要分布式锁</h3>
+    <p>单机时代用 <code>synchronized</code> 或 <code>ReentrantLock</code> 即可保证线程安全。但在分布式系统中，多个服务实例运行在不同机器上，本地锁失效——需要<strong>分布式锁</strong>来保证跨进程的互斥访问。</p>
+    <p><strong>典型场景：</strong>库存扣减、防重复提交、定时任务防重、资源配额控制。</p>
+  </div>
+
+  <div class="sub-title">6.1 分布式锁三种实现方案对比</div>
+
+  <table>
+    <thead>
+      <tr><th>维度</th><th>Redis (Redisson)</th><th>ZooKeeper</th><th>MySQL</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>实现原理</b></td><td>SET NX PX + Lua</td><td>临时顺序节点 + Watch</td><td>唯一索引 / for update</td></tr>
+      <tr><td><b>性能</b></td><td><span class="badge green">极高</span> 10万+ TPS</td><td><span class="badge orange">中等</span> 万级 TPS</td><td><span class="badge red">低</span> 千级 TPS</td></tr>
+      <tr><td><b>可靠性</b></td><td><span class="badge orange">AP</span> 主从切换可能丢锁</td><td><span class="badge green">CP</span> 强一致</td><td><span class="badge green">CP</span> 强一致</td></tr>
+      <tr><td><b>自动续期</b></td><td><span class="badge green">WatchDog</span></td><td>临时节点自动删除</td><td>需手动超时清理</td></tr>
+      <tr><td><b>可重入</b></td><td><span class="badge green">支持</span></td><td>支持（需自己实现）</td><td>不支持</td></tr>
+      <tr><td><b>复杂度</b></td><td>低</td><td>高（ZK 集群运维）</td><td>低</td></tr>
+      <tr><td><b>适用场景</b></td><td>高并发库存扣减</td><td>配置/选主/元数据</td><td>低频定时任务</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip blue">
+    <span class="ti">💡</span>
+    <div><b>选型建议：</b>99% 的场景用 <strong>Redis + Redisson</strong> 即可（高性能 + 可重入 + WatchDog 续期）。对锁可靠性要求极高（如金融级）用 <strong>ZooKeeper</strong>。简单低频场景用 <strong>MySQL 行锁</strong>。</div>
+  </div>
+
+  <div class="sub-title">6.2 Redisson 分布式锁实现</div>
+
+  <div class="code">
+    <span class="lang">Java / Redisson</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// Redisson 分布式锁：可重入 + 自动续期 + 公平锁</span>
+
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="typ">StockService</span> {
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">RedissonClient</span> redisson;
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">StockMapper</span> stockMapper;
+    
+    <span class="kw">public</span> <span class="typ">boolean</span> <span class="fn">deductStock</span>(<span class="typ">Long</span> goodsId, <span class="typ">Integer</span> quantity) {
+        <span class="typ">String</span> lockKey = <span class="str">"lock:stock:"</span> + goodsId;
+        <span class="typ">RLock</span> lock = redisson.getLock(lockKey);
+        
+        <span class="kw">try</span> {
+            <span class="cmt">// 尝试加锁：最多等待 3 秒，锁自动过期 10 秒</span>
+            <span class="cmt">// 注意：如果不传 leaseTime，会启用 WatchDog 自动续期（默认 30s 续一次）</span>
+            <span class="typ">boolean</span> locked = lock.tryLock(<span class="num">3</span>, <span class="num">10</span>, <span class="typ">TimeUnit</span>.SECONDS);
+            <span class="kw">if</span> (!locked) {
+                log.warn(<span class="str">"获取锁失败，goodsId={}"</span>, goodsId);
+                <span class="kw">return</span> <span class="kw">false</span>;
+            }
+            
+            <span class="cmt">// === 临界区：扣减库存 ===</span>
+            <span class="typ">Stock</span> stock = stockMapper.selectByGoodsId(goodsId);
+            <span class="kw">if</span> (stock.getQuantity() &lt; quantity) {
+                <span class="kw">return</span> <span class="kw">false</span>;  <span class="cmt">// 库存不足</span>
+            }
+            stock.setQuantity(stock.getQuantity() - quantity);
+            stockMapper.updateById(stock);
+            <span class="kw">return</span> <span class="kw">true</span>;
+            
+        } <span class="kw">catch</span> (<span class="typ">InterruptedException</span> e) {
+            <span class="typ">Thread</span>.currentThread().interrupt();
+            <span class="kw">return</span> <span class="kw">false</span>;
+        } <span class="kw">finally</span> {
+            <span class="cmt">// 确保释放锁（且锁是当前线程持有）</span>
+            <span class="kw">if</span> (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+}
+
+<span class="cmt">// WatchDog 续期原理（不传 leaseTime 时自动启用）：</span>
+<span class="cmt">// 1. 默认锁过期时间 30 秒</span>
+<span class="cmt">// 2. 每 10 秒检查一次，如果锁还被当前线程持有，续期到 30 秒</span>
+<span class="cmt">// 3. 如果线程宕机，WatchDog 停止续期，锁 30 秒后自动释放</span></pre>
+  </div>
+
+  <div class="sub-title">6.3 Redis 分布式锁的安全隐患</div>
+
+  <div class="grid2">
+    <div class="pitfall">
+      <div class="ph"><span class="ic">⚠️</span> 主从切换丢锁</div>
+      <ul>
+        <li>主节点加锁成功，同步到从节点前宕机</li>
+        <li>从节点晋升为主，锁数据丢失</li>
+        <li>其他线程可以再次获取同一把锁</li>
+      </ul>
+      <p style="margin-top:8px;color:var(--blue);font-size:.8rem"><b>解法：</b>RedLock 算法（多节点过半数加锁）或用 ZK</p>
+    </div>
+    <div class="pitfall">
+      <div class="ph"><span class="ic">⚠️</span> 锁过期 + 业务未完成</div>
+      <ul>
+        <li>业务执行时间超过锁过期时间</li>
+        <li>锁自动释放，其他线程获取到锁</li>
+        <li>两个线程同时执行临界区</li>
+      </ul>
+      <p style="margin-top:8px;color:var(--blue);font-size:.8rem"><b>解法：</b>WatchDog 自动续期 / 合理设置过期时间</p>
+    </div>
+  </div>
+
+  <div class="tip warn">
+    <span class="ti">⚡</span>
+    <div><b>RedLock 争议：</b>Redis 作者提出 RedLock 算法解决主从切换丢锁问题，但被 Martin Kleppmann 批评存在时钟漂移问题。<strong>实际工程中</strong>，大多数场景用 Redisson 单节点锁 + WatchDog 足够。如果业务对锁绝对敏感（如金融），用 ZooKeeper 或 etcd 更可靠。</div>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>用 SETNX 手写分布式锁：</b>不处理锁续期、不可重入、无公平性。直接用 Redisson，不要自己造轮子。</li>
+      <li><b>锁粒度过粗：</b>锁整个方法而不是锁具体资源。如扣库存应锁 goodsId 而不是锁整个方法。</li>
+      <li><b>忘记 finally 释放锁：</b>异常导致锁未释放，其他线程永远获取不到锁。必须 try-finally。</li>
+      <li><b>锁释放错对象：</b>A 线程的锁过期后 B 获取到锁，A 执行完把 B 的锁释放了。必须检查 <code>isHeldByCurrentThread()</code>。</li>
+      <li><b>用分布式锁替代数据库事务：</b>锁只保证互斥，不保证原子性。锁内操作仍需事务。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li><strong>锁粒度最小化：</strong>按具体资源加锁（如 <code>lock:stock:{goodsId}</code>），不要锁整个方法或类</li>
+      <li><strong>必须设超时：</strong><code>tryLock(waitTime, leaseTime, unit)</code>，避免无限等待死锁</li>
+      <li><strong>WatchDog 续期：</strong>不传 leaseTime 自动启用，确保业务未完成时锁不过期</li>
+      <li><strong>释放前检查持有者：</strong><code>lock.isHeldByCurrentThread()</code> 防止释放他人的锁</li>
+      <li><strong>锁内逻辑尽量短：</strong>锁内不要做 RPC 调用、IO 操作，只做核心互斥逻辑</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 7: 最终一致性 ═══════ -->
+<section class="sec" id="sec7">
+  <h2 class="sec-title"><span class="n">7</span> 关键技术 IV — 最终一致性方案</h2>
+
+  <div class="card">
+    <h3><span class="ic">🔄</span> 为什么不用强一致</h3>
+    <p>分布式系统中，强一致（2PC/XA）代价极高：性能差、可用性低、实现复杂。CAP 定理告诉我们，网络分区不可避免时，只能在 C 和 A 之间取舍。<strong>高并发系统几乎都选择 AP + 最终一致性</strong>，用异步补偿保证数据最终正确。</p>
+  </div>
+
+  <div class="sub-title">7.1 最终一致性五大方案</div>
+
+  <div class="grid3">
+    <div class="step-card" style="border-left-color:var(--purple)">
+      <h4>① 本地消息表</h4>
+      <p>业务 + 消息写入同一事务，定时扫描发送</p>
+      <p><span class="badge green">可靠</span> <span class="badge gray">简单</span></p>
+      <p style="font-size:.78rem;color:var(--text3)">适合简单异步场景</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--orange)">
+      <h4>② 事务消息</h4>
+      <p>RocketMQ 半消息 + 本地事务回查</p>
+      <p><span class="badge green">可靠</span> <span class="badge blue">高性能</span></p>
+      <p style="font-size:.78rem;color:var(--text3)">适合电商交易</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--green)">
+      <h4>③ TCC</h4>
+      <p>Try-Confirm-Cancel 三阶段补偿</p>
+      <p><span class="badge green">强一致</span> <span class="badge red">复杂</span></p>
+      <p style="font-size:.78rem;color:var(--text3)">适合资金交易</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--blue)">
+      <h4>④ Saga</h4>
+      <p>长事务拆分为多个子事务 + 补偿</p>
+      <p><span class="badge green">灵活</span> <span class="badge orange">补偿复杂</span></p>
+      <p style="font-size:.78rem;color:var(--text3)">适合跨服务长流程</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--teal)">
+      <h4>⑤ 最大努力通知</h4>
+      <p>消息投递 + 定时重试 + 对账兜底</p>
+      <p><span class="badge gray">简单</span> <span class="badge orange">不保证</span></p>
+      <p style="font-size:.78rem;color:var(--text3)">适合通知类场景</p>
+    </div>
+    <div class="step-card" style="border-left-color:var(--red)">
+      <h4>⑥ 对账补偿</h4>
+      <p>定时跑批比对数据差异并修复</p>
+      <p><span class="badge green">兜底</span> <span class="badge gray">延迟高</span></p>
+      <p style="font-size:.78rem;color:var(--text3)">所有方案的最终防线</p>
+    </div>
+  </div>
+
+  <div class="sub-title">7.2 RocketMQ 事务消息实现</div>
+
+  <div class="flow">
+    <span class="flow-node blue">1.发送半消息</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node purple">2.执行本地事务</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node green">3.提交/回滚</span>
+    <span class="flow-arrow">⇢</span>
+    <span class="flow-node orange">4.事务回查</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node teal">5.消费者消费</span>
+  </div>
+
+  <div class="code">
+    <span class="lang">Java / RocketMQ Transaction</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// RocketMQ 事务消息：保证本地事务与消息发送的最终一致</span>
+
+<span class="cmt">// ===== 事务生产者 =====</span>
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="typ">OrderTransactionService</span> {
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">RocketMQTemplate</span> mqTemplate;
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">OrderService</span> orderService;
+    
+    <span class="kw">public void</span> <span class="fn">createOrder</span>(<span class="typ">OrderRequest</span> req) {
+        <span class="typ">Message</span> msg = <span class="typ">MessageBuilder</span>.withPayload(<span class="kw">new</span> <span class="typ">OrderEvent</span>(req))
+            .setHeader(<span class="str">"bizId"</span>, req.getBizId())
+            .build();
+        
+        <span class="cmt">// 发送事务消息</span>
+        mqTemplate.sendMessageInTransaction(<span class="str">"order_topic"</span>, msg, req);
+    }
+}
+
+<span class="cmt">// ===== 事务监听器：执行本地事务 + 事务回查 =====</span>
+<span class="kw">@RocketMQTransactionListener</span>
+<span class="kw">public class</span> <span class="typ">OrderTransactionListener</span> <span class="kw">implements</span> <span class="typ">RocketMQLocalTransactionListener</span> {
+    
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> <span class="typ">OrderService</span> orderService;
+    
+    <span class="kw">@Override</span>
+    <span class="kw">public</span> <span class="typ">RocketMQLocalTransactionState</span> <span class="fn">executeLocalTransaction</span>(<span class="typ">Message</span> msg, <span class="typ">Object</span> arg) {
+        <span class="typ">OrderRequest</span> req = (<span class="typ">OrderRequest</span>) arg;
+        <span class="kw">try</span> {
+            <span class="cmt">// 执行本地事务（创建订单 + 扣库存）</span>
+            orderService.createOrderAndDeductStock(req);
+            <span class="kw">return</span> <span class="typ">RocketMQLocalTransactionState</span>.COMMIT;    <span class="cmt">// 提交：消息可被消费</span>
+        } <span class="kw">catch</span> (<span class="typ">Exception</span> e) {
+            log.error(<span class="str">"本地事务执行失败"</span>, e);
+            <span class="kw">return</span> <span class="typ">RocketMQLocalTransactionState</span>.ROLLBACK;   <span class="cmt">// 回滚：消息丢弃</span>
+        }
+    }
+    
+    <span class="kw">@Override</span>
+    <span class="kw">public</span> <span class="typ">RocketMQLocalTransactionState</span> <span class="fn">checkLocalTransaction</span>(<span class="typ">MessageExt</span> msg) {
+        <span class="cmt">// 事务回查：检查本地事务是否执行成功</span>
+        <span class="typ">String</span> bizId = msg.getProperty(<span class="str">"bizId"</span>);
+        <span class="typ">Order</span> order = orderService.getByBizId(bizId);
+        
+        <span class="kw">if</span> (order != <span class="kw">null</span> && order.getStatus() == <span class="typ">OrderStatus</span>.CREATED) {
+            <span class="kw">return</span> <span class="typ">RocketMQLocalTransactionState</span>.COMMIT;    <span class="cmt">// 事务已执行，提交消息</span>
+        }
+        <span class="kw">if</span> (order != <span class="kw">null</span> && order.getStatus() == <span class="typ">OrderStatus</span>.FAILED) {
+            <span class="kw">return</span> <span class="typ">RocketMQLocalTransactionState</span>.ROLLBACK;   <span class="cmt">// 事务失败，回滚消息</span>
+        }
+        <span class="kw">return</span> <span class="typ">RocketMQLocalTransactionState</span>.UNKNOWN;      <span class="cmt">// 未知，等待下次回查</span>
+    }
+}</pre>
+  </div>
+
+  <div class="sub-title">7.3 TCC 补偿模式</div>
+
+  <div class="table">
+    <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>阶段</th><th>动作</th><th>示例（转账）</th><th>失败处理</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>Try</b></td><td>预留资源（冻结）</td><td>冻结转出方 100 元</td><td>释放冻结</td></tr>
+        <tr><td><b>Confirm</b></td><td>确认执行（扣款）</td><td>扣除冻结的 100 元</td><td>重试直到成功</td></tr>
+        <tr><td><b>Cancel</b></td><td>取消执行（解冻）</td><td>解冻 100 元</td><td>重试直到成功</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="tip info">
+    <span class="ti">💡</span>
+    <div><b>TCC 三大约束：</b><br>
+    <strong>① 幂等：</strong>Confirm 和 Cancel 可能被重试，必须幂等<br>
+    <strong>② 空回滚：</strong>Try 未执行但 Cancel 被调用，需检测并跳过<br>
+    <strong>③ 悬挂：</strong>Cancel 先于 Try 到达，Try 后不再执行（需记录 Cancel 状态）</div>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>过度追求强一致：</b>用 2PC/XA 做分布式事务，性能下降 10 倍以上。99% 场景最终一致就够了。</li>
+      <li><b>不做对账：</b>只依赖 MQ 保证一致性，没有对账兜底。MQ 也有极低概率丢消息。</li>
+      <li><b>补偿逻辑不可靠：</b>补偿操作本身失败后没有重试机制。补偿必须<strong>可重试 + 幂等</strong>。</li>
+      <li><b>忽略幂等：</b>消费者收到重复消息后重复处理数据。所有消费逻辑都必须幂等。</li>
+      <li><b>事务范围过大：</b>把多个无关操作放在一个事务里，任一失败全部回滚。应按业务边界拆分。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li><strong>选型原则：</strong>能用事务消息就不用 TCC，能用 TCC 就不用 Saga，复杂度递增</li>
+      <li><strong>所有异步操作必须幂等：</strong>唯一键 + 状态机 + Redis 去重三重保障</li>
+      <li><strong>建立对账系统：</strong>T+1 跑批比对，发现差异自动补偿 + 人工告警</li>
+      <li><strong>记录操作日志：</strong>每一步操作记录流水，方便回溯和补偿</li>
+      <li><strong>设计补偿顺序：</strong>正向操作和补偿操作配对，按逆序执行补偿</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 8: 监控运维 ═══════ -->
+<section class="sec" id="sec8">
+  <h2 class="sec-title"><span class="n">8</span> 监控运维 — 全链路追踪 / 指标监控 / 日志聚合</h2>
+
+  <div class="card">
+    <h3><span class="ic">📡</span> 没有监控的系统等于盲飞</h3>
+    <p>高并发系统出问题的速度远超人工反应速度——从 QPS 飙升到雪崩可能只需 30 秒。<strong>监控不是可选的，是必需的</strong>。三大支柱：指标监控（Metrics）、日志聚合（Logging）、全链路追踪（Tracing），缺一不可。</p>
+  </div>
+
+  <div class="grid3">
+    <div class="metric-card" style="border-color:var(--blue)">
+      <div class="mv" style="color:var(--blue)">📈</div>
+      <div class="ml" style="font-weight:700;font-size:.84rem;color:var(--text)">Metrics 指标监控</div>
+      <div class="md">QPS / RT / 错误率 / 资源利用率<br><strong>工具：</strong>Prometheus + Grafana</div>
+    </div>
+    <div class="metric-card" style="border-color:var(--green)">
+      <div class="mv" style="color:var(--green)">📋</div>
+      <div class="ml" style="font-weight:700;font-size:.84rem;color:var(--text)">Logging 日志聚合</div>
+      <div class="md">错误排查 / 行为审计 / 问题定位<br><strong>工具：</strong>ELK / Loki + Grafana</div>
+    </div>
+    <div class="metric-card" style="border-color:var(--purple)">
+      <div class="mv" style="color:var(--purple)">🔗</div>
+      <div class="ml" style="font-weight:700;font-size:.84rem;color:var(--text)">Tracing 全链路追踪</div>
+      <div class="md">调用链 / 瓶颈定位 / 依赖分析<br><strong>工具：</strong>SkyWalking / Jaeger</div>
+    </div>
+  </div>
+
+  <div class="sub-title">8.1 全链路追踪</div>
+
+  <div class="arch-diagram">
+    <div style="text-align:center;margin-bottom:12px">
+      <span class="badge blue">Trace: a1b2c3d4</span>
+      <span style="font-size:.78rem;color:var(--text3);margin-left:8px">用户下单请求完整调用链</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:.76rem;font-family:var(--mono)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600">Gateway</span>
+        <div style="height:20px;width:100%;background:linear-gradient(90deg,#dbeafe 0%,#dbeafe 100%);border-radius:3px;position:relative">
+          <div style="position:absolute;left:0;top:0;height:100%;width:100%;background:#3b82f6;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:50%;top:1px;color:#fff;font-size:.68rem">2.5ms</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600;padding-left:20px">├ OrderService</span>
+        <div style="height:20px;width:100%;background:#f1f5f9;border-radius:3px;position:relative">
+          <div style="position:absolute;left:5%;top:0;height:100%;width:40%;background:#8b5cf6;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:20%;top:1px;color:#fff;font-size:.68rem">45ms</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600;padding-left:40px">├ MySQL (insert)</span>
+        <div style="height:20px;width:100%;background:#f1f5f9;border-radius:3px;position:relative">
+          <div style="position:absolute;left:5%;top:0;height:100%;width:15%;background:#059669;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:10%;top:1px;color:#fff;font-size:.68rem">12ms</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600;padding-left:40px">├ Redis (stock)</span>
+        <div style="height:20px;width:100%;background:#f1f5f9;border-radius:3px;position:relative">
+          <div style="position:absolute;left:22%;top:0;height:100%;width:5%;background:#ea580c;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:23%;top:1px;color:#fff;font-size:.68rem">3ms</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600;padding-left:40px">└ MQ (send)</span>
+        <div style="height:20px;width:100%;background:#f1f5f9;border-radius:3px;position:relative">
+          <div style="position:absolute;left:28%;top:0;height:100%;width:8%;background:#0891b2;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:30%;top:1px;color:#fff;font-size:.68rem">5ms</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600;padding-left:20px">├ PaymentService</span>
+        <div style="height:20px;width:100%;background:#f1f5f9;border-radius:3px;position:relative">
+          <div style="position:absolute;left:48%;top:0;height:100%;width:35%;background:#dc2626;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:60%;top:1px;color:#fff;font-size:.68rem">120ms ⚠️</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:120px;font-weight:600;padding-left:40px">└ BankAPI</span>
+        <div style="height:20px;width:100%;background:#f1f5f9;border-radius:3px;position:relative">
+          <div style="position:absolute;left:48%;top:0;height:100%;width:30%;background:#7f1d1d;border-radius:3px;opacity:.7"></div>
+          <span style="position:absolute;left:58%;top:1px;color:#fff;font-size:.68rem">110ms</span>
+        </div>
+      </div>
+    </div>
+    <div class="tip red" style="margin-top:12px;margin-bottom:0">
+      <span class="ti">🔍</span>
+      <div><b>追踪价值：</b>一眼看出 PaymentService 耗时 120ms（占总 RT 的 60%），瓶颈在 BankAPI 调用。没有链路追踪，只能靠猜。</div>
+    </div>
+  </div>
+
+  <div class="code">
+    <span class="lang">Java / SkyWalking</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// SkyWalking 自动埋点（Java Agent 无侵入）</span>
+<span class="cmt">// 启动参数添加：-javaagent:/path/to/skywalking-agent.jar</span>
+<span class="cmt">// 配置 agent.service_name=order-service</span>
+<span class="cmt">// 配置 collector.backend_service=skywalking-oap:11800</span>
+
+<span class="cmt">// 手动埋点（关键业务逻辑）</span>
+<span class="kw">@GetMapping</span>(<span class="str">"/order/create"</span>)
+<span class="kw">@Trace</span>                          <span class="cmt">// SkyWalking 注解</span>
+<span class="kw">@Tag</span>(value = <span class="str">"orderId"</span>, key = <span class="str">"orderId"</span>)
+<span class="kw">public</span> <span class="typ">Result</span> <span class="fn">createOrder</span>(<span class="typ">OrderRequest</span> req) {
+    <span class="typ">Span</span> span = <span class="typ">ContextManager</span>.createLocalSpan(<span class="str">"business-validate"</span>);
+    <span class="kw">try</span> {
+        <span class="cmt">// 业务校验</span>
+        orderValidator.validate(req);
+        span.tag(<span class="str">"validation.result"</span>, <span class="str">"passed"</span>);
+    } <span class="kw">finally</span> {
+        <span class="typ">ContextManager</span>.stopSpan(span);
+    }
+    
+    <span class="kw">return</span> orderService.create(req);
+}
+
+<span class="cmt">// 传播 TraceId（跨服务传递）</span>
+<span class="cmt">// SkyWalking Agent 自动通过 HTTP Header / MQ Header 传递：</span>
+<span class="cmt">// sw8: 1|base64(traceId)|base64(segmentId)|1|appname|entryService</span></pre>
+  </div>
+
+  <div class="sub-title">8.2 指标监控体系</div>
+
+  <table>
+    <thead>
+      <tr><th>层级</th><th>核心指标</th><th>告警阈值</th><th>工具</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>业务指标</b></td><td>订单量/支付金额/转化率</td><td>同比下降 30%</td><td>Grafana + 自定义</td></tr>
+      <tr><td><b>应用指标</b></td><td>QPS / P99 RT / 错误率 / 熔断次数</td><td>P99 &gt; 500ms / 错误率 &gt; 1%</td><td>Micrometer + Prometheus</td></tr>
+      <tr><td><b>中间件</b></td><td>MQ 积压 / Redis 命中率 / DB 慢查询</td><td>积压 &gt; 1万 / 命中率 &lt; 90%</td><td>Exporter + Prometheus</td></tr>
+      <tr><td><b>系统指标</b></td><td>CPU / 内存 / 磁盘IO / 网络IO</td><td>CPU &gt; 80% / 磁盘 &gt; 90%</td><td>Node Exporter</td></tr>
+      <tr><td><b>容器指标</b></td><td>Pod 状态 / 容器重启 / 资源限制</td><td>Pod 重启 / OOM</td><td>cAdvisor + Prometheus</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code">
+    <span class="lang">YAML / Prometheus Alert</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt"># Prometheus 告警规则</span>
+groups:
+  - name: high_concurrency_alerts
+    rules:
+      <span class="cmt"># P99 延迟告警</span>
+      - alert: HighP99Latency
+        expr: histogram_quantile(<span class="num">0.99</span>, rate(http_request_duration_seconds_bucket[<span class="num">5</span>m])) &gt; <span class="num">0.5</span>
+        for: <span class="num">2</span>m
+        labels:
+          severity: warning
+        annotations:
+          summary: <span class="str">"P99 延迟超过 500ms ({{ $labels.instance }})"</span>
+          description: <span class="str">"接口 {{ $labels.path }} P99 = {{ $value }}s"</span>
+      
+      <span class="cmt"># 错误率告警</span>
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~<span class="str">"5.."</span>}[<span class="num">1</span>m]) / rate(http_requests_total[<span class="num">1</span>m]) &gt; <span class="num">0.01</span>
+        for: <span class="num">1</span>m
+        labels:
+          severity: critical
+        annotations:
+          summary: <span class="str">"错误率超过 1%"</span>
+      
+      <span class="cmt"># MQ 积压告警</span>
+      - alert: MQMessageBacklog
+        expr: rocketmq_consumer_lag &gt; <span class="num">10000</span>
+        for: <span class="num">5</span>m
+        labels:
+          severity: warning
+        annotations:
+          summary: <span class="str">"MQ 消息积压超过 1 万"</span>
+      
+      <span class="cmt"># CPU 使用率告警</span>
+      - alert: HighCPUUsage
+        expr: <span class="num">100</span> - (avg by(instance)(rate(node_cpu_seconds_total{mode=<span class="str">"idle"</span>}[<span class="num">5</span>m])) * <span class="num">100</span>) &gt; <span class="num">80</span>
+        for: <span class="num">5</span>m
+        labels:
+          severity: warning</pre>
+  </div>
+
+  <div class="sub-title">8.3 日志聚合架构</div>
+
+  <div class="flow">
+    <span class="flow-node blue">应用日志</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node teal">Filebeat (采集)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node orange">Kafka (缓冲)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node purple">Logstash (清洗)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node green">Elasticsearch (存储)</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node blue">Kibana (查询)</span>
+  </div>
+
+  <div class="code">
+    <span class="lang">Java / Structured Logging</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cmt">// 结构化日志：JSON 格式，带 TraceId，方便 ELK 检索</span>
+<span class="kw">@Slf4j</span>
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="typ">OrderService</span> {
+    
+    <span class="kw">private static final</span> <span class="typ">Marker</span> ORDER_MARKER = <span class="typ">MarkerFactory</span>.getMarker(<span class="str">"ORDER"</span>);
+    
+    <span class="kw">public</span> <span class="typ">Order</span> <span class="fn">createOrder</span>(<span class="typ">OrderRequest</span> req) {
+        <span class="typ">String</span> traceId = <span class="typ">MDC</span>.get(<span class="str">"traceId"</span>);  <span class="cmt">// 从 SkyWalking 获取</span>
+        
+        log.info(<span class="typ">ORDER_MARKER</span>,
+            <span class="str">"创建订单开始 userId={} goodsId={} quantity={} traceId={}"</span>,
+            req.getUserId(), req.getGoodsId(), req.getQuantity(), traceId);
+        
+        <span class="kw">try</span> {
+            <span class="typ">Order</span> order = doCreateOrder(req);
+            log.info(<span class="typ">ORDER_MARKER</span>,
+                <span class="str">"创建订单成功 orderId={} traceId={}"</span>, order.getId(), traceId);
+            <span class="kw">return</span> order;
+        } <span class="kw">catch</span> (<span class="typ">Exception</span> e) {
+            log.error(<span class="typ">ORDER_MARKER</span>,
+                <span class="str">"创建订单失败 userId={} error={} traceId={}"</span>,
+                req.getUserId(), e.getMessage(), traceId, e);
+            <span class="kw">throw</span> e;
+        }
+    }
+}
+
+<span class="cmt">/* logback.xml 配置 JSON 格式输出 */</span>
+<span class="cmt">/* 输出示例：
+{
+  "timestamp": "2025-07-11T15:30:00.123Z",
+  "level": "INFO",
+  "marker": "ORDER",
+  "logger": "com.example.OrderService",
+  "message": "创建订单成功 orderId=12345 traceId=a1b2c3d4",
+  "traceId": "a1b2c3d4",
+  "service": "order-service",
+  "host": "pod-abc123"
+}
+*/</span></pre>
+  </div>
+
+  <div class="pitfall">
+    <div class="ph"><span class="ic">⚠️</span> 常见误区</div>
+    <ul>
+      <li><b>监控指标太多：</b>Dashboard 上几百个指标，看不出重点。应该用 <strong>USE/RED 方法论</strong>筛选核心指标。</li>
+      <li><b>告警风暴：</b>一个 DB 慢查询触发 50 条告警。应做<strong>告警收敛和聚合</strong>，同一故障只通知一次。</li>
+      <li><b>日志无结构：</b>日志全用字符串拼接，无法检索。必须<strong>结构化日志（JSON）+ TraceId</strong>。</li>
+      <li><b>日志级别滥用：</b>正常流程打 ERROR，异常不打日志。日志级别应严格遵循：ERROR=需人工介入、WARN=自动恢复、INFO=关键节点、DEBUG=调试用。</li>
+      <li><b>没有业务监控：</b>只有技术指标（CPU/QPS），没有业务指标（订单量/支付成功率）。业务指标往往比技术指标更早发现问题。</li>
+    </ul>
+  </div>
+
+  <div class="best">
+    <div class="bh"><span class="ic">✅</span> 实施要点</div>
+    <ul>
+      <li><strong>RED 方法论：</strong>每个服务监控 Rate（请求率）、Errors（错误率）、Duration（延迟）三个核心指标</li>
+      <li><strong>USE 方法论：</strong>每个资源监控 Utilization（利用率）、Saturation（饱和度）、Errors（错误）</li>
+      <li><strong>黄金信号：</strong>延迟、流量、错误、饱和度——Google SRE 四大黄金信号</li>
+      <li><strong>告警分级：</strong>P0（电话+短信）、P1（短信+IM）、P2（IM）、P3（邮件），不同级别不同响应</li>
+      <li><strong>TraceId 全链路贯穿：</strong>从网关到 DB，所有日志都带 TraceId，一键串联全链路</li>
+      <li><strong>大盘 + 告警 + 日志联动：</strong>Grafana 大盘看到异常 → 告警通知 → 点击跳转 Kibana 查日志 → SkyWalking 看链路</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 9: 演进路线 ═══════ -->
+<section class="sec" id="sec9">
+  <h2 class="sec-title"><span class="n">9</span> 演进路线 — 从单机到十万级并发</h2>
+
+  <div class="card">
+    <h3><span class="ic">🗺️</span> 高并发不是一蹴而就，是逐步演进</h3>
+    <p>所有高并发系统都是从单机开始的。<strong>正确的演进节奏比一步到位更重要</strong>——过早引入复杂度会拖死团队，过晚优化会错失业务机会。以下是一条经过实战验证的演进路线图。</p>
+  </div>
+
+  <div class="sub-title">阶段演进路线图</div>
+
+  <table>
+    <thead>
+      <tr><th>阶段</th><th>QPS 量级</th><th>架构形态</th><th>关键动作</th><th>团队规模</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge gray">阶段 1</span></td>
+        <td>0 ~ 1,000</td>
+        <td>单体应用 + 单库</td>
+        <td>关注业务功能实现，单体足矣</td>
+        <td>3-5 人</td>
+      </tr>
+      <tr>
+        <td><span class="badge blue">阶段 2</span></td>
+        <td>1,000 ~ 10,000</td>
+        <td>单体 + 读写分离 + Redis 缓存</td>
+        <td>引入缓存层、MySQL 主从、CDN 静态加速</td>
+        <td>5-10 人</td>
+      </tr>
+      <tr>
+        <td><span class="badge green">阶段 3</span></td>
+        <td>10,000 ~ 50,000</td>
+        <td>垂直拆分 + 负载均衡 + MQ</td>
+        <td>按业务垂直拆分、Nginx 负载均衡、MQ 异步化</td>
+        <td>10-20 人</td>
+      </tr>
+      <tr>
+        <td><span class="badge orange">阶段 4</span></td>
+        <td>50,000 ~ 100,000</td>
+        <td>微服务 + 分库分表 + 限流降级</td>
+        <td>服务化拆分、ShardingSphere 分片、Sentinel 限流</td>
+        <td>20-50 人</td>
+      </tr>
+      <tr>
+        <td><span class="badge purple">阶段 5</span></td>
+        <td>100,000+</td>
+        <td>云原生 + 多活 + 单元化</td>
+        <td>K8s 容器化、异地多活、单元化部署、Service Mesh</td>
+        <td>50+ 人</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="flow">
+    <span class="flow-node gray">单体</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node blue">+缓存+读写分离</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node green">+垂直拆分+MQ</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node orange">+微服务+分片+限流</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-node purple">+多活+单元化</span>
+  </div>
+
+  <div class="sub-title">每个阶段的核心原则</div>
+
+  <div class="grid2">
+    <div class="step-card">
+      <h4>📌 阶段 1-2：快速验证</h4>
+      <p><strong>核心原则：</strong>用最简单的技术栈快速验证业务模式</p>
+      <p><strong>技术栈：</strong>Spring Boot + MySQL + Redis</p>
+      <p><strong>禁忌：</strong>不要过早微服务化、不要引入 MQ</p>
+      <p><strong>优化重点：</strong>SQL 优化 + 索引 + 合理缓存</p>
+    </div>
+    <div class="step-card">
+      <h4>📌 阶段 3：系统化优化</h4>
+      <p><strong>核心原则：</strong>开始面向高并发做架构调整</p>
+      <p><strong>技术栈：</strong>+ Nginx + RocketMQ + ELK</p>
+      <p><strong>禁忌：</strong>不要过度拆分微服务</p>
+      <p><strong>优化重点：</strong>异步化 + 缓存策略 + 读写分离</p>
+    </div>
+    <div class="step-card">
+      <h4>📌 阶段 4：分布式架构</h4>
+      <p><strong>核心原则：</strong>全面分布式化，建立稳定性保障</p>
+      <p><strong>技术栈：</strong>+ ShardingSphere + Sentinel + SkyWalking</p>
+      <p><strong>禁忌：</strong>不要忽视监控和运维体系建设</p>
+      <p><strong>优化重点：</strong>分库分表 + 限流降级 + 全链路监控</p>
+    </div>
+    <div class="step-card">
+      <h4>📌 阶段 5：极致弹性</h4>
+      <p><strong>核心原则：</strong>面向极端流量做容灾和弹性</p>
+      <p><strong>技术栈：</strong>+ K8s + 异地多活 + Service Mesh</p>
+      <p><strong>禁忌：</strong>不要盲目追求技术先进性</p>
+      <p><strong>优化重点：</strong>多活容灾 + 单元化 + 自动化运维</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>🎯 总结：高并发系统设计的核心心法</h4>
+    <div class="kv"><span class="k">第一步</span><span class="v"><strong>量化</strong>：用数字说话，QPS/数据量/延迟，不拍脑袋</span></div>
+    <div class="kv"><span class="k">第二步</span><span class="v"><strong>分层</strong>：接入层 → 应用层 → 数据层，逐层消化并发</span></div>
+    <div class="kv"><span class="k">第三步</span><span class="v"><strong>缓存</strong>：多级缓存是高并发第一利器，命中率 &gt; 95% 是目标</span></div>
+    <div class="kv"><span class="k">第四步</span><span class="v"><strong>异步</strong>：MQ 削峰填谷，把同步链路缩短到极致</span></div>
+    <div class="kv"><span class="k">第五步</span><span class="v"><strong>保护</strong>：限流 + 降级 + 熔断，系统自我保护三件套</span></div>
+    <div class="kv"><span class="k">第六步</span><span class="v"><strong>监控</strong>：Metrics + Logging + Tracing，可观测性是底线</span></div>
+    <div class="kv"><span class="k">第七步</span><span class="v"><strong>演进</strong>：按需迭代，不过度设计，也不欠技术债</span></div>
+  </div>
+
+  <div class="tip good">
+    <span class="ti">🎯</span>
+    <div><b>最后一句话：</b>高并发系统设计的本质不是堆砌技术，而是<strong>在正确的阶段做正确的事</strong>。10万 QPS 不是目标，而是在业务驱动下自然演进的结果。保持架构的简洁性和可演进性，比追求某个技术指标更重要。</div>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<!-- ═══════ SCRIPT ═══════ -->
+<script>
+/* === QPS Calculator === */
+function formatNum(n) {
+  if (n >= 1e8) return (n / 1e8).toFixed(2) + ' 亿';
+  if (n >= 1e4) return (n / 1e4).toFixed(2) + ' 万';
+  return n.toLocaleString();
+}
+function calcQPS() {
+  var dau = parseInt(document.getElementById('calcDAU').value) || 0;
+  var rpu = parseInt(document.getElementById('calcReqPerUser').value) || 0;
+  var hours = parseFloat(document.getElementById('calcPeakHours').value) || 1;
+  var ratio = parseFloat(document.getElementById('calcPeakRatio').value) || 1;
+  var rw = parseInt(document.getElementById('calcReadWrite').value) || 10;
+  
+  var dailyTotal = dau * rpu;
+  var avgQPS = dailyTotal / (hours * 3600);
+  var peakQPS = avgQPS * ratio;
+  var designCap = peakQPS * 2;
+  var readQPS = Math.round(peakQPS * rw / (rw + 1));
+  var writeQPS = Math.round(peakQPS / (rw + 1));
+  var mysqlCount = Math.ceil(readQPS / 5000);
+  var redisCount = Math.ceil(readQPS / 100000);
+  
+  document.getElementById('rDailyTotal').textContent = formatNum(dailyTotal) + ' 次';
+  document.getElementById('rAvgQPS').textContent = formatNum(Math.round(avgQPS));
+  document.getElementById('rPeakQPS').textContent = formatNum(Math.round(peakQPS));
+  document.getElementById('rDesignCap').textContent = formatNum(Math.round(designCap));
+  document.getElementById('rReadQPS').textContent = formatNum(readQPS);
+  document.getElementById('rWriteQPS').textContent = formatNum(writeQPS);
+  document.getElementById('rMySQLCount').textContent = mysqlCount + ' 个实例';
+  document.getElementById('rRedisCount').textContent = redisCount + ' 个分片';
+}
+['calcDAU','calcReqPerUser','calcPeakHours','calcPeakRatio','calcReadWrite'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) { el.addEventListener('input', calcQPS); el.addEventListener('change', calcQPS); }
+});
+calcQPS();
+
+/* === Circuit Breaker Demo === */
+var cbState = 'closed';
+var cbSuccessCount = 0;
+var cbFailCount = 0;
+var cbLogText = '> 熔断器已就绪，当前状态：Closed\n';
+
+function cbSwitch(state) {
+  cbState = state;
+  document.querySelectorAll('.cb-state').forEach(function(el) { el.classList.remove('active'); });
+  var idMap = {'closed':'cbClosed','open':'cbOpen','half-open':'cbHalfOpen'};
+  document.getElementById(idMap[state]).classList.add('active');
+  
+  var info = {
+    'closed': {
+      state: 'Closed（闭合）',
+      behavior: '所有请求正常放行到下游服务',
+      trigger: '异常率 > 50% 或慢调用比例 > 60%',
+      recovery: '满足触发条件后转入 Open 状态'
+    },
+    'open': {
+      state: 'Open（断开）',
+      behavior: '所有请求快速失败，不调用下游服务',
+      trigger: '熔断超时时间到达（默认 10s）',
+      recovery: '超时后自动转入 Half-Open 状态'
+    },
+    'half-open': {
+      state: 'Half-Open（半开）',
+      behavior: '放行一个试探请求，其余快速失败',
+      trigger: '试探请求成功 → Closed；失败 → Open',
+      recovery: '根据试探结果决定恢复或继续熔断'
+    }
+  };
+  var i = info[state];
+  document.getElementById('cbStateVal').textContent = i.state;
+  document.getElementById('cbBehaviorVal').textContent = i.behavior;
+  document.getElementById('cbTriggerVal').textContent = i.trigger;
+  document.getElementById('cbRecoveryVal').textContent = i.recovery;
+}
+
+function cbRequest(type) {
+  if (cbState === 'open') {
+    cbLogText += '> 请求被拒绝（熔断器开启），快速失败\n';
+  } else if (cbState === 'half-open') {
+    if (type === 'success') {
+      cbLogText += '> 半开状态：试探请求成功 → 恢复为 Closed\n';
+      cbSwitch('closed');
+    } else {
+      cbLogText += '> 半开状态：试探请求失败 → 重新熔断 Open\n';
+      cbSwitch('open');
+    }
+  } else {
+    if (type === 'success') {
+      cbSuccessCount++;
+      cbLogText += '> 请求成功 (成功: ' + cbSuccessCount + ')\n';
+    } else {
+      cbFailCount++;
+      cbLogText += '> 请求失败 (失败: ' + cbFailCount + ')\n';
+      if (cbFailCount >= 5) {
+        cbLogText += '> 失败次数达阈值 → 触发熔断！\n';
+        cbSwitch('open');
+        cbFailCount = 0;
+      }
+    }
+  }
+  var logEl = document.getElementById('cbLog');
+  logEl.textContent = cbLogText;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function cbReset() {
+  cbSuccessCount = 0;
+  cbFailCount = 0;
+  cbLogText = '> 熔断器已重置，当前状态：Closed\n';
+  document.getElementById('cbLog').textContent = cbLogText;
+  cbSwitch('closed');
+}
+
+/* === Code Copy === */
+function copyCode(btn) {
+  var pre = btn.parentElement.querySelector('pre');
+  if (!pre) return;
+  var text = pre.textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      btn.textContent = '已复制';
+      setTimeout(function() { btn.textContent = '复制'; }, 2000);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '已复制';
+    setTimeout(function() { btn.textContent = '复制'; }, 2000);
+  }
+}
+
+/* === Nav Highlight on Scroll === */
+var navLinks = document.querySelectorAll('.nav a[href^="#"]');
+var sections = document.querySelectorAll('.sec');
+window.addEventListener('scroll', function() {
+  var scrollY = window.scrollY;
+  var current = '';
+  sections.forEach(function(sec) {
+    if (scrollY >= sec.offsetTop - 100) current = sec.id;
+  });
+  navLinks.forEach(function(link) {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+
+</body>
+</html>

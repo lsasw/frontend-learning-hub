@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 开发概念全指南 · 从单 Agent 到多 Agent 协作体系</title>
+<style>
+:root{
+  --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--border-l:#f1f5f9;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --primary:#2563eb;--primary-d:#1d4ed8;--primary-l:#dbeafe;--primary-ll:#eff6ff;
+  --purple:#7c3aed;--purple-l:#ede9fe;--green:#059669;--green-l:#d1fae5;
+  --orange:#ea580c;--orange-l:#fed7aa;--red:#dc2626;--red-l:#fee2e2;
+  --teal:#0891b2;--teal-l:#cffafe;--pink:#db2777;--pink-l:#fce7f3;
+  --radius:10px;--radius-sm:6px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --font-mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%);color:#fff;padding:56px 32px 48px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,.25) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-40%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,.2) 0%,transparent 70%);pointer-events:none}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;position:relative;z-index:1}
+.hero .subtitle{font-size:1.05rem;color:#93c5fd;margin-top:10px;position:relative;z-index:1}
+.hero .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative;z-index:1}
+.hero .badge{font-size:.72rem;padding:4px 12px;border-radius:20px;font-weight:600;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(4px)}
+.toc{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 32px;position:sticky;top:0;z-index:50;display:flex;gap:6px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow-sm)}
+.toc::-webkit-scrollbar{height:4px}.toc::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.toc a{font-size:.78rem;color:var(--text2);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all var(--transition);flex-shrink:0;font-weight:500}
+.toc a:hover{background:var(--primary-ll);color:var(--primary)}
+.toc a.active{background:var(--primary);color:#fff}
+.container{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+section{margin-bottom:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:8px}
+.section-title .num{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:.9rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-desc{color:var(--text2);font-size:.92rem;margin-bottom:24px;padding-left:48px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);transition:all var(--transition);margin-bottom:16px}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--primary)}
+.card h4{font-size:1.05rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card p{color:var(--text2);font-size:.88rem;line-height:1.7}
+.card .note{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:.82rem;display:flex;gap:8px;align-items:flex-start}
+.note.tip{background:var(--green-l);color:#065f46;border-left:3px solid var(--green)}
+.note.warn{background:var(--orange-l);color:#9a3412;border-left:3px solid var(--orange)}
+.note.danger{background:var(--red-l);color:#991b1b;border-left:3px solid var(--red)}
+.note.info{background:var(--primary-ll);color:var(--primary-d);border-left:3px solid var(--primary)}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.hero{padding:36px 16px 32px}.hero h1{font-size:1.6rem}.container{padding:20px 14px 40px}.toc{padding:12px 16px}.section-desc{padding-left:0}}
+pre{background:#1e293b;color:#e2e8f0;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;margin:12px 0;position:relative}
+pre .kw{color:#c084fc}pre .str{color:#86efac}pre .cm{color:#64748b;font-style:italic}pre .fn{color:#60a5fa}pre .num{color:#fbbf24}pre .op{color:#f472b6}pre .var{color:#fde68a}
+code.inline{background:var(--border-l);color:var(--primary-d);padding:2px 8px;border-radius:4px;font-family:var(--font-mono);font-size:.82rem}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.84rem}
+th{background:var(--primary-ll);color:var(--primary-d);font-weight:700;padding:10px 14px;text-align:left;border-bottom:2px solid var(--primary-l)}
+td{padding:10px 14px;border-bottom:1px solid var(--border-l);color:var(--text2)}
+tr:hover td{background:var(--primary-ll)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;padding:2px 10px;border-radius:12px;font-weight:600}
+.tag-blue{background:var(--primary-l);color:var(--primary-d)}.tag-purple{background:var(--purple-l);color:var(--purple)}.tag-green{background:var(--green-l);color:var(--green)}.tag-orange{background:var(--orange-l);color:var(--orange)}.tag-red{background:var(--red-l);color:var(--red)}.tag-teal{background:var(--teal-l);color:var(--teal)}.tag-pink{background:var(--pink-l);color:var(--pink)}
+.steps{display:flex;flex-direction:column;gap:0;position:relative}
+.step{display:flex;gap:16px;padding:16px 0;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:19px;top:48px;bottom:-8px;width:2px;background:var(--border)}
+.step .step-num{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#fff;z-index:1}
+.step .step-content{flex:1}.step .step-content h5{font-size:.92rem;font-weight:700;margin-bottom:4px}.step .step-content p{font-size:.82rem;color:var(--text2)}
+.svg-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin:16px 0;overflow-x:auto}
+.svg-box svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.accordion-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;transition:all var(--transition)}
+.accordion-item:hover{border-color:var(--primary)}
+.accordion-header{padding:14px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:600;font-size:.9rem;user-select:none;transition:background var(--transition)}
+.accordion-header:hover{background:var(--primary-ll)}
+.accordion-header .chevron{margin-left:auto;transition:transform var(--transition);color:var(--text3)}
+.accordion-item.open .chevron{transform:rotate(90deg)}
+.accordion-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.accordion-item.open .accordion-body{max-height:3000px}
+.accordion-content{padding:0 20px 20px}
+.compare-box{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.compare-box .side{padding:20px}
+.compare-box .side.left{background:var(--red-l);border-right:1px solid var(--border)}
+.compare-box .side.right{background:var(--green-l)}
+.compare-box .side h5{font-size:.9rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.compare-box .side ul{list-style:none;padding:0}
+.compare-box .side li{font-size:.82rem;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+.compare-box .side.left li::before{content:'\2717';color:var(--red);flex-shrink:0;margin-top:0}
+.compare-box .side.right li::before{content:'\2713';color:var(--green);flex-shrink:0;margin-top:0}
+@media(max-width:768px){.compare-box{grid-template-columns:1fr}}
+.problem-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid;border-radius:var(--radius);padding:20px;margin-bottom:12px}
+.problem-card.severity-high{border-left-color:var(--red)}
+.problem-card.severity-mid{border-left-color:var(--orange)}
+.problem-card.severity-low{border-left-color:var(--green)}
+.problem-card .prob-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.problem-card .prob-header h5{font-size:.95rem;font-weight:700}
+.problem-card .prob-body{font-size:.84rem;color:var(--text2);line-height:1.7}
+.problem-card .prob-solution{margin-top:10px;padding:10px 14px;background:var(--green-l);border-radius:var(--radius-sm);font-size:.82rem;color:#065f46}
+.problem-card .prob-solution strong{color:#047857}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab-btn{padding:8px 18px;border:none;background:none;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all var(--transition)}
+.tab-btn:hover{color:var(--primary)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.pill-list{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;background:var(--border-l);color:var(--text2);transition:all var(--transition)}
+.pill:hover{background:var(--primary-l);color:var(--primary)}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;padding-bottom:20px}
+.timeline-item::before{content:'';position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface)}
+.timeline-item.t-blue::before{background:var(--primary)}
+.timeline-item.t-purple::before{background:var(--purple)}
+.timeline-item.t-green::before{background:var(--green)}
+.timeline-item.t-orange::before{background:var(--orange)}
+.timeline-item h5{font-size:.88rem;font-weight:700;margin-bottom:4px}
+.timeline-item p{font-size:.82rem;color:var(--text2)}
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);color:var(--text3);font-size:.78rem}
+.footer a{color:var(--primary);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>AI Agent 开发概念全指南</h1>
+  <p class="subtitle">从单 Agent 架构到多 Agent 协作体系 - 兜底重试 - A2A 协议 - 记忆与工具调用 - 插件化生态</p>
+  <div class="badges">
+    <span class="badge">Multi-Agent</span><span class="badge">Fallback</span><span class="badge">Retry</span><span class="badge">A2A Protocol</span><span class="badge">Skills</span><span class="badge">Memory</span><span class="badge">Tool Calling</span><span class="badge">Plugin</span>
+  </div>
+</div>
+
+<nav class="toc" id="toc">
+  <a href="#overview" class="active">总览</a>
+  <a href="#core">Agent 核心</a>
+  <a href="#multi-agent">多 Agent 协作</a>
+  <a href="#fallback">兜底机制</a>
+  <a href="#retry">重试策略</a>
+  <a href="#a2a">A2A 协议</a>
+  <a href="#skills">Skills 技能</a>
+  <a href="#context">上下文管理</a>
+  <a href="#memory">记忆系统</a>
+  <a href="#tool-calling">工具调用</a>
+  <a href="#plugin">插件体系</a>
+  <a href="#problems">问题排查</a>
+  <a href="#checklist">落地清单</a>
+</nav>
+
+<div class="container">
+
+<!-- ════ 1. OVERVIEW ════ -->
+<section id="overview">
+  <div class="section-title"><span class="num" style="background:var(--primary)">0</span>总览：Agent 开发知识地图</div>
+  <p class="section-desc">一张图理解 AI Agent 开发涉及的核心概念域及其关系</p>
+  <div class="svg-box">
+    <svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1000" height="520" fill="#f8fafc" rx="12"/>
+      <ellipse cx="500" cy="260" rx="120" ry="65" fill="#2563eb" opacity="0.9"/>
+      <text x="500" y="255" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">AI Agent</text>
+      <text x="500" y="278" text-anchor="middle" fill="#bfdbfe" font-size="12">LLM + 推理 + 决策</text>
+      <g><rect x="60" y="40" width="180" height="70" rx="10" fill="#7c3aed" opacity="0.85"/><text x="150" y="68" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">多 Agent 协作</text><text x="150" y="88" text-anchor="middle" fill="#ddd6fe" font-size="10">编排 / 通信 / 分工</text><line x1="240" y1="110" x2="400" y2="230" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="410" y="30" width="180" height="70" rx="10" fill="#0891b2" opacity="0.85"/><text x="500" y="58" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">A2A 协议</text><text x="500" y="78" text-anchor="middle" fill="#cffafe" font-size="10">Agent-to-Agent 通信</text><line x1="500" y1="100" x2="500" y2="195" stroke="#0891b2" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="760" y="40" width="180" height="70" rx="10" fill="#059669" opacity="0.85"/><text x="850" y="68" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Skills 技能</text><text x="850" y="88" text-anchor="middle" fill="#d1fae5" font-size="10">能力封装 / 复用</text><line x1="760" y1="110" x2="600" y2="230" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="20" y="220" width="160" height="70" rx="10" fill="#ea580c" opacity="0.85"/><text x="100" y="248" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">工具调用</text><text x="100" y="268" text-anchor="middle" fill="#fed7aa" font-size="10">Function Calling</text><line x1="180" y1="255" x2="380" y2="260" stroke="#ea580c" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="820" y="220" width="160" height="70" rx="10" fill="#db2777" opacity="0.85"/><text x="900" y="248" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">记忆系统</text><text x="900" y="268" text-anchor="middle" fill="#fce7f3" font-size="10">短期 / 长期 / 向量</text><line x1="820" y1="255" x2="620" y2="260" stroke="#db2777" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="60" y="410" width="180" height="70" rx="10" fill="#1d4ed8" opacity="0.85"/><text x="150" y="438" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">上下文管理</text><text x="150" y="458" text-anchor="middle" fill="#bfdbfe" font-size="10">窗口 / 压缩 / 路由</text><line x1="240" y1="410" x2="400" y2="290" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="410" y="420" width="180" height="70" rx="10" fill="#dc2626" opacity="0.85"/><text x="500" y="448" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">兜底 &amp; 重试</text><text x="500" y="468" text-anchor="middle" fill="#fecaca" font-size="10">容错 / 降级 / 恢复</text><line x1="500" y1="420" x2="500" y2="325" stroke="#dc2626" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <g><rect x="760" y="410" width="180" height="70" rx="10" fill="#6d28d9" opacity="0.85"/><text x="850" y="438" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">插件体系</text><text x="850" y="458" text-anchor="middle" fill="#ede9fe" font-size="10">扩展 / 注册 / 隔离</text><line x1="760" y1="410" x2="600" y2="290" stroke="#6d28d9" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/></g>
+      <text x="500" y="510" text-anchor="middle" fill="#94a3b8" font-size="11">虚线表示概念间的关联关系 - 每个概念域独立又互相支撑</text>
+    </svg>
+  </div>
+  <div class="grid-4" style="margin-top:16px">
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:1.8rem">🧠</div><h4 style="font-size:.88rem;justify-content:center">Agent 核心</h4><p style="font-size:.78rem">LLM 驱动的<br/>自主推理决策体</p></div>
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:1.8rem">👥</div><h4 style="font-size:.88rem;justify-content:center">多 Agent</h4><p style="font-size:.78rem">分工协作的<br/>群体智能体系</p></div>
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:1.8rem">🛡️</div><h4 style="font-size:.88rem;justify-content:center">兜底重试</h4><p style="font-size:.78rem">容错与恢复的<br/>工程保障机制</p></div>
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:1.8rem">🔌</div><h4 style="font-size:.88rem;justify-content:center">插件 &amp; 工具</h4><p style="font-size:.78rem">能力扩展的<br/>标准化接口</p></div>
+  </div>
+</section>
+
+<!-- ════ 2. CORE ════ -->
+<section id="core">
+  <div class="section-title"><span class="num" style="background:var(--primary)">1</span>Agent 核心架构</div>
+  <p class="section-desc">理解单个 Agent 的内部运转机制 -- 这是一切复杂体系的基础</p>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="380" fill="#f8fafc" rx="12"/>
+      <rect x="20" y="150" width="120" height="80" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="80" y="185" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="bold">用户输入</text><text x="80" y="205" text-anchor="middle" fill="#475569" font-size="10">Task / Query</text>
+      <line x1="140" y1="190" x2="200" y2="190" stroke="#94a3b8" stroke-width="2" marker-end="url(#a1)"/>
+      <rect x="210" y="150" width="120" height="80" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="270" y="185" text-anchor="middle" fill="#5b21b6" font-size="13" font-weight="bold">感知层</text><text x="270" y="205" text-anchor="middle" fill="#475569" font-size="10">意图理解</text>
+      <line x1="330" y1="190" x2="390" y2="190" stroke="#94a3b8" stroke-width="2" marker-end="url(#a1)"/>
+      <rect x="400" y="100" width="160" height="180" rx="12" fill="#2563eb" opacity="0.9"/>
+      <text x="480" y="135" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">LLM 推理引擎</text>
+      <text x="480" y="160" text-anchor="middle" fill="#bfdbfe" font-size="11">ReAct / CoT</text>
+      <text x="480" y="180" text-anchor="middle" fill="#bfdbfe" font-size="11">Plan > Act > Observe</text>
+      <text x="480" y="210" text-anchor="middle" fill="#bfdbfe" font-size="11">Memory 记忆</text>
+      <text x="480" y="230" text-anchor="middle" fill="#bfdbfe" font-size="11">Context 上下文</text>
+      <text x="480" y="255" text-anchor="middle" fill="#93c5fd" font-size="10">--- 决策核心 ---</text>
+      <line x1="560" y1="160" x2="640" y2="120" stroke="#ea580c" stroke-width="2" marker-end="url(#a2)" stroke-dasharray="4,3"/>
+      <line x1="560" y1="190" x2="640" y2="190" stroke="#94a3b8" stroke-width="2" marker-end="url(#a1)"/>
+      <line x1="560" y1="220" x2="640" y2="260" stroke="#059669" stroke-width="2" marker-end="url(#a3)" stroke-dasharray="4,3"/>
+      <rect x="650" y="80" width="140" height="70" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+      <text x="720" y="110" text-anchor="middle" fill="#9a3412" font-size="13" font-weight="bold">工具调用</text><text x="720" y="130" text-anchor="middle" fill="#9a3412" font-size="10">API / Code / Search</text>
+      <rect x="650" y="155" width="140" height="70" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="720" y="185" text-anchor="middle" fill="#065f46" font-size="13" font-weight="bold">输出层</text><text x="720" y="205" text-anchor="middle" fill="#065f46" font-size="10">Response</text>
+      <rect x="650" y="230" width="140" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="720" y="260" text-anchor="middle" fill="#5b21b6" font-size="13" font-weight="bold">Skills</text><text x="720" y="280" text-anchor="middle" fill="#5b21b6" font-size="10">技能库</text>
+      <path d="M720 300 Q 480 360 270 230" stroke="#dc2626" stroke-width="2" fill="none" stroke-dasharray="5,3" marker-end="url(#a4)"/>
+      <text x="480" y="365" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="600">观察反馈 -> 下一轮推理</text>
+      <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#94a3b8"/></marker><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#ea580c"/></marker><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#059669"/></marker><marker id="a4" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#dc2626"/></marker></defs>
+    </svg>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h4>🧠 推理引擎 (Reasoning)</h4><p>Agent 的"大脑"，基于 LLM 进行 Chain-of-Thought (CoT) 推理。核心范式是 <strong>ReAct</strong>：思考(Reason) - 行动(Act) - 观察(Observe) 循环，直到任务完成。</p><div class="note info">ReAct 是当前 Agent 最主流的推理范式，将"推理"和"行动"交织进行</div></div>
+    <div class="card"><h4>👁️ 感知层 (Perception)</h4><p>接收用户输入，解析意图。包括自然语言理解、多模态输入处理（图像/语音/视频）、意图分类、任务拆解。</p><div class="note tip">好的感知层 = 准确的意图识别 = 更少无效工具调用</div></div>
+    <div class="card"><h4>🎯 输出层 (Action)</h4><p>将推理结果转化为可执行操作：返回文本、调用工具、触发工作流、与其他 Agent 通信。</p><div class="note tip">输出不只是"说"，更是"做" -- 这正是 Agent 区别于 Chatbot 的关键</div></div>
+  </div>
+  <h4 style="margin:24px 0 12px;font-size:1.1rem">ReAct 循环详解</h4>
+  <div class="card">
+    <pre><span class="cm"># ReAct: Reasoning + Acting 交替循环</span>
+
+<span class="kw">Thought</span>: 用户想查询上海明天的天气，我需要调用天气 API
+<span class="kw">Action</span>: weather_api
+<span class="kw">Action Input</span>: {<span class="str">"city"</span>: <span class="str">"上海"</span>, <span class="str">"date"</span>: <span class="str">"明天"</span>}
+
+<span class="kw">Observation</span>: {<span class="str">"temp"</span>: <span class="num">28</span>, <span class="str">"weather"</span>: <span class="str">"多云转晴"</span>, <span class="str">"humidity"</span>: <span class="num">65</span>}
+
+<span class="kw">Thought</span>: 获取到天气数据，用户还问要不要带伞，湿度 65% 且多云转晴，不需要带伞
+<span class="kw">Action</span>: finish
+<span class="kw">Action Input</span>: <span class="str">"上海明天 28度，多云转晴，湿度 65%，不需要带伞。"</span>
+
+<span class="cm"># 循环结束，返回最终结果</span></pre>
+  </div>
+</section>
+
+<!-- ════ 3. MULTI-AGENT ════ -->
+<section id="multi-agent">
+  <div class="section-title"><span class="num" style="background:var(--purple)">2</span>多 Agent 协作体系</div>
+  <p class="section-desc">从单打独斗到团队协作 -- 多 Agent 的编排模式、通信机制与角色分工</p>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="ma-pattern">协作模式</button>
+    <button class="tab-btn" data-tab="ma-role">角色分工</button>
+    <button class="tab-btn" data-tab="ma-code">代码示例</button>
+  </div>
+  <div class="tab-panel active" id="ma-pattern">
+    <div class="grid-2">
+      <div class="card">
+        <h4>📋 中心化编排 (Orchestrator)</h4>
+        <p>一个"主 Agent"负责任务分配和结果汇总，其他 Agent 作为执行者。类似项目经理 + 团队成员的模式。</p>
+        <div class="svg-box" style="padding:10px;margin-top:10px">
+          <svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="360" height="200" fill="#f8fafc" rx="8"/>
+            <rect x="130" y="20" width="100" height="50" rx="8" fill="#7c3aed"/>
+            <text x="180" y="50" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">Orchestrator</text>
+            <rect x="30" y="120" width="80" height="50" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="70" y="150" text-anchor="middle" fill="#5b21b6" font-size="11">Agent A</text>
+            <rect x="140" y="120" width="80" height="50" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="180" y="150" text-anchor="middle" fill="#5b21b6" font-size="11">Agent B</text>
+            <rect x="250" y="120" width="80" height="50" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="290" y="150" text-anchor="middle" fill="#5b21b6" font-size="11">Agent C</text>
+            <line x1="155" y1="70" x2="70" y2="120" stroke="#7c3aed" stroke-width="1.5"/>
+            <line x1="180" y1="70" x2="180" y2="120" stroke="#7c3aed" stroke-width="1.5"/>
+            <line x1="205" y1="70" x2="290" y2="120" stroke="#7c3aed" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="pill-list"><span class="pill" style="background:var(--green-l);color:var(--green)">✓ 控制清晰</span><span class="pill" style="background:var(--green-l);color:var(--green)">✓ 易调试</span><span class="pill" style="background:var(--red-l);color:var(--red)">✗ 单点瓶颈</span></div>
+      </div>
+      <div class="card">
+        <h4>🔄 去中心化 (Peer-to-Peer)</h4>
+        <p>Agent 之间直接通信，无中心节点。每个 Agent 自主决策何时与谁协作。更灵活但更难控制。</p>
+        <div class="svg-box" style="padding:10px;margin-top:10px">
+          <svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="360" height="200" fill="#f8fafc" rx="8"/>
+            <rect x="40" y="30" width="80" height="50" rx="8" fill="#0891b2"/><text x="80" y="60" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Agent A</text>
+            <rect x="240" y="30" width="80" height="50" rx="8" fill="#0891b2"/><text x="280" y="60" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Agent B</text>
+            <rect x="40" y="120" width="80" height="50" rx="8" fill="#0891b2"/><text x="80" y="150" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Agent C</text>
+            <rect x="240" y="120" width="80" height="50" rx="8" fill="#0891b2"/><text x="280" y="150" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Agent D</text>
+            <line x1="120" y1="55" x2="240" y2="55" stroke="#0891b2" stroke-width="1.5"/>
+            <line x1="80" y1="80" x2="80" y2="120" stroke="#0891b2" stroke-width="1.5"/>
+            <line x1="280" y1="80" x2="280" y2="120" stroke="#0891b2" stroke-width="1.5"/>
+            <line x1="120" y1="145" x2="240" y2="145" stroke="#0891b2" stroke-width="1.5"/>
+            <line x1="110" y1="75" x2="260" y2="125" stroke="#0891b2" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+            <line x1="260" y1="75" x2="110" y2="125" stroke="#0891b2" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="pill-list"><span class="pill" style="background:var(--green-l);color:var(--green)">✓ 高可用</span><span class="pill" style="background:var(--green-l);color:var(--green)">✓ 可扩展</span><span class="pill" style="background:var(--red-l);color:var(--red)">✗ 难调试</span></div>
+      </div>
+      <div class="card">
+        <h4>🏭 流水线 (Pipeline)</h4>
+        <p>Agent 按顺序依次处理，上一个的输出是下一个的输入。适合有明确阶段的任务。</p>
+        <div class="svg-box" style="padding:10px;margin-top:10px">
+          <svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
+            <rect width="360" height="120" fill="#f8fafc" rx="8"/>
+            <rect x="10" y="35" width="70" height="50" rx="8" fill="#059669"/><text x="45" y="65" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">调研</text>
+            <rect x="100" y="35" width="70" height="50" rx="8" fill="#059669"/><text x="135" y="65" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">分析</text>
+            <rect x="190" y="35" width="70" height="50" rx="8" fill="#059669"/><text x="225" y="65" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">写作</text>
+            <rect x="280" y="35" width="70" height="50" rx="8" fill="#059669"/><text x="315" y="65" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">审核</text>
+            <line x1="80" y1="60" x2="100" y2="60" stroke="#059669" stroke-width="2" marker-end="url(#pa1)"/>
+            <line x1="170" y1="60" x2="190" y2="60" stroke="#059669" stroke-width="2" marker-end="url(#pa1)"/>
+            <line x1="260" y1="60" x2="280" y2="60" stroke="#059669" stroke-width="2" marker-end="url(#pa1)"/>
+            <defs><marker id="pa1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#059669"/></marker></defs>
+          </svg>
+        </div>
+        <div class="pill-list"><span class="pill" style="background:var(--green-l);color:var(--green)">✓ 流程清晰</span><span class="pill" style="background:var(--red-l);color:var(--red)">✗ 串行延迟</span></div>
+      </div>
+      <div class="card">
+        <h4>⚖️ 辩论式 (Debate)</h4>
+        <p>多个 Agent 对同一问题给出不同观点，互相批判，最终由裁判 Agent 做决策。适合需要多角度分析的场景。</p>
+        <div class="svg-box" style="padding:10px;margin-top:10px">
+          <svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="360" height="160" fill="#f8fafc" rx="8"/>
+            <rect x="20" y="20" width="80" height="40" rx="8" fill="#ea580c"/><text x="60" y="45" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">正方 Agent</text>
+            <rect x="140" y="20" width="80" height="40" rx="8" fill="#2563eb"/><text x="180" y="45" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">反方 Agent</text>
+            <rect x="260" y="20" width="80" height="40" rx="8" fill="#7c3aed"/><text x="300" y="45" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">裁判 Agent</text>
+            <line x1="100" y1="40" x2="140" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="220" y1="40" x2="260" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="100" y="90" width="160" height="40" rx="8" fill="#fef3c7" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="180" y="115" text-anchor="middle" fill="#9a3412" font-size="11" font-weight="bold">最终决策</text>
+            <line x1="300" y1="60" x2="220" y2="90" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3,2"/>
+          </svg>
+        </div>
+        <div class="pill-list"><span class="pill" style="background:var(--green-l);color:var(--green)">✓ 多角度</span><span class="pill" style="background:var(--red-l);color:var(--red)">✗ Token 消耗大</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-panel" id="ma-role">
+    <table>
+      <thead><tr><th>角色</th><th>职责</th><th>典型能力</th><th>类比</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag-purple">Orchestrator</span></td><td>任务分解、分配、结果汇总</td><td>规划、路由、决策</td><td>项目经理</td></tr>
+        <tr><td><span class="tag tag-blue">Researcher</span></td><td>信息检索、数据收集</td><td>搜索 API、网页抓取、DB 查询</td><td>调研员</td></tr>
+        <tr><td><span class="tag tag-green">Executor</span></td><td>执行具体操作</td><td>代码执行、API 调用、文件操作</td><td>工程师</td></tr>
+        <tr><td><span class="tag tag-orange">Reviewer</span></td><td>审核结果、质量把控</td><td>对比、校验、评分</td><td>QA / 审核员</td></tr>
+        <tr><td><span class="tag tag-teal">Critic</span></td><td>提出反对意见、发现风险</td><td>逆向推理、边界分析</td><td>魔鬼代言人</td></tr>
+        <tr><td><span class="tag tag-pink">Summarizer</span></td><td>整合多 Agent 输出</td><td>摘要、格式化、翻译</td><td>编辑 / 文案</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip" style="margin-top:16px"><strong>设计原则：</strong>角色要有明确边界 -- 一个 Agent 只做一件事，做透。避免"全能 Agent"导致 prompt 膨胀和决策混乱。</div>
+  </div>
+  <div class="tab-panel" id="ma-code">
+    <pre><span class="cm"># 基于 LangGraph 的多 Agent 中心化编排示例</span>
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+
+<span class="kw">class</span> <span class="fn">AgentState</span>(TypedDict):
+    task: <span class="fn">str</span>
+    research_results: <span class="fn">str</span>
+    analysis: <span class="fn">str</span>
+    final_report: <span class="fn">str</span>
+
+<span class="cm"># 1. 定义各角色 Agent</span>
+<span class="kw">def</span> <span class="fn">researcher_agent</span>(state: AgentState) -> dict:
+    <span class="str">"""调研 Agent：负责信息检索"""</span>
+    task = state[<span class="str">"task"</span>]
+    results = llm.invoke(<span class="str">f"请调研以下主题并收集关键信息：{task}"</span>)
+    <span class="kw">return</span> {<span class="str">"research_results"</span>: results}
+
+<span class="kw">def</span> <span class="fn">analyst_agent</span>(state: AgentState) -> dict:
+    <span class="str">"""分析 Agent：负责数据深度分析"""</span>
+    data = state[<span class="str">"research_results"</span>]
+    analysis = llm.invoke(<span class="str">f"基于以下数据做深度分析：\n{data}"</span>)
+    <span class="kw">return</span> {<span class="str">"analysis"</span>: analysis}
+
+<span class="kw">def</span> <span class="fn">writer_agent</span>(state: AgentState) -> dict:
+    <span class="str">"""写作 Agent：负责最终报告"""</span>
+    report = llm.invoke(<span class="str">f"基于分析结果写报告：\n{state['analysis']}"</span>)
+    <span class="kw">return</span> {<span class="str">"final_report"</span>: report}
+
+<span class="cm"># 2. 构建编排图（流水线模式）</span>
+workflow = <span class="fn">StateGraph</span>(AgentState)
+workflow.add_node(<span class="str">"researcher"</span>, researcher_agent)
+workflow.add_node(<span class="str">"analyst"</span>, analyst_agent)
+workflow.add_node(<span class="str">"writer"</span>, writer_agent)
+
+<span class="cm"># 3. 定义执行顺序</span>
+workflow.set_entry_point(<span class="str">"researcher"</span>)
+workflow.add_edge(<span class="str">"researcher"</span>, <span class="str">"analyst"</span>)
+workflow.add_edge(<span class="str">"analyst"</span>, <span class="str">"writer"</span>)
+workflow.add_edge(<span class="str">"writer"</span>, END)
+
+<span class="cm"># 4. 编译并执行</span>
+app = workflow.compile()
+result = app.invoke({<span class="str">"task"</span>: <span class="str">"2025 年 AI Agent 发展趋势"</span>})</pre>
+  </div>
+</section>
+
+<!-- ════ 4. FALLBACK ════ -->
+<section id="fallback">
+  <div class="section-title"><span class="num" style="background:var(--red)">3</span>兜底机制 (Fallback)</div>
+  <p class="section-desc">当 Agent 执行失败时，如何优雅降级而非直接崩溃</p>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="300" fill="#f8fafc" rx="12"/>
+      <rect x="50" y="20" width="800" height="55" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="450" y="42" text-anchor="middle" fill="#065f46" font-size="13" font-weight="bold">L1 - 主链路：GPT-4o / Claude 3.5 Sonnet</text>
+      <text x="450" y="62" text-anchor="middle" fill="#059669" font-size="10">最佳质量 - 高 Token 成本 - 请求成功率 ~99%</text>
+      <text x="450" y="92" text-anchor="middle" fill="#94a3b8" font-size="18">v 失败 / 超时 / 限流</text>
+      <rect x="50" y="105" width="800" height="55" rx="10" fill="#fef3c7" stroke="#ea580c" stroke-width="2"/>
+      <text x="450" y="127" text-anchor="middle" fill="#9a3412" font-size="13" font-weight="bold">L2 - 降级模型：GPT-4o-mini / Claude Haiku / Qwen</text>
+      <text x="450" y="147" text-anchor="middle" fill="#ea580c" font-size="10">可接受质量 - 低成本 - 更快响应</text>
+      <text x="450" y="177" text-anchor="middle" fill="#94a3b8" font-size="18">v 仍然失败</text>
+      <rect x="50" y="190" width="800" height="55" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+      <text x="450" y="212" text-anchor="middle" fill="#991b1b" font-size="13" font-weight="bold">L3 - 规则引擎 / 缓存 / 静态回复</text>
+      <text x="450" y="232" text-anchor="middle" fill="#dc2626" font-size="10">兜底回复 - 保证可用性 - 可能不够智能但不会崩</text>
+      <rect x="680" y="260" width="200" height="30" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+      <text x="780" y="280" text-anchor="middle" fill="#1e40af" font-size="10">每一层都有独立超时与熔断</text>
+    </svg>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h4>🔄 模型降级</h4><p>主模型不可用时切换到备用模型。如 GPT-4o - GPT-4o-mini - 本地小模型。</p><div class="note warn">备用模型能力可能不足，需要调整 prompt 或简化任务</div></div>
+    <div class="card"><h4>📋 规则兜底</h4><p>所有 AI 链路都失败时，回退到硬编码规则。如 FAQ 匹配、关键词路由、默认回复。</p><div class="note tip">规则兜底是最后一道防线，保证用户体验不中断</div></div>
+    <div class="card"><h4>💾 缓存兜底</h4><p>对相似/历史查询返回缓存结果。即使实时计算不可用，也能返回"足够好"的答案。</p><div class="note info">缓存要有 TTL 和失效策略，避免返回过时信息</div></div>
+  </div>
+  <h4 style="margin:24px 0 12px;font-size:1.1rem">兜底策略代码示例</h4>
+  <pre><span class="kw">class</span> <span class="fn">FallbackChain</span>:
+    <span class="str">"""多级兜底链：主模型 > 降级模型 > 规则引擎"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.chain = [
+            {<span class="str">"name"</span>: <span class="str">"gpt-4o"</span>, <span class="str">"timeout"</span>: <span class="num">15</span>, <span class="str">"handler"</span>: self.gpt4o_call},
+            {<span class="str">"name"</span>: <span class="str">"gpt-4o-mini"</span>, <span class="str">"timeout"</span>: <span class="num">10</span>, <span class="str">"handler"</span>: self.gpt4o_mini_call},
+            {<span class="str">"name"</span>: <span class="str">"rule-based"</span>, <span class="str">"timeout"</span>: <span class="num">2</span>, <span class="str">"handler"</span>: self.rule_based},
+        ]
+
+    <span class="kw">async def</span> <span class="fn">execute</span>(self, query: <span class="fn">str</span>) -> dict:
+        errors = []
+        <span class="kw">for</span> layer <span class="kw">in</span> self.chain:
+            <span class="kw">try</span>:
+                result = <span class="kw">await</span> asyncio.wait_for(
+                    layer[<span class="str">"handler"</span>](query),
+                    timeout=layer[<span class="str">"timeout"</span>]
+                )
+                <span class="kw">return</span> {<span class="str">"answer"</span>: result, <span class="str">"served_by"</span>: layer[<span class="str">"name"</span>],
+                        <span class="str">"degraded"</span>: layer != self.chain[<span class="num">0</span>]}
+            <span class="kw">except</span> Exception <span class="kw">as</span> e:
+                errors.append({<span class="str">"layer"</span>: layer[<span class="str">"name"</span>], <span class="str">"error"</span>: <span class="fn">str</span>(e)})
+                logger.warning(<span class="str">f"Layer {layer['name']} failed: {e}, trying next..."</span>)
+
+        <span class="kw">return</span> {<span class="str">"answer"</span>: <span class="str">"抱歉，服务暂时不可用，请稍后重试。"</span>,
+                <span class="str">"served_by"</span>: <span class="str">"default"</span>, <span class="str">"degraded"</span>: <span class="kw">True</span>, <span class="str">"errors"</span>: errors}</pre>
+</section>
+
+<!-- ════ 5. RETRY ════ -->
+<section id="retry">
+  <div class="section-title"><span class="num" style="background:var(--orange)">4</span>重试策略 (Retry)</div>
+  <p class="section-desc">网络抖动、API 限流、临时不可用 -- 重试是分布式系统的基础生存技能</p>
+  <div class="grid-2">
+    <div class="card">
+      <h4>⏰ 指数退避 (Exponential Backoff)</h4>
+      <p>最常用的重试策略。每次重试间隔按指数增长：1s - 2s - 4s - 8s，避免重试风暴。</p>
+      <pre><span class="kw">import</span> asyncio
+<span class="kw">import</span> random
+
+<span class="kw">async def</span> <span class="fn">retry_with_backoff</span>(
+    func, max_retries=<span class="num">5</span>,
+    base_delay=<span class="num">1.0</span>, max_delay=<span class="num">60.0</span>
+):
+    <span class="kw">for</span> attempt <span class="kw">in</span> <span class="fn">range</span>(max_retries):
+        <span class="kw">try</span>:
+            <span class="kw">return await</span> func()
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            <span class="kw">if</span> attempt == max_retries - <span class="num">1</span>:
+                <span class="kw">raise</span>
+            <span class="cm"># 指数退避 + 随机抖动</span>
+            delay = <span class="fn">min</span>(
+                base_delay * (<span class="num">2</span> ** attempt),
+                max_delay
+            )
+            jitter = random.uniform(<span class="num">0</span>, delay * <span class="num">0.1</span>)
+            <span class="kw">await</span> asyncio.sleep(delay + jitter)</pre>
+    </div>
+    <div class="card">
+      <h4>🎯 重试条件判断</h4>
+      <p>不是所有错误都该重试。需要区分<strong>可重试错误</strong>和<strong>不可重试错误</strong>。</p>
+      <table>
+        <thead><tr><th>错误类型</th><th>是否重试</th></tr></thead>
+        <tbody>
+          <tr><td>429 Too Many Requests</td><td><span class="tag tag-green">✓ 重试</span></td></tr>
+          <tr><td>500/502/503</td><td><span class="tag tag-green">✓ 重试</span></td></tr>
+          <tr><td>超时 / 连接重置</td><td><span class="tag tag-green">✓ 重试</span></td></tr>
+          <tr><td>400 Bad Request</td><td><span class="tag tag-red">✗ 不重试</span></td></tr>
+          <tr><td>401 Unauthorized</td><td><span class="tag tag-red">✗ 不重试</span></td></tr>
+          <tr><td>内容安全拦截</td><td><span class="tag tag-red">✗ 不重试</span></td></tr>
+        </tbody>
+      </table>
+      <div class="note danger" style="margin-top:12px"><strong>陷阱：</strong>对 401 错误重试只会浪费 Token，还会触发安全告警。务必先判断错误码！</div>
+    </div>
+  </div>
+  <h4 style="margin:24px 0 12px;font-size:1.1rem">Agent 工具调用的重试流程</h4>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="280" fill="#f8fafc" rx="12"/>
+      <rect x="30" y="110" width="100" height="60" rx="10" fill="#2563eb"/><text x="80" y="145" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Agent</text>
+      <line x1="130" y1="140" x2="210" y2="140" stroke="#94a3b8" stroke-width="2" marker-end="url(#ra1)"/>
+      <rect x="220" y="100" width="140" height="80" rx="10" fill="#fef3c7" stroke="#ea580c" stroke-width="2"/>
+      <text x="290" y="130" text-anchor="middle" fill="#9a3412" font-size="12" font-weight="bold">重试控制器</text>
+      <text x="290" y="148" text-anchor="middle" fill="#9a3412" font-size="10">指数退避</text>
+      <text x="290" y="162" text-anchor="middle" fill="#9a3412" font-size="10">抖动 + 熔断</text>
+      <line x1="360" y1="140" x2="440" y2="140" stroke="#94a3b8" stroke-width="2" marker-end="url(#ra1)"/>
+      <rect x="450" y="110" width="100" height="60" rx="10" fill="#059669"/><text x="500" y="145" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">工具 API</text>
+      <line x1="550" y1="130" x2="700" y2="60" stroke="#059669" stroke-width="2" marker-end="url(#ra1)"/>
+      <text x="640" y="80" fill="#059669" font-size="11" font-weight="bold">✓ 成功 -> 返回结果</text>
+      <path d="M 550 150 Q 650 200 450 180 Q 400 175 360 160" stroke="#ea580c" stroke-width="2" fill="none" stroke-dasharray="5,3" marker-end="url(#ra1)"/>
+      <text x="620" y="200" fill="#ea580c" font-size="11" font-weight="bold">↻ 可重试错误 -> 退避重试</text>
+      <line x1="290" y1="180" x2="290" y2="230" stroke="#dc2626" stroke-width="2" marker-end="url(#ra1)"/>
+      <line x1="290" y1="230" x2="440" y2="230" stroke="#dc2626" stroke-width="2"/>
+      <text x="360" y="250" fill="#dc2626" font-size="11" font-weight="bold">✗ 重试耗尽 -> 触发兜底</text>
+      <defs><marker id="ra1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#94a3b8"/></marker></defs>
+    </svg>
+  </div>
+  <div class="compare-box">
+    <div class="side left">
+      <h5>❌ 常见重试反模式</h5>
+      <ul><li>固定间隔重试（无退避）- 雪崩效应</li><li>对所有错误都重试 - 浪费资源</li><li>无限重试 - 用户超时等待</li><li>重试时不加抖动 - 同步重试风暴</li><li>重试时不记录日志 - 问题无法追踪</li></ul>
+    </div>
+    <div class="side right">
+      <h5>✅ 正确的重试姿势</h5>
+      <ul><li>指数退避 + 随机抖动</li><li>只对可重试错误重试（5xx/超时/429）</li><li>设置最大重试次数（通常 3-5 次）</li><li>配合熔断器模式使用</li><li>每次重试都记录上下文日志</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 6. A2A ════ -->
+<section id="a2a">
+  <div class="section-title"><span class="num" style="background:var(--teal)">5</span>A2A 协议 (Agent-to-Agent)</div>
+  <p class="section-desc">Google 提出的开放协议 -- 让不同框架、不同厂商的 Agent 能够互相发现、通信、协作</p>
+  <div class="grid-2">
+    <div class="card"><h4>📡 A2A 是什么？</h4><p>A2A (Agent-to-Agent) 是 Google 在 2025 年提出的开放协议，定义了 Agent 之间的标准通信方式。类似于 HTTP 之于 Web，A2A 之于 Agent 网络。</p><div class="note info"><strong>核心理念：</strong>不同框架（LangChain / CrewAI / AutoGen / Dify）的 Agent，只要实现 A2A 协议，就能互相调用。</div></div>
+    <div class="card"><h4>🔧 核心概念</h4><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+      <div><span class="tag tag-teal">Agent Card</span> <span style="font-size:.84rem;color:var(--text2)">- Agent 的"名片"，描述能力和接口</span></div>
+      <div><span class="tag tag-teal">Task</span> <span style="font-size:.84rem;color:var(--text2)">- Agent 之间的工作单元</span></div>
+      <div><span class="tag tag-teal">Message</span> <span style="font-size:.84rem;color:var(--text2)">- 通信消息，可含多模态内容</span></div>
+      <div><span class="tag tag-teal">Artifact</span> <span style="font-size:.84rem;color:var(--text2)">- 任务产出物（文件/图片/数据）</span></div>
+      <div><span class="tag tag-teal">Streaming</span> <span style="font-size:.84rem;color:var(--text2)">- SSE 流式响应支持</span></div>
+    </div></div>
+  </div>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="360" fill="#f8fafc" rx="12"/>
+      <rect x="30" y="40" width="180" height="100" rx="12" fill="#2563eb" opacity="0.9"/>
+      <text x="120" y="70" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">Agent A</text>
+      <text x="120" y="90" text-anchor="middle" fill="#bfdbfe" font-size="11">LangChain 框架</text>
+      <text x="120" y="110" text-anchor="middle" fill="#bfdbfe" font-size="10">能力：代码生成</text>
+      <text x="120" y="125" text-anchor="middle" fill="#93c5fd" font-size="9">/.well-known/agent.json</text>
+      <rect x="690" y="40" width="180" height="100" rx="12" fill="#7c3aed" opacity="0.9"/>
+      <text x="780" y="70" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">Agent B</text>
+      <text x="780" y="90" text-anchor="middle" fill="#ddd6fe" font-size="11">CrewAI 框架</text>
+      <text x="780" y="110" text-anchor="middle" fill="#ddd6fe" font-size="10">能力：数据分析</text>
+      <text x="780" y="125" text-anchor="middle" fill="#c4b5fd" font-size="9">/.well-known/agent.json</text>
+      <rect x="200" y="170" width="500" height="70" rx="12" fill="#0891b2" opacity="0.15" stroke="#0891b2" stroke-width="2" stroke-dasharray="6,3"/>
+      <text x="450" y="200" text-anchor="middle" fill="#0891b2" font-size="16" font-weight="bold">A2A Protocol Layer</text>
+      <text x="450" y="220" text-anchor="middle" fill="#0891b2" font-size="11">JSON-RPC 2.0 over HTTP/SSE - Agent Card 发现 - Task 生命周期管理</text>
+      <line x1="120" y1="140" x2="300" y2="170" stroke="#0891b2" stroke-width="2"/>
+      <line x1="780" y1="140" x2="600" y2="170" stroke="#0891b2" stroke-width="2"/>
+      <line x1="300" y1="240" x2="300" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#aa1)"/>
+      <line x1="450" y1="240" x2="450" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#aa1)"/>
+      <line x1="600" y1="240" x2="600" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#aa1)"/>
+      <rect x="220" y="285" width="160" height="50" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+      <text x="300" y="305" text-anchor="middle" fill="#1e40af" font-size="10" font-weight="bold">1. 发现 Agent Card</text>
+      <text x="300" y="320" text-anchor="middle" fill="#475569" font-size="9">GET /.well-known/agent.json</text>
+      <rect x="380" y="285" width="140" height="50" rx="8" fill="#fef3c7" stroke="#ea580c" stroke-width="1"/>
+      <text x="450" y="305" text-anchor="middle" fill="#9a3412" font-size="10" font-weight="bold">2. 发送 Task</text>
+      <text x="450" y="320" text-anchor="middle" fill="#475569" font-size="9">POST /tasks/send</text>
+      <rect x="540" y="285" width="120" height="50" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+      <text x="600" y="305" text-anchor="middle" fill="#065f46" font-size="10" font-weight="bold">3. 获取结果</text>
+      <text x="600" y="320" text-anchor="middle" fill="#475569" font-size="9">SSE / Polling</text>
+      <defs><marker id="aa1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#94a3b8"/></marker></defs>
+    </svg>
+  </div>
+  <h4 style="margin:16px 0 12px;font-size:1.1rem">Agent Card 示例</h4>
+  <pre><span class="cm">// /.well-known/agent.json - Agent 的标准名片</span>
+{
+  <span class="str">"name"</span>: <span class="str">"data-analyst-agent"</span>,
+  <span class="str">"description"</span>: <span class="str">"专业数据分析 Agent，支持 CSV/Excel 处理与可视化"</span>,
+  <span class="str">"version"</span>: <span class="str">"1.2.0"</span>,
+  <span class="str">"capabilities"</span>: {
+    <span class="str">"streaming"</span>: <span class="kw">true</span>,
+    <span class="str">"pushNotifications"</span>: <span class="kw">false</span>,
+    <span class="str">"modalities"</span>: [<span class="str">"text"</span>, <span class="str">"file"</span>, <span class="str">"data"</span>]
+  },
+  <span class="str">"skills"</span>: [
+    {
+      <span class="str">"id"</span>: <span class="str">"csv_analysis"</span>,
+      <span class="str">"name"</span>: <span class="str">"CSV 数据分析"</span>,
+      <span class="str">"description"</span>: <span class="str">"上传 CSV 文件，自动生成统计摘要和可视化图表"</span>,
+      <span class="str">"inputModes"</span>: [<span class="str">"file"</span>],
+      <span class="str">"outputModes"</span>: [<span class="str">"text"</span>, <span class="str">"file"</span>]
+    }
+  ],
+  <span class="str">"endpoints"</span>: {
+    <span class="str">"tasks_send"</span>: <span class="str">"/tasks/send"</span>,
+    <span class="str">"tasks_get"</span>: <span class="str">"/tasks/{id}"</span>,
+    <span class="str">"tasks_subscribe"</span>: <span class="str">"/tasks/{id}/subscribe"</span>
+  }
+}</pre>
+  <div class="grid-3" style="margin-top:16px">
+    <div class="card"><h4>🔄 A2A vs MCP</h4><table style="font-size:.78rem"><tr><td></td><td><strong>A2A</strong></td><td><strong>MCP</strong></td></tr><tr><td>层级</td><td>Agent ↔ Agent</td><td>Agent ↔ Tool</td></tr><tr><td>关系</td><td>对等</td><td>主从</td></tr><tr><td>提出</td><td>Google</td><td>Anthropic</td></tr><tr><td>类比</td><td>同事协作</td><td>使用工具</td></tr></table></div>
+    <div class="card"><h4>⚡ 核心优势</h4><p style="font-size:.84rem"><strong>跨框架：</strong>LangChain Agent 可以调用 CrewAI Agent<br/><strong>跨厂商：</strong>OpenAI Agent 可以调用 Google Agent<br/><strong>可发现：</strong>Agent Card 让能力自动暴露<br/><strong>异步：</strong>SSE 流式 + 任务状态轮询</p></div>
+    <div class="card"><h4>⚠️ 当前限制</h4><p style="font-size:.84rem"><strong>安全：</strong>跨 Agent 调用的鉴权仍在完善<br/><strong>性能：</strong>多跳通信延迟叠加<br/><strong>标准：</strong>协议仍在快速演进中<br/><strong>生态：</strong>支持 A2A 的平台还不够多</p></div>
+  </div>
+</section>
+
+<!-- ════ 7. SKILLS ════ -->
+<section id="skills">
+  <div class="section-title"><span class="num" style="background:var(--green)">6</span>Skills 技能体系</div>
+  <p class="section-desc">将 Agent 能力模块化、可复用、可组合 -- Skills 是 Agent 的"技能树"</p>
+  <div class="grid-2">
+    <div class="card"><h4>🎯 Skill 是什么？</h4><p>Skill 是对 Agent 某项具体能力的<strong>标准化封装</strong>。包含：名称、描述、输入输出 schema、执行逻辑。Agent 通过 Skill 描述自动判断何时调用哪个 Skill。</p><div class="note tip"><strong>Skill vs Tool 的区别：</strong>Tool 是原子操作（如"调用天气 API"），Skill 是更高层的复合能力（如"规划旅行路线"可能调用多个 Tool）。</div></div>
+    <div class="card"><h4>🏗️ Skill 结构</h4><pre><span class="cm"># skill.yaml - 技能声明文件</span>
+name: <span class="str">web-research</span>
+description: <span class="str">"""搜索网络、提取信息、
+  生成结构化摘要"""</span>
+version: <span class="str">1.0.0</span>
+
+inputs:
+  - name: <span class="str">query</span>
+    type: <span class="str">string</span>
+    required: <span class="kw">true</span>
+    desc: <span class="str">"搜索关键词"</span>
+  - name: <span class="str">depth</span>
+    type: <span class="str">enum</span>
+    options: [<span class="str">quick</span>, <span class="str">deep</span>]
+    default: <span class="str">quick</span>
+
+outputs:
+  - name: <span class="str">summary</span>
+    type: <span class="str">string</span>
+  - name: <span class="str">sources</span>
+    type: <span class="str">array</span>
+
+tools_used:
+  - <span class="str">web_search</span>
+  - <span class="str">url_fetcher</span>
+  - <span class="str">text_summarizer</span></pre></div>
+  </div>
+  <h4 style="margin:24px 0 12px;font-size:1.1rem">Skill 生命周期</h4>
+  <div class="steps">
+    <div class="step"><div class="step-num" style="background:var(--primary)">1</div><div class="step-content"><h5>📝 声明 (Declare)</h5><p>编写 skill.yaml，定义名称、描述、输入输出 schema、依赖工具</p></div></div>
+    <div class="step"><div class="step-num" style="background:var(--purple)">2</div><div class="step-content"><h5>🔌 注册 (Register)</h5><p>将 Skill 注册到 Agent 的技能库中，Agent 自动将 Skill 描述注入 system prompt</p></div></div>
+    <div class="step"><div class="step-num" style="background:var(--green)">3</div><div class="step-content"><h5>🧭 匹配 (Match)</h5><p>LLM 根据用户意图，从技能库中自动选择最匹配的 Skill（语义路由）</p></div></div>
+    <div class="step"><div class="step-num" style="background:var(--orange)">4</div><div class="step-content"><h5>⚡ 执行 (Execute)</h5><p>按 Skill 定义的流程执行，可能调用多个 Tool，支持中间结果观察和重试</p></div></div>
+    <div class="step"><div class="step-num" style="background:var(--teal)">5</div><div class="step-content"><h5>📤 输出 (Output)</h5><p>按 schema 返回结构化结果，供 Agent 进行下一步推理或直接返回用户</p></div></div>
+    <div class="step"><div class="step-num" style="background:var(--pink)">6</div><div class="step-content"><h5>🔄 迭代 (Iterate)</h5><p>根据使用反馈持续优化 Skill 的 prompt、流程和参数</p></div></div>
+  </div>
+  <div class="grid-3" style="margin-top:16px">
+    <div class="card"><h4>🧩 复合 Skill</h4><p>Skill 可以嵌套调用其他 Skill，形成<strong>能力树</strong>。如"市场分析"Skill 内部调用"数据采集"和"图表生成"两个子 Skill。</p></div>
+    <div class="card"><h4>🏷️ Skill 路由</h4><p>当技能库中有几十个 Skill 时，需要<strong>语义路由</strong>：先用 embedding 检索 top-K 相关 Skill，再让 LLM 精确选择。</p></div>
+    <div class="card"><h4>📊 Skill 版本管理</h4><p>每个 Skill 有版本号，支持灰度发布、A/B 测试。旧版本不删，标记 deprecated，平滑迁移。</p></div>
+  </div>
+</section>
+
+<!-- ════ 8. CONTEXT ════ -->
+<section id="context">
+  <div class="section-title"><span class="num" style="background:var(--primary-d)">7</span>上下文管理 (Context Management)</div>
+  <p class="section-desc">LLM 的上下文窗口是有限的 -- 如何在有限窗口内塞入最有效的信息</p>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="360" fill="#f8fafc" rx="12"/>
+      <rect x="200" y="20" width="500" height="50" rx="10" fill="#1e40af" opacity="0.9"/>
+      <text x="450" y="50" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">Context Window (128K / 200K tokens)</text>
+      <rect x="200" y="80" width="100" height="70" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="250" y="108" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="bold">System</text>
+      <text x="250" y="125" text-anchor="middle" fill="#1e40af" font-size="9">角色设定</text>
+      <text x="250" y="138" text-anchor="middle" fill="#1e40af" font-size="9">规则约束</text>
+      <rect x="310" y="80" width="100" height="70" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="360" y="108" text-anchor="middle" fill="#5b21b6" font-size="11" font-weight="bold">Skills</text>
+      <text x="360" y="125" text-anchor="middle" fill="#5b21b6" font-size="9">技能描述</text>
+      <text x="360" y="138" text-anchor="middle" fill="#5b21b6" font-size="9">工具 schema</text>
+      <rect x="420" y="80" width="100" height="70" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+      <text x="470" y="108" text-anchor="middle" fill="#9d174d" font-size="11" font-weight="bold">Memory</text>
+      <text x="470" y="125" text-anchor="middle" fill="#9d174d" font-size="9">历史摘要</text>
+      <text x="470" y="138" text-anchor="middle" fill="#9d174d" font-size="9">用户偏好</text>
+      <rect x="530" y="80" width="100" height="70" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="580" y="108" text-anchor="middle" fill="#065f46" font-size="11" font-weight="bold">RAG</text>
+      <text x="580" y="125" text-anchor="middle" fill="#065f46" font-size="9">检索结果</text>
+      <text x="580" y="138" text-anchor="middle" fill="#065f46" font-size="9">参考资料</text>
+      <rect x="640" y="80" width="60" height="70" rx="8" fill="#fef3c7" stroke="#ea580c" stroke-width="1.5"/>
+      <text x="670" y="108" text-anchor="middle" fill="#9a3412" font-size="11" font-weight="bold">对话</text>
+      <text x="670" y="125" text-anchor="middle" fill="#9a3412" font-size="9">近期</text>
+      <text x="670" y="138" text-anchor="middle" fill="#9a3412" font-size="9">消息</text>
+      <rect x="710" y="80" width="80" height="70" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="750" y="108" text-anchor="middle" fill="#991b1b" font-size="10" font-weight="bold">溢出区</text>
+      <text x="750" y="125" text-anchor="middle" fill="#991b1b" font-size="9">需要压缩</text>
+      <text x="750" y="138" text-anchor="middle" fill="#991b1b" font-size="9">或丢弃</text>
+      <text x="450" y="185" text-anchor="middle" fill="#475569" font-size="12" font-weight="bold">--- 上下文管理策略 ---</text>
+      <rect x="50" y="210" width="150" height="55" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+      <text x="125" y="232" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="bold">压缩摘要</text>
+      <text x="125" y="248" text-anchor="middle" fill="#475569" font-size="9">旧对话 > 摘要</text>
+      <rect x="220" y="210" width="150" height="55" rx="8" fill="#fef3c7" stroke="#ea580c" stroke-width="1"/>
+      <text x="295" y="232" text-anchor="middle" fill="#9a3412" font-size="11" font-weight="bold">滑动窗口</text>
+      <text x="295" y="248" text-anchor="middle" fill="#475569" font-size="9">只保留近 N 轮</text>
+      <rect x="390" y="210" width="150" height="55" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+      <text x="465" y="232" text-anchor="middle" fill="#065f46" font-size="11" font-weight="bold">语义检索</text>
+      <text x="465" y="248" text-anchor="middle" fill="#475569" font-size="9">按需注入相关</text>
+      <rect x="560" y="210" width="150" height="55" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+      <text x="635" y="232" text-anchor="middle" fill="#5b21b6" font-size="11" font-weight="bold">优先级路由</text>
+      <text x="635" y="248" text-anchor="middle" fill="#475569" font-size="9">重要信息优先</text>
+      <rect x="730" y="210" width="140" height="55" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="1"/>
+      <text x="800" y="232" text-anchor="middle" fill="#9d174d" font-size="11" font-weight="bold">分层记忆</text>
+      <text x="800" y="248" text-anchor="middle" fill="#475569" font-size="9">热/温/冷分层</text>
+      <rect x="150" y="290" width="600" height="45" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="450" y="318" text-anchor="middle" fill="#991b1b" font-size="12" font-weight="bold">⚠ 上下文超限 = 截断丢失 -> Agent "失忆" -> 行为异常</text>
+    </svg>
+  </div>
+  <div class="grid-2">
+    <div class="card"><h4>🗜️ 压缩策略</h4><p>当对话超出窗口时，将早期对话<strong>摘要化</strong>。保留关键事实和决策，丢弃寒暄和冗余。</p>
+    <pre><span class="kw">async def</span> <span class="fn">compress_context</span>(messages):
+    <span class="cm"># 按轮次分组</span>
+    chunks = <span class="fn">chunk_messages</span>(messages, size=<span class="num">10</span>)
+
+    <span class="cm"># 对早期对话做摘要</span>
+    <span class="kw">if</span> <span class="fn">total_tokens</span>(messages) > MAX_TOKENS:
+        old = chunks[:-<span class="num">3</span>]  <span class="cm"># 保留最近3轮</span>
+        summary = <span class="kw">await</span> llm.summarize(old)
+        <span class="kw">return</span> [{<span class="str">"role"</span>: <span class="str">"system"</span>,
+                 <span class="str">"content"</span>: <span class="str">f"历史摘要: {summary}"</span>}]
+               + chunks[-<span class="num">3</span>:]
+    <span class="kw">return</span> messages</pre></div>
+    <div class="card"><h4>🎯 Token 预算分配</h4><p>将上下文窗口当作"预算"来管理，给每个部分分配额度：</p>
+    <table><thead><tr><th>区域</th><th>预算占比</th><th>说明</th></tr></thead><tbody>
+      <tr><td>System Prompt</td><td>~10%</td><td>角色、规则、约束</td></tr>
+      <tr><td>Skills/Tools</td><td>~15%</td><td>技能描述和 schema</td></tr>
+      <tr><td>RAG 检索</td><td>~25%</td><td>知识库检索结果</td></tr>
+      <tr><td>记忆</td><td>~15%</td><td>历史摘要和偏好</td></tr>
+      <tr><td>近期对话</td><td>~25%</td><td>最近几轮交互</td></tr>
+      <tr><td>输出预留</td><td>~10%</td><td>给 LLM 生成空间</td></tr>
+    </tbody></table>
+    <div class="note warn">实际比例需根据场景调整。RAG 密集型任务可给 RAG 更多预算</div></div>
+  </div>
+</section>
+
+<!-- ════ 9. MEMORY ════ -->
+<section id="memory">
+  <div class="section-title"><span class="num" style="background:var(--pink)">8</span>记忆系统 (Memory)</div>
+  <p class="section-desc">让 Agent 拥有跨会话的"长期记忆" -- 短期、长期、向量三层架构</p>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="320" fill="#f8fafc" rx="12"/>
+      <rect x="30" y="30" width="260" height="260" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="160" y="60" text-anchor="middle" fill="#1e40af" font-size="15" font-weight="bold">短期记忆</text>
+      <text x="160" y="80" text-anchor="middle" fill="#2563eb" font-size="11">Working Memory</text>
+      <line x1="50" y1="95" x2="270" y2="95" stroke="#2563eb" stroke-width="1" opacity="0.3"/>
+      <text x="160" y="120" text-anchor="middle" fill="#475569" font-size="11">- 当前会话对话历史</text>
+      <text x="160" y="142" text-anchor="middle" fill="#475569" font-size="11">- 当前任务中间状态</text>
+      <text x="160" y="164" text-anchor="middle" fill="#475569" font-size="11">- 临时变量和上下文</text>
+      <text x="160" y="195" text-anchor="middle" fill="#2563eb" font-size="10" font-weight="bold">存储：内存 / Redis</text>
+      <text x="160" y="215" text-anchor="middle" fill="#2563eb" font-size="10" font-weight="bold">TTL：会话级别</text>
+      <text x="160" y="240" text-anchor="middle" fill="#2563eb" font-size="10" font-weight="bold">容量：受 Token 窗口限制</text>
+      <text x="160" y="270" text-anchor="middle" fill="#94a3b8" font-size="9">会话结束后清除</text>
+      <rect x="320" y="30" width="260" height="260" rx="12" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+      <text x="450" y="60" text-anchor="middle" fill="#9d174d" font-size="15" font-weight="bold">长期记忆</text>
+      <text x="450" y="80" text-anchor="middle" fill="#db2777" font-size="11">Episodic / Semantic</text>
+      <line x1="340" y1="95" x2="560" y2="95" stroke="#db2777" stroke-width="1" opacity="0.3"/>
+      <text x="450" y="120" text-anchor="middle" fill="#475569" font-size="11">- 用户偏好与画像</text>
+      <text x="450" y="142" text-anchor="middle" fill="#475569" font-size="11">- 历史决策记录</text>
+      <text x="450" y="164" text-anchor="middle" fill="#475569" font-size="11">- 学到的知识和规则</text>
+      <text x="450" y="195" text-anchor="middle" fill="#db2777" font-size="10" font-weight="bold">存储：DB / KV Store</text>
+      <text x="450" y="215" text-anchor="middle" fill="#db2777" font-size="10" font-weight="bold">TTL：永久 / 手动过期</text>
+      <text x="450" y="240" text-anchor="middle" fill="#db2777" font-size="10" font-weight="bold">结构化：JSON / Table</text>
+      <text x="450" y="270" text-anchor="middle" fill="#94a3b8" font-size="9">跨会话持久化</text>
+      <rect x="610" y="30" width="260" height="260" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="740" y="60" text-anchor="middle" fill="#065f46" font-size="15" font-weight="bold">向量记忆</text>
+      <text x="740" y="80" text-anchor="middle" fill="#059669" font-size="11">Vector / Procedural</text>
+      <line x1="630" y1="95" x2="850" y2="95" stroke="#059669" stroke-width="1" opacity="0.3"/>
+      <text x="740" y="120" text-anchor="middle" fill="#475569" font-size="11">- 语义相似经验检索</text>
+      <text x="740" y="142" text-anchor="middle" fill="#475569" font-size="11">- 大量非结构化文本</text>
+      <text x="740" y="164" text-anchor="middle" fill="#475569" font-size="11">- Embedding 索引</text>
+      <text x="740" y="195" text-anchor="middle" fill="#059669" font-size="10" font-weight="bold">存储：向量数据库</text>
+      <text x="740" y="215" text-anchor="middle" fill="#059669" font-size="10" font-weight="bold">Pinecone / Chroma / Milvus</text>
+      <text x="740" y="240" text-anchor="middle" fill="#059669" font-size="10" font-weight="bold">检索：Top-K 语义匹配</text>
+      <text x="740" y="270" text-anchor="middle" fill="#94a3b8" font-size="9">按语义相关性召回</text>
+    </svg>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h4>📝 记忆写入流程</h4><div class="timeline">
+      <div class="timeline-item t-blue"><h5>1. 交互发生</h5><p>用户与 Agent 对话，产生新信息</p></div>
+      <div class="timeline-item t-purple"><h5>2. 信息提取</h5><p>LLM 从对话中提取关键事实和偏好</p></div>
+      <div class="timeline-item t-green"><h5>3. 分类存储</h5><p>结构化 -> DB；非结构化 -> 向量库</p></div>
+      <div class="timeline-item t-orange"><h5>4. 索引更新</h5><p>更新 embedding 索引，供后续检索</p></div>
+    </div></div>
+    <div class="card"><h4>🔍 记忆读取流程</h4><div class="timeline">
+      <div class="timeline-item t-blue"><h5>1. 意图分析</h5><p>分析当前查询需要什么记忆</p></div>
+      <div class="timeline-item t-purple"><h5>2. 多路召回</h5><p>同时查 DB（精确）和向量库（语义）</p></div>
+      <div class="timeline-item t-green"><h5>3. 相关性排序</h5><p>对召回结果按相关性 + 时效性排序</p></div>
+      <div class="timeline-item t-orange"><h5>4. 注入上下文</h5><p>将 Top-K 记忆注入 prompt</p></div>
+    </div></div>
+    <div class="card"><h4>🧹 记忆维护</h4><div class="timeline">
+      <div class="timeline-item t-blue"><h5>去重</h5><p>相同信息合并，避免重复存储</p></div>
+      <div class="timeline-item t-purple"><h5>衰减</h5><p>长期未使用的记忆降低权重</p></div>
+      <div class="timeline-item t-green"><h5>遗忘</h5><p>过时/低价值记忆定期清理</p></div>
+      <div class="timeline-item t-orange"><h5>整合</h5><p>多条碎片记忆合并为完整知识</p></div>
+    </div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h4>💻 记忆系统代码示例</h4>
+    <pre><span class="kw">class</span> <span class="fn">AgentMemory</span>:
+    <span class="str">"""三层记忆架构：短期 > 长期 > 向量"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.short_term = []          <span class="cm"># 当前会话消息列表</span>
+        self.long_term = RedisDB()    <span class="cm"># 结构化记忆</span>
+        self.vector = VectorStore()   <span class="cm"># 语义记忆</span>
+
+    <span class="kw">async def</span> <span class="fn">write</span>(self, message: dict):
+        <span class="cm"># 1. 写入短期记忆</span>
+        self.short_term.append(message)
+
+        <span class="cm"># 2. 提取关键信息写入长期记忆</span>
+        <span class="kw">if</span> <span class="fn">is_important</span>(message):
+            facts = <span class="kw">await</span> llm.extract_facts(message)
+            <span class="kw">for</span> fact <span class="kw">in</span> facts:
+                <span class="kw">await</span> self.long_term.set(
+                    fact[<span class="str">"key"</span>], fact[<span class="str">"value"</span>],
+                    ttl=fact.get(<span class="str">"ttl"</span>, <span class="num">86400</span> * <span class="num">30</span>)
+                )
+
+        <span class="cm"># 3. 向量化写入语义记忆</span>
+        embedding = <span class="kw">await</span> embed_model.encode(message[<span class="str">"content"</span>])
+        <span class="kw">await</span> self.vector.upsert(
+            id=message[<span class="str">"id"</span>],
+            embedding=embedding,
+            metadata={<span class="str">"timestamp"</span>: <span class="fn">now</span>(), <span class="str">"type"</span>: message.get(<span class="str">"type"</span>)}
+        )
+
+    <span class="kw">async def</span> <span class="fn">recall</span>(self, query: <span class="fn">str</span>, top_k: <span class="fn">int</span> = <span class="num">5</span>) -> <span class="fn">list</span>:
+        <span class="cm"># 多路召回：精确 + 语义</span>
+        exact = <span class="kw">await</span> self.long_term.search(query)
+        semantic = <span class="kw">await</span> self.vector.search(
+            <span class="kw">await</span> embed_model.encode(query), top_k=top_k
+        )
+        <span class="cm"># 合并 + 去重 + 排序</span>
+        <span class="kw">return</span> <span class="fn">merge_and_rank</span>(exact, semantic)</pre>
+  </div>
+</section>
+
+<!-- ════ 10. TOOL CALLING ════ -->
+<section id="tool-calling">
+  <div class="section-title"><span class="num" style="background:var(--orange)">9</span>工具调用 (Tool Calling)</div>
+  <p class="section-desc">Function Calling -- 让 Agent 能够"动手"而不仅是"动嘴"</p>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="340" fill="#f8fafc" rx="12"/>
+      <rect x="20" y="30" width="160" height="70" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="100" y="55" text-anchor="middle" fill="#1e40af" font-size="12" font-weight="bold">1. 用户提问</text>
+      <text x="100" y="75" text-anchor="middle" fill="#475569" font-size="10">"查上海明天天气"</text>
+      <line x1="180" y1="65" x2="230" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#tc1)"/>
+      <rect x="240" y="30" width="180" height="70" rx="10" fill="#fef3c7" stroke="#ea580c" stroke-width="2"/>
+      <text x="330" y="55" text-anchor="middle" fill="#9a3412" font-size="12" font-weight="bold">2. LLM 决策调用</text>
+      <text x="330" y="75" text-anchor="middle" fill="#475569" font-size="10">匹配 weather_api 工具</text>
+      <line x1="420" y1="65" x2="470" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#tc1)"/>
+      <rect x="480" y="30" width="180" height="70" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="570" y="55" text-anchor="middle" fill="#065f46" font-size="12" font-weight="bold">3. 执行工具</text>
+      <text x="570" y="75" text-anchor="middle" fill="#475569" font-size="10">调用天气 API</text>
+      <line x1="660" y1="65" x2="710" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#tc1)"/>
+      <rect x="720" y="30" width="160" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="800" y="55" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="bold">4. 返回结果</text>
+      <text x="800" y="75" text-anchor="middle" fill="#475569" font-size="10">{"temp": 28, ...}</text>
+      <path d="M 800 100 Q 800 140 570 140 Q 330 140 330 100" stroke="#dc2626" stroke-width="2" fill="none" stroke-dasharray="5,3" marker-end="url(#tc1)"/>
+      <text x="565" y="135" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="bold">5. 结果回传 LLM -> 生成自然语言回复</text>
+      <rect x="100" y="180" width="700" height="140" rx="10" fill="#1e293b"/>
+      <text x="120" y="205" fill="#94a3b8" font-size="10" font-family="monospace">// Tool Schema - 定义给 LLM 的工具描述</text>
+      <text x="120" y="225" fill="#86efac" font-size="10" font-family="monospace">{</text>
+      <text x="140" y="240" fill="#60a5fa" font-size="10" font-family="monospace">"name"</text><text x="190" y="240" fill="#e2e8f0" font-size="10" font-family="monospace">: </text><text x="210" y="240" fill="#86efac" font-size="10" font-family="monospace">"weather_api"</text><text x="280" y="240" fill="#e2e8f0" font-size="10" font-family="monospace">,</text>
+      <text x="140" y="255" fill="#60a5fa" font-size="10" font-family="monospace">"description"</text><text x="230" y="255" fill="#e2e8f0" font-size="10" font-family="monospace">: </text><text x="250" y="255" fill="#86efac" font-size="10" font-family="monospace">"查询指定城市天气"</text><text x="360" y="255" fill="#e2e8f0" font-size="10" font-family="monospace">,</text>
+      <text x="140" y="270" fill="#60a5fa" font-size="10" font-family="monospace">"parameters"</text><text x="220" y="270" fill="#e2e8f0" font-size="10" font-family="monospace">: {</text>
+      <text x="160" y="285" fill="#60a5fa" font-size="10" font-family="monospace">"city"</text><text x="200" y="285" fill="#e2e8f0" font-size="10" font-family="monospace">: {</text><text x="220" y="285" fill="#60a5fa" font-size="10" font-family="monospace">"type"</text><text x="255" y="285" fill="#e2e8f0" font-size="10" font-family="monospace">: </text><text x="275" y="285" fill="#fde68a" font-size="10" font-family="monospace">"string"</text><text x="320" y="285" fill="#e2e8f0" font-size="10" font-family="monospace">},</text>
+      <text x="160" y="300" fill="#60a5fa" font-size="10" font-family="monospace">"date"</text><text x="200" y="300" fill="#e2e8f0" font-size="10" font-family="monospace">: {</text><text x="220" y="300" fill="#60a5fa" font-size="10" font-family="monospace">"type"</text><text x="255" y="300" fill="#e2e8f0" font-size="10" font-family="monospace">: </text><text x="275" y="300" fill="#fde68a" font-size="10" font-family="monospace">"string"</text><text x="320" y="300" fill="#e2e8f0" font-size="10" font-family="monospace">}</text>
+      <text x="140" y="315" fill="#e2e8f0" font-size="10" font-family="monospace">}</text>
+      <text x="120" y="315" fill="#86efac" font-size="10" font-family="monospace">}</text>
+      <defs><marker id="tc1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="#94a3b8"/></marker></defs>
+    </svg>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h4>✅ 工具设计最佳实践</h4>
+      <div class="steps" style="margin-top:8px">
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">1</div><div class="step-content"><h5>描述清晰</h5><p>name 和 description 要让 LLM 一眼看懂何时用</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">2</div><div class="step-content"><h5>参数最小化</h5><p>只暴露必要参数，有默认值的不要让 LLM 填</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">3</div><div class="step-content"><h5>错误可读</h5><p>工具报错信息要让 LLM 能理解并自我修正</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">4</div><div class="step-content"><h5>幂等设计</h5><p>同一参数重复调用应返回相同结果</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">5</div><div class="step-content"><h5>超时控制</h5><p>每个工具设置独立超时，避免拖垮整个 Agent</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h4>⚠️ 常见工具调用问题</h4>
+      <div class="problem-card severity-high" style="margin-bottom:8px">
+        <div class="prob-header"><h5>LLM 幻觉调用不存在的工具</h5></div>
+        <div class="prob-body">LLM 编造了一个 schema 中不存在的工具名</div>
+        <div class="prob-solution"><strong>解决：</strong>在 system prompt 中明确列出可用工具；对未知工具返回友好错误而非崩溃</div>
+      </div>
+      <div class="problem-card severity-mid">
+        <div class="prob-header"><h5>参数格式错误</h5></div>
+        <div class="prob-body">LLM 传入了字符串而非数字，或缺少必填参数</div>
+        <div class="prob-solution"><strong>解决：</strong>工具入口做参数校验 (Pydantic)；错误信息回传 LLM 让它修正后重试</div>
+      </div>
+      <div class="problem-card severity-mid">
+        <div class="prob-header"><h5>无限循环调用</h5></div>
+        <div class="prob-body">LLM 反复调用同一工具，不收敛</div>
+        <div class="prob-solution"><strong>解决：</strong>设置最大工具调用次数（如 10 次）；检测重复调用模式并强制终止</div>
+      </div>
+      <div class="problem-card severity-low">
+        <div class="prob-header"><h5>工具选择错误</h5></div>
+        <div class="prob-body">LLM 选了不太合适的工具</div>
+        <div class="prob-solution"><strong>解决：</strong>优化工具 description；减少相似工具数量；增加 few-shot 示例</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 11. PLUGIN ════ -->
+<section id="plugin">
+  <div class="section-title"><span class="num" style="background:var(--purple)">10</span>插件体系 (Plugin System)</div>
+  <p class="section-desc">插件是 Agent 能力扩展的标准化机制 -- 安装即用、隔离安全、版本管理</p>
+  <div class="grid-2">
+    <div class="card">
+      <h4>🔌 插件 vs 工具 vs Skill</h4>
+      <table>
+        <thead><tr><th>概念</th><th>粒度</th><th>包含内容</th><th>类比</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tool</strong></td><td>原子</td><td>一个函数 + schema</td><td>螺丝刀</td></tr>
+          <tr><td><strong>Skill</strong></td><td>复合</td><td>多个 Tool + 流程 + prompt</td><td>维修手册</td></tr>
+          <tr><td><strong>Plugin</strong></td><td>系统</td><td>Skill + Tool + 配置 + UI + 依赖</td><td>工具箱</td></tr>
+        </tbody>
+      </table>
+      <div class="note info">Plugin 是最大的能力单元，一个插件可能包含多个 Skill 和 Tool，甚至自带 UI 组件</div>
+    </div>
+    <div class="card">
+      <h4>🏗️ 插件目录结构</h4>
+      <pre><span class="cm"># 插件目录结构</span>
+my-plugin/
+├── plugin.yaml          <span class="cm"># 插件清单</span>
+├── skills/              <span class="cm"># 技能定义</span>
+│   ├── research.yaml
+│   └── summarize.yaml
+├── tools/               <span class="cm"># 工具实现</span>
+│   ├── web_search.py
+│   └── pdf_reader.py
+├── prompts/             <span class="cm"># 提示词模板</span>
+│   └── system_prompt.txt
+├── config/              <span class="cm"># 默认配置</span>
+│   └── defaults.yaml
+├── ui/                  <span class="cm"># 前端组件(可选)</span>
+│   └── panel.html
+└── requirements.txt     <span class="cm"># 依赖</span></pre>
+    </div>
+  </div>
+  <div class="svg-box">
+    <svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+      <rect width="900" height="300" fill="#f8fafc" rx="12"/>
+      <rect x="300" y="20" width="300" height="60" rx="10" fill="#7c3aed" opacity="0.9"/>
+      <text x="450" y="48" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">Plugin Registry（插件注册中心）</text>
+      <text x="450" y="68" text-anchor="middle" fill="#ddd6fe" font-size="10">发现 / 加载 / 版本管理 / 权限控制</text>
+      <rect x="30" y="120" width="140" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="100" y="150" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="bold">Web 搜索</text>
+      <text x="100" y="168" text-anchor="middle" fill="#5b21b6" font-size="9">2 Skills / 3 Tools</text>
+      <text x="100" y="182" text-anchor="middle" fill="#5b21b6" font-size="9">v1.2.0</text>
+      <rect x="190" y="120" width="140" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="260" y="150" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="bold">数据分析</text>
+      <text x="260" y="168" text-anchor="middle" fill="#5b21b6" font-size="9">4 Skills / 6 Tools</text>
+      <text x="260" y="182" text-anchor="middle" fill="#5b21b6" font-size="9">v2.0.1</text>
+      <rect x="350" y="120" width="140" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="420" y="150" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="bold">图表生成</text>
+      <text x="420" y="168" text-anchor="middle" fill="#5b21b6" font-size="9">3 Skills / 2 Tools</text>
+      <text x="420" y="182" text-anchor="middle" fill="#5b21b6" font-size="9">v1.0.5</text>
+      <rect x="510" y="120" width="140" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="580" y="150" text-anchor="middle" fill="#5b21b6" font-size="12" font-weight="bold">邮件助手</text>
+      <text x="580" y="168" text-anchor="middle" fill="#5b21b6" font-size="9">2 Skills / 4 Tools</text>
+      <text x="580" y="182" text-anchor="middle" fill="#5b21b6" font-size="9">v3.1.0</text>
+      <rect x="670" y="120" width="140" height="70" rx="10" fill="#fef3c7" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="740" y="150" text-anchor="middle" fill="#9a3412" font-size="12" font-weight="bold">自定义</text>
+      <text x="740" y="168" text-anchor="middle" fill="#9a3412" font-size="9">用户开发</text>
+      <text x="740" y="182" text-anchor="middle" fill="#9a3412" font-size="9">v0.1.0</text>
+      <line x1="100" y1="120" x2="350" y2="80" stroke="#7c3aed" stroke-width="1" opacity="0.3"/>
+      <line x1="260" y1="120" x2="400" y2="80" stroke="#7c3aed" stroke-width="1" opacity="0.3"/>
+      <line x1="420" y1="120" x2="450" y2="80" stroke="#7c3aed" stroke-width="1" opacity="0.3"/>
+      <line x1="580" y1="120" x2="500" y2="80" stroke="#7c3aed" stroke-width="1" opacity="0.3"/>
+      <line x1="740" y1="120" x2="550" y2="80" stroke="#ea580c" stroke-width="1" opacity="0.3" stroke-dasharray="3,2"/>
+      <rect x="300" y="220" width="300" height="60" rx="10" fill="#2563eb" opacity="0.9"/>
+      <text x="450" y="248" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">Agent Runtime</text>
+      <text x="450" y="268" text-anchor="middle" fill="#bfdbfe" font-size="10">按需加载插件 / 沙箱隔离执行 / 权限管控</text>
+      <line x1="100" y1="190" x2="350" y2="220" stroke="#7c3aed" stroke-width="1" opacity="0.2"/>
+      <line x1="260" y1="190" x2="380" y2="220" stroke="#7c3aed" stroke-width="1" opacity="0.2"/>
+      <line x1="420" y1="190" x2="450" y2="220" stroke="#7c3aed" stroke-width="1" opacity="0.2"/>
+      <line x1="580" y1="190" x2="500" y2="220" stroke="#7c3aed" stroke-width="1" opacity="0.2"/>
+    </svg>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h4>🔐 插件安全</h4><p style="font-size:.84rem"><strong>沙箱隔离：</strong>插件代码在受限环境执行<br/><strong>权限声明：</strong>插件声明需要哪些权限<br/><strong>能力限制：</strong>限制文件/网络/系统访问<br/><strong>审核机制：</strong>上架前安全审查</p></div>
+    <div class="card"><h4>📦 插件生命周期</h4><div class="timeline">
+      <div class="timeline-item t-purple"><h5>安装</h5><p>从市场安装或本地导入</p></div>
+      <div class="timeline-item t-blue"><h5>激活</h5><p>注册到 Agent，加载 Skills/Tools</p></div>
+      <div class="timeline-item t-green"><h5>使用</h5><p>Agent 自动按需调用</p></div>
+      <div class="timeline-item t-orange"><h5>停用</h5><p>禁用但不删除，可随时恢复</p></div>
+    </div></div>
+    <div class="card"><h4>🔄 插件市场</h4><p style="font-size:.84rem"><strong>发现：</strong>搜索、分类、推荐<br/><strong>评分：</strong>用户评价和使用统计<br/><strong>版本：</strong>语义化版本管理<br/><strong>兼容性：</strong>声明支持的 Agent 版本</p></div>
+  </div>
+</section>
+
+<!-- ════ 12. PROBLEMS ════ -->
+<section id="problems">
+  <div class="section-title"><span class="num" style="background:var(--red)">11</span>常见问题与排查</div>
+  <p class="section-desc">Agent 开发中高频出现的问题及其排查思路和解决方案</p>
+
+  <div class="accordion-item open">
+    <div class="accordion-header"><span style="font-size:1.1rem">🔥</span><span>Agent 陷入无限循环，不断调用工具但不收敛</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>Agent 反复调用同一工具或在不同工具间跳转，不产出最终答案。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>工具返回结果不明确，LLM 无法判断任务是否完成</li>
+        <li>system prompt 缺少"何时停止"的明确指令</li>
+        <li>工具间有功能重叠，LLM 在多个工具间犹豫</li>
+        <li>上下文过长导致 LLM "忘记"原始目标</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>设置最大工具调用次数硬限制（如 max_iterations=10）</li>
+        <li>在 system prompt 中明确"任务完成的标志"</li>
+        <li>检测连续重复调用模式，超过 3 次相同调用强制终止</li>
+        <li>每次工具调用后让 LLM 做一次"进度自评"</li>
+        <li>使用 LangGraph 等框架的条件边精确控制流转</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header"><span style="font-size:1.1rem">💸</span><span>Token 消耗暴涨，成本不可控</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>单次对话消耗数万甚至数十万 Token，费用远超预期。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>上下文不压缩，每轮对话都带完整历史</li>
+        <li>RAG 检索结果过多，注入大量无关文本</li>
+        <li>工具 schema 描述冗长，占用大量 system prompt</li>
+        <li>多 Agent 协作时重复传递相同信息</li>
+        <li>未使用 prompt caching，每次都全量发送</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>实现上下文压缩策略（摘要化旧对话）</li>
+        <li>RAG 结果限制 top-K（通常 3-5 条）</li>
+        <li>精简工具描述，合并相似工具</li>
+        <li>启用 prompt caching / KV cache 复用</li>
+        <li>设置每会话 Token 上限，超限自动降级模型</li>
+        <li>多 Agent 间传递摘要而非完整上下文</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header"><span style="font-size:1.1rem">🧠</span><span>Agent "失忆"，跨会话不记得用户信息</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>新会话中 Agent 不记得之前聊过的内容、用户偏好、历史决策。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>只有短期记忆（会话内），没有长期记忆层</li>
+        <li>记忆写入逻辑缺失或条件太严格</li>
+        <li>记忆检索时相关性排序不佳，召回了无关记忆</li>
+        <li>用户 ID 关联缺失，记忆无法归属到正确用户</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>建立三层记忆架构：短期（内存）+ 长期（DB）+ 向量（Embedding）</li>
+        <li>每次对话结束后自动提取关键事实写入长期记忆</li>
+        <li>使用 user_id 作为记忆关联键</li>
+        <li>记忆检索时同时使用精确匹配 + 语义搜索</li>
+        <li>定期整理记忆：去重、整合、衰减</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header"><span style="font-size:1.1rem">⚡</span><span>响应延迟过高，用户体验差</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>Agent 从收到消息到返回结果超过 30 秒，用户等待时间过长。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>多步 ReAct 循环，每步都等 LLM 完整响应</li>
+        <li>工具调用同步阻塞，未做并行化</li>
+        <li>上下文过长导致 LLM 推理慢</li>
+        <li>多 Agent 串行编排而非并行</li>
+        <li>没有使用流式输出（SSE），用户等全部完成才看到</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>使用 SSE 流式输出，让用户"边生成边看"</li>
+        <li>无依赖的工具调用并行化（asyncio.gather）</li>
+        <li>多 Agent 并行编排：可同时执行的节点并行跑</li>
+        <li>压缩上下文减少推理时间</li>
+        <li>简单查询走快速路径，不进 Agent 循环</li>
+        <li>使用更快的模型处理简单步骤（如 GPT-4o-mini 做路由）</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header"><span style="font-size:1.1rem">🔒</span><span>安全问题：Agent 执行了危险操作</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>Agent 调用工具执行了不该执行的操作，如删除文件、发送邮件、修改数据库。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>工具权限过宽，没有操作级别限制</li>
+        <li>缺少 Human-in-the-Loop 审批机制</li>
+        <li>Agent prompt 被注入恶意指令（Prompt Injection）</li>
+        <li>工具输入参数缺少校验</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>对危险操作强制 Human-in-the-Loop 审批</li>
+        <li>工具权限分级：只读 / 写入 / 危险操作</li>
+        <li>对用户输入做 Prompt Injection 检测</li>
+        <li>工具参数用 Pydantic 严格校验</li>
+        <li>操作日志全记录，支持审计和回滚</li>
+        <li>沙箱环境执行代码类工具</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header"><span style="font-size:1.1rem">🎭</span><span>多 Agent 通信混乱，信息丢失或重复</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>多 Agent 协作时，信息传递不准确，有的 Agent 收到重复消息，有的漏收关键信息。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>没有统一的消息格式和协议</li>
+        <li>Agent 间状态共享方式不一致（有的用共享内存，有的用消息传递）</li>
+        <li>消息队列没有去重机制</li>
+        <li>Orchestrator 没有做结果合并和冲突检测</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>使用统一的状态管理（如 LangGraph 的 StateGraph）</li>
+        <li>定义标准消息格式：type / source / content / timestamp</li>
+        <li>消息 ID 去重，防止重复处理</li>
+        <li>Orchestrator 负责结果合并和冲突检测</li>
+        <li>采用 A2A 协议标准化 Agent 间通信</li>
+        <li>每个 Agent 有明确的输入输出 schema</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header"><span style="font-size:1.1rem">🎯</span><span>Agent 输出质量不稳定，时好时差</span><span class="chevron">▶</span></div>
+    <div class="accordion-body"><div class="accordion-content">
+      <p style="margin-bottom:10px"><strong>现象：</strong>同一个问题不同时间问，得到的答案质量差异大。</p>
+      <p style="margin-bottom:6px"><strong>根因分析：</strong></p>
+      <ul style="margin-left:20px;margin-bottom:10px;color:var(--text2);font-size:.84rem">
+        <li>LLM 本身的随机性（temperature 过高）</li>
+        <li>上下文组装顺序不一致，影响 LLM 注意力</li>
+        <li>RAG 检索结果不稳定，不同时刻检索到不同内容</li>
+        <li>缺少 few-shot 示例，LLM 理解偏差</li>
+      </ul>
+      <p style="margin-bottom:6px"><strong>解决方案：</strong></p>
+      <ul style="margin-left:20px;color:var(--text2);font-size:.84rem">
+        <li>适当降低 temperature（0.3-0.7），减少随机性</li>
+        <li>固定上下文组装顺序：System > Memory > RAG > Dialog</li>
+        <li>RAG 检索结果做 re-ranking，保证 top 结果稳定</li>
+        <li>在 system prompt 中加入 few-shot 示例</li>
+        <li>增加 Reviewer Agent 做质量审核，不合格则重试</li>
+        <li>关键场景使用结构化输出（JSON mode）</li>
+      </ul>
+    </div></div>
+  </div>
+</section>
+
+<!-- ════ 13. CHECKLIST ════ -->
+<section id="checklist">
+  <div class="section-title"><span class="num" style="background:var(--green)">12</span>Agent 开发落地清单</div>
+  <p class="section-desc">从 0 到 1 构建 Agent 系统的关键检查点</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>🏗️ 架构设计阶段</h4>
+      <div class="steps" style="margin-top:8px">
+        <div class="step"><div class="step-num" style="background:var(--primary);width:28px;height:28px;font-size:.75rem">1</div><div class="step-content"><h5>明确 Agent 定位</h5><p>是单 Agent 还是多 Agent？通用还是专用？</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--primary);width:28px;height:28px;font-size:.75rem">2</div><div class="step-content"><h5>选择编排模式</h5><p>中心化 / 去中心化 / 流水线 / 辩论式</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--primary);width:28px;height:28px;font-size:.75rem">3</div><div class="step-content"><h5>设计 Agent 角色边界</h5><p>每个 Agent 职责清晰，避免重叠</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--primary);width:28px;height:28px;font-size:.75rem">4</div><div class="step-content"><h5>选择技术框架</h5><p>LangGraph / CrewAI / AutoGen / Dify</p></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>🛡️ 工程保障阶段</h4>
+      <div class="steps" style="margin-top:8px">
+        <div class="step"><div class="step-num" style="background:var(--orange);width:28px;height:28px;font-size:.75rem">1</div><div class="step-content"><h5>设计兜底链路</h5><p>主模型 -> 降级模型 -> 规则引擎</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--orange);width:28px;height:28px;font-size:.75rem">2</div><div class="step-content"><h5>实现重试机制</h5><p>指数退避 + 抖动 + 错误分类</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--orange);width:28px;height:28px;font-size:.75rem">3</div><div class="step-content"><h5>设置熔断器</h5><p>防止故障级联扩散</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--orange);width:28px;height:28px;font-size:.75rem">4</div><div class="step-content"><h5>全链路日志</h5><p>每步推理 / 工具调用 / 延迟都记录</p></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>🧠 智能能力阶段</h4>
+      <div class="steps" style="margin-top:8px">
+        <div class="step"><div class="step-num" style="background:var(--purple);width:28px;height:28px;font-size:.75rem">1</div><div class="step-content"><h5>设计 Skill 体系</h5><p>按业务场景拆分技能，定义 schema</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--purple);width:28px;height:28px;font-size:.75rem">2</div><div class="step-content"><h5>实现记忆系统</h5><p>三层架构：短期 / 长期 / 向量</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--purple);width:28px;height:28px;font-size:.75rem">3</div><div class="step-content"><h5>上下文管理</h5><p>Token 预算分配 + 压缩策略</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--purple);width:28px;height:28px;font-size:.75rem">4</div><div class="step-content"><h5>工具生态</h5><p>核心工具 + 插件市场</p></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>🚀 上线运维阶段</h4>
+      <div class="steps" style="margin-top:8px">
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">1</div><div class="step-content"><h5>安全审计</h5><p>权限分级 + Human-in-the-Loop</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">2</div><div class="step-content"><h5>监控告警</h5><p>Token 用量 / 延迟 / 成功率 / 成本</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">3</div><div class="step-content"><h5>A/B 测试</h5><p>不同 prompt / 模型 / Skill 对比</p></div></div>
+        <div class="step"><div class="step-num" style="background:var(--green);width:28px;height:28px;font-size:.75rem">4</div><div class="step-content"><h5>持续迭代</h5><p>用户反馈 -> Skill 优化 -> 效果验证</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;border-left:4px solid var(--primary)">
+    <h4>📊 Agent 开发概念速查表</h4>
+    <table>
+      <thead><tr><th>概念</th><th>一句话解释</th><th>关键指标</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Agent</strong></td><td>LLM 驱动的自主推理决策体</td><td>任务完成率 / 推理步数</td></tr>
+        <tr><td><strong>多 Agent</strong></td><td>多个 Agent 分工协作解决复杂问题</td><td>协作延迟 / 结果一致性</td></tr>
+        <tr><td><strong>兜底</strong></td><td>主链路失败时的降级保障</td><td>降级率 / 恢复时间</td></tr>
+        <tr><td><strong>重试</strong></td><td>对临时性故障的自动恢复</td><td>重试成功率 / 重试次数</td></tr>
+        <tr><td><strong>A2A</strong></td><td>Agent 间标准通信协议</td><td>通信延迟 / 互操作成功率</td></tr>
+        <tr><td><strong>Skill</strong></td><td>标准化的 Agent 能力封装</td><td>技能命中率 / 执行成功率</td></tr>
+        <tr><td><strong>上下文</strong></td><td>LLM 窗口内信息的组织管理</td><td>Token 利用率 / 超限率</td></tr>
+        <tr><td><strong>记忆</strong></td><td>跨会话的信息持久化</td><td>召回准确率 / 写入延迟</td></tr>
+        <tr><td><strong>工具调用</strong></td><td>Agent 通过 API 执行外部操作</td><td>调用成功率 / 参数准确率</td></tr>
+        <tr><td><strong>插件</strong></td><td>Agent 能力的标准化扩展包</td><td>加载时间 / 安全隔离度</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<!-- ════ FOOTER ════ -->
+<div class="footer">
+  <p>AI Agent 开发概念全指南 - Frontend Learning Hub</p>
+  <p>本教程为概念讲解页，所有 SVG 图表和代码示例均可直接在浏览器中查看</p>
+</div>
+
+<script>
+// TOC active state
+(function(){
+  'use strict';
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('section[id]');
+
+  function updateActive(){
+    let current = '';
+    sections.forEach(function(sec){
+      const rect = sec.getBoundingClientRect();
+      if(rect.top <= 100 && rect.bottom >= 100){
+        current = sec.id;
+      }
+    });
+    if(!current && sections.length > 0){
+      current = sections[0].id;
+    }
+    tocLinks.forEach(function(link){
+      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+  }
+
+  // Smooth scroll
+  tocLinks.forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if(target){
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+  });
+
+  window.addEventListener('scroll', updateActive, {passive:true});
+  updateActive();
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const tabId = this.dataset.tab;
+      const section = this.closest('section');
+      section.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+      section.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+      this.classList.add('active');
+      const panel = document.getElementById(tabId);
+      if(panel) panel.classList.add('active');
+    });
+  });
+
+  // Accordion
+  document.querySelectorAll('.accordion-header').forEach(function(header){
+    header.addEventListener('click', function(){
+      this.closest('.accordion-item').classList.toggle('open');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
