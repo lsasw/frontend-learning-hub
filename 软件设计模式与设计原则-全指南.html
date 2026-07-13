@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>软件设计模式与设计原则 · 系统学习全指南</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #dbeafe;
+  --primary-lighter: #eff6ff;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --code-bg: #1e293b;
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --purple: #8b5cf6;
+  --purple-bg: #f5f3ff;
+  --teal: #14b8a6;
+  --teal-bg: #f0fdfa;
+  --sidebar-w: 270px;
+  --header-h: 56px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.08), 0 3px 10px rgba(0,0,0,.04);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --code-font: "Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", Consolas, monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 20px)}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;font-size:15px;overflow-x:hidden}
+
+/* ===== Header ===== */
+.header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:1000;box-shadow:var(--shadow)}
+.header-back{display:flex;align-items:center;gap:6px;color:var(--text-secondary);text-decoration:none;font-size:14px;transition:color .2s;white-space:nowrap}
+.header-back:hover{color:var(--primary)}
+.header-title{font-size:16px;font-weight:700;color:var(--text);margin-left:16px;padding-left:16px;border-left:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-badge{margin-left:auto;display:flex;gap:8px;align-items:center}
+.header-badge span{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600}
+.badge-principle{background:var(--primary-light);color:var(--primary-dark)}
+.badge-pattern{background:var(--purple-bg);color:var(--purple)}
+.menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:4px 8px}
+
+/* ===== Sidebar ===== */
+.sidebar{position:fixed;top:var(--header-h);left:0;width:var(--sidebar-w);height:calc(100vh - var(--header-h));overflow-y:auto;background:var(--card);border-right:1px solid var(--border);padding:16px 0;z-index:900;transition:transform .3s ease}
+.sidebar::-webkit-scrollbar{width:5px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
+.sidebar::-webkit-scrollbar-thumb:hover{background:var(--text-light)}
+.nav-group{margin-bottom:6px}
+.nav-group-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-light);padding:10px 20px 6px;display:flex;align-items:center;gap:6px}
+.nav-item{display:block;padding:7px 20px 7px 36px;font-size:13.5px;color:var(--text-secondary);text-decoration:none;transition:all .15s;border-left:3px solid transparent;line-height:1.5}
+.nav-item:hover{background:var(--primary-lighter);color:var(--primary)}
+.nav-item.active{background:var(--primary-lighter);color:var(--primary);font-weight:600;border-left-color:var(--primary)}
+.nav-sub-item{padding-left:52px;font-size:13px}
+.nav-category{padding:6px 20px 4px 24px;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
+.nav-category-icon{width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fff;flex-shrink:0}
+.icon-create{background:var(--success)}
+.icon-struct{background:var(--warning)}
+.icon-behav{background:var(--purple)}
+
+/* ===== Content ===== */
+.content{margin-left:var(--sidebar-w);padding:calc(var(--header-h) + 30px) 40px 60px;max-width:1000px}
+.hero{text-align:center;padding:30px 0 40px;border-bottom:2px solid var(--border-light);margin-bottom:40px}
+.hero h1{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.hero p{color:var(--text-secondary);font-size:15px;max-width:600px;margin:0 auto}
+.hero-stats{display:flex;justify-content:center;gap:32px;margin-top:24px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:28px;font-weight:800;color:var(--primary)}
+.hero-stat-label{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em}
+
+.section{margin-bottom:48px;scroll-margin-top:calc(var(--header-h) + 20px)}
+.section-title{font-size:26px;font-weight:800;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:2px solid var(--border-light)}
+.section-title .emoji{font-size:24px}
+.section-desc{color:var(--text-secondary);font-size:14px;margin-bottom:24px;margin-left:38px}
+
+.subsection{margin-bottom:40px;scroll-margin-top:calc(var(--header-h) + 20px)}
+.subsection-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.subsection-title{font-size:20px;font-weight:700;color:var(--text)}
+.subsection-tag{font-size:11px;padding:2px 10px;border-radius:20px;font-weight:600;letter-spacing:.02em}
+.tag-principle{background:var(--primary-light);color:var(--primary-dark)}
+.tag-create{background:var(--success-bg);color:var(--success)}
+.tag-struct{background:var(--warning-bg);color:#b45309}
+.tag-behav{background:var(--purple-bg);color:var(--purple)}
+.subsection-desc{color:var(--text-secondary);font-size:14px;margin-bottom:16px}
+
+/* ===== Pattern Card ===== */
+.pattern-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:24px;transition:box-shadow .2s}
+.pattern-card:hover{box-shadow:var(--shadow-lg)}
+.pattern-card h3{font-size:18px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pattern-card h3 .en{font-size:14px;font-weight:500;color:var(--text-light)}
+.pattern-def{font-size:14px;color:var(--text-secondary);margin-bottom:14px;line-height:1.7}
+.pattern-scene{background:var(--primary-lighter);border-left:3px solid var(--primary);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin-bottom:16px;font-size:13.5px}
+.pattern-scene strong{color:var(--primary-dark)}
+.pattern-scene ul{margin:4px 0 0;padding-left:18px}
+.pattern-scene li{margin-bottom:2px}
+
+/* ===== Code Blocks ===== */
+.code-block{margin-bottom:14px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.code-label{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-size:12px;font-weight:600;color:#fff}
+.code-label.bad{background:var(--danger)}
+.code-label.good{background:var(--success)}
+.code-label.neutral{background:var(--text-secondary)}
+.code-label .lang{font-family:var(--code-font);font-size:11px;opacity:.8}
+pre[class*="language-"]{margin:0;border-radius:0;font-size:13px;line-height:1.6;padding:16px;max-height:520px;overflow:auto}
+pre[class*="language-"]::-webkit-scrollbar{width:6px;height:6px}
+pre[class*="language-"]::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
+code[class*="language-"]{font-family:var(--code-font)!important;font-size:13px!important}
+
+/* ===== Info Box ===== */
+.info-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:16px;font-size:14px}
+.info-box.tip{border-left:3px solid var(--success);background:var(--success-bg)}
+.info-box.warn{border-left:3px solid var(--warning);background:var(--warning-bg)}
+.info-box.note{border-left:3px solid var(--primary);background:var(--primary-lighter)}
+.info-box strong{display:block;margin-bottom:4px}
+
+/* ===== Comparison Table ===== */
+.compare-table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13.5px;border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow)}
+.compare-table th{background:var(--primary);color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:13px}
+.compare-table td{padding:10px 14px;border-bottom:1px solid var(--border-light)}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table tr:nth-child(even){background:var(--bg)}
+
+/* ===== Footer ===== */
+.footer{margin-left:var(--sidebar-w);padding:24px 40px;text-align:center;color:var(--text-light);font-size:13px;border-top:1px solid var(--border);background:var(--card)}
+
+/* ===== Back to Top ===== */
+.back-top{position:fixed;bottom:30px;right:30px;width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:20px;box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transition:all .3s;z-index:800}
+.back-top.show{opacity:1;visibility:visible}
+.back-top:hover{background:var(--primary-dark);transform:translateY(-2px)}
+
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  .sidebar{transform:translateX(-100%);width:270px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-toggle{display:block}
+  .header-title{font-size:14px}
+  .header-badge{display:none}
+  .content{padding:calc(var(--header-h) + 20px) 16px 40px}
+  .footer{margin-left:0;padding:20px 16px}
+  .hero h1{font-size:24px}
+  .hero-stats{gap:20px}
+  .hero-stat-num{font-size:22px}
+  .pattern-card{padding:16px}
+  .section-title{font-size:22px}
+  .subsection-title{font-size:17px}
+  pre[class*="language-"]{font-size:12px;padding:12px}
+}
+
+/* Prism overrides */
+.token.comment,.token.prolog,.token.doctype,.token.cdata{color:#6b7280}
+.token.punctuation{color:#cbd5e1}
+.token.property,.token.tag,.token.boolean,.token.number,.token.constant,.token.symbol{color:#f472b6}
+.token.selector,.token.attr-name,.token.string,.token.char,.token.builtin,.token.inserted{color:#86efac}
+.token.operator,.token.entity,.token.url,.language-css .token.string,.style .token.string{color:#fbbf24}
+.token.atrule,.token.attr-value,.token.keyword{color:#93c5fd}
+.token.function,.token.class-name{color:#fde68a}
+.token.regex,.token.important,.token.variable{color:#fca5a5}
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="菜单">☰</button>
+  <a class="header-back" href="index.html">← 返回首页</a>
+  <span class="header-title">软件设计模式与设计原则</span>
+  <div class="header-badge">
+    <span class="badge-principle">9 条设计原则</span>
+    <span class="badge-pattern">22 种设计模式</span>
+  </div>
+</header>
+
+<!-- ===== Sidebar ===== -->
+<nav class="sidebar" id="sidebar">
+  <div class="nav-group">
+    <div class="nav-group-title">📘 设计原则</div>
+    <a class="nav-item" href="#principles">设计原则总览</a>
+    <a class="nav-item" href="#solid">SOLID 原则</a>
+    <a class="nav-item nav-sub-item" href="#srp">单一职责原则 (SRP)</a>
+    <a class="nav-item nav-sub-item" href="#ocp">开闭原则 (OCP)</a>
+    <a class="nav-item nav-sub-item" href="#lsp">里氏替换原则 (LSP)</a>
+    <a class="nav-item nav-sub-item" href="#isp">接口隔离原则 (ISP)</a>
+    <a class="nav-item nav-sub-item" href="#dip">依赖倒转原则 (DIP)</a>
+    <a class="nav-item" href="#dry">DRY 原则</a>
+    <a class="nav-item" href="#kiss">KISS 原则</a>
+    <a class="nav-item" href="#yagni">YAGNI 原则</a>
+    <a class="nav-item" href="#lod">迪米特法则 (LoD)</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">🏗️ 设计模式</div>
+    <a class="nav-item" href="#patterns">设计模式总览</a>
+    <div class="nav-category"><span class="nav-category-icon icon-create">C</span>创建型模式</div>
+    <a class="nav-item nav-sub-item" href="#singleton">单例模式</a>
+    <a class="nav-item nav-sub-item" href="#factory-method">工厂方法模式</a>
+    <a class="nav-item nav-sub-item" href="#abstract-factory">抽象工厂模式</a>
+    <a class="nav-item nav-sub-item" href="#builder">建造者模式</a>
+    <a class="nav-item nav-sub-item" href="#prototype">原型模式</a>
+    <div class="nav-category"><span class="nav-category-icon icon-struct">S</span>结构型模式</div>
+    <a class="nav-item nav-sub-item" href="#adapter">适配器模式</a>
+    <a class="nav-item nav-sub-item" href="#bridge">桥接模式</a>
+    <a class="nav-item nav-sub-item" href="#composite">组合模式</a>
+    <a class="nav-item nav-sub-item" href="#decorator">装饰器模式</a>
+    <a class="nav-item nav-sub-item" href="#facade">外观模式</a>
+    <a class="nav-item nav-sub-item" href="#flyweight">享元模式</a>
+    <a class="nav-item nav-sub-item" href="#proxy">代理模式</a>
+    <div class="nav-category"><span class="nav-category-icon icon-behav">B</span>行为型模式</div>
+    <a class="nav-item nav-sub-item" href="#chain">责任链模式</a>
+    <a class="nav-item nav-sub-item" href="#command">命令模式</a>
+    <a class="nav-item nav-sub-item" href="#iterator">迭代器模式</a>
+    <a class="nav-item nav-sub-item" href="#mediator">中介者模式</a>
+    <a class="nav-item nav-sub-item" href="#memento">备忘录模式</a>
+    <a class="nav-item nav-sub-item" href="#observer">观察者模式</a>
+    <a class="nav-item nav-sub-item" href="#state">状态模式</a>
+    <a class="nav-item nav-sub-item" href="#strategy">策略模式</a>
+    <a class="nav-item nav-sub-item" href="#template">模板方法模式</a>
+    <a class="nav-item nav-sub-item" href="#visitor">访问者模式</a>
+  </div>
+</nav>
+
+<!-- ===== Content ===== -->
+<main class="content">
+
+<!-- Hero -->
+<div class="hero">
+  <h1>软件设计模式与设计原则</h1>
+  <p>系统讲解 SOLID 等核心设计原则与 GoF 23 种设计模式，每条原则与模式均附定义、适用场景及代码示例，助你写出可维护、可扩展的高质量代码。</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num">9</div><div class="hero-stat-label">设计原则</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">22</div><div class="hero-stat-label">设计模式</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">3</div><div class="hero-stat-label">模式分类</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">30+</div><div class="hero-stat-label">代码示例</div></div>
+  </div>
+</div>
+
+<!-- ==================== 设计原则 ==================== -->
+<div class="section" id="principles">
+  <h2 class="section-title"><span class="emoji">📘</span> 设计原则总览</h2>
+  <p class="section-desc">设计原则是指导软件设计和架构的核心理念，帮助开发者写出高内聚、低耦合、易维护的代码。</p>
+
+  <table class="compare-table">
+    <thead><tr><th>原则</th><th>全称</th><th>核心思想</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SRP</strong></td><td>Single Responsibility Principle</td><td>一个类应该只有一个引起变化的原因</td></tr>
+      <tr><td><strong>OCP</strong></td><td>Open-Closed Principle</td><td>对扩展开放，对修改关闭</td></tr>
+      <tr><td><strong>LSP</strong></td><td>Liskov Substitution Principle</td><td>子类必须能替换父类</td></tr>
+      <tr><td><strong>ISP</strong></td><td>Interface Segregation Principle</td><td>客户端不应依赖不需要的接口</td></tr>
+      <tr><td><strong>DIP</strong></td><td>Dependency Inversion Principle</td><td>依赖抽象而非具体实现</td></tr>
+      <tr><td><strong>DRY</strong></td><td>Don't Repeat Yourself</td><td>不要重复自己</td></tr>
+      <tr><td><strong>KISS</strong></td><td>Keep It Simple, Stupid</td><td>保持简单</td></tr>
+      <tr><td><strong>YAGNI</strong></td><td>You Aren't Gonna Need It</td><td>不要过度设计</td></tr>
+      <tr><td><strong>LoD</strong></td><td>Law of Demeter</td><td>最少知识原则</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SOLID -->
+<div class="section" id="solid">
+  <h2 class="section-title"><span class="emoji">⭐</span> SOLID 原则</h2>
+  <p class="section-desc">SOLID 是面向对象设计的五大基本原则，由 Robert C. Martin（Uncle Bob）提出，是构建可维护面向对象系统的基石。</p>
+</div>
+
+<!-- SRP -->
+<div class="subsection" id="srp">
+  <div class="subsection-header">
+    <h3 class="subsection-title">单一职责原则 (SRP)</h3>
+    <span class="subsection-tag tag-principle">S — Single Responsibility</span>
+  </div>
+  <p class="subsection-desc">一个类应该只有一个引起它变化的原因。换言之，一个类只做一件事。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>就一个类而言，应该仅有一个引起它变化的原因。如果一个类承担的职责过多，就等于把这些职责耦合在一起，一个职责的变化可能会削弱或抑制这个类完成其他职责的能力。</p>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>类中方法过多，且各方法操作的数据不同</li>
+        <li>类承担了多个不相关的职责（如数据持久化 + 业务逻辑 + 日志记录）</li>
+        <li>修改一个功能时经常影响其他不相关功能</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 SRP<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 一个类承担了用户管理、验证、邮件通知三种职责
+class UserService {
+  register(user: User): void {
+    // 职责1：验证
+    if (!user.email || !user.password) {
+      throw new Error("邮箱和密码不能为空");
+    }
+    if (user.password.length < 8) {
+      throw new Error("密码至少8位");
+    }
+    // 职责2：存储
+    db.save("users", user);
+    // 职责3：发邮件
+    smtp.send(user.email, "欢迎注册");
+  }
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 SRP<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 拆分为三个各司其职的类
+class UserValidator {
+  validate(user: User): void {
+    if (!user.email || !user.password)
+      throw new Error("邮箱和密码不能为空");
+    if (user.password.length < 8)
+      throw new Error("密码至少8位");
+  }
+}
+
+class UserRepository {
+  save(user: User): void {
+    db.save("users", user);
+  }
+}
+
+class EmailService {
+  sendWelcome(email: string): void {
+    smtp.send(email, "欢迎注册");
+  }
+}
+
+class UserService {
+  constructor(
+    private validator: UserValidator,
+    private repo: UserRepository,
+    private email: EmailService
+  ) {}
+  register(user: User): void {
+    this.validator.validate(user);  // 委托验证
+    this.repo.save(user);           // 委托存储
+    this.email.sendWelcome(user.email); // 委托通知
+  }
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- OCP -->
+<div class="subsection" id="ocp">
+  <div class="subsection-header">
+    <h3 class="subsection-title">开闭原则 (OCP)</h3>
+    <span class="subsection-tag tag-principle">O — Open-Closed</span>
+  </div>
+  <p class="subsection-desc">软件实体应该对扩展开放，对修改关闭。通过抽象和多态实现新增功能时不修改已有代码。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>软件实体（类、模块、函数等）应该可以扩展，但是不可修改。即在不修改原有代码的前提下，通过增加新代码来实现新功能。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>需要频繁添加新类型或新策略时</li>
+        <li>不同分支处理逻辑相似但类型不同</li>
+        <li>希望发布后无需重新编译已有代码就能扩展功能</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 OCP：每加一种形状就要改 AreaCalculator<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">class AreaCalculator {
+  calculate(shape: any): number {
+    if (shape.type === "circle") {
+      return Math.PI * shape.radius ** 2;
+    } else if (shape.type === "rectangle") {
+      return shape.width * shape.height;
+    }
+    // 新增三角形？必须修改这个方法 → 违反 OCP
+    throw new Error("不支持的形状");
+  }
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 OCP：通过抽象 + 多态扩展<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 定义抽象接口
+interface Shape {
+  area(): number;
+}
+
+// 具体实现：各自计算面积
+class Circle implements Shape {
+  constructor(private radius: number) {}
+  area(): number {
+    return Math.PI * this.radius ** 2;
+  }
+}
+
+class Rectangle implements Shape {
+  constructor(private w: number, private h: number) {}
+  area(): number {
+    return this.w * this.h;
+  }
+}
+
+// 新增三角形 —— 无需修改任何已有代码
+class Triangle implements Shape {
+  constructor(private base: number, private height: number) {}
+  area(): number {
+    return 0.5 * this.base * this.height;
+  }
+}
+
+// 计算器只依赖抽象，对扩展开放
+class AreaCalculator {
+  calculate(shape: Shape): number {
+    return shape.area();
+  }
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- LSP -->
+<div class="subsection" id="lsp">
+  <div class="subsection-header">
+    <h3 class="subsection-title">里氏替换原则 (LSP)</h3>
+    <span class="subsection-tag tag-principle">L — Liskov Substitution</span>
+  </div>
+  <p class="subsection-desc">所有引用父类的地方必须能透明地使用子类对象，且程序行为不会发生变化。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>子类型必须能够替换掉它们的基类型，而不影响程序的正确性。核心是子类不能违背父类的行为契约（前置条件不能更强，后置条件不能更弱）。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>设计继承体系时验证子类是否合理</li>
+        <li>子类重写父类方法时检查行为一致性</li>
+        <li>判断是否应该用继承还是组合</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 LSP：正方形继承长方形，但 setWidth 破坏了长方形契约<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">class Rectangle {
+  protected width: number = 0;
+  protected height: number = 0;
+  setWidth(w: number): void { this.width = w; }
+  setHeight(h: number): void { this.height = h; }
+  area(): number { return this.width * this.height; }
+}
+
+class Square extends Rectangle {
+  setWidth(w: number): void { this.width = w; this.height = w; }
+  setHeight(h: number): void { this.width = h; this.height = h; }
+}
+
+// 调用方期望 Rectangle 的行为
+function resize(r: Rectangle): void {
+  r.setWidth(5);
+  r.setHeight(10);
+  console.log(r.area()); // Rectangle→50, Square→100 行为不一致！
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 LSP：用共同基类代替继承<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 提取共同抽象，不再强行继承
+abstract class Shape {
+  abstract area(): number;
+}
+
+class Rectangle extends Shape {
+  constructor(private w: number, private h: number) { super(); }
+  setWidth(w: number): void { this.w = w; }
+  setHeight(h: number): void { this.h = h; }
+  area(): number { return this.w * this.h; }
+}
+
+class Square extends Shape {
+  constructor(private side: number) { super(); }
+  setSide(s: number): void { this.side = s; }
+  area(): number { return this.side ** 2; }
+}
+
+// 现在子类替换父类不会产生行为不一致
+function printArea(s: Shape): void {
+  console.log(s.area()); // 无论传入什么形状都正确
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ISP -->
+<div class="subsection" id="isp">
+  <div class="subsection-header">
+    <h3 class="subsection-title">接口隔离原则 (ISP)</h3>
+    <span class="subsection-tag tag-principle">I — Interface Segregation</span>
+  </div>
+  <p class="subsection-desc">客户端不应该被迫依赖它不使用的方法。将臃肿的接口拆分为更小、更具体的接口。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>客户端不应该依赖它不需要的接口。一个类对另一个类的依赖应该建立在最小的接口上。接口过大会导致实现类被迫实现不需要的方法。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>接口包含过多方法，部分实现类只需要其中几个</li>
+        <li>实现类被迫提供空方法或抛异常来满足接口</li>
+        <li>不同客户端只使用接口的不同子集</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 ISP：胖接口强迫打印机实现不需要的方法<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 臃肿接口
+interface Machine {
+  print(doc: string): void;
+  scan(doc: string): void;
+  fax(doc: string): void;
+}
+
+// 简单打印机被迫实现 scan 和 fax
+class SimplePrinter implements Machine {
+  print(doc: string): void { console.log("打印:", doc); }
+  scan(doc: string): void { throw new Error("不支持扫描"); }
+  fax(doc: string): void { throw new Error("不支持传真"); }
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 ISP：拆分为细粒度接口<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 按职责拆分
+interface Printer { print(doc: string): void; }
+interface Scanner { scan(doc: string): void; }
+interface FaxMachine { fax(doc: string): void; }
+
+// 简单打印机只实现需要的接口
+class SimplePrinter implements Printer {
+  print(doc: string): void { console.log("打印:", doc); }
+}
+
+// 多功能设备实现多个接口
+class MultiFunctionDevice implements Printer, Scanner, FaxMachine {
+  print(doc: string): void { console.log("打印:", doc); }
+  scan(doc: string): void { console.log("扫描:", doc); }
+  fax(doc: string): void { console.log("传真:", doc); }
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- DIP -->
+<div class="subsection" id="dip">
+  <div class="subsection-header">
+    <h3 class="subsection-title">依赖倒转原则 (DIP)</h3>
+    <span class="subsection-tag tag-principle">D — Dependency Inversion</span>
+  </div>
+  <p class="subsection-desc">高层模块不应依赖低层模块，二者都应依赖抽象。抽象不应依赖细节，细节应依赖抽象。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>① 高层模块不应该依赖低层模块，两者都应该依赖其抽象。② 抽象不应该依赖细节，细节应该依赖抽象。核心是面向接口编程，而非面向实现编程。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>高层业务逻辑直接依赖低层数据访问或外部服务</li>
+        <li>需要切换底层实现（如更换数据库、消息队列）</li>
+        <li>单元测试时需要 Mock 依赖项</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 DIP：高层直接依赖低层具体实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 低层模块
+class MySQLDatabase {
+  save(data: string): void { console.log("MySQL保存:", data); }
+}
+
+// 高层模块直接依赖 MySQLDatabase（具体实现）
+class UserService {
+  private db = new MySQLDatabase(); // 硬编码依赖
+  saveUser(name: string): void {
+    this.db.save(name);
+  }
+}
+// 换成 PostgreSQL？必须修改 UserService → 耦合</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 DIP：通过抽象解耦<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 抽象接口
+interface IDatabase {
+  save(data: string): void;
+}
+
+// 低层实现依赖抽象
+class MySQLDatabase implements IDatabase {
+  save(data: string): void { console.log("MySQL保存:", data); }
+}
+class PostgreSQLDatabase implements IDatabase {
+  save(data: string): void { console.log("PostgreSQL保存:", data); }
+}
+
+// 高层也依赖抽象 —— 通过构造注入
+class UserService {
+  constructor(private db: IDatabase) {} // 依赖抽象
+  saveUser(name: string): void {
+    this.db.save(name);
+  }
+}
+
+// 使用时注入具体实现
+const svc = new UserService(new MySQLDatabase());
+const svc2 = new UserService(new PostgreSQLDatabase());
+// 切换数据库无需修改 UserService</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- DRY -->
+<div class="subsection" id="dry">
+  <div class="subsection-header">
+    <h3 class="subsection-title">DRY 原则 (Don't Repeat Yourself)</h3>
+    <span class="subsection-tag tag-principle">DRY</span>
+  </div>
+  <p class="subsection-desc">系统中的每一项知识都必须有唯一、明确、权威的表示。消除重复，提高可维护性。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>每一个知识点在系统中都应该有唯一的、权威的表示。重复的代码意味着修改时需要改多处，遗漏一处就会产生 Bug。DRY 不仅适用于代码，也适用于数据库 Schema、测试逻辑、构建脚本等。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>多处出现几乎相同的代码块</li>
+        <li>相同的业务规则在不同地方分别实现</li>
+        <li>常量、配置值散落在代码各处</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 DRY：重复的校验逻辑<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">function createUser(name: string, email: string) {
+  if (!name || name.length < 2) throw new Error("姓名无效");
+  if (!email || !email.includes("@")) throw new Error("邮箱无效");
+  // ...创建用户
+}
+function updateUser(name: string, email: string) {
+  if (!name || name.length < 2) throw new Error("姓名无效"); // 重复！
+  if (!email || !email.includes("@")) throw new Error("邮箱无效"); // 重复！
+  // ...更新用户
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 DRY：提取公共校验函数<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 唯一的校验逻辑来源
+function validateUser(name: string, email: string): void {
+  if (!name || name.length < 2) throw new Error("姓名无效");
+  if (!email || !email.includes("@")) throw new Error("邮箱无效");
+}
+
+function createUser(name: string, email: string) {
+  validateUser(name, email);
+  // ...创建用户
+}
+function updateUser(name: string, email: string) {
+  validateUser(name, email); // 复用
+  // ...更新用户
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- KISS -->
+<div class="subsection" id="kiss">
+  <div class="subsection-header">
+    <h3 class="subsection-title">KISS 原则 (Keep It Simple, Stupid)</h3>
+    <span class="subsection-tag tag-principle">KISS</span>
+  </div>
+  <p class="subsection-desc">保持简单。用最简单的方式解决问题，避免不必要的复杂性。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>大多数系统在保持简单而不是变得复杂时运作得更好。简单性应该是设计的一个关键目标，不必要的复杂性应该被避免。不要为了展示技术而过度设计。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>过度使用设计模式导致代码难以理解</li>
+        <li>简单问题用了复杂的框架或架构</li>
+        <li>引入不必要的抽象层、配置或间接引用</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 KISS：简单需求过度设计<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 只需要从配置读一个值，却搞了完整的状态机
+abstract class ConfigState {
+  abstract getValue(key: string): string;
+}
+class LoadingState extends ConfigState {
+  getValue(key: string): string { throw new Error("加载中"); }
+}
+class ReadyState extends ConfigState {
+  constructor(private data: Record<string, string>) { super(); }
+  getValue(key: string): string { return this.data[key]; }
+}
+class ConfigManager {
+  private state: ConfigState = new LoadingState();
+  load(data: Record<string, string>) { this.state = new ReadyState(data); }
+  get(key: string): string { return this.state.getValue(key); }
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 KISS：直接解决<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 读取配置就是读一个对象
+const config: Record<string, string> = JSON.parse(
+  fs.readFileSync("config.json", "utf-8")
+);
+const value = config["api_key"]; // 完事</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- YAGNI -->
+<div class="subsection" id="yagni">
+  <div class="subsection-header">
+    <h3 class="subsection-title">YAGNI 原则 (You Aren't Gonna Need It)</h3>
+    <span class="subsection-tag tag-principle">YAGNI</span>
+  </div>
+  <p class="subsection-desc">不要实现当前不需要的功能。避免为想象中的未来需求编写代码。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>你不会需要它。永远不要因为"将来可能需要"就去实现一个功能。只在真正需要的时候才去写，这样可以减少代码量、降低维护成本、避免死代码堆积。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>为"将来可能扩展"预留接口或抽象层</li>
+        <li>添加当前需求不需要的配置项或参数</li>
+        <li>提前实现"通用框架"而当前只有一个具体场景</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 YAGNI：提前实现用不到的通用性<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 当前只需要支持 HTTP，却为 FTP、SMTP 预留了抽象
+interface ProtocolAdapter {
+  connect(): void;
+  send(data: string): void;
+  disconnect(): void;
+}
+class HttpAdapter implements ProtocolAdapter { /*...*/ }
+class FtpAdapter implements ProtocolAdapter { /*...*/ } // 没人用
+class SmtpAdapter implements ProtocolAdapter { /*...*/ } // 没人用
+class ProtocolFactory {
+  create(type: string): ProtocolAdapter { /*...*/ }
+}
+// 但实际上项目中只用到了 HttpAdapter</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 YAGNI：只做当前需要的<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 当前只需要 HTTP，就直接用
+class HttpClient {
+  async get(url: string): Promise<Response> {
+    return fetch(url);
+  }
+  async post(url: string, body: unknown): Promise<Response> {
+    return fetch(url, { method: "POST", body: JSON.stringify(body) });
+  }
+}
+// 将来真的需要 FTP 时再提取抽象也不迟</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- LoD -->
+<div class="subsection" id="lod">
+  <div class="subsection-header">
+    <h3 class="subsection-title">迪米特法则 (Law of Demeter)</h3>
+    <span class="subsection-tag tag-principle">LoD — 最少知识原则</span>
+  </div>
+  <p class="subsection-desc">一个对象应该对其他对象保持最少的了解。只与"直接朋友"通信。</p>
+
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>一个对象应该对其他对象有最少的了解。具体规则：一个方法只应该调用以下对象的方法——①自身 ②方法参数 ③自身创建的对象 ④自身的直接成员。不应该调用"朋友的朋友"的方法。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul>
+        <li>出现链式调用 a.getB().getC().doSomething() 的深层访问</li>
+        <li>类需要了解其他类内部结构才能工作</li>
+        <li>模块间耦合度过高，修改一个类影响多个不相关模块</li>
+      </ul>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label bad">❌ 违反 LoD：通过链式调用深入访问陌生人<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">class Customer {
+  constructor(private wallet: Wallet) {}
+  getWallet(): Wallet { return this.wallet; }
+}
+class Wallet {
+  balance: number = 100;
+  deduct(amount: number): void { this.balance -= amount; }
+}
+
+// 收银员直接操作顾客钱包 —— 知道太多了
+class Cashier {
+  checkout(customer: Customer, amount: number): void {
+    const wallet = customer.getWallet(); // 访问了 Customer 的内部
+    wallet.deduct(amount);               // 又访问了 Wallet 的方法
+    // Cashier 同时依赖 Customer 和 Wallet 两个类
+  }
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label good">✅ 遵循 LoD：只跟直接朋友说话<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">class Wallet {
+  private balance: number = 100;
+  deduct(amount: number): boolean {
+    if (this.balance >= amount) {
+      this.balance -= amount;
+      return true;
+    }
+    return false;
+  }
+}
+class Customer {
+  constructor(private wallet: Wallet) {}
+  // Customer 封装了支付逻辑，不暴露 Wallet
+  pay(amount: number): boolean {
+    return this.wallet.deduct(amount);
+  }
+}
+
+// 收银员只与 Customer 交互（直接朋友）
+class Cashier {
+  checkout(customer: Customer, amount: number): boolean {
+    return customer.pay(amount); // 不需要知道 Wallet 的存在
+  }
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 设计模式 ==================== -->
+<div class="section" id="patterns">
+  <h2 class="section-title"><span class="emoji">🏗️</span> 设计模式总览</h2>
+  <p class="section-desc">设计模式是前人总结的、在特定场景下解决软件设计问题的经验方案。GoF（Gang of Four）归纳了 23 种经典设计模式，分为创建型、结构型、行为型三大类。</p>
+
+  <table class="compare-table">
+    <thead><tr><th>分类</th><th>关注点</th><th>包含模式</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:var(--success)">创建型</strong></td><td>对象的创建机制</td><td>单例、工厂方法、抽象工厂、建造者、原型</td></tr>
+      <tr><td><strong style="color:#b45309">结构型</strong></td><td>类与对象的组合</td><td>适配器、桥接、组合、装饰器、外观、享元、代理</td></tr>
+      <tr><td><strong style="color:var(--purple)">行为型</strong></td><td>对象间的通信与职责分配</td><td>责任链、命令、迭代器、中介者、备忘录、观察者、状态、策略、模板方法、访问者</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============ 创建型模式 ============ -->
+<div class="section">
+  <h2 class="section-title"><span class="emoji">🟢</span> 创建型模式</h2>
+  <p class="section-desc">创建型模式关注对象的创建过程，将对象的创建与使用分离，使系统更灵活。</p>
+</div>
+
+<!-- Singleton -->
+<div class="subsection" id="singleton">
+  <div class="subsection-header">
+    <h3 class="subsection-title">单例模式 (Singleton)</h3>
+    <span class="subsection-tag tag-create">创建型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>确保一个类只有一个实例，并提供一个全局访问点。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>全局配置管理</li><li>数据库连接池</li><li>日志记录器</li><li>缓存服务</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">单例模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">class Singleton {
+  private static instance: Singleton | null = null;
+
+  // 私有构造函数，防止外部 new
+  private constructor(
+    private config: Record<string, unknown> = {}
+  ) {}
+
+  // 全局访问点
+  static getInstance(): Singleton {
+    if (!Singleton.instance) {
+      Singleton.instance = new Singleton({ env: "production" });
+    }
+    return Singleton.instance;
+  }
+
+  get<T>(key: string): T {
+    return this.config[key] as T;
+  }
+}
+
+// 使用
+const s1 = Singleton.getInstance();
+const s2 = Singleton.getInstance();
+console.log(s1 === s2); // true —— 同一个实例</code></pre>
+    </div>
+    <div class="info-box warn"><strong>⚠️ 注意</strong>单例模式可能引入全局状态，增加耦合度，在并发环境下需注意线程安全。现代实践中可用依赖注入替代。</div>
+  </div>
+</div>
+
+<!-- Factory Method -->
+<div class="subsection" id="factory-method">
+  <div class="subsection-header">
+    <h3 class="subsection-title">工厂方法模式 (Factory Method)</h3>
+    <span class="subsection-tag tag-create">创建型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>定义一个创建对象的接口，但由子类决定实例化哪个类。工厂方法使一个类的实例化延迟到其子类。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>创建对象时不想指定具体类</li><li>需要根据条件创建不同子类实例</li><li>希望将对象创建逻辑集中管理</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">工厂方法模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 产品接口
+interface Logger {
+  log(message: string): void;
+}
+
+// 具体产品
+class ConsoleLogger implements Logger {
+  log(message: string): void { console.log("[Console]", message); }
+}
+class FileLogger implements Logger {
+  log(message: string): void { console.log("[File]", message); }
+}
+
+// 工厂接口
+interface LoggerFactory {
+  createLogger(): Logger;
+}
+
+// 具体工厂：每个子类决定创建哪种产品
+class ConsoleLoggerFactory implements LoggerFactory {
+  createLogger(): Logger { return new ConsoleLogger(); }
+}
+class FileLoggerFactory implements LoggerFactory {
+  createLogger(): Logger { return new FileLogger(); }
+}
+
+// 使用
+const factory: LoggerFactory = new FileLoggerFactory();
+const logger = factory.createLogger();
+logger.log("Hello World"); // [File] Hello World</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Abstract Factory -->
+<div class="subsection" id="abstract-factory">
+  <div class="subsection-header">
+    <h3 class="subsection-title">抽象工厂模式 (Abstract Factory)</h3>
+    <span class="subsection-tag tag-create">创建型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>提供一个创建一系列相关或相互依赖对象的接口，而无需指定它们具体的类。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>系统需要独立于产品的创建方式</li><li>需要创建一族相关产品（如 UI 组件族：暗色/亮色主题）</li><li>产品族需要一起使用，保证一致性</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">抽象工厂模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 产品族接口
+interface Button { render(): string; }
+interface Input { render(): string; }
+
+// 暗色主题产品
+class DarkButton implements Button {
+  render(): string { return "🌑 暗色按钮"; }
+}
+class DarkInput implements Input {
+  render(): string { return "🌑 暗色输入框"; }
+}
+
+// 亮色主题产品
+class LightButton implements Button {
+  render(): string { return "☀️ 亮色按钮"; }
+}
+class LightInput implements Input {
+  render(): string { return "☀️ 亮色输入框"; }
+}
+
+// 抽象工厂：创建一族产品
+interface UIFactory {
+  createButton(): Button;
+  createInput(): Input;
+}
+
+// 具体工厂
+class DarkUIFactory implements UIFactory {
+  createButton(): Button { return new DarkButton(); }
+  createInput(): Input { return new DarkInput(); }
+}
+class LightUIFactory implements UIFactory {
+  createButton(): Button { return new LightButton(); }
+  createInput(): Input { return new LightInput(); }
+}
+
+// 使用：切换主题只需换工厂
+const factory: UIFactory = new DarkUIFactory();
+console.log(factory.createButton().render()); // 🌑 暗色按钮
+console.log(factory.createInput().render());  // 🌑 暗色输入框</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Builder -->
+<div class="subsection" id="builder">
+  <div class="subsection-header">
+    <h3 class="subsection-title">建造者模式 (Builder)</h3>
+    <span class="subsection-tag tag-create">创建型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>对象有大量可选参数，构造函数参数爆炸</li><li>需要分步骤创建复杂对象</li><li>同一构建过程需要产生不同表示</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">建造者模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">class HttpRequest {
+  constructor(
+    public method: string,
+    public url: string,
+    public headers: Record<string, string>,
+    public body: string | null,
+    public timeout: number
+  ) {}
+}
+
+// 建造者：流式 API 分步构建
+class HttpRequestBuilder {
+  private method = "GET";
+  private url = "";
+  private headers: Record<string, string> = {};
+  private body: string | null = null;
+  private timeout = 30000;
+
+  setMethod(method: string): this {
+    this.method = method; return this;
+  }
+  setUrl(url: string): this {
+    this.url = url; return this;
+  }
+  addHeader(key: string, value: string): this {
+    this.headers[key] = value; return this;
+  }
+  setBody(body: string): this {
+    this.body = body; return this;
+  }
+  setTimeout(ms: number): this {
+    this.timeout = ms; return this;
+  }
+  build(): HttpRequest {
+    return new HttpRequest(
+      this.method, this.url, this.headers, this.body, this.timeout
+    );
+  }
+}
+
+// 使用：清晰、可读、可选参数灵活
+const req = new HttpRequestBuilder()
+  .setMethod("POST")
+  .setUrl("https://api.example.com/users")
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Authorization", "Bearer token123")
+  .setBody(JSON.stringify({ name: "张三" }))
+  .setTimeout(5000)
+  .build();</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Prototype -->
+<div class="subsection" id="prototype">
+  <div class="subsection-header">
+    <h3 class="subsection-title">原型模式 (Prototype)</h3>
+    <span class="subsection-tag tag-create">创建型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>用原型实例指定创建对象的种类，并通过拷贝这些原型来创建新对象。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>创建新对象成本较大（如需要数据库查询或网络请求）</li><li>需要保持对象结构一致但值不同</li><li>避免重复初始化复杂对象</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">原型模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 原型接口
+interface Cloneable<T> {
+  clone(): T;
+}
+
+class Document implements Cloneable<Document> {
+  constructor(
+    public title: string,
+    public content: string,
+    public metadata: Record<string, string>
+  ) {}
+
+  // 深拷贝
+  clone(): Document {
+    return new Document(
+      this.title,
+      this.content,
+      JSON.parse(JSON.stringify(this.metadata)) // 深拷贝
+    );
+  }
+
+  toString(): string {
+    return `${this.title}\n内容: ${this.content}\n元数据: ${JSON.stringify(this.metadata)}`;
+  }
+}
+
+// 使用
+const template = new Document("月报模板", "本月工作总结...", {
+  author: "系统",
+  createdAt: "2026-01-01"
+});
+
+// 通过克隆快速创建新文档
+const janReport = template.clone();
+janReport.title = "1月月报";
+janReport.metadata.author = "张三";
+
+console.log(template.metadata.author);  // "系统"（深拷贝互不影响）
+console.log(janReport.metadata.author); // "张三"</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 结构型模式 ============ -->
+<div class="section">
+  <h2 class="section-title"><span class="emoji">🟡</span> 结构型模式</h2>
+  <p class="section-desc">结构型模式关注如何将类或对象组合成更大的结构，以实现新功能或更好的灵活性。</p>
+</div>
+
+<!-- Adapter -->
+<div class="subsection" id="adapter">
+  <div class="subsection-header">
+    <h3 class="subsection-title">适配器模式 (Adapter)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>将一个类的接口转换成客户希望的另一个接口。使得原本由于接口不兼容而不能一起工作的类可以一起工作。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>需要使用已有的类，但其接口与需求不匹配</li><li>对接第三方库，接口不兼容</li><li>统一多个不同接口的调用方式</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">适配器模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 目标接口：系统期望的接口
+interface PaymentGateway {
+  pay(amount: number, currency: string): boolean;
+}
+
+// 已有类：第三方支付库，接口不同
+class StripeSDK {
+  charge(usdCents: number): { success: boolean } {
+    console.log(`Stripe扣款 ${usdCents} 美分`);
+    return { success: true };
+  }
+}
+
+// 适配器：把 Stripe 接口转换成系统期望的接口
+class StripeAdapter implements PaymentGateway {
+  constructor(private stripe: StripeSDK) {}
+  pay(amount: number, currency: string): boolean {
+    // 转换：金额转美分 + 只支持美元
+    const cents = Math.round(amount * 100);
+    const result = this.stripe.charge(cents);
+    return result.success;
+  }
+}
+
+// 使用：系统只跟 PaymentGateway 打交道
+function checkout(gateway: PaymentGateway, amount: number) {
+  gateway.pay(amount, "USD");
+}
+
+const adapter = new StripeAdapter(new StripeSDK());
+checkout(adapter, 99.99); // Stripe扣款 9999 美分</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Bridge -->
+<div class="subsection" id="bridge">
+  <div class="subsection-header">
+    <h3 class="subsection-title">桥接模式 (Bridge)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>将抽象部分与它的实现部分分离，使它们都可以独立地变化。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>需要在两个独立维度上扩展（如形状×颜色、消息×发送渠道）</li><li>避免类爆炸（继承组合过多）</li><li>运行时切换实现</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">桥接模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 实现维度：渲染器
+interface Renderer {
+  render(shape: string): string;
+}
+class VectorRenderer implements Renderer {
+  render(shape: string): string { return `矢量绘制 ${shape}`; }
+}
+class RasterRenderer implements Renderer {
+  render(shape: string): string { return `像素绘制 ${shape}`; }
+}
+
+// 抽象维度：形状（持有渲染器引用 = 桥梁）
+abstract class Shape {
+  constructor(protected renderer: Renderer) {}
+  abstract draw(): string;
+}
+class Circle extends Shape {
+  draw(): string { return this.renderer.render("圆形"); }
+}
+class Square extends Shape {
+  draw(): string { return this.renderer.render("方形"); }
+}
+
+// 两个维度独立变化，任意组合
+const vCircle = new Circle(new VectorRenderer());
+const rSquare = new Square(new RasterRenderer());
+console.log(vCircle.draw()); // 矢量绘制 圆形
+console.log(rSquare.draw()); // 像素绘制 方形</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Composite -->
+<div class="subsection" id="composite">
+  <div class="subsection-header">
+    <h3 class="subsection-title">组合模式 (Composite)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>将对象组合成树形结构以表示"部分-整体"的层次结构。使得客户端可以一致地处理单个对象和组合对象。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>文件系统（文件/文件夹）</li><li>UI 组件树（容器/叶子组件）</li><li>组织架构管理</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">组合模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 统一接口
+interface FileSystemNode {
+  getName(): string;
+  getSize(): number;
+  print(indent?: string): void;
+}
+
+// 叶子节点：文件
+class File implements FileSystemNode {
+  constructor(private name: string, private size: number) {}
+  getName(): string { return this.name; }
+  getSize(): number { return this.size; }
+  print(indent: string = ""): void {
+    console.log(`${indent}📄 ${this.name} (${this.size}KB)`);
+  }
+}
+
+// 组合节点：文件夹
+class Folder implements FileSystemNode {
+  private children: FileSystemNode[] = [];
+  constructor(private name: string) {}
+  getName(): string { return this.name; }
+  getSize(): number {
+    return this.children.reduce((sum, c) => sum + c.getSize(), 0);
+  }
+  add(node: FileSystemNode): this {
+    this.children.push(node); return this;
+  }
+  print(indent: string = ""): void {
+    console.log(`${indent}📁 ${this.name}/ (${this.getSize()}KB)`);
+    this.children.forEach(c => c.print(indent + "  "));
+  }
+}
+
+// 使用：客户端一致地处理文件和文件夹
+const root = new Folder("project")
+  .add(new File("index.html", 5))
+  .add(new File("style.css", 3))
+  .add(new Folder("src")
+    .add(new File("app.ts", 12))
+    .add(new File("utils.ts", 4))
+  );
+root.print();
+// 📁 project/ (24KB)
+//   📄 index.html (5KB)
+//   📄 style.css (3KB)
+//   📁 src/ (16KB)
+//     📄 app.ts (12KB)
+//     📄 utils.ts (4KB)</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Decorator -->
+<div class="subsection" id="decorator">
+  <div class="subsection-header">
+    <h3 class="subsection-title">装饰器模式 (Decorator)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>动态地给一个对象添加额外的职责。比生成子类（继承）更加灵活。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>需要动态添加/撤销功能</li><li>不便通过继承扩展（类被 final 封装或继承层次过深）</li><li>咖啡配料、冰淇淋 toppings、日志/缓存中间件</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">装饰器模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 组件接口
+interface Coffee {
+  cost(): number;
+  description(): string;
+}
+
+// 基础组件
+class SimpleCoffee implements Coffee {
+  cost(): number { return 10; }
+  description(): string { return "咖啡"; }
+}
+
+// 装饰器基类
+abstract class CoffeeDecorator implements Coffee {
+  constructor(protected coffee: Coffee) {}
+  abstract cost(): number;
+  abstract description(): string;
+}
+
+// 具体装饰器：加奶
+class MilkDecorator extends CoffeeDecorator {
+  cost(): number { return this.coffee.cost() + 3; }
+  description(): string { return this.coffee.description() + " +牛奶"; }
+}
+
+// 具体装饰器：加糖
+class SugarDecorator extends CoffeeDecorator {
+  cost(): number { return this.coffee.cost() + 1; }
+  description(): string { return this.coffee.description() + " +糖"; }
+}
+
+// 使用：动态叠加
+const coffee = new SugarDecorator(
+  new MilkDecorator(new SimpleCoffee())
+);
+console.log(coffee.description()); // 咖啡 +牛奶 +糖
+console.log(coffee.cost());         // 14</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Facade -->
+<div class="subsection" id="facade">
+  <div class="subsection-header">
+    <h3 class="subsection-title">外观模式 (Facade)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>为子系统中的一组接口提供一个一致的界面。定义一个高层接口，使得子系统更容易使用。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>子系统复杂，希望提供简化入口</li><li>分层架构中为每层提供门面</li><li>封装遗留系统，提供新接口</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">外观模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 复杂子系统
+class CPU { freeze(): void { console.log("CPU冻结"); } }
+class Memory { load(addr: string): void { console.log(`内存加载: ${addr}`); } }
+class HardDrive { read(file: string): string { return `数据(${file})`; } }
+
+// 外观：一键启动，隐藏子系统的复杂交互
+class ComputerFacade {
+  private cpu = new CPU();
+  private memory = new Memory();
+  private hardDrive = new HardDrive();
+
+  start(): void {
+    this.cpu.freeze();
+    this.memory.load("0x00");
+    const data = this.hardDrive.read("boot.bin");
+    console.log(`启动完成，读取: ${data}`);
+  }
+}
+
+// 使用：客户端不需要了解子系统细节
+const pc = new ComputerFacade();
+pc.start();
+// CPU冻结 → 内存加载: 0x00 → 启动完成，读取: 数据(boot.bin)</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Flyweight -->
+<div class="subsection" id="flyweight">
+  <div class="subsection-header">
+    <h3 class="subsection-title">享元模式 (Flyweight)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>运用共享技术有效地支持大量细粒度的对象。将对象内部状态（可共享）与外部状态（不可共享）分离。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>大量相似对象，内存开销大</li><li>对象大部分状态可外部化</li><li>文本编辑器字符渲染、游戏中的粒子/树木</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">享元模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 享元对象：共享的内在状态（树的类型）
+class TreeType {
+  constructor(
+    public name: string,
+    public color: string,
+    public texture: string
+  ) {}
+  draw(x: number, y: number): void {
+    console.log(`${this.color}${this.name} 绘制于 (${x}, ${y})`);
+  }
+}
+
+// 享元工厂：缓存并复用
+class TreeFactory {
+  private static pool = new Map<string, TreeType>();
+  static get(name: string, color: string, texture: string): TreeType {
+    const key = `${name}_${color}_${texture}`;
+    if (!this.pool.has(key)) {
+      this.pool.set(key, new TreeType(name, color, texture));
+      console.log(`创建新树种: ${name}`);
+    }
+    return this.pool.get(key)!;
+  }
+}
+
+// 上下文：外部状态（位置）+ 享元引用
+class Tree {
+  constructor(private x: number, private y: number, private type: TreeType) {}
+  plant(): void { this.type.draw(this.x, this.y); }
+}
+
+// 使用：1000 棵树只有 3 个 TreeType 对象
+const trees: Tree[] = [];
+trees.push(new Tree(1, 1, TreeFactory.get("橡树", "🟢", "粗糙")));
+trees.push(new Tree(2, 5, TreeFactory.get("橡树", "🟢", "粗糙"))); // 复用
+trees.push(new Tree(3, 3, TreeFactory.get("松树", "🌲", "鳞片")));
+trees.forEach(t => t.plant());</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Proxy -->
+<div class="subsection" id="proxy">
+  <div class="subsection-header">
+    <h3 class="subsection-title">代理模式 (Proxy)</h3>
+    <span class="subsection-tag tag-struct">结构型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>为其他对象提供一种代理以控制对这个对象的访问。代理对象在客户端和目标对象之间起到中介作用。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>延迟加载（虚拟代理）</li><li>权限控制（保护代理）</li><li>缓存请求结果（智能代理）</li><li>远程服务调用（远程代理）</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">代理模式实现：缓存代理<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 主题接口
+interface ImageService {
+  loadImage(url: string): Promise<string>;
+}
+
+// 真实主题：耗时的图片加载
+class RealImageService implements ImageService {
+  async loadImage(url: string): Promise<string> {
+    console.log(`⏳ 从网络下载: ${url}`);
+    await new Promise(r => setTimeout(r, 1000)); // 模拟网络延迟
+    return `图片数据(${url})`;
+  }
+}
+
+// 代理：添加缓存
+class ImageProxy implements ImageService {
+  private cache = new Map<string, string>();
+  constructor(private real: RealImageService) {}
+
+  async loadImage(url: string): Promise<string> {
+    if (this.cache.has(url)) {
+      console.log(`✅ 缓存命中: ${url}`);
+      return this.cache.get(url)!;
+    }
+    const data = await this.real.loadImage(url);
+    this.cache.set(url, data);
+    return data;
+  }
+}
+
+// 使用
+const proxy = new ImageProxy(new RealImageService());
+await proxy.loadImage("a.png"); // ⏳ 从网络下载: a.png
+await proxy.loadImage("a.png"); // ✅ 缓存命中: a.png</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 行为型模式 ============ -->
+<div class="section">
+  <h2 class="section-title"><span class="emoji">🟣</span> 行为型模式</h2>
+  <p class="section-desc">行为型模式关注对象之间的通信和职责分配，描述对象之间如何协作完成任务。</p>
+</div>
+
+<!-- Chain of Responsibility -->
+<div class="subsection" id="chain">
+  <div class="subsection-header">
+    <h3 class="subsection-title">责任链模式 (Chain of Responsibility)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>将请求的发送者和接收者解耦，使多个对象都有机会处理请求。将这些对象连成一条链，沿链传递请求，直到有一个对象处理为止。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>多层审批流程</li><li>事件冒泡处理</li><li>HTTP 中间件管道</li><li>日志级别过滤</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">责任链模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">abstract class Handler {
+  private next: Handler | null = null;
+  setNext(h: Handler): Handler { this.next = h; return h; }
+  handle(request: string): string | null {
+    if (this.next) return this.next.handle(request);
+    return null;
+  }
+}
+
+// 具体处理者
+class AuthHandler extends Handler {
+  handle(request: string): string | null {
+    if (!request.includes("token"))
+      return "❌ 认证失败：缺少 token";
+    return super.handle(request);
+  }
+}
+class RateLimitHandler extends Handler {
+  handle(request: string): string | null {
+    if (request.includes("spam"))
+      return "❌ 限流：请求过于频繁";
+    return super.handle(request);
+  }
+}
+class BizHandler extends Handler {
+  handle(request: string): string | null {
+    return "✅ 业务处理完成";
+  }
+}
+
+// 构建责任链
+const chain = new AuthHandler();
+chain.setNext(new RateLimitHandler()).setNext(new BizHandler());
+
+console.log(chain.handle("GET /api token"));      // ✅ 业务处理完成
+console.log(chain.handle("GET /api spam token")); // ❌ 限流
+console.log(chain.handle("GET /api"));            // ❌ 认证失败</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Command -->
+<div class="subsection" id="command">
+  <div class="subsection-header">
+    <h3 class="subsection-title">命令模式 (Command)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>将一个请求封装为一个对象，从而允许用不同的请求对客户进行参数化、排队请求或记录日志，以及支持撤销操作。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>需要撤销/重做功能</li><li>任务队列、宏命令</li><li>GUI 操作（按钮点击 → 命令）</li><li>事务管理</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">命令模式实现：支持撤销的编辑器<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 命令接口
+interface Command {
+  execute(): void;
+  undo(): void;
+}
+
+// 接收者
+class TextEditor {
+  private text = "";
+  getText(): string { return this.text; }
+  insert(text: string): void { this.text += text; }
+  delete(n: number): string {
+    const removed = this.text.slice(-n);
+    this.text = this.text.slice(0, -n);
+    return removed;
+  }
+}
+
+// 具体命令：插入文本
+class InsertCommand implements Command {
+  constructor(private editor: TextEditor, private text: string) {}
+  execute(): void { this.editor.insert(this.text); }
+  undo(): void { this.editor.delete(this.text.length); }
+}
+
+// 调用者：管理命令历史
+class CommandManager {
+  private history: Command[] = [];
+  execute(cmd: Command): void {
+    cmd.execute();
+    this.history.push(cmd);
+  }
+  undo(): void {
+    const cmd = this.history.pop();
+    cmd?.undo();
+  }
+}
+
+// 使用
+const editor = new TextEditor();
+const manager = new CommandManager();
+manager.execute(new InsertCommand(editor, "Hello "));
+manager.execute(new InsertCommand(editor, "World!"));
+console.log(editor.getText()); // Hello World!
+manager.undo();
+console.log(editor.getText()); // Hello</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Iterator -->
+<div class="subsection" id="iterator">
+  <div class="subsection-header">
+    <h3 class="subsection-title">迭代器模式 (Iterator)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>提供一种方法顺序访问一个聚合对象中的各个元素，而又不暴露该对象的内部表示。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>自定义集合需要遍历能力</li><li>多种遍历方式（前序/中序/后序、深度/广度）</li><li>统一不同数据结构的遍历接口</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">迭代器模式实现<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 迭代器接口
+interface Iterator<T> {
+  hasNext(): boolean;
+  next(): T;
+}
+
+// 聚合接口
+interface Aggregate<T> {
+  createIterator(): Iterator<T>;
+}
+
+// 具体聚合：书架
+class Bookshelf implements Aggregate<string> {
+  constructor(private books: string[]) {}
+  createIterator(): Iterator<string> {
+    return new BookIterator(this.books);
+  }
+}
+
+// 具体迭代器
+class BookIterator implements Iterator<string> {
+  private index = 0;
+  constructor(private books: string[]) {}
+  hasNext(): boolean { return this.index < this.books.length; }
+  next(): string { return this.books[this.index++]; }
+}
+
+// 使用：遍历时不需要知道内部是数组
+const shelf = new Bookshelf(["JS高级", "CSS世界", "HTML5权威指南"]);
+const it = shelf.createIterator();
+while (it.hasNext()) {
+  console.log(it.next()); // JS高级 → CSS世界 → HTML5权威指南
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Mediator -->
+<div class="subsection" id="mediator">
+  <div class="subsection-header">
+    <h3 class="subsection-title">中介者模式 (Mediator)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>用一个中介对象来封装一系列的对象交互。中介者使各对象不需要显式地相互引用，从而使其耦合松散，而且可以独立地改变它们之间的交互。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>UI 组件间通信（表单联动）</li><li>聊天室消息分发</li><li>机场调度系统</li><li>多个对象之间存在复杂的网状引用</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">中介者模式实现：聊天室<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 中介者接口
+interface ChatMediator {
+  sendMessage(msg: string, user: User): void;
+  register(user: User): void;
+}
+
+// 同事类
+class User {
+  constructor(public name: string, private mediator: ChatMediator) {}
+  send(msg: string): void {
+    console.log(`${this.name} 发送: ${msg}`);
+    this.mediator.sendMessage(msg, this);
+  }
+  receive(msg: string, from: string): void {
+    console.log(`${this.name} 收到来自 ${from} 的消息: ${msg}`);
+  }
+}
+
+// 具体中介者
+class ChatRoom implements ChatMediator {
+  private users: User[] = [];
+  register(user: User): void { this.users.push(user); }
+  sendMessage(msg: string, sender: User): void {
+    // 中介者负责分发，用户之间不直接引用
+    this.users
+      .filter(u => u !== sender)
+      .forEach(u => u.receive(msg, sender.name));
+  }
+}
+
+// 使用：用户之间通过聊天室通信
+const room = new ChatRoom();
+const alice = new User("Alice", room);
+const bob = new User("Bob", room);
+const charlie = new User("Charlie", room);
+room.register(alice); room.register(bob); room.register(charlie);
+alice.send("大家好！");
+// Alice 发送: 大家好！
+// Bob 收到来自 Alice 的消息: 大家好！
+// Charlie 收到来自 Alice 的消息: 大家好！</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Memento -->
+<div class="subsection" id="memento">
+  <div class="subsection-header">
+    <h3 class="subsection-title">备忘录模式 (Memento)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>在不破坏封装性的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态，以便以后恢复。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>编辑器撤销功能</li><li>游戏存档/读档</li><li>事务回滚</li><li>状态快照</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">备忘录模式实现：游戏存档<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 备忘录：保存的状态快照
+class GameMemento {
+  constructor(
+    public readonly level: number,
+    public readonly score: number,
+    public readonly hp: number
+  ) {}
+}
+
+// 发起人：需要保存/恢复状态的对象
+class GameCharacter {
+  constructor(
+    private level: number,
+    private score: number,
+    private hp: number
+  ) {}
+  // 保存状态
+  save(): GameMemento {
+    return new GameMemento(this.level, this.score, this.hp);
+  }
+  // 恢复状态
+  restore(m: GameMemento): void {
+    this.level = m.level;
+    this.score = m.score;
+    this.hp = m.hp;
+  }
+  play(): void { this.level++; this.score += 100; this.hp -= 10; }
+  status(): string { return `Lv.${this.level} 分数:${this.score} HP:${this.hp}`; }
+}
+
+// 管理者：管理备忘录
+class SaveManager {
+  private saves: Map<string, GameMemento> = new Map();
+  save(name: string, m: GameMemento): void { this.saves.set(name, m); }
+  load(name: string): GameMemento | undefined { return this.saves.get(name); }
+}
+
+// 使用
+const player = new GameCharacter(1, 0, 100);
+const saves = new SaveManager();
+saves.save("关卡1前", player.save());
+player.play();
+console.log(player.status()); // Lv.2 分数:100 HP:90
+player.restore(saves.load("关卡1前")!);
+console.log(player.status()); // Lv.1 分数:0 HP:100</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Observer -->
+<div class="subsection" id="observer">
+  <div class="subsection-header">
+    <h3 class="subsection-title">观察者模式 (Observer)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>事件订阅/发布系统</li><li>数据绑定（MVVM 框架）</li><li>股价变动通知</li><li>消息队列消费</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">观察者模式实现：股价变动通知<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 观察者接口
+interface Observer {
+  update(stock: string, price: number): void;
+}
+
+// 主题接口
+interface Subject {
+  attach(o: Observer): void;
+  detach(o: Observer): void;
+  notify(): void;
+}
+
+// 具体主题：股票
+class Stock implements Subject {
+  private observers: Observer[] = [];
+  private price: number;
+  constructor(private symbol: string, initialPrice: number) {
+    this.price = initialPrice;
+  }
+  attach(o: Observer): void { this.observers.push(o); }
+  detach(o: Observer): void {
+    this.observers = this.observers.filter(x => x !== o);
+  }
+  notify(): void {
+    this.observers.forEach(o => o.update(this.symbol, this.price));
+  }
+  setPrice(newPrice: number): void {
+    const old = this.price;
+    this.price = newPrice;
+    console.log(`📈 ${this.symbol}: ${old} → ${newPrice}`);
+    this.notify();
+  }
+}
+
+// 具体观察者
+class PriceAlert implements Observer {
+  constructor(private name: string) {}
+  update(stock: string, price: number): void {
+    console.log(`  [${this.name}] ${stock} 当前价格: ${price}`);
+  }
+}
+
+// 使用
+const apple = new Stock("AAPL", 180);
+apple.attach(new PriceAlert("张三"));
+apple.attach(new PriceAlert("李四"));
+apple.setPrice(185);
+// 📈 AAPL: 180 → 185
+//   [张三] AAPL 当前价格: 185
+//   [李四] AAPL 当前价格: 185</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- State -->
+<div class="subsection" id="state">
+  <div class="subsection-header">
+    <h3 class="subsection-title">状态模式 (State)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>允许一个对象在其内部状态改变时改变它的行为。对象看起来似乎修改了它的类。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>对象行为随状态变化（订单状态机：待付款→已付款→已发货→已完成）</li><li>大量条件分支判断状态</li><li>自动售货机、红绿灯</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">状态模式实现：订单状态机<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">interface OrderState {
+  pay(ctx: OrderContext): void;
+  ship(ctx: OrderContext): void;
+  deliver(ctx: OrderContext): void;
+  cancel(ctx: OrderContext): void;
+  getName(): string;
+}
+
+// 上下文
+class OrderContext {
+  private state: OrderState;
+  constructor() { this.state = new PendingState(); }
+  setState(s: OrderState): void { this.state = s; }
+  getState(): string { return this.state.getName(); }
+  pay(): void { this.state.pay(this); }
+  ship(): void { this.state.ship(this); }
+  deliver(): void { this.state.deliver(this); }
+  cancel(): void { this.state.cancel(this); }
+}
+
+// 具体状态
+class PendingState implements OrderState {
+  getName(): string { return "待付款"; }
+  pay(ctx: OrderContext): void {
+    console.log("✅ 支付成功");
+    ctx.setState(new PaidState());
+  }
+  ship(): void { console.log("❌ 未付款，不能发货"); }
+  deliver(): void { console.log("❌ 未付款，不能送达"); }
+  cancel(): void { console.log("✅ 订单已取消"); ctx.setState(new CancelledState()); }
+}
+class PaidState implements OrderState {
+  getName(): string { return "已付款"; }
+  pay(): void { console.log("❌ 已付款，无需重复支付"); }
+  ship(ctx: OrderContext): void {
+    console.log("✅ 已发货"); ctx.setState(new ShippedState());
+  }
+  deliver(): void { console.log("❌ 尚未发货"); }
+  cancel(): void { console.log("✅ 已退款并取消"); ctx.setState(new CancelledState()); }
+}
+class ShippedState implements OrderState {
+  getName(): string { return "已发货"; }
+  pay(): void { console.log("❌ 已付款"); }
+  ship(): void { console.log("❌ 已发货"); }
+  deliver(ctx: OrderContext): void {
+    console.log("✅ 已送达"); ctx.setState(new DeliveredState());
+  }
+  cancel(): void { console.log("❌ 已发货，无法取消"); }
+}
+class DeliveredState implements OrderState {
+  getName(): string { return "已完成"; }
+  pay(): void { console.log("❌ 已完成"); }
+  ship(): void { console.log("❌ 已完成"); }
+  deliver(): void { console.log("❌ 已完成"); }
+  cancel(): void { console.log("❌ 已完成，无法取消"); }
+}
+class CancelledState implements OrderState {
+  getName(): string { return "已取消"; }
+  pay(): void { console.log("❌ 订单已取消"); }
+  ship(): void { console.log("❌ 订单已取消"); }
+  deliver(): void { console.log("❌ 订单已取消"); }
+  cancel(): void { console.log("❌ 已经是取消状态"); }
+}
+
+// 使用
+const order = new OrderContext();
+console.log(order.getState()); // 待付款
+order.ship();    // ❌ 未付款，不能发货
+order.pay();     // ✅ 支付成功
+order.ship();    // ✅ 已发货
+order.deliver(); // ✅ 已送达
+console.log(order.getState()); // 已完成</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Strategy -->
+<div class="subsection" id="strategy">
+  <div class="subsection-header">
+    <h3 class="subsection-title">策略模式 (Strategy)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>定义一系列算法，将每一个算法封装起来，并使它们可以相互替换。策略模式使得算法可以独立于使用它的客户端而变化。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>多种支付方式（微信/支付宝/银行卡）</li><li>排序算法切换</li><li>促销折扣策略</li><li>消除大量 if-else 分支</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">策略模式实现：折扣策略<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 策略接口
+interface DiscountStrategy {
+  calculate(price: number): number;
+}
+
+// 具体策略
+class NoDiscount implements DiscountStrategy {
+  calculate(price: number): number { return price; }
+}
+class PercentageDiscount implements DiscountStrategy {
+  constructor(private rate: number) {} // rate: 0.8 = 八折
+  calculate(price: number): number { return price * this.rate; }
+}
+class FullReductionDiscount implements DiscountStrategy {
+  constructor(private threshold: number, private reduction: number) {}
+  calculate(price: number): number {
+    return price >= this.threshold ? price - this.reduction : price;
+  }
+}
+
+// 上下文
+class PriceCalculator {
+  constructor(private strategy: DiscountStrategy) {}
+  setStrategy(s: DiscountStrategy): void { this.strategy = s; }
+  finalPrice(price: number): number {
+    return this.strategy.calculate(price);
+  }
+}
+
+// 使用
+const calc = new PriceCalculator(new NoDiscount());
+console.log(calc.finalPrice(100)); // 100
+
+calc.setStrategy(new PercentageDiscount(0.8));
+console.log(calc.finalPrice(100)); // 80
+
+calc.setStrategy(new FullReductionDiscount(100, 20));
+console.log(calc.finalPrice(100)); // 80 (满100减20)</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Template Method -->
+<div class="subsection" id="template">
+  <div class="subsection-header">
+    <h3 class="subsection-title">模板方法模式 (Template Method)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>定义一个操作中算法的骨架，而将一些步骤延迟到子类中。模板方法使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>框架定义流程骨架，子类填充细节</li><li>数据导出（CSV/JSON/Excel）流程统一</li><li>构建查询（SQL/NoSQL）步骤一致</li><li>生命周期钩子</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">模板方法模式实现：数据导出<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">abstract class DataExporter {
+  // 模板方法：定义算法骨架，final 防止子类覆盖
+  export(data: Record<string, unknown>[]): string {
+    const header = this.buildHeader(data[0]);
+    const body = this.buildBody(data);
+    const footer = this.buildFooter();
+    return header + body + footer;
+  }
+  // 抽象方法：子类必须实现
+  protected abstract buildBody(data: Record<string, unknown>[]): string;
+  // 钩子方法：子类可选覆盖
+  protected buildHeader(sample: Record<string, unknown>): string {
+    return Object.keys(sample).join(",") + "\n";
+  }
+  protected buildFooter(): string { return ""; }
+}
+
+// CSV 导出
+class CsvExporter extends DataExporter {
+  protected buildBody(data: Record<string, unknown>[]): string {
+    return data.map(row =>
+      Object.values(row).join(",")
+    ).join("\n");
+  }
+}
+// JSON 导出
+class JsonExporter extends DataExporter {
+  protected buildHeader(): string { return "["; }
+  protected buildBody(data: Record<string, unknown>[]): string {
+    return data.map(d => JSON.stringify(d)).join(",");
+  }
+  protected buildFooter(): string { return "]"; }
+}
+
+// 使用
+const data = [{ name: "张三", age: 25 }, { name: "李四", age: 30 }];
+console.log(new CsvExporter().export(data));
+// name,age
+// 张三,25
+// 李四,30
+console.log(new JsonExporter().export(data));
+// [{"name":"张三","age":25},{"name":"李四","age":30}]</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Visitor -->
+<div class="subsection" id="visitor">
+  <div class="subsection-header">
+    <h3 class="subsection-title">访问者模式 (Visitor)</h3>
+    <span class="subsection-tag tag-behav">行为型</span>
+  </div>
+  <div class="pattern-card">
+    <div class="pattern-def"><strong>定义：</strong>表示一个作用于某对象结构中的各元素的操作。它使你可以在不改变各元素的类的前提下定义作用于这些元素的新操作。</div>
+    <div class="pattern-scene"><strong>适用场景：</strong>
+      <ul><li>编译器 AST 遍历（语法树节点 → 代码生成/类型检查/优化）</li><li>对一组不同类型的对象执行同一类操作</li><li>报表导出（同一组数据 → 不同格式）</li></ul>
+    </div>
+    <div class="code-block">
+      <div class="code-label neutral">访问者模式实现：文档元素导出<span class="lang">TypeScript</span></div>
+<pre><code class="language-typescript">// 元素接口
+interface DocumentElement {
+  accept(visitor: Visitor): void;
+}
+
+// 访问者接口
+interface Visitor {
+  visitParagraph(p: Paragraph): void;
+  visitImage(img: ImageElement): void;
+  visitTable(t: Table): void;
+}
+
+// 具体元素
+class Paragraph implements DocumentElement {
+  constructor(public text: string) {}
+  accept(v: Visitor): void { v.visitParagraph(this); }
+}
+class ImageElement implements DocumentElement {
+  constructor(public url: string) {}
+  accept(v: Visitor): void { v.visitImage(this); }
+}
+class Table implements DocumentElement {
+  constructor(public rows: string[][]) {}
+  accept(v: Visitor): void { v.visitTable(this); }
+}
+
+// 具体访问者：HTML 导出
+class HtmlExportVisitor implements Visitor {
+  private html = "";
+  getResult(): string { return this.html; }
+  visitParagraph(p: Paragraph): void {
+    this.html += `<p>${p.text}</p>\n`;
+  }
+  visitImage(img: ImageElement): void {
+    this.html += `<img src="${img.url}" />\n`;
+  }
+  visitTable(t: Table): void {
+    const rows = t.rows.map(r =>
+      `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`
+    ).join("");
+    this.html += `<table>${rows}</table>\n`;
+  }
+}
+
+// 具体访问者：统计字数
+class WordCountVisitor implements Visitor {
+  count = 0;
+  visitParagraph(p: Paragraph): void { this.count += p.text.length; }
+  visitImage(): void { /* 图片不计字数 */ }
+  visitTable(t: Table): void {
+    t.rows.forEach(r => r.forEach(c => this.count += c.length));
+  }
+}
+
+// 使用：不修改元素类就能新增操作
+const doc: DocumentElement[] = [
+  new Paragraph("Hello World"),
+  new ImageElement("logo.png"),
+  new Table([["A", "B"], ["1", "2"]])
+];
+const htmlVisitor = new HtmlExportVisitor();
+doc.forEach(el => el.accept(htmlVisitor));
+console.log(htmlVisitor.getResult());
+
+const countVisitor = new WordCountVisitor();
+doc.forEach(el => el.accept(countVisitor));
+console.log(`总字数: ${countVisitor.count}`); // 总字数: 13</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- 总结 -->
+<div class="section">
+  <h2 class="section-title"><span class="emoji">📌</span> 总结：原则与模式的关系</h2>
+  <div class="info-box note">
+    <strong>设计原则是"道"，设计模式是"术"</strong>
+    设计原则是指导思想，告诉你"应该怎样思考"；设计模式是具体方案，告诉你"遇到某类问题可以这样做"。模式是原则在特定场景下的落地实践。
+  </div>
+  <table class="compare-table">
+    <thead><tr><th>设计原则</th><th>相关设计模式</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SRP 单一职责</strong></td><td>外观模式（简化接口）、命令模式（封装操作）</td></tr>
+      <tr><td><strong>OCP 开闭原则</strong></td><td>策略模式、观察者模式、装饰器模式、工厂模式</td></tr>
+      <tr><td><strong>LSP 里氏替换</strong></td><td>所有依赖继承的模式（模板方法、工厂方法）</td></tr>
+      <tr><td><strong>ISP 接口隔离</strong></td><td>适配器模式、代理模式（按需暴露接口）</td></tr>
+      <tr><td><strong>DIP 依赖倒转</strong></td><td>策略模式、工厂模式、观察者模式（均依赖抽象接口）</td></tr>
+      <tr><td><strong>LoD 迪米特法则</strong></td><td>中介者模式、外观模式（减少直接耦合）</td></tr>
+    </tbody>
+  </table>
+  <div class="info-box tip">
+    <strong>实践建议</strong>
+    ① 不要为了用模式而用模式——先理解问题，再选模式。② 模式不是银弹，过度使用反而增加复杂度（违背 KISS/YAGNI）。③ 优先用语言原生特性（如 JS 的 Proxy、Python 的装饰器语法）。④ 在重构中逐步引入模式，而非一开始就套用。
+  </div>
+</div>
+
+</main>
+
+<footer class="footer">
+  <p>软件设计模式与设计原则 · 系统学习全指南 | 参考自 GoF《设计模式》与 Robert C. Martin《敏捷软件开发》</p>
+</footer>
+
+<button class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="回到顶部">↑</button>
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script>
+// ===== Scroll Spy =====
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.subsection, .section[id]');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-80px 0px -70% 0px' });
+sections.forEach(s => { if (s.id) observer.observe(s); });
+
+// ===== Back to Top =====
+const backTop = document.querySelector('.back-top');
+window.addEventListener('scroll', () => {
+  backTop.classList.toggle('show', window.scrollY > 400);
+});
+
+// ===== Mobile: close sidebar on nav click =====
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+
+// ===== Highlight current section on load =====
+window.addEventListener('load', () => {
+  Prism.highlightAll();
+});
+</script>
+</body>
+</html>
