@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能体原理讲解 - OpenClaw / Hermes / Claude Code / Codex</title>
+  <style>
+    :root {
+      --pri: #7c3aed;
+      --pri-dark: #5b21b6;
+      --bg: #f8fafc;
+      --surface: #fff;
+      --border: #e2e8f0;
+      --text: #1a1a2e;
+      --text2: #5a6170;
+      --text3: #9ca3af;
+      --code-bg: #1a1a2e;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+      --sans: -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+      --shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    /* 导航 */
+    .nav { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); height: 54px; display: flex; align-items: center; padding: 0 20px; gap: 16px; }
+    .nav-logo { font-weight: 700; color: var(--pri); text-decoration: none; font-size: 15px; white-space: nowrap; }
+    .nav-links { display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-links a { text-decoration: none; color: var(--text2); font-size: 13px; padding: 6px 12px; border-radius: 6px; white-space: nowrap; transition: all .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--pri); background: #ede9fe; }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #c4b5fd 100%); color: #fff; padding: 48px 24px 40px; text-align: center; }
+    .hero h1 { font-size: 28px; margin-bottom: 12px; }
+    .hero p { font-size: 15px; opacity: .92; max-width: 720px; margin: 0 auto 16px; }
+    .hero-tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .hero-tags span { background: rgba(255,255,255,.18); padding: 4px 14px; border-radius: 99px; font-size: 12px; backdrop-filter: blur(4px); }
+
+    /* 布局 */
+    .wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+    .sec { margin-bottom: 48px; }
+    .sec-title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 22px; font-weight: 700; }
+    .sec-title::before { content: attr(data-num); background: var(--pri); color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .sec-title::after { content: ''; flex: 1; height: 2px; background: linear-gradient(90deg, var(--border), transparent); }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); transition: box-shadow .2s; }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .card h3 { font-size: 17px; margin-bottom: 12px; color: var(--text); }
+    .card h4 { font-size: 15px; margin: 16px 0 8px; color: var(--pri); }
+    .card p { font-size: 14px; color: var(--text2); margin-bottom: 10px; }
+    .card ul, .card ol { font-size: 14px; color: var(--text2); padding-left: 20px; margin-bottom: 10px; }
+    .card li { margin-bottom: 4px; }
+
+    /* 提示块 */
+    .tip { border-radius: var(--radius-sm); padding: 14px 16px; font-size: 13px; margin: 12px 0; border-left: 4px solid; }
+    .tip.info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+    .tip.warn { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+    .tip.good { background: #f0fdf4; border-color: #22c55e; color: #166534; }
+    .tip.blue { background: #ede9fe; border-color: #7c3aed; color: #5b21b6; }
+
+    /* 表格 */
+    .tbl-wrap { overflow-x: auto; margin: 16px 0; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); }
+    th { background: #f1f5f9; padding: 12px 14px; text-align: left; font-weight: 600; color: var(--text); white-space: nowrap; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+    tr:hover td { background: #fafbff; }
+
+    /* 网格 */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) {
+      .grid2, .grid3 { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 22px; }
+      .sec-title { font-size: 18px; }
+      .card { padding: 16px; }
+    }
+
+    /* 代码块 */
+    .code { background: var(--code-bg); border-radius: var(--radius-sm); margin: 12px 0; position: relative; overflow: hidden; }
+    .code .lang { position: absolute; top: 0; left: 0; background: rgba(255,255,255,.1); color: #94a3b8; font-size: 11px; padding: 4px 10px; border-radius: 0 0 6px 0; font-family: var(--mono); }
+    .copy-btn { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,.1); border: none; color: #94a3b8; font-size: 11px; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: all .2s; }
+    .copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .code pre { padding: 32px 16px 16px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.6; color: #e2e8f0; }
+
+    /* 智能体卡片配色 */
+    .agent-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .badge-openclaw { background: #dbeafe; color: #1d4ed8; }
+    .badge-hermes { background: #fce7f3; color: #be185d; }
+    .badge-claude { background: #fef3c7; color: #b45309; }
+    .badge-codex { background: #d1fae5; color: #065f46; }
+
+    /* 架构图 */
+    .viz { background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px; margin: 16px 0; overflow-x: auto; }
+    .viz svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+
+    /* 对比高亮 */
+    .highlight-row td { background: #fefce8 !important; font-weight: 600; color: #854d0e; }
+
+    /* 页脚 */
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="../index.html" class="nav-logo">← 学习门户</a>
+    <div class="nav-links">
+      <a href="#overview">全景概览</a>
+      <a href="#openclaw">OpenClaw</a>
+      <a href="#hermes">Hermes</a>
+      <a href="#claudecode">Claude Code</a>
+      <a href="#codex">Codex CLI</a>
+      <a href="#compare">对比总结</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>智能体原理讲解</h1>
+    <p>OpenClaw · Hermes · Claude Code · Codex —— 四大 AI 智能体的架构设计、工作原理与差异对比</p>
+    <div class="hero-tags">
+      <span>AI Agent</span>
+      <span>架构解析</span>
+      <span>2026 最新</span>
+      <span>深度对比</span>
+    </div>
+  </section>
+
+  <div class="wrap">
+
+    <!-- ==================== 01 全景概览 ==================== -->
+    <section class="sec" id="overview">
+      <div class="sec-title" data-num="01">全景概览</div>
+
+      <div class="card">
+        <h3>什么是 AI 智能体（Agent）？</h3>
+        <p>AI 智能体是一种能够<strong>自主感知环境、规划任务、调用工具并执行动作</strong>的软件系统。与传统聊天机器人不同，智能体具备「手」和「脚」——它能操作文件系统、执行命令、浏览网页、编写代码，并在多轮交互中持续优化行为。</p>
+        <p>2025-2026 年，AI 智能体从概念走向工程落地，形成了四条截然不同的技术路线。本教程将深入剖析其中最具代表性的四款产品。</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <span class="agent-badge badge-openclaw">OpenClaw</span>
+          <h3>多平台消息路由器</h3>
+          <p>「Give AI a computer and let it work」—— 让 AI 接管你的数字生活，覆盖 50+ 通讯平台，插件生态最丰富。</p>
+        </div>
+        <div class="card">
+          <span class="agent-badge badge-hermes">Hermes</span>
+          <h3>自我进化的数字员工</h3>
+          <p>「The agent that grows with you」—— 越用越懂你，自动沉淀技能与偏好，实现闭环自我迭代。</p>
+        </div>
+        <div class="card">
+          <span class="agent-badge badge-claude">Claude Code</span>
+          <h3>规范可控的编程专家</h3>
+          <p>以 Plan Mode 为核心 UX，先出完整计划经用户批准后才动手，强调用户控制与代码安全。</p>
+        </div>
+        <div class="card">
+          <span class="agent-badge badge-codex">Codex CLI</span>
+          <h3>工程化批处理利器</h3>
+          <p>Rust 编写的 Agent Loop Harness，显式区分 turn 与 thread，追求批处理效率与零数据留存合规。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>四条技术路线的核心分歧</h3>
+        <div class="viz">
+          <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/></marker>
+            </defs>
+            <!-- 背景 -->
+            <rect x="0" y="0" width="680" height="200" fill="none"/>
+            <!-- 中心分歧点 -->
+            <circle cx="340" cy="100" r="8" fill="#7c3aed"/>
+            <text x="340" y="85" text-anchor="middle" font-size="12" fill="#5b21b6" font-weight="600">设计原点</text>
+            <!-- OpenClaw -->
+            <line x1="340" y1="100" x2="120" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <rect x="40" y="15" width="160" height="36" rx="6" fill="#dbeafe"/>
+            <text x="120" y="38" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">OpenClaw：向外铺</text>
+            <!-- Hermes -->
+            <line x1="340" y1="100" x2="120" y2="160" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <rect x="40" y="142" width="160" height="36" rx="6" fill="#fce7f3"/>
+            <text x="120" y="165" text-anchor="middle" font-size="12" fill="#be185d" font-weight="600">Hermes：向内长</text>
+            <!-- Claude Code -->
+            <line x1="340" y1="100" x2="560" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <rect x="480" y="15" width="160" height="36" rx="6" fill="#fef3c7"/>
+            <text x="560" y="38" text-anchor="middle" font-size="12" fill="#b45309" font-weight="600">Claude Code：安全优先</text>
+            <!-- Codex -->
+            <line x1="340" y1="100" x2="560" y2="160" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <rect x="480" y="142" width="160" height="36" rx="6" fill="#d1fae5"/>
+            <text x="560" y="165" text-anchor="middle" font-size="12" fill="#065f46" font-weight="600">Codex：批处理高效</text>
+          </svg>
+        </div>
+        <p style="text-align:center;font-size:13px;color:var(--text3);">四大智能体的设计原点差异：覆盖广度 vs 自我进化 vs 用户控制 vs 工程效率</p>
+      </div>
+    </section>
+
+    <!-- ==================== 02 OpenClaw ==================== -->
+    <section class="sec" id="openclaw">
+      <div class="sec-title" data-num="02">OpenClaw</div>
+
+      <div class="card">
+        <span class="agent-badge badge-openclaw">OpenClaw</span>
+        <h3>定位：多平台消息路由器 + 工具执行引擎</h3>
+        <p>OpenClaw 由 Peter Steinberger 发起，是社区驱动、生态最成熟的智能体框架。它的北极星指标是「覆盖多少平台、能调用多少工具」，目前支持 50+ 通讯平台原生接入，插件数量最多。</p>
+      </div>
+
+      <div class="card">
+        <h3>核心架构：Gateway 统一调度 + 多 Runtime 并行</h3>
+        <p>OpenClaw 把 4 个 Runtime 当作一等公民，由 Gateway 进程统一接收所有渠道消息并路由到对应 Session：</p>
+        <ul>
+          <li><strong>PI (Process Intelligence)</strong> —— 本地进程级工具执行</li>
+          <li><strong>Codex CLI</strong> —— OpenAI 代码代理委托</li>
+          <li><strong>Claude CLI</strong> —— Anthropic 代码代理委托</li>
+          <li><strong>ACP (Agent Control Protocol)</strong> —— 标准化代理通信协议</li>
+        </ul>
+
+        <div class="viz">
+          <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+            </defs>
+            <!-- 渠道层 -->
+            <rect x="20" y="20" width="640" height="40" rx="6" fill="#e2e8f0"/>
+            <text x="340" y="45" text-anchor="middle" font-size="12" fill="#475569">消息渠道：WhatsApp / Telegram / Slack / Discord / 邮件 / 日历 / 浏览器 ...（50+）</text>
+            <!-- Gateway -->
+            <rect x="240" y="80" width="200" height="50" rx="8" fill="#3b82f6"/>
+            <text x="340" y="110" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Gateway (Node.js)</text>
+            <text x="340" y="128" text-anchor="middle" font-size="10" fill="#bfdbfe">127.0.0.1:18789 · 消息路由 · 会话复用</text>
+            <!-- 连接线 -->
+            <line x1="340" y1="60" x2="340" y2="78" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow2)"/>
+            <line x1="340" y1="130" x2="340" y2="148" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow2)"/>
+            <!-- Runtime 层 -->
+            <rect x="20" y="150" width="150" height="50" rx="6" fill="#dbeafe"/>
+            <text x="95" y="172" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600">PI Runtime</text>
+            <text x="95" y="188" text-anchor="middle" font-size="10" fill="#3b82f6">本地进程工具</text>
+
+            <rect x="180" y="150" width="150" height="50" rx="6" fill="#dbeafe"/>
+            <text x="255" y="172" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600">Codex CLI</text>
+            <text x="255" y="188" text-anchor="middle" font-size="10" fill="#3b82f6">OpenAI 代理</text>
+
+            <rect x="340" y="150" width="150" height="50" rx="6" fill="#dbeafe"/>
+            <text x="415" y="172" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600">Claude CLI</text>
+            <text x="415" y="188" text-anchor="middle" font-size="10" fill="#3b82f6">Anthropic 代理</text>
+
+            <rect x="500" y="150" width="160" height="50" rx="6" fill="#dbeafe"/>
+            <text x="580" y="172" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600">ACP Protocol</text>
+            <text x="580" y="188" text-anchor="middle" font-size="10" fill="#3b82f6">标准代理通信</text>
+            <!-- Agent Loop -->
+            <rect x="140" y="220" width="400" height="30" rx="6" fill="#ede9fe"/>
+            <text x="340" y="240" text-anchor="middle" font-size="11" fill="#5b21b6">Agent Loop → LLM API → Tool Call → 结果回填 → 流式输出</text>
+          </svg>
+        </div>
+
+        <h4>关键设计特点</h4>
+        <ul>
+          <li><strong>每个 Session 串行执行</strong>：防止竞争条件，确保消息处理有序</li>
+          <li><strong>Multi-agent Routing</strong>：不同 Agent 可处理不同渠道，实现负载均衡</li>
+          <li><strong>LLM 热切换</strong>：切换底层模型不影响其他组件运行</li>
+          <li><strong>Spawn Subagent</strong>：隔离会话，零上下文成本创建子代理</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Skill 系统：简单但够用</h3>
+        <p>OpenClaw 的 Skill 采用多级目录结构（workspace / project / personal / bundled），通过 SKILL.md 自描述，支持自动发现和自动注入。它的优势在于<strong>热加载</strong>——修改 Skill 文件立即生效，无需重启服务。</p>
+        <div class="code">
+          <div class="lang">目录结构</div>
+          <button class="copy-btn" onclick="copyCode(this)">复制</button>
+          <pre>skills/
+├── workspace/     # 工作区级
+├── project/       # 项目级
+├── personal/      # 个人级
+└── bundled/       # 内置级
+    └── git-ops/
+        └── SKILL.md   # 自描述文件，自动发现注入</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 03 Hermes ==================== -->
+    <section class="sec" id="hermes">
+      <div class="sec-title" data-num="03">Hermes Agent</div>
+
+      <div class="card">
+        <span class="agent-badge badge-hermes">Hermes</span>
+        <h3>定位：会自我进化的数字员工</h3>
+        <p>Hermes 由 Nous Research 实验室开发，2026 年 2 月上线即获得 66K+ GitHub Stars。它的北极星指标是「用户使用 3 个月后，Agent 能省多少重复指令」——强调<strong>自我进化</strong>与<strong>技能沉淀</strong>。</p>
+      </div>
+
+      <div class="card">
+        <h3>核心架构：单循环 + 自我改进闭环</h3>
+        <p>Hermes 的核心是一个原生 Agent Loop + 内置学习闭环，形成「越用越聪明」的正反馈：</p>
+
+        <div class="viz">
+          <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#be185d"/></marker>
+            </defs>
+            <!-- 闭环图 -->
+            <circle cx="340" cy="100" r="70" fill="none" stroke="#fce7f3" stroke-width="2"/>
+            <!-- 节点1 用户交互 -->
+            <rect x="290" y="15" width="100" height="32" rx="6" fill="#fce7f3"/>
+            <text x="340" y="35" text-anchor="middle" font-size="11" fill="#be185d" font-weight="600">用户交互</text>
+            <!-- 节点2 行为记录 -->
+            <rect x="460" y="70" width="100" height="32" rx="6" fill="#fce7f3"/>
+            <text x="510" y="90" text-anchor="middle" font-size="11" fill="#be185d" font-weight="600">行为记录</text>
+            <!-- 节点3 结果评估 -->
+            <rect x="400" y="150" width="100" height="32" rx="6" fill="#fce7f3"/>
+            <text x="450" y="170" text-anchor="middle" font-size="11" fill="#be185d" font-weight="600">结果评估</text>
+            <!-- 节点4 策略优化 -->
+            <rect x="180" y="150" width="100" height="32" rx="6" fill="#fce7f3"/>
+            <text x="230" y="170" text-anchor="middle" font-size="11" fill="#be185d" font-weight="600">策略优化</text>
+            <!-- 节点5 技能固化 -->
+            <rect x="120" y="70" width="100" height="32" rx="6" fill="#fce7f3"/>
+            <text x="170" y="90" text-anchor="middle" font-size="11" fill="#be185d" font-weight="600">技能固化</text>
+            <!-- 箭头 -->
+            <line x1="390" y1="31" x2="470" y2="75" stroke="#be185d" stroke-width="1.5" marker-end="url(#arrow3)"/>
+            <line x1="510" y1="102" x2="480" y2="150" stroke="#be185d" stroke-width="1.5" marker-end="url(#arrow3)"/>
+            <line x1="400" y1="166" x2="280" y2="166" stroke="#be185d" stroke-width="1.5" marker-end="url(#arrow3)"/>
+            <line x1="180" y1="150" x2="150" y2="102" stroke="#be185d" stroke-width="1.5" marker-end="url(#arrow3)"/>
+            <line x1="170" y1="70" x2="290" y2="35" stroke="#be185d" stroke-width="1.5" marker-end="url(#arrow3)"/>
+            <!-- 中心 -->
+            <text x="340" y="95" text-anchor="middle" font-size="12" fill="#9d174d" font-weight="700">自我进化闭环</text>
+            <text x="340" y="112" text-anchor="middle" font-size="10" fill="#be185d">每 15 个任务全局评估</text>
+          </svg>
+        </div>
+
+        <h4>ReAct 循环与自省机制</h4>
+        <p>Hermes 的核心是 <code>AIAgent</code> 类（run_agent.py），实现 ReAct 循环（推理 → 行动 → 观察），并具备独特的<strong>自省机制</strong>——每步评估工具输出是否合理，不合理则自动重试或调整策略。</p>
+      </div>
+
+      <div class="card">
+        <h3>Skill 系统：活的、自进化的</h3>
+        <p>Hermes 的 Skill 是「活的」——完成 5+ 次工具调用的复杂任务后，系统会自动提炼为 Skill（Markdown + YAML frontmatter），实现<strong> Progressive Disclosure</strong>（只加载 frontmatter 判断是否触发，不污染上下文）。</p>
+        <div class="tip good">
+          <strong>关键区别</strong>：OpenClaw 的「智能」来自外部 LLM + 人工编写的 Skill；Hermes 的「智能」来自内生进化——使用越多，自动沉淀的技能越多，重复指令越少。
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Profile 隔离与记忆管理</h3>
+        <p>Hermes 支持多 Profile 彻底隔离，每个 Profile 拥有独立的记忆空间、技能库和模型配置。记忆持续演化，但过程是黑盒的——这是它与 OpenClaw 的共同局限，也是与 PilotDeck 等新兴白盒记忆框架的分水岭。</p>
+      </div>
+    </section>
+
+    <!-- ==================== 04 Claude Code ==================== -->
+    <section class="sec" id="claudecode">
+      <div class="sec-title" data-num="04">Claude Code</div>
+
+      <div class="card">
+        <span class="agent-badge badge-claude">Claude Code</span>
+        <h3>定位：规范可控的编程专家</h3>
+        <p>Claude Code 是 Anthropic 官方推出的智能体，以 <strong>Plan Mode</strong> 为标志性 UX——先输出完整计划，经用户批准后才动手执行。它强调用户控制、代码安全与权限管理，是 IDE 集成场景下的首选。</p>
+      </div>
+
+      <div class="card">
+        <h3>核心架构：QueryEngine + 三层权限检查</h3>
+        <p>Claude Code 的核心是 QueryEngine（2026 年 3 月泄露的技术细节），启动时先加载 CLAUDE.md + Auto Memory，然后执行三层权限检查，可选子 Agent 委托：</p>
+        <ul>
+          <li><strong>Explore Agent</strong>：使用 Haiku 模型，只读搜索代码，成本低</li>
+          <li><strong>Plan Agent</strong>：只读生成方案，不修改文件</li>
+          <li><strong>General-purpose Agent</strong>：全能型，可读写执行</li>
+        </ul>
+
+        <div class="viz">
+          <svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow4" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#b45309"/></marker>
+            </defs>
+            <!-- 启动层 -->
+            <rect x="20" y="15" width="640" height="35" rx="6" fill="#fef3c7"/>
+            <text x="340" y="37" text-anchor="middle" font-size="12" fill="#92400e">启动：加载 CLAUDE.md + Auto Memory + 项目上下文</text>
+            <!-- QueryEngine -->
+            <rect x="220" y="65" width="240" height="45" rx="8" fill="#f59e0b"/>
+            <text x="340" y="90" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">QueryEngine</text>
+            <!-- 权限层 -->
+            <rect x="20" y="125" width="200" height="40" rx="6" fill="#fde68a"/>
+            <text x="120" y="148" text-anchor="middle" font-size="11" fill="#92400e">Layer 1: 工具权限</text>
+            <rect x="240" y="125" width="200" height="40" rx="6" fill="#fde68a"/>
+            <text x="340" y="148" text-anchor="middle" font-size="11" fill="#92400e">Layer 2: 文件权限</text>
+            <rect x="460" y="125" width="200" height="40" rx="6" fill="#fde68a"/>
+            <text x="560" y="148" text-anchor="middle" font-size="11" fill="#92400e">Layer 3: 执行权限</text>
+            <!-- 子 Agent -->
+            <rect x="70" y="180" width="150" height="30" rx="6" fill="#fef3c7"/>
+            <text x="145" y="200" text-anchor="middle" font-size="11" fill="#b45309">Explore (Haiku)</text>
+            <rect x="265" y="180" width="150" height="30" rx="6" fill="#fef3c7"/>
+            <text x="340" y="200" text-anchor="middle" font-size="11" fill="#b45309">Plan (只读)</text>
+            <rect x="460" y="180" width="150" height="30" rx="6" fill="#fef3c7"/>
+            <text x="535" y="200" text-anchor="middle" font-size="11" fill="#b45309">General-purpose</text>
+            <!-- 连接线 -->
+            <line x1="340" y1="50" x2="340" y2="63" stroke="#b45309" stroke-width="1.5" marker-end="url(#arrow4)"/>
+            <line x1="340" y1="110" x2="340" y2="123" stroke="#b45309" stroke-width="1.5" marker-end="url(#arrow4)"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Plan Mode：用户控制的终极体现</h3>
+        <p>Claude Code 的 Plan Mode 是其区别于其他智能体的核心 UX。用户输入需求后，系统首先生成详细的执行计划（包括修改哪些文件、执行哪些命令），用户确认无误后才进入执行阶段。这种设计避免了「AI 乱改代码」的风险，特别适合生产环境。</p>
+        <div class="tip info">
+          <strong>适用场景</strong>：对代码安全要求高的团队、需要审计追踪的企业环境、初学者学习编程时的安全网。
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Skill 系统：规范 + 动态注入</h3>
+        <p>Claude Code 的 Skill 系统最「规范」——采用开放标准，支持 <strong>Live Change Detection</strong>（修改 Skill 文件立即生效）和 <strong>Dynamic Context Injection</strong>（Skill 中写 <code>!git diff HEAD</code> 即可自动注入当前 diff，不是静态文本而是运行时动态内容）。</p>
+      </div>
+    </section>
+
+    <!-- ==================== 05 Codex CLI ==================== -->
+    <section class="sec" id="codex">
+      <div class="sec-title" data-num="05">Codex CLI</div>
+
+      <div class="card">
+        <span class="agent-badge badge-codex">Codex CLI</span>
+        <h3>定位：工程化批处理利器</h3>
+        <p>Codex CLI 是 OpenAI 推出的开源智能体，采用 Rust 编写，核心是 <strong>Agent Loop Harness</strong>。它显式区分「turn」（单次用户输入到响应的循环）与「thread」（完整对话线程），追求批处理效率与零数据留存（ZDR）合规。</p>
+      </div>
+
+      <div class="card">
+        <h3>核心架构：Agent Loop Harness + Rust 性能</h3>
+        <p>Codex CLI 的架构围绕「批处理高效」设计，Rust 带来的内存安全与高性能使其在大规模代码迁移、批量测试生成等场景下表现卓越。</p>
+
+        <div class="viz">
+          <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#065f46"/></marker>
+            </defs>
+            <!-- Thread -->
+            <rect x="20" y="20" width="640" height="35" rx="6" fill="#d1fae5"/>
+            <text x="340" y="42" text-anchor="middle" font-size="12" fill="#065f46" font-weight="600">Thread：完整对话线程（持久化上下文）</text>
+            <!-- Turn 循环 -->
+            <rect x="140" y="70" width="400" height="50" rx="8" fill="#10b981"/>
+            <text x="340" y="92" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Turn：单次交互循环</text>
+            <text x="340" y="110" text-anchor="middle" font-size="10" fill="#a7f3d0">用户输入 → Agent Loop → 工具执行 → 响应输出</text>
+            <!-- 底层 -->
+            <rect x="20" y="140" width="200" height="40" rx="6" fill="#a7f3d0"/>
+            <text x="120" y="165" text-anchor="middle" font-size="11" fill="#065f46">Rust Core</text>
+            <rect x="240" y="140" width="200" height="40" rx="6" fill="#a7f3d0"/>
+            <text x="340" y="165" text-anchor="middle" font-size="11" fill="#065f46">ZDR 合规</text>
+            <rect x="460" y="140" width="200" height="40" rx="6" fill="#a7f3d0"/>
+            <text x="560" y="165" text-anchor="middle" font-size="11" fill="#065f46">按需启动</text>
+            <!-- 连接线 -->
+            <line x1="340" y1="55" x2="340" y2="68" stroke="#065f46" stroke-width="1.5" marker-end="url(#arrow5)"/>
+            <line x1="340" y1="120" x2="340" y2="138" stroke="#065f46" stroke-width="1.5" marker-end="url(#arrow5)"/>
+          </svg>
+        </div>
+
+        <h4>按需启动 vs 长驻守护</h4>
+        <p>与 OpenClaw / Hermes 的 Gateway 长驻守护进程不同，Codex CLI 采用「按需启动」短进程模型——每次交互独立启动 CLI，适合 IDE 集成但每次需要冷启动开销。这种设计牺牲了一点延迟，换来了更好的资源隔离与安全性。</p>
+      </div>
+
+      <div class="card">
+        <h3>Skill 系统：最工程化的实现</h3>
+        <p>Codex 的 Skill 系统是最「工程化」的——独立的 Rust crate（codex-core-skills），包含 8+ 模块文件（loader / manager / injection / render / model / config_rules / system / remote）。loader.rs 解析 YAML frontmatter，manager.rs 管理发现注册，injection.rs 负责 prompt 注入，模块化程度最高。</p>
+        <div class="code">
+          <div class="lang">Rust Crate 结构</div>
+          <button class="copy-btn" onclick="copyCode(this)">复制</button>
+          <pre>codex-core-skills/
+├── loader.rs      # 解析 YAML frontmatter
+├── manager.rs     # 发现、注册、生命周期
+├── injection.rs   # Prompt 注入逻辑
+├── render.rs      # 模板渲染
+├── model.rs       # 数据模型定义
+├── config_rules.rs # 配置规则
+├── system.rs      # 系统级 Skill
+└── remote.rs      # 远程 Skill 同步</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 06 对比总结 ==================== -->
+    <section class="sec" id="compare">
+      <div class="sec-title" data-num="06">对比总结</div>
+
+      <div class="card">
+        <h3>核心维度对比表</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>维度</th>
+                <th>OpenClaw</th>
+                <th>Hermes</th>
+                <th>Claude Code</th>
+                <th>Codex CLI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>核心定位</strong></td>
+                <td>多平台消息路由器</td>
+                <td>自我进化数字员工</td>
+                <td>规范可控编程专家</td>
+                <td>工程化批处理利器</td>
+              </tr>
+              <tr>
+                <td><strong>设计原点</strong></td>
+                <td>向外铺：覆盖广度</td>
+                <td>向内长：自我进化</td>
+                <td>安全优先：用户控制</td>
+                <td>批处理高效：工程效率</td>
+              </tr>
+              <tr>
+                <td><strong>进程模型</strong></td>
+                <td>Gateway 长驻守护</td>
+                <td>Gateway 长驻守护</td>
+                <td>按需启动短进程</td>
+                <td>按需启动短进程</td>
+              </tr>
+              <tr>
+                <td><strong>Agent 循环</strong></td>
+                <td>Tool Loop 内置 Gateway</td>
+                <td>ReAct + 自省机制</td>
+                <td>QueryEngine + Plan Mode</td>
+                <td>Agent Loop Harness</td>
+              </tr>
+              <tr>
+                <td><strong>Skill 系统</strong></td>
+                <td>简单热加载</td>
+                <td>活/自进化</td>
+                <td>规范/动态注入</td>
+                <td>工程化/Rust crate</td>
+              </tr>
+              <tr>
+                <td><strong>记忆管理</strong></td>
+                <td>黑盒记忆</td>
+                <td>黑盒记忆 + 持续演化</td>
+                <td>持久记忆但不透明</td>
+                <td>持久记忆但不透明</td>
+              </tr>
+              <tr>
+                <td><strong>开源情况</strong></td>
+                <td>开源（Node.js）</td>
+                <td>开源（Python）</td>
+                <td>TypeScript 但不开源</td>
+                <td>开源（Rust）</td>
+              </tr>
+              <tr>
+                <td><strong>通讯平台</strong></td>
+                <td>50+ 原生支持</td>
+                <td>主流平台支持</td>
+                <td>Telegram / Discord</td>
+                <td>Slack（Telegram 社区）</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>最佳场景</strong></td>
+                <td>多平台接入、IM 推送</td>
+                <td>长期陪伴、个性化</td>
+                <td>IDE 编程、安全敏感</td>
+                <td>批量代码任务、ZDR 合规</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>快速选型指南</h3>
+          <ul>
+            <li><strong>要接入多个通讯平台</strong> → OpenClaw（50+ 平台原生支持，插件最多）</li>
+            <li><strong>要多个独立 Agent 人格长期并存</strong> → Hermes（Profile 隔离最彻底，记忆持续演化）</li>
+            <li><strong>主要在 IDE/终端写代码</strong> → Claude Code / Codex CLI（前者 Claude 模型 + 多 IDE 扩展；后者开源 + OpenAI 模型）</li>
+            <li><strong>对 Token 成本敏感</strong> → Hermes 手动 Profile 配模型；PilotDeck 智能路由自动省约 70%</li>
+            <li><strong>不想折腾，开箱即用</strong> → Claude Code / Codex CLI（订阅/API Key 即用，无部署成本）</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>2026 下半年趋势</h3>
+          <ul>
+            <li><strong>记忆管理成为核心竞争维度</strong>：无记忆 → 黑盒记忆 → 项目级手动记忆 → 白盒记忆（可追溯、可编辑、可回滚）</li>
+            <li><strong>开源 vs 商业的分界线在记忆透明度</strong>：商业框架模型能力更强，开源框架记忆隔离和可审计性更灵活</li>
+            <li><strong>成本控制从手动走向自动</strong>：智能路由根据任务复杂度自动选择模型，是未来方向</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>写在最后</h3>
+        <p>四大智能体没有绝对的优劣，只有场景的匹配。OpenClaw 适合打造「全能数字管家」，Hermes 适合培养「专属数字员工」，Claude Code 适合作为「安全编程伙伴」，Codex CLI 适合充当「批量代码工人」。理解它们的架构差异与设计哲学，才能在实际项目中做出最合适的技术选型。</p>
+        <div class="tip blue">
+          <strong>延伸思考</strong>：智能体的终极形态可能是「Gateway 统一调度 + 白盒记忆 + 自动成本控制」的融合体。2026 年下半年，关注 PilotDeck 等新兴框架在白盒记忆与智能路由上的突破。
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <p>智能体原理讲解 · 生成于 Frontend Learning Hub · 2026</p>
+  </div>
+
+  <script>
+    // 导航高亮
+    const sections = document.querySelectorAll('.sec');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          navLinks.forEach(function(link) { link.classList.remove('active'); });
+          const id = entry.target.getAttribute('id');
+          const activeLink = document.querySelector('.nav-links a[href="#' + id + '"]');
+          if (activeLink) activeLink.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(function(sec) { observer.observe(sec); });
+
+    // 代码复制
+    function copyCode(btn) {
+      const pre = btn.parentElement.querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = '已复制';
+        setTimeout(function() { btn.textContent = '复制'; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 执行沙盒机制全解析 · 隔离边界·操作分类·安全约束</title>
+<style>
+/* ═══════════════════════════════════════════
+   CSS Variables & Reset
+   ═══════════════════════════════════════════ */
+:root {
+  --pri: #2563eb;
+  --pri-dark: #1d4ed8;
+  --pri-light: #dbeafe;
+  --pri-lighter: #eff6ff;
+  --bg: #f8fafc;
+  --surface: #fff;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+  --transition: .2s cubic-bezier(.4,0,.2,1);
+  /* risk colors */
+  --r-low: #059669;
+  --r-low-bg: #d1fae5;
+  --r-mid-low: #65a30d;
+  --r-mid-low-bg: #ecfccb;
+  --r-mid: #ca8a04;
+  --r-mid-bg: #fef9c3;
+  --r-mid-high: #ea580c;
+  --r-mid-high-bg: #ffedd5;
+  --r-high: #dc2626;
+  --r-high-bg: #fee2e2;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--pri);text-decoration:none}
+
+/* ═══════════════════════════════════════════
+   Top Navigation
+   ═══════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;height:56px;
+  display:flex;align-items:center;gap:12px;
+}
+.nav .logo{
+  font-weight:800;font-size:.95rem;
+  color:var(--pri);
+  display:flex;align-items:center;gap:8px;
+  white-space:nowrap;
+}
+.nav .logo svg{width:26px;height:26px;flex-shrink:0}
+.nav .toc{display:flex;gap:4px;margin-left:8px;overflow-x:auto;flex:1;scrollbar-width:thin}
+.nav .toc::-webkit-scrollbar{height:0}
+.nav .toc a{
+  font-size:.76rem;color:var(--text2);
+  padding:5px 12px;border-radius:20px;
+  white-space:nowrap;transition:var(--transition);
+  cursor:pointer;
+}
+.nav .toc a:hover,.nav .toc a.active{background:var(--pri-light);color:var(--pri);font-weight:600}
+.nav .home-btn{
+  font-size:.78rem;color:var(--text2);
+  padding:6px 14px;border-radius:8px;
+  border:1px solid var(--border);
+  transition:var(--transition);
+  white-space:nowrap;
+}
+.nav .home-btn:hover{background:var(--pri-lighter);border-color:var(--pri);color:var(--pri)}
+@media(max-width:768px){
+  .nav{padding:0 14px}
+  .nav .toc{display:none}
+}
+
+/* ═══════════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════════ */
+.hero{
+  background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 40%,#e0e7ff 100%);
+  padding:56px 24px 52px;text-align:center;
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-60%;right:-20%;
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(37,99,235,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero .badge{
+  display:inline-block;font-size:.7rem;font-weight:700;
+  background:var(--pri);color:#fff;
+  padding:4px 14px;border-radius:20px;
+  letter-spacing:.5px;margin-bottom:16px;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.hero h1{
+  font-size:2.2rem;font-weight:800;
+  color:var(--text);line-height:1.3;
+  margin-bottom:12px;position:relative;
+}
+.hero .subtitle{
+  font-size:1.05rem;color:var(--text2);
+  max-width:680px;margin:0 auto;
+  line-height:1.7;position:relative;
+}
+.hero .meta{
+  display:flex;gap:24px;justify-content:center;
+  margin-top:24px;flex-wrap:wrap;position:relative;
+}
+.hero .meta-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:.82rem;color:var(--text2);
+}
+.hero .meta-item strong{color:var(--pri);font-weight:700}
+@media(max-width:768px){
+  .hero h1{font-size:1.6rem}
+  .hero .subtitle{font-size:.92rem}
+}
+
+/* ═══════════════════════════════════════════
+   Content Layout
+   ═══════════════════════════════════════════ */
+.content{max-width:920px;margin:0 auto;padding:0 24px}
+section{padding:48px 0;border-bottom:1px solid var(--border-light)}
+section:last-child{border-bottom:none}
+.section-title{
+  font-size:1.5rem;font-weight:800;
+  color:var(--text);margin-bottom:8px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-title .num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:8px;
+  background:var(--pri);color:#fff;
+  font-size:.85rem;font-weight:700;flex-shrink:0;
+}
+.section-desc{
+  font-size:.92rem;color:var(--text2);
+  margin-bottom:28px;line-height:1.7;
+}
+
+/* ═══════════════════════════════════════════
+   Cards & Components
+   ═══════════════════════════════════════════ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+  transition:var(--transition);
+}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--pri-light)}
+.card h3{
+  font-size:1.1rem;font-weight:700;
+  color:var(--text);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.card h3 .icon{font-size:1.2rem}
+.card p{font-size:.9rem;color:var(--text2);line-height:1.75;margin-bottom:8px}
+.card p:last-child{margin-bottom:0}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:768px){
+  .grid-2,.grid-3{grid-template-columns:1fr}
+}
+
+/* Callout */
+.callout{
+  border-radius:var(--radius-sm);
+  padding:16px 20px;
+  margin:20px 0;
+  font-size:.88rem;
+  line-height:1.7;
+  border-left:4px solid;
+}
+.callout.info{background:var(--pri-lighter);border-color:var(--pri);color:#1e3a5f}
+.callout.warn{background:#fff7ed;border-color:var(--r-mid-high);color:#7c2d12}
+.callout.danger{background:var(--r-high-bg);border-color:var(--r-high);color:#7f1d1d}
+.callout.success{background:var(--r-low-bg);border-color:var(--r-low);color:#064e3b}
+.callout strong{font-weight:700}
+
+/* Code Block */
+.code-block{
+  background:var(--code-bg);
+  border-radius:var(--radius-sm);
+  padding:20px 24px;
+  margin:16px 0;
+  overflow-x:auto;
+  font-family:var(--mono);
+  font-size:.83rem;
+  line-height:1.65;
+  color:var(--code-text);
+  position:relative;
+}
+.code-block .label{
+  position:absolute;top:8px;right:12px;
+  font-size:.68rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.code-block .c-key{color:#93c5fd}
+.code-block .c-str{color:#86efac}
+.code-block .c-com{color:#64748b;font-style:italic}
+.code-block .c-fn{color:#fbbf24}
+.code-block .c-num{color:#c4b5fd}
+.code-block .c-op{color:#f472b6}
+.code-block .c-type{color:#67e8f9}
+
+/* Inline code */
+code.inline{
+  font-family:var(--mono);
+  font-size:.85em;
+  background:var(--border-light);
+  color:var(--pri-dark);
+  padding:2px 6px;
+  border-radius:4px;
+  font-weight:600;
+}
+
+/* List */
+ul.clean{list-style:none;padding:0}
+ul.clean li{
+  font-size:.9rem;color:var(--text2);
+  padding:6px 0 6px 22px;
+  position:relative;line-height:1.7;
+}
+ul.clean li::before{
+  content:'';position:absolute;left:0;top:13px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--pri);
+}
+ul.clean li strong{color:var(--text)}
+
+/* ═══════════════════════════════════════════
+   Architecture Diagram (SVG-like with HTML)
+   ═══════════════════════════════════════════ */
+.arch-diagram{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px 24px;
+  margin:24px 0;
+  box-shadow:var(--shadow);
+}
+.arch-layer{
+  border-radius:var(--radius-sm);
+  padding:16px 20px;
+  margin-bottom:10px;
+  text-align:center;
+  position:relative;
+  transition:var(--transition);
+}
+.arch-layer:hover{transform:translateX(4px)}
+.arch-layer .layer-name{
+  font-weight:700;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.arch-layer .layer-desc{
+  font-size:.78rem;margin-top:4px;opacity:.8;
+}
+.arch-host{
+  background:linear-gradient(135deg,#fee2e2,#fecaca);
+  border:2px solid #f87171;
+  color:#7f1d1d;
+}
+.arch-vm{
+  background:linear-gradient(135deg,#ffedd5,#fed7aa);
+  border:2px solid #fb923c;
+  color:#7c2d12;
+}
+.arch-container{
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border:2px solid #fbbf24;
+  color:#78350f;
+}
+.arch-sandbox{
+  background:linear-gradient(135deg,#dbeafe,#bfdbfe);
+  border:2px solid #60a5fa;
+  color:#1e3a5f;
+}
+.arch-agent{
+  background:linear-gradient(135deg,#d1fae5,#a7f3d0);
+  border:2px solid #34d399;
+  color:#064e3b;
+}
+.arch-arrow{
+  text-align:center;color:var(--text3);
+  font-size:1.2rem;margin:2px 0;
+}
+.arch-label{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.68rem;font-weight:600;
+  background:rgba(255,255,255,.7);
+  padding:2px 8px;border-radius:4px;
+  color:var(--text2);
+}
+
+/* ═══════════════════════════════════════════
+   Tech Stack Cards
+   ═══════════════════════════════════════════ */
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;margin:20px 0;
+}
+.tech-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  transition:var(--transition);
+}
+.tech-card:hover{box-shadow:var(--shadow-md);border-color:var(--pri);transform:translateY(-2px)}
+.tech-card .tech-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:10px;
+}
+.tech-card .tech-icon{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--pri-lighter);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;flex-shrink:0;
+}
+.tech-card h4{font-size:.95rem;font-weight:700;color:var(--text)}
+.tech-card .tech-tag{
+  font-size:.68rem;font-weight:600;
+  padding:2px 8px;border-radius:4px;
+  margin-left:auto;
+}
+.tech-card p{font-size:.82rem;color:var(--text2);line-height:1.65}
+.tech-card .tech-detail{
+  margin-top:10px;padding-top:10px;
+  border-top:1px dashed var(--border);
+  font-size:.78rem;color:var(--text3);
+}
+.tech-card .tech-detail code{
+  font-family:var(--mono);font-size:.82em;
+  color:var(--pri-dark);font-weight:600;
+}
+
+/* ═══════════════════════════════════════════
+   Operation Matrix Table
+   ═══════════════════════════════════════════ */
+.matrix-wrap{overflow-x:auto;margin:20px 0}
+table.matrix{
+  width:100%;border-collapse:separate;border-spacing:0;
+  font-size:.84rem;
+  min-width:760px;
+}
+table.matrix th{
+  background:var(--pri);color:#fff;
+  padding:12px 14px;text-align:left;
+  font-weight:700;font-size:.8rem;
+  white-space:nowrap;
+  position:sticky;top:0;
+}
+table.matrix th:first-child{border-radius:8px 0 0 0}
+table.matrix th:last-child{border-radius:0 8px 0 0}
+table.matrix td{
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;
+  line-height:1.6;
+}
+table.matrix tr:nth-child(even) td{background:var(--bg)}
+table.matrix tr:hover td{background:var(--pri-lighter)}
+table.matrix td:first-child{font-weight:600;color:var(--text)}
+table.matrix .op-icon{font-size:1.1rem;display:block;margin-bottom:2px}
+
+/* Risk Badge */
+.risk-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.72rem;font-weight:700;
+  padding:3px 10px;border-radius:20px;
+  white-space:nowrap;
+}
+.risk-l1{background:var(--r-low-bg);color:var(--r-low)}
+.risk-l2{background:var(--r-mid-low-bg);color:var(--r-mid-low)}
+.risk-l3{background:var(--r-mid-bg);color:var(--r-mid)}
+.risk-l4{background:var(--r-mid-high-bg);color:var(--r-mid-high)}
+.risk-l5{background:var(--r-high-bg);color:var(--r-high)}
+
+/* Execution Environment Badge */
+.env-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.72rem;font-weight:600;
+  padding:3px 10px;border-radius:6px;
+  white-space:nowrap;
+}
+.env-sandbox{background:var(--pri-light);color:var(--pri-dark)}
+.env-host{background:var(--r-high-bg);color:var(--r-high)}
+.env-bridged{background:#fef3c7;color:#92400e}
+
+/* ═══════════════════════════════════════════
+   Risk Level Cards
+   ═══════════════════════════════════════════ */
+.risk-cards{display:flex;flex-direction:column;gap:12px;margin:20px 0}
+.risk-card{
+  display:grid;
+  grid-template-columns:80px 1fr auto;
+  gap:16px;align-items:center;
+  border-radius:var(--radius);
+  padding:16px 20px;
+  border:2px solid;
+  transition:var(--transition);
+}
+.risk-card:hover{transform:translateX(4px);box-shadow:var(--shadow-md)}
+.risk-card .level{
+  font-size:1.6rem;font-weight:800;
+  text-align:center;line-height:1;
+}
+.risk-card .level small{display:block;font-size:.65rem;font-weight:600;margin-top:2px}
+.risk-card .info h4{font-size:.95rem;font-weight:700;margin-bottom:4px}
+.risk-card .info p{font-size:.82rem;line-height:1.6}
+.risk-card .examples{
+  font-size:.78rem;font-family:var(--mono);
+  display:flex;flex-wrap:wrap;gap:6px;
+}
+.risk-card .examples span{
+  padding:2px 8px;border-radius:4px;
+  background:rgba(255,255,255,.6);
+}
+.risk-l1-card{border-color:var(--r-low);background:var(--r-low-bg)}
+.risk-l1-card .level{color:var(--r-low)}
+.risk-l2-card{border-color:var(--r-mid-low);background:var(--r-mid-low-bg)}
+.risk-l2-card .level{color:var(--r-mid-low)}
+.risk-l3-card{border-color:var(--r-mid);background:var(--r-mid-bg)}
+.risk-l3-card .level{color:var(--r-mid)}
+.risk-l4-card{border-color:var(--r-mid-high);background:var(--r-mid-high-bg)}
+.risk-l4-card .level{color:var(--r-mid-high)}
+.risk-l5-card{border-color:var(--r-high);background:var(--r-high-bg)}
+.risk-l5-card .level{color:var(--r-high)}
+@media(max-width:768px){
+  .risk-card{grid-template-columns:1fr;text-align:left}
+  .risk-card .level{text-align:left}
+}
+
+/* ═══════════════════════════════════════════
+   Comparison Table
+   ═══════════════════════════════════════════ */
+.compare-wrap{overflow-x:auto;margin:20px 0}
+table.compare{
+  width:100%;border-collapse:separate;border-spacing:0;
+  font-size:.82rem;min-width:680px;
+}
+table.compare th{
+  background:var(--text);color:#fff;
+  padding:10px 14px;text-align:left;
+  font-weight:700;font-size:.78rem;
+}
+table.compare th:first-child{border-radius:8px 0 0 0}
+table.compare th:last-child{border-radius:0 8px 0 0}
+table.compare td{
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;line-height:1.6;
+}
+table.compare tr:nth-child(even) td{background:var(--bg)}
+table.compare td:first-child{font-weight:600;color:var(--text);white-space:nowrap}
+
+/* ═══════════════════════════════════════════
+   Case Study
+   ═══════════════════════════════════════════ */
+.case-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;margin-bottom:16px;
+  border-left:4px solid var(--pri);
+  transition:var(--transition);
+}
+.case-card:hover{box-shadow:var(--shadow-md)}
+.case-card .case-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:14px;
+}
+.case-card .case-logo{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;flex-shrink:0;
+}
+.case-card h4{font-size:1.05rem;font-weight:700}
+.case-card .case-sub{font-size:.78rem;color:var(--text3)}
+.case-card .case-body{font-size:.86rem;color:var(--text2);line-height:1.7}
+.case-card .case-body p{margin-bottom:8px}
+.case-card .case-body p:last-child{margin-bottom:0}
+.case-card .case-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.case-card .case-tags span{
+  font-size:.72rem;font-weight:600;
+  padding:3px 10px;border-radius:6px;
+  background:var(--pri-lighter);color:var(--pri-dark);
+}
+
+/* Flow Diagram */
+.flow-diagram{
+  display:flex;align-items:stretch;gap:0;
+  margin:24px 0;flex-wrap:wrap;
+}
+.flow-step{
+  flex:1;min-width:140px;
+  padding:16px 12px;text-align:center;
+  border-radius:var(--radius-sm);
+  font-size:.82rem;font-weight:600;
+  position:relative;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+}
+.flow-step .step-icon{font-size:1.5rem}
+.flow-step .step-num{
+  font-size:.65rem;font-weight:700;
+  opacity:.7;text-transform:uppercase;
+}
+.flow-arrow{
+  display:flex;align-items:center;
+  color:var(--text3);font-size:1.2rem;
+  padding:0 6px;
+}
+@media(max-width:768px){
+  .flow-diagram{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg);padding:8px 0}
+}
+
+/* Constraint Strategy Grid */
+.constraint-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;margin:20px 0;
+}
+.constraint-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  border-top:3px solid var(--pri);
+  transition:var(--transition);
+}
+.constraint-item:hover{box-shadow:var(--shadow-md)}
+.constraint-item .c-header{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:8px;
+}
+.constraint-item .c-header .c-icon{font-size:1.1rem}
+.constraint-item h4{font-size:.9rem;font-weight:700}
+.constraint-item p{font-size:.8rem;color:var(--text2);line-height:1.65}
+.constraint-item .c-tech{
+  margin-top:8px;font-size:.76rem;
+  font-family:var(--mono);color:var(--pri-dark);
+  background:var(--pri-lighter);
+  padding:4px 8px;border-radius:4px;
+  display:inline-block;
+}
+
+/* Summary stats */
+.stats-row{
+  display:flex;gap:16px;flex-wrap:wrap;
+  margin:20px 0;
+}
+.stat-box{
+  flex:1;min-width:120px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;text-align:center;
+}
+.stat-box .num{
+  font-size:2rem;font-weight:800;
+  color:var(--pri);line-height:1;
+}
+.stat-box .label{
+  font-size:.78rem;color:var(--text2);
+  margin-top:6px;
+}
+
+/* Footer */
+.footer{
+  text-align:center;padding:40px 24px;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+}
+.footer p{font-size:.82rem;color:var(--text3)}
+.footer .back-top{
+  display:inline-block;margin-top:12px;
+  font-size:.82rem;color:var(--pri);font-weight:600;
+  cursor:pointer;transition:var(--transition);
+}
+.footer .back-top:hover{color:var(--pri-dark)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     Navigation
+     ═══════════════════════════════════════════ -->
+<nav class="nav">
+  <a href="../index.html" class="logo">
+    <svg viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="7" fill="#2563eb"/>
+      <path d="M8 9h12M8 14h12M8 19h7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <span>Frontend Learning Hub</span>
+  </a>
+  <div class="toc">
+    <a data-toc="concept">概念定义</a>
+    <a data-toc="boundary">隔离边界</a>
+    <a data-toc="tech">技术手段</a>
+    <a data-toc="ops-matrix">操作矩阵</a>
+    <a data-toc="risk">风险等级</a>
+    <a data-toc="strategy">约束策略</a>
+    <a data-toc="cases">案例分析</a>
+    <a data-toc="best-practice">最佳实践</a>
+  </div>
+  <a href="../index.html" class="home-btn">← 返回首页</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     Hero
+     ═══════════════════════════════════════════ -->
+<header class="hero">
+  <span class="badge">AI AGENT · 安全架构</span>
+  <h1>AI Agent 执行沙盒机制全解析</h1>
+  <p class="subtitle">从隔离边界到操作分类，从技术手段到安全约束 —— 深入理解 Agent 执行环境的隔离原理、操作范围控制策略与风险分级体系</p>
+  <div class="meta">
+    <div class="meta-item">📚 <strong>8</strong> 个核心模块</div>
+    <div class="meta-item">🔧 <strong>6</strong> 大技术手段</div>
+    <div class="meta-item">📊 <strong>5</strong> 级风险体系</div>
+    <div class="meta-item">🎯 <strong>4</strong> 个实战案例</div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     1. 概念定义
+     ═══════════════════════════════════════════ -->
+<div class="content">
+<section id="concept">
+  <h2 class="section-title"><span class="num">1</span>什么是执行沙盒</h2>
+  <p class="section-desc">沙盒（Sandbox）是一种受控的隔离执行环境，Agent 在其中运行时，其对宿主系统资源的访问被严格限制。它既是 Agent 的"活动围栏"，也是宿主系统的"防护盾牌"。</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3><span class="icon">🛡️</span>核心设计目标</h3>
+      <ul class="clean">
+        <li><strong>隔离性</strong>：Agent 进程与宿主 OS 之间建立明确的信任边界</li>
+        <li><strong>可控性</strong>：精确控制 Agent 可访问的资源类型与范围</li>
+        <li><strong>可观测性</strong>：监控并审计 Agent 的所有系统调用行为</li>
+        <li><strong>可恢复性</strong>：执行完毕后环境可销毁，不留痕迹</li>
+        <li><strong>最小权限</strong>：仅授予完成任务所需的最少系统权限</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="icon">⚡</span>为什么需要沙盒</h3>
+      <ul class="clean">
+        <li><strong>不可信代码执行</strong>：Agent 生成的代码可能包含恶意逻辑</li>
+        <li><strong>提示注入攻击</strong>：攻击者通过工具返回结果劫持 Agent</li>
+        <li><strong>误操作防护</strong>：Agent 自主决策可能导致意外的系统破坏</li>
+        <li><strong>资源耗尽</strong>：防止 Agent 占满 CPU / 内存 / 磁盘</li>
+        <li><strong>数据泄露</strong>：阻止 Agent 读取敏感文件或外传数据</li>
+        <li><strong>横向移动</strong>：防止被攻破的 Agent 攻击同主机其他服务</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <strong>关键区别：</strong>沙盒 ≠ 虚拟机。沙盒是一种<strong>约束策略</strong>，可通过多种技术实现（容器、VM、WASM、语言级隔离等），而虚拟机只是实现沙盒的<strong>技术手段之一</strong>。沙盒的核心理念是"默认拒绝，按需放行"。
+  </div>
+
+  <div class="card">
+    <h3><span class="icon">🔍</span>沙盒的信任模型</h3>
+    <p>沙盒的安全模型基于<strong>分层信任</strong>（Layered Trust）原则：</p>
+    <div class="code-block">
+<span class="label">Trust Model</span>
+<span class="c-com">// 信任层级（从高到低）</span>
+<span class="c-key">Level 0</span> <span class="c-op">→</span> 宿主内核（<span class="c-type">完全信任</span>，沙盒的基础设施）
+<span class="c-key">Level 1</span> <span class="c-op">→</span> 沙盒运行时（<span class="c-type">可信</span>，负责隔离与监控）
+<span class="c-key">Level 2</span> <span class="c-op">→</span> Agent 框架代码（<span class="c-type">半可信</span>，经过审计）
+<span class="c-key">Level 3</span> <span class="c-op">→</span> Agent 生成的代码 / LLM 输出（<span class="c-type">不可信</span>，需沙盒隔离）
+<span class="c-key">Level 4</span> <span class="c-op">→</span> 外部工具返回的数据（<span class="c-type">不可信</span>，可能含注入）
+
+<span class="c-com">// 每一层只能调用比自己信任级别低或 equal 的层</span>
+<span class="c-com">// Level 3 的代码永远不能直接触碰 Level 0 的内核资源</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     2. 隔离边界
+     ═══════════════════════════════════════════ -->
+<section id="boundary">
+  <h2 class="section-title"><span class="num">2</span>沙盒的隔离边界在哪</h2>
+  <p class="section-desc">隔离边界定义了"沙盒内"与"沙盒外"的分界线。不同的隔离技术提供不同强度的边界，从进程级到硬件级，安全性与开销递增。</p>
+
+  <div class="arch-diagram">
+    <div class="arch-layer arch-agent">
+      <div class="layer-name">🤖 Agent 进程（不可信代码）</div>
+      <div class="layer-desc">LLM 生成的代码、工具调用、数据处理逻辑</div>
+      <span class="arch-label">Level 3-4</span>
+    </div>
+    <div class="arch-arrow">▲▼</div>
+    <div class="arch-layer arch-sandbox">
+      <div class="layer-name">📦 沙盒运行时（隔离层）</div>
+      <div class="layer-desc">Namespace + seccomp + cgroups + 文件系统隔离</div>
+      <span class="arch-label">Level 1-2</span>
+    </div>
+    <div class="arch-arrow">▲▼</div>
+    <div class="arch-layer arch-container">
+      <div class="layer-name">🐳 容器 / WASM 引擎（可选中间层）</div>
+      <div class="layer-desc">Docker / gVisor / Wasmtime / Firecracker microVM</div>
+      <span class="arch-label">Level 1</span>
+    </div>
+    <div class="arch-arrow">▲▼</div>
+    <div class="arch-layer arch-host">
+      <div class="layer-name">🖥️ 宿主操作系统内核（信任根基）</div>
+      <div class="layer-desc">Linux Kernel — 沙盒边界的最终执行者</div>
+      <span class="arch-label">Level 0</span>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <strong>边界的核心原则：</strong>隔离边界不是一条线，而是<strong>多层防御</strong>（Defense in Depth）。每一层都假设外层可能被攻破，因此内层必须独立提供保护。如果容器逃逸成功，seccomp 仍应阻止危险系统调用；如果 seccomp 被绕过，AppArmor 仍应限制文件访问。
+  </div>
+
+  <h3 style="font-size:1.15rem;font-weight:700;margin:28px 0 16px;color:var(--text)">五级隔离技术对比</h3>
+  <div class="compare-wrap">
+    <table class="compare">
+      <thead>
+        <tr>
+          <th>隔离级别</th>
+          <th>技术实现</th>
+          <th>隔离强度</th>
+          <th>性能开销</th>
+          <th>典型场景</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>语言级</td>
+          <td>Python RestrictedPython<br>JS vm / isolated-vm<br>V8 Isolates</td>
+          <td><span class="risk-badge risk-l2">中低</span></td>
+          <td>极低（&lt;1%）</td>
+          <td>在线代码执行<br>表达式求值</td>
+        </tr>
+        <tr>
+          <td>进程级</td>
+          <td>fork + setuid<br>chroot + drop caps<br>ptrace 监控</td>
+          <td><span class="risk-badge risk-l3">中</span></td>
+          <td>低（1-3%）</td>
+          <td>简单脚本执行<br>CI/CD runner</td>
+        </tr>
+        <tr>
+          <td>容器级</td>
+          <td>Docker / Podman<br>Namespaces + cgroups<br>seccomp-bpf</td>
+          <td><span class="risk-badge risk-l3">中</span></td>
+          <td>低（2-5%）</td>
+          <td>Agent 代码执行<br>Dev 环境</td>
+        </tr>
+        <tr>
+          <td>强化容器</td>
+          <td>gVisor（用户态内核）<br>Kata Containers<br>Firecracker microVM</td>
+          <td><span class="risk-badge risk-l4">中高</span></td>
+          <td>中（5-15%）</td>
+          <td>多租户 Agent<br>生产环境</td>
+        </tr>
+        <tr>
+          <td>虚拟机级</td>
+          <td>KVM / QEMU<br>Firecracker<br>Nitro Enclave</td>
+          <td><span class="risk-badge risk-l5">高</span></td>
+          <td>高（10-30%）</td>
+          <td>高安全需求<br>不可信代码执行</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     3. 技术手段
+     ═══════════════════════════════════════════ -->
+<section id="tech">
+  <h2 class="section-title"><span class="num">3</span>技术手段深度解析</h2>
+  <p class="section-desc">沙盒的隔离能力并非来自单一技术，而是多种 Linux 内核安全机制的组合。以下六大技术手段构成了沙盒的"防护矩阵"。</p>
+
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tech-header">
+        <div class="tech-icon">🌐</div>
+        <h4>Linux Namespaces</h4>
+        <span class="tech-tag env-sandbox">视图隔离</span>
+      </div>
+      <p>为进程创建独立的系统视图，使其"看不到"宿主的其他进程、网络、挂载点等资源。</p>
+      <div class="tech-detail">
+        <strong>7 种 Namespace：</strong><br>
+        <code>PID</code> 进程隔离 · <code>NET</code> 网络栈<br>
+        <code>MNT</code> 文件挂载 · <code>IPC</code> 进程间通信<br>
+        <code>UTS</code> 主机名 · <code>USER</code> UID 映射<br>
+        <code>CGROUP</code> cgroup 视图
+      </div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-header">
+        <div class="tech-icon">📊</div>
+        <h4>cgroups (v2)</h4>
+        <span class="tech-tag env-sandbox">资源限制</span>
+      </div>
+      <p>限制进程组可使用的系统资源量，防止 Agent 耗尽宿主资源导致 DoS。</p>
+      <div class="tech-detail">
+        <strong>核心控制器：</strong><br>
+        <code>cpu.max</code> CPU 配额<br>
+        <code>memory.max</code> 内存上限<br>
+        <code>pids.max</code> 进程数限制<br>
+        <code>io.max</code> 磁盘 I/O 限速
+      </div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-header">
+        <div class="tech-icon">🔒</div>
+        <h4>seccomp-BPF</h4>
+        <span class="tech-tag env-sandbox">系统调用过滤</span>
+      </div>
+      <p>通过 BPF 过滤器在内核层面拦截系统调用，仅允许白名单内的 syscall 执行。</p>
+      <div class="tech-detail">
+        <strong>默认策略：</strong>白名单模式<br>
+        <strong>允许：</strong>read/write/close/mmap<br>
+        <strong>禁止：</strong>ptrace/mount/reboot<br>
+        <strong>拦截后：</strong>SIGKILL 或 EPERM
+      </div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-header">
+        <div class="tech-icon">📁</div>
+        <h4>OverlayFS + 只读层</h4>
+        <span class="tech-tag env-sandbox">文件系统隔离</span>
+      </div>
+      <p>将根文件系统设为只读，通过 OverlayFS 叠加可写层，Agent 的修改不反映到宿主。</p>
+      <div class="tech-detail">
+        <strong>三层结构：</strong><br>
+        <code>lower</code> 只读基础镜像<br>
+        <code>upper</code> 可写层（tmpfs）<br>
+        <code>merged</code> 合并视图<br>
+        <strong>敏感路径：</strong>/proc /sys /dev 严格过滤
+      </div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-header">
+        <div class="tech-icon">🔌</div>
+        <h4>网络隔离</h4>
+        <span class="tech-tag env-sandbox">网络访问控制</span>
+      </div>
+      <p>通过 Network Namespace + eBPF / iptables 限制 Agent 的网络访问范围。</p>
+      <div class="tech-detail">
+        <strong>策略示例：</strong><br>
+        白名单域名访问<br>
+        禁止内网地址段（10.x / 172.x）<br>
+        出站流量经代理审计<br>
+        <code>eBPF</code> 实时监控 socket 行为
+      </div>
+    </div>
+
+    <div class="tech-card">
+      <div class="tech-header">
+        <div class="tech-icon">⚡</div>
+        <h4>权限降级</h4>
+        <span class="tech-tag env-sandbox">最小权限</span>
+      </div>
+      <p>移除 Linux Capabilities，将 Agent 进程降级为非特权用户，配合 AppArmor/SELinux 强制访问控制。</p>
+      <div class="tech-detail">
+        <strong>移除的 Capabilities：</strong><br>
+        <code>CAP_SYS_ADMIN</code> 系统管理<br>
+        <code>CAP_NET_ADMIN</code> 网络管理<br>
+        <code>CAP_SYS_PTRACE</code> 进程调试<br>
+        <strong>保留：</strong>仅完成功能所需的最小集
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="icon">🧩</span>技术组合：Docker 沙盒的安全配置示例</h3>
+    <div class="code-block">
+<span class="label">docker run</span>
+docker run <span class="c-op">\</span>
+  <span class="c-key">--rm</span>                    <span class="c-com"># 执行完毕自动删除容器</span>
+  <span class="c-key">--read-only</span>             <span class="c-com"># 根文件系统只读</span>
+  <span class="c-key">--tmpfs</span> /tmp:size=64m   <span class="c-com"># 仅 /tmp 可写，限制 64MB</span>
+  <span class="c-key">--network</span>=none           <span class="c-com"># 完全禁用网络</span>
+  <span class="c-key">--pids-limit</span>=64          <span class="c-com"># 最多 64 个进程</span>
+  <span class="c-key">--memory</span>=512m            <span class="c-com"># 内存上限 512MB</span>
+  <span class="c-key">--cpus</span>=1                <span class="c-com"># 最多 1 个 CPU 核心</span>
+  <span class="c-key">--cap-drop</span>=ALL           <span class="c-com"># 移除所有 Linux Capabilities</span>
+  <span class="c-key">--security-opt</span> no-new-privileges  <span class="c-com"># 禁止提权</span>
+  <span class="c-key">--security-opt</span> seccomp=agent-profile.json  <span class="c-com"># seccomp 白名单</span>
+  <span class="c-key">--security-opt</span> apparmor=agent-profile     <span class="c-com"># AppArmor 策略</span>
+  <span class="c-key">--user</span> 1000:1000          <span class="c-com"># 非特权用户运行</span>
+  <span class="c-key">--workdir</span> /sandbox        <span class="c-com"># 限定工作目录</span>
+  agent-runtime:latest python /sandbox/main.py
+    </div>
+    <p style="font-size:.82rem;color:var(--text3);margin-top:8px">这个配置组合了只读 FS、tmpfs、网络隔离、资源限制、seccomp、AppArmor、权限降级七层防护。每一层独立失效时，其他层仍能提供保护。</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     4. 操作分类矩阵（核心）
+     ═══════════════════════════════════════════ -->
+<section id="ops-matrix">
+  <h2 class="section-title"><span class="num">4</span>操作分类矩阵</h2>
+  <p class="section-desc">这是本文的核心：逐一列举 Agent 可能执行的所有操作类型，标注其执行环境（沙盒内 / 突破沙盒）、安全风险等级以及沙盒施加的具体约束。</p>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="num">14</div><div class="label">操作类型</div></div>
+    <div class="stat-box"><div class="num">9</div><div class="label">沙盒内执行</div></div>
+    <div class="stat-box"><div class="num">5</div><div class="label">突破沙盒</div></div>
+    <div class="stat-box"><div class="num">5</div><div class="label">风险等级</div></div>
+  </div>
+
+  <div class="callout info">
+    <strong>阅读说明：</strong>「执行环境」列标注了该操作在标准沙盒配置下的归属：
+    <span class="env-badge env-sandbox">沙盒内</span> = 在隔离环境中安全执行；
+    <span class="env-badge env-host">突破沙盒</span> = 直接接触宿主资源，需要特殊放行；
+    <span class="env-badge env-bridged">桥接</span> = 在沙盒内发起但经代理访问宿主资源。
+  </div>
+
+  <div class="matrix-wrap">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>操作类型</th>
+          <th>执行环境</th>
+          <th>风险等级</th>
+          <th>具体操作</th>
+          <th>沙盒约束策略</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ── 沙盒内执行的操作 ── -->
+        <tr>
+          <td><span class="op-icon">🐍</span>代码执行</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l2">L2 中低</span></td>
+          <td>Python / Node.js / Shell 脚本解释执行</td>
+          <td>隔离进程运行；<code class="inline">__builtins__</code> 过滤；禁用 <code class="inline">import os/subprocess</code>；CPU/内存配额限制；执行超时</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">📄</span>文件读取（受限）</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l2">L2 中低</span></td>
+          <td>读取沙盒工作目录内的文件、读取上传的附件</td>
+          <td>仅允许 <code class="inline">/sandbox/</code> 路径；OverlayFS 只读层；<code class="inline">/proc</code>/<code class="inline">/sys</code> 挂载为空；路径穿越检查（防 <code class="inline">../../etc/passwd</code>）</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">✏️</span>文件写入（受限）</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l2">L2 中低</span></td>
+          <td>写入临时文件、生成输出文件</td>
+          <td>仅 <code class="inline">/sandbox/output/</code> 可写（tmpfs）；磁盘配额限制；禁止写入系统路径；写入审计日志</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">🌐</span>网络请求（受限）</td>
+          <td><span class="env-badge env-bridged">桥接</span></td>
+          <td><span class="risk-badge risk-l3">L3 中</span></td>
+          <td>HTTP/HTTPS API 调用、Webhook 回调</td>
+          <td>出站经代理审计；域名白名单；禁止内网 IP 段；SSRF 防护；请求频率/大小限制；TLS 证书校验</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">📦</span>第三方库加载</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l3">L3 中</span></td>
+          <td><code class="inline">pip install</code> / <code class="inline">npm install</code> / <code class="inline">require()</code></td>
+          <td>预装白名单包；离线 pip/npm 源；禁止安装含 C 扩展的包；依赖扫描；虚拟环境隔离</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">⚙️</span>系统命令（白名单）</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l4">L4 中高</span></td>
+          <td>执行 <code class="inline">git</code> / <code class="inline">curl</code> / <code class="inline">make</code> 等命令</td>
+          <td>命令白名单（非完整 shell）；参数校验；seccomp 限制 syscall；命令执行超时；stdout/stderr 捕获</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">🔀</span>进程创建（受限）</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l3">L3 中</span></td>
+          <td>fork / exec 子进程</td>
+          <td><code class="inline">pids.max</code> 限制进程数；子进程继承沙盒约束；禁止 ptrace/procfs 访问；进程树监控</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">🔑</span>环境变量访问</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l2">L2 中低</span></td>
+          <td>读取 <code class="inline">os.environ</code> / <code class="inline">process.env</code></td>
+          <td>仅注入白名单变量；敏感密钥通过 secrets manager 注入；禁止读取宿主环境变量</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">💾</span>数据计算与处理</td>
+          <td><span class="env-badge env-sandbox">沙盒内</span></td>
+          <td><span class="risk-badge risk-l1">L1 低</span></td>
+          <td>数值计算、JSON 解析、正则匹配、排序过滤</td>
+          <td>纯内存操作，无 I/O 副作用；递归深度限制；正则复杂度限制（防 ReDoS）；内存配额</td>
+        </tr>
+        <tr>
+          <td><span class="op-icon">📨</span>消息队列操作</td>
+          <td><span class="env-badge env-bridged">桥接</span></td>
+          <td><span class="risk-badge risk-l3">L3 中</span></td>
+          <td>向 Redis / RabbitMQ / Kafka 发布消息</td>
+          <td>经专用 SDK 桥接（非直连）；topic 白名单；消息大小限制；QPS 限流；连接池隔离</td>
+        </tr>
+
+        <!-- ── 突破沙盒的操作 ── -->
+        <tr style="background:var(--r-high-bg) !important">
+          <td><span class="op-icon">💽</span>宿主文件系统直写</td>
+          <td><span class="env-badge env-host">突破沙盒</span></td>
+          <td><span class="risk-badge risk-l5">L5 高</span></td>
+          <td>写入宿主磁盘路径、修改系统配置文件</td>
+          <td>⚠️ <strong>沙盒禁止</strong>：通过 mount namespace + OverlayFS 完全隔离。需放行时使用「安全桥接」：经审计代理逐文件审批，写入前校验路径与内容</td>
+        </tr>
+        <tr style="background:var(--r-high-bg) !important">
+          <td><span class="op-icon">💉</span>宿主进程注入</td>
+          <td><span class="env-badge env-host">突破沙盒</span></td>
+          <td><span class="risk-badge risk-l5">L5 高</span></td>
+          <td>ptrace 注入、共享内存写入宿主进程</td>
+          <td>⚠️ <strong>沙盒禁止</strong>：seccomp 拦截 <code class="inline">ptrace</code>；PID namespace 隐藏宿主进程；<code class="inline">CAP_SYS_PTRACE</code> 已移除。正常 Agent 永不需要此操作</td>
+        </tr>
+        <tr style="background:var(--r-high-bg) !important">
+          <td><span class="op-icon">🔧</span>内核模块加载</td>
+          <td><span class="env-badge env-host">突破沙盒</span></td>
+          <td><span class="risk-badge risk-l5">L5 高</span></td>
+          <td><code class="inline">insmod</code> / <code class="inline">modprobe</code> 加载内核模块</td>
+          <td>⚠️ <strong>沙盒禁止</strong>：seccomp 拦截 <code class="inline">init_module</code> / <code class="inline">finit_module</code>；移除 <code class="inline">CAP_SYS_MODULE</code>。内核模块可绕过所有沙盒防护</td>
+        </tr>
+        <tr style="background:var(--r-high-bg) !important">
+          <td><span class="op-icon">🔌</span>硬件设备访问</td>
+          <td><span class="env-badge env-host">突破沙盒</span></td>
+          <td><span class="risk-badge risk-l5">L5 高</span></td>
+          <td>读写 <code class="inline">/dev/mem</code> / <code class="inline">/dev/sda</code> / GPU 设备</td>
+          <td>⚠️ <strong>沙盒禁止</strong>：Device Namespace 过滤；<code class="inline">/dev</code> 仅暴露 <code class="inline">/dev/null</code> 等基础设备；移除 <code class="inline">CAP_SYS_RAWIO</code></td>
+        </tr>
+        <tr style="background:var(--r-high-bg) !important">
+          <td><span class="op-icon">📡</span>特权网络操作</td>
+          <td><span class="env-badge env-host">突破沙盒</span></td>
+          <td><span class="risk-badge risk-l4">L4 中高</span></td>
+          <td>原始套接字、网络抓包、ARP 欺骗、端口扫描</td>
+          <td>⚠️ <strong>沙盒禁止</strong>：移除 <code class="inline">CAP_NET_RAW</code> / <code class="inline">CAP_NET_ADMIN</code>；seccomp 拦截 <code class="inline">socket(AF_RAW,...)</code>；Net Namespace 隔离网络栈</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout danger">
+    <strong>突破沙盒的操作说明：</strong>上表中标记为「突破沙盒」的操作，在标准沙盒配置下会被<strong>直接拒绝</strong>（进程收到 SIGKILL 或 EPERM 错误）。这些操作如果需要执行，必须通过<strong>安全桥接层</strong>（Audited Bridge）——由宿主侧的特权代理代为执行，并对每次操作进行策略校验和审计记录。Agent 本身永远不应获得直接执行这些操作的能力。
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     5. 安全风险等级
+     ═══════════════════════════════════════════ -->
+<section id="risk">
+  <h2 class="section-title"><span class="num">5</span>安全风险等级体系</h2>
+  <p class="section-desc">将 Agent 操作按潜在危害分为 5 个等级，从 L1（纯计算无副作用）到 L5（可完全控制宿主系统），每个等级对应不同的约束强度和放行策略。</p>
+
+  <div class="risk-cards">
+    <div class="risk-card risk-l1-card">
+      <div class="level">L1<small>低风险</small></div>
+      <div class="info">
+        <h4>纯计算与内存操作</h4>
+        <p>仅在内存中执行，不产生任何 I/O 副作用。即使代码被劫持，也无法影响系统安全。</p>
+      </div>
+      <div class="examples">
+        <span>数值计算</span><span>JSON解析</span><span>正则匹配</span><span>排序过滤</span>
+      </div>
+    </div>
+
+    <div class="risk-card risk-l2-card">
+      <div class="level">L2<small>中低风险</small></div>
+      <div class="info">
+        <h4>受限文件系统操作</h4>
+        <p>涉及文件读写，但限定在沙盒工作目录内。主要风险是数据泄露和磁盘耗尽。</p>
+      </div>
+      <div class="examples">
+        <span>读沙盒文件</span><span>写tmpfs</span><span>读环境变量</span><span>代码执行</span>
+      </div>
+    </div>
+
+    <div class="risk-card risk-l3-card">
+      <div class="level">L3<small>中风险</small></div>
+      <div class="info">
+        <h4>网络与外部交互</h4>
+        <p>涉及网络请求或第三方库加载，存在 SSRF、数据外传、供应链攻击风险。</p>
+      </div>
+      <div class="examples">
+        <span>HTTP请求</span><span>pip install</span><span>消息队列</span><span>进程创建</span>
+      </div>
+    </div>
+
+    <div class="risk-card risk-l4-card">
+      <div class="level">L4<small>中高风险</small></div>
+      <div class="info">
+        <h4>系统命令与特权网络</h4>
+        <p>直接执行系统命令或进行特权网络操作。可能被利用进行提权或横向移动。</p>
+      </div>
+      <div class="examples">
+        <span>shell命令</span><span>原始套接字</span><span>端口扫描</span><span>网络抓包</span>
+      </div>
+    </div>
+
+    <div class="risk-card risk-l5-card">
+      <div class="level">L5<small>高风险</small></div>
+      <div class="info">
+        <h4>宿主系统级操作</h4>
+        <p>直接操作宿主文件系统、进程、内核或硬件。一旦成功可完全控制宿主主机。</p>
+      </div>
+      <div class="examples">
+        <span>写宿主FS</span><span>进程注入</span><span>加载内核模块</span><span>/dev访问</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <strong>放行策略矩阵：</strong>
+    <strong>L1</strong> — 默认允许，无需审计 ·
+    <strong>L2</strong> — 允许，记录审计日志 ·
+    <strong>L3</strong> — 白名单放行，实时监控 ·
+    <strong>L4</strong> — 需策略审批，操作前校验 ·
+    <strong>L5</strong> — 默认拒绝，仅经安全桥接层代执行
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     6. 约束策略
+     ═══════════════════════════════════════════ -->
+<section id="strategy">
+  <h2 class="section-title"><span class="num">6</span>约束策略详解</h2>
+  <p class="section-desc">沙盒对每类操作施加的约束策略不是简单的"允许/禁止"，而是多维度的组合约束：限制范围 + 限制资源 + 监控行为 + 审计记录。</p>
+
+  <div class="constraint-grid">
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">📁</span><h4>路径约束</h4></div>
+      <p>限制文件操作的可访问路径范围，防止路径穿越和越权访问。</p>
+      <span class="c-tech">chroot + realpath() + prefix check</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">⏱️</span><h4>时间约束</h4></div>
+      <p>限制单次操作的最大执行时间，防止死循环和资源占用。</p>
+      <span class="c-tech">timeout + alarm + cgroup cpu.max</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">💾</span><h4>资源约束</h4></div>
+      <p>限制 CPU、内存、磁盘、进程数等资源使用量，防止 DoS。</p>
+      <span class="c-tech">cgroups v2 + ulimit + tmpfs size</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">🌐</span><h4>网络约束</h4></div>
+      <p>限制可访问的域名、端口、协议，防止 SSRF 和数据外传。</p>
+      <span class="c-tech">eBPF + iptables + domain whitelist</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">🔐</span><h4>权限约束</h4></div>
+      <p>限制 syscall 调用范围和 Linux capabilities，最小权限原则。</p>
+      <span class="c-tech">seccomp-bpf + drop caps + AppArmor</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">📦</span><h4>依赖约束</h4></div>
+      <p>限制可加载的第三方库，防止供应链攻击和恶意扩展。</p>
+      <span class="c-tech">package whitelist + offline registry</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">📊</span><h4>行为约束</h4></div>
+      <p>监控操作序列，检测异常行为模式（如批量读取后网络外传）。</p>
+      <span class="c-tech">audit log + anomaly detection</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">🧬</span><h4>数据约束</h4></div>
+      <p>限制单次 I/O 数据大小，防止大文件读取导致内存溢出。</p>
+      <span class="c-tech">read size limit + stream chunking</span>
+    </div>
+    <div class="constraint-item">
+      <div class="c-header"><span class="c-icon">🔄</span><h4>频率约束</h4></div>
+      <p>限制操作调用频率，防止暴力探测和自动化攻击。</p>
+      <span class="c-tech">rate limiter + token bucket</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <h3><span class="icon">🔀</span>安全桥接层（Audited Bridge）工作流</h3>
+    <p>对于需要访问宿主资源的高风险操作（L4-L5），沙盒不直接放行，而是通过「安全桥接层」代理执行：</p>
+    <div class="flow-diagram">
+      <div class="flow-step" style="background:var(--pri-lighter);color:var(--pri-dark)">
+        <span class="step-num">STEP 1</span>
+        <span class="step-icon">📝</span>
+        Agent 发起请求
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#fef3c7;color:#92400e">
+        <span class="step-num">STEP 2</span>
+        <span class="step-icon">🔍</span>
+        策略校验
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#fed7aa;color:#7c2d12">
+        <span class="step-num">STEP 3</span>
+        <span class="step-icon">⚠️</span>
+        风险评估
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#fecaca;color:#7f1d1d">
+        <span class="step-num">STEP 4</span>
+        <span class="step-icon">✅</span>
+        代理执行
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:var(--r-low-bg);color:var(--r-low)">
+        <span class="step-num">STEP 5</span>
+        <span class="step-icon">📋</span>
+        审计记录
+      </div>
+    </div>
+    <p style="font-size:.82rem;color:var(--text2);margin-top:16px"><strong>桥接层职责：</strong>① 验证请求是否在允许策略内 → ② 评估操作的潜在风险 → ③ 由特权代理代为执行（Agent 本身无权限）→ ④ 完整记录操作参数、时间、结果到审计日志 → ⑤ 返回脱敏后的结果给 Agent。</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     7. 案例分析
+     ═══════════════════════════════════════════ -->
+<section id="cases">
+  <h2 class="section-title"><span class="num">7</span>实际 Agent 沙盒案例分析</h2>
+  <p class="section-desc">对比主流 Agent 执行环境的沙盒实现方案，理解不同产品如何权衡安全性与功能性。</p>
+
+  <div class="case-card">
+    <div class="case-header">
+      <div class="case-logo" style="background:#dbeafe">🟦</div>
+      <div>
+        <h4>Claude Code（Anthropic）</h4>
+        <div class="case-sub">文件系统沙盒 + 权限审批模型</div>
+      </div>
+    </div>
+    <div class="case-body">
+      <p>Claude Code 在用户本地机器上运行，采用<strong>文件系统范围沙盒</strong>策略。Agent 的文件操作被限制在用户指定的项目目录内，对项目目录外的文件访问需要用户逐次审批。</p>
+      <p><strong>沙盒机制：</strong>① 工作目录边界检查（路径前缀匹配）② Bash 命令执行前展示命令内容，用户确认后才执行 ③ 敏感操作（如 <code class="inline">git push</code>、<code class="inline">rm</code>）强制审批 ④ 网络请求通过工具层代理而非直接放行。</p>
+      <p><strong>特点：</strong>轻量级沙盒，依赖人类审批而非技术隔离。适合本地开发场景，但不适合多租户 / 不可信代码执行。</p>
+    </div>
+    <div class="case-tags">
+      <span>文件系统沙盒</span><span>人工审批</span><span>命令确认</span><span>本地运行</span>
+    </div>
+  </div>
+
+  <div class="case-card">
+    <div class="case-header">
+      <div class="case-logo" style="background:#d1fae5">🟩</div>
+      <div>
+        <h4>OpenAI Codex / Code Interpreter</h4>
+        <div class="case-sub">容器级沙盒 + 网络隔离</div>
+      </div>
+    </div>
+    <div class="case-body">
+      <p>Code Interpreter 在<strong>隔离的 Docker 容器</strong>中执行 Agent 生成的 Python 代码。每个会话获得独立的容器实例，执行完毕后销毁。</p>
+      <p><strong>沙盒机制：</strong>① 独立容器 + 只读根文件系统 ② <code class="inline">--network=none</code> 完全禁用网络（或仅允许白名单域名）③ CPU/内存配额限制 ④ 预装 Python 包白名单，禁止 <code class="inline">pip install</code> ⑤ 执行超时 120 秒 ⑥ 文件仅通过上传/下载 API 交换。</p>
+      <p><strong>特点：</strong>技术隔离强度高，适合不可信代码执行。但牺牲了灵活性（无网络访问、无自定义依赖）。</p>
+    </div>
+    <div class="case-tags">
+      <span>Docker 容器</span><span>网络隔离</span><span>资源限制</span><span>会话级销毁</span>
+    </div>
+  </div>
+
+  <div class="case-card">
+    <div class="case-header">
+      <div class="case-logo" style="background:#ede9fe">🟪</div>
+      <div>
+        <h4>Hermes（字节跳动）</h4>
+        <div class="case-sub">强化容器 + 多层防护</div>
+      </div>
+    </div>
+    <div class="case-body">
+      <p>Hermes 采用<strong>gVisor 强化容器</strong>方案，在容器与内核之间增加用户态内核拦截层，提供比标准 Docker 更强的隔离性。</p>
+      <p><strong>沙盒机制：</strong>① gVisor 用户态内核拦截大部分 syscall ② seccomp-bpf 二次过滤 ③ AppArmor 强制访问控制 ④ 出站网络经 eBPF 审计 ⑤ 敏感操作经安全桥接层代理 ⑥ 实时行为分析检测异常模式。</p>
+      <p><strong>特点：</strong>多层防御深度高，适合多租户 Agent 平台。性能开销约 10-15%，在安全性与性能间取得平衡。</p>
+    </div>
+    <div class="case-tags">
+      <span>gVisor</span><span>seccomp-bpf</span><span>AppArmor</span><span>eBPF 审计</span><span>行为分析</span>
+    </div>
+  </div>
+
+  <div class="case-card">
+    <div class="case-header">
+      <div class="case-logo" style="background:#fef3c7">🟨</div>
+      <div>
+        <h4>OpenClaw（开源 Agent 框架）</h4>
+        <div class="case-sub">可配置沙盒 + 分级权限</div>
+      </div>
+    </div>
+    <div class="case-body">
+      <p>OpenClaw 提供<strong>可配置的分级沙盒</strong>，开发者可根据 Agent 的信任级别选择不同强度的隔离方案。</p>
+      <p><strong>沙盒机制：</strong>① <strong>Trusted 模式</strong>：进程级隔离，允许文件读写和网络访问（适合可信 Agent）② <strong>Sandboxed 模式</strong>：容器级隔离 + seccomp（适合半可信 Agent）③ <strong>Hardened 模式</strong>：microVM 隔离 + 完整 seccomp/AppArmor/cgroups（适合不可信代码）④ 每种模式对应不同的操作权限矩阵和审计级别。</p>
+      <p><strong>特点：</strong>灵活性最高，但安全性取决于模式选择。错误选择低强度模式可能导致安全风险。</p>
+    </div>
+    <div class="case-tags">
+      <span>分级沙盒</span><span>可配置</span><span>Trusted/Sandboxed/Hardened</span><span>权限矩阵</span>
+    </div>
+  </div>
+
+  <div class="compare-wrap" style="margin-top:24px">
+    <table class="compare">
+      <thead>
+        <tr>
+          <th>对比维度</th>
+          <th>Claude Code</th>
+          <th>Codex / Code Interpreter</th>
+          <th>Hermes</th>
+          <th>OpenClaw</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>隔离技术</td>
+          <td>文件系统范围</td>
+          <td>Docker 容器</td>
+          <td>gVisor 强化容器</td>
+          <td>可配置（进程→VM）</td>
+        </tr>
+        <tr>
+          <td>网络访问</td>
+          <td>工具层代理</td>
+          <td>完全禁止 / 白名单</td>
+          <td>eBPF 审计代理</td>
+          <td>按模式配置</td>
+        </tr>
+        <tr>
+          <td>文件访问</td>
+          <td>项目目录 + 审批</td>
+          <td>仅容器内 tmpfs</td>
+          <td>安全桥接层代理</td>
+          <td>按模式配置</td>
+        </tr>
+        <tr>
+          <td>代码执行</td>
+          <td>Bash + 审批</td>
+          <td>Python 沙盒</td>
+          <td>多语言沙盒</td>
+          <td>多语言沙盒</td>
+        </tr>
+        <tr>
+          <td>安全强度</td>
+          <td><span class="risk-badge risk-l3">中</span></td>
+          <td><span class="risk-badge risk-l4">中高</span></td>
+          <td><span class="risk-badge risk-l4">中高</span></td>
+          <td><span class="risk-badge risk-l3">中～高</span></td>
+        </tr>
+        <tr>
+          <td>适用场景</td>
+          <td>本地开发辅助</td>
+          <td>在线代码执行</td>
+          <td>多租户平台</td>
+          <td>通用 Agent 框架</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     8. 最佳实践
+     ═══════════════════════════════════════════ -->
+<section id="best-practice">
+  <h2 class="section-title"><span class="num">8</span>沙盒安全最佳实践</h2>
+  <p class="section-desc">设计 Agent 沙盒时的关键原则与实施清单，帮助在安全性与功能性之间找到正确平衡。</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3><span class="icon">🎯</span>设计原则</h3>
+      <ul class="clean">
+        <li><strong>默认拒绝</strong>：所有操作默认禁止，按需逐项放行</li>
+        <li><strong>最小权限</strong>：仅授予完成任务所需的最少权限</li>
+        <li><strong>纵深防御</strong>：多层独立防护，单层被突破不致全盘沦陷</li>
+        <li><strong>失败安全</strong>：沙盒组件故障时应默认拒绝而非放行</li>
+        <li><strong>可审计</strong>：所有操作留痕，支持事后追溯分析</li>
+        <li><strong>短期凭证</strong>：令牌短期有效，使用后立即销毁</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="icon">✅</span>实施清单</h3>
+      <ul class="clean">
+        <li><strong>文件系统</strong>：只读根 + tmpfs 可写层 + 路径白名单</li>
+        <li><strong>网络</strong>：域名白名单 + 禁止内网 + 出站代理</li>
+        <li><strong>资源</strong>：CPU/内存/磁盘/进程数配额</li>
+        <li><strong>Syscall</strong>：seccomp 白名单 + 移除所有 capabilities</li>
+        <li><strong>依赖</strong>：离线包源 + 白名单 + 漏洞扫描</li>
+        <li><strong>超时</strong>：单操作超时 + 总会话超时</li>
+        <li><strong>审计</strong>：操作日志 + 异常检测 + 告警</li>
+        <li><strong>销毁</strong>：会话结束后容器/VM 立即销毁</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout danger">
+    <strong>常见安全陷阱：</strong>
+    <br>① <strong>过度信任 Agent</strong>：认为"Agent 是自己写的"就不需要沙盒 → Agent 可能被提示注入劫持
+    <br>② <strong>只隔离不监控</strong>：配了沙盒但不看审计日志 → 无法发现缓慢的数据外传
+    <br>③ <strong>网络白名单太宽</strong>：允许整个 <code class="inline">*.amazonaws.com</code> → 包含 S3 / IAM 等敏感端点
+    <br>④ <strong>忽略供应链</strong>：允许 <code class="inline">pip install</code> 任意包 → 恶意包可在安装时执行任意代码
+    <br>⑤ <strong>凭证泄漏</strong>：把 API Key 放在环境变量 → Agent 可读取并外传
+  </div>
+
+  <div class="callout success">
+    <strong>进阶建议：</strong>对于高安全需求的 Agent 平台，建议采用<strong>三层沙盒架构</strong>：
+    <br>① <strong>外层</strong>：microVM（Firecracker）提供硬件级隔离
+    <br>② <strong>中层</strong>：容器 + seccomp + AppArmor 提供系统调用级过滤
+    <br>③ <strong>内层</strong>：语言级沙盒（RestrictedPython / isolated-vm）提供代码级约束
+    <br>三层独立配置，任一层被突破时其他层仍能提供保护。
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <h3><span class="icon">📐</span>沙盒强度选择决策树</h3>
+    <div class="code-block">
+<span class="label">Decision Tree</span>
+<span class="c-key">Q1</span>: Agent 执行的代码来源？
+  <span class="c-op">├─</span> <span class="c-str">自己编写的可信代码</span>
+  <span class="c-op">│   └─</span> <span class="c-key">Q2</span>: 是否有网络 / 文件 I/O？
+  <span class="c-op">│       ├─</span> <span class="c-str">否</span> <span class="c-op">→</span> 语言级沙盒（RestrictedPython / vm）
+  <span class="c-op">│       └─</span> <span class="c-str">是</span> <span class="c-op">→</span> 进程级沙盒（chroot + drop caps）
+  <span class="c-op">├─</span> <span class="c-str">LLM 生成的代码</span>
+  <span class="c-op">│   └─</span> <span class="c-key">Q3</span>: 是否多租户？
+  <span class="c-op">│       ├─</span> <span class="c-str">否（单用户）</span> <span class="c-op">→</span> 容器级沙盒（Docker + seccomp）
+  <span class="c-op">│       └─</span> <span class="c-str">是（多用户）</span> <span class="c-op">→</span> 强化容器（gVisor / Kata）
+  <span class="c-op">└─</span> <span class="c-str">不可信外部代码</span>
+      <span class="c-op">└─</span> <span class="c-key">Q4</span>: 是否需要硬件级隔离？
+          <span class="c-op">├─</span> <span class="c-str">否</span> <span class="c-op">→</span> 强化容器 + seccomp + AppArmor
+          <span class="c-op">└─</span> <span class="c-str">是</span> <span class="c-op">→</span> microVM（Firecracker）+ 完整防护
+    </div>
+  </div>
+</section>
+
+</div><!-- /content -->
+
+<!-- ═══════════════════════════════════════════
+     Footer
+     ═══════════════════════════════════════════ -->
+<footer class="footer">
+  <p>AI Agent 执行沙盒机制全解析 · Frontend Learning Hub</p>
+  <p>隔离边界 → 技术手段 → 操作矩阵 → 风险等级 → 约束策略 → 案例分析 → 最佳实践</p>
+  <span class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ 返回顶部</span>
+</footer>
+
+<script>
+// TOC active highlight
+(function(){
+  const tocLinks = document.querySelectorAll('.toc a[data-toc]');
+  const sections = document.querySelectorAll('section[id]');
+  function updateActive(){
+    let current = '';
+    sections.forEach(s=>{
+      const top = s.getBoundingClientRect().top;
+      if(top < 120) current = s.id;
+    });
+    tocLinks.forEach(l=>{
+      l.classList.toggle('active', l.dataset.toc === current);
+    });
+  }
+  window.addEventListener('scroll', updateActive, {passive:true});
+  updateActive();
+  // smooth scroll
+  tocLinks.forEach(l=>{
+    l.addEventListener('click', e=>{
+      e.preventDefault();
+      const target = document.getElementById(l.dataset.toc);
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+})();
+</script>
+</body>
+</html>

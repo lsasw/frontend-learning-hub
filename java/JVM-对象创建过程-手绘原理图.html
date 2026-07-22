@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JVM 对象创建全过程 · 手绘原理图</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Kalam:wght@300;400;700&family=Patrick+Hand&family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: #f5f0e8;
+    background-image:
+      linear-gradient(rgba(139,119,101,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,119,101,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+
+  body {
+    font-family: 'Kalam', 'Patrick Hand', cursive, sans-serif;
+    color: #2d2d2d;
+    min-height: 100vh;
+    display: block;
+    overflow-x: auto;
+    padding: 30px 20px 60px;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 10% 5%, rgba(139,119,101,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 95%, rgba(139,119,101,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .canvas-host {
+    position: relative;
+    min-width: 1200px;
+    width: 1200px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  #svg-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
+
+  #text-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+
+  .title-cn {
+    font-family: 'ZCOOL KuaiLe', 'Ma Shan Zheng', cursive, sans-serif;
+    font-size: 42px;
+    color: #1a1a1a;
+    line-height: 1.3;
+  }
+  .title-en {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    color: #888;
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+  .code-snippet {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    color: #555;
+    background: rgba(255,255,255,0.7);
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 4px;
+  }
+  .step-label {
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+  }
+  .step-title {
+    font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+    font-size: 24px;
+    line-height: 1.3;
+  }
+  .step-desc {
+    font-family: 'ZCOOL XiaoWei', 'Patrick Hand', serif, sans-serif;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #444;
+  }
+  .step-desc b {
+    font-family: 'Kalam', cursive;
+    color: #2d2d2d;
+  }
+  .component-title {
+    font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+    font-size: 20px;
+  }
+  .component-desc {
+    font-family: 'ZCOOL XiaoWei', serif, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #555;
+  }
+  .note-title {
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+  }
+  .note-text {
+    font-family: 'ZCOOL XiaoWei', serif, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #555;
+  }
+  .memory-layout-title {
+    font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+    font-size: 22px;
+  }
+  .memory-layout-sub {
+    font-family: 'ZCOOL XiaoWei', serif, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #555;
+  }
+  .memory-label {
+    font-family: 'Kalam', cursive;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .legend-text {
+    font-family: 'ZCOOL XiaoWei', serif, sans-serif;
+    font-size: 13px;
+  }
+  .footnote {
+    font-family: 'Kalam', cursive;
+    font-size: 16px;
+    color: #666;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .tape {
+    position: absolute;
+    background: rgba(255,255,200,0.65);
+    z-index: 5;
+  }
+  .tape-1 { top: -18px; left: 80px; width: 90px; height: 30px; transform: rotate(-1.5deg); border: 1.5px dashed rgba(180,160,100,0.5); border-radius: 1px; }
+  .tape-2 { top: -18px; right: 80px; width: 80px; height: 28px; transform: rotate(2deg); border: 1.5px dashed rgba(180,160,100,0.5); border-radius: 1px; }
+
+  /* Placeholder used to measure real text height before drawing SVG boxes */
+  .measure-host {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    visibility: hidden;
+    width: 380px;
+  }
+  .measure-host.wide { width: 310px; }
+</style>
+</head>
+<body>
+
+<div class="canvas-host" id="canvas-host">
+  <div class="tape tape-1"></div>
+  <div class="tape tape-2"></div>
+
+  <svg id="svg-canvas" width="1200" height="2400" viewBox="0 0 1200 2400"></svg>
+  <div id="text-overlay"></div>
+</div>
+
+<div class="measure-host" id="measure-host"></div>
+
+<script>
+(async function() {
+  'use strict';
+
+  if (typeof rough === 'undefined') {
+    console.error('RoughJS 未加载');
+    return;
+  }
+
+  // Wait for web fonts so measured heights are accurate
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch (e) {}
+  }
+
+  const svg = document.getElementById('svg-canvas');
+  const rc = rough.svg(svg);
+  const overlay = document.getElementById('text-overlay');
+  const measure = document.getElementById('measure-host');
+
+  const R = 1.8;
+  const SW = 2.5;
+
+  // ====== Drawing helpers ======
+  function box(x, y, w, h, fill, stroke, opts) {
+    svg.appendChild(rc.rectangle(x, y, w, h, {
+      roughness: R, strokeWidth: SW,
+      fill, fillStyle: 'hachure', fillWeight: 2, hachureGap: 8,
+      stroke, ...(opts || {})
+    }));
+  }
+
+  function arrow(x1, y1, x2, y2, color) {
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    const hl = 14, ha = Math.PI / 6.5;
+    svg.appendChild(rc.line(x1, y1, x2, y2, {
+      roughness: R, strokeWidth: SW, stroke: color
+    }));
+    const tipX = x2, tipY = y2;
+    const left = [tipX - hl * Math.cos(a - ha), tipY - hl * Math.sin(a - ha)];
+    const right = [tipX - hl * Math.cos(a + ha), tipY - hl * Math.sin(a + ha)];
+    svg.appendChild(rc.polygon([[tipX, tipY], left, right], {
+      roughness: 0.8, fill: color, fillStyle: 'solid',
+      stroke: color, strokeWidth: 1.5
+    }));
+  }
+
+  function dashedLine(x1, y1, x2, y2, color) {
+    svg.appendChild(rc.line(x1, y1, x2, y2, {
+      roughness: 0.8, strokeWidth: 1.8, stroke: color,
+      strokeLineDash: [8, 5]
+    }));
+  }
+
+  function circle(cx, cy, r, color, fill) {
+    svg.appendChild(rc.circle(cx, cy, r * 2, {
+      roughness: R, strokeWidth: SW,
+      stroke: color,
+      fill: fill || 'transparent',
+      fillStyle: 'hachure', fillWeight: 1
+    }));
+  }
+
+  function smallTriangle(x, y, color) {
+    svg.appendChild(rc.linearPath([[x, y], [x + 12, y + 4], [x, y + 8]], {
+      roughness: 0.5, strokeWidth: 1.5, stroke: color,
+      fill: color, fillStyle: 'solid'
+    }));
+  }
+
+  function addText(html, left, top, w) {
+    const d = document.createElement('div');
+    d.style.cssText = `position:absolute;left:${left}px;top:${top}px;width:${w}px;`;
+    d.innerHTML = html;
+    overlay.appendChild(d);
+    return d;
+  }
+
+  function measureHeight(html, wide) {
+    measure.className = 'measure-host' + (wide ? ' wide' : '');
+    measure.innerHTML = html;
+    return measure.offsetHeight;
+  }
+
+  // ====== Layout config ======
+  const TITLE_Y = 18;
+  const CODE_Y = 100;
+  const COMP_Y = 155;
+  const COMP_H = 215;
+
+  const STEPS_START_Y = 405;
+  const STEP_PAD_TOP = 32;
+  const STEP_PAD_BOTTOM = 28;
+  const STEP_GAP = 42;
+  const ARROW_LEN = 26;
+
+  const BOX_X = 310, BOX_W = 420;
+  const NOTE_X = 800, NOTE_W = 350;
+
+  // ====== Title area ======
+  addText(`
+    <div style="text-align:center;">
+      <div class="title-cn">JVM 对象创建全过程</div>
+      <div class="title-en">—— Java Virtual Machine · Object Creation Pipeline ——</div>
+    </div>
+  `, 200, TITLE_Y, 800);
+
+  svg.appendChild(rc.line(350, 88, 850, 88, { roughness: 1.5, strokeWidth: 3.5, stroke: '#333' }));
+  svg.appendChild(rc.line(450, 102, 750, 102, { roughness: 1.2, strokeWidth: 2, stroke: '#aaa' }));
+
+  const codeHtml = `<div style="text-align:center;">
+    <span class="code-snippet">Object obj = new Object(); &nbsp; → &nbsp;
+    <span style="color:#e91e63;">new</span> &gt;
+    <span style="color:#ff9800;">dup</span> &gt;
+    <span style="color:#4caf50;">invokespecial</span> &lt;
+    <span style="color:#9c27b0;">init</span>&gt;</span>
+  </div>`;
+  addText(codeHtml, 310, CODE_Y, 580);
+  box(270, 92, 660, 42, 'rgba(255,255,255,0.5)', '#bbb');
+
+  // ====== JVM Components ======
+  addText(`
+    <div style="text-align:center;margin-bottom:4px;" class="component-title">🔄 类加载器子系统</div>
+    <div class="component-desc" style="font-size:13px;">
+      <div style="margin:2px 0;">▸ Bootstrap ClassLoader</div>
+      <div style="margin:2px 0;">▸ Extension ClassLoader</div>
+      <div style="margin:2px 0;">▸ Application ClassLoader</div>
+      <div style="margin-top:8px;font-size:12px;color:#888;">加载 → 验证 → 准备 → 解析 → 初始化</div>
+    </div>
+  `, 80, COMP_Y + 10, 260);
+  box(60, COMP_Y, 300, COMP_H, '#fffde7', '#f9a825');
+
+  addText(`
+    <div style="text-align:center;margin-bottom:4px;" class="component-title">📋 方法区 (Method Area)</div>
+    <div class="component-desc" style="font-size:13px;">
+      <div style="margin:2px 0;">▸ 类元信息 (Class Metadata)</div>
+      <div style="margin:2px 0;">▸ 运行时常量池 (RCP)</div>
+      <div style="margin:2px 0;">▸ 字段 &amp; 方法描述</div>
+      <div style="margin:2px 0;">▸ 静态变量 (static fields)</div>
+      <div style="margin-top:6px;font-size:11px;color:#888;">JDK8+ 元空间 (Metaspace) 实现</div>
+    </div>
+  `, 860, COMP_Y + 10, 260);
+  box(860, COMP_Y, 300, COMP_H, '#fce4ec', '#e91e63');
+
+  // Arrow Class Loader → Method Area
+  arrow(365, COMP_Y + 105, 853, COMP_Y + 105, '#555');
+  svg.appendChild(rc.rectangle(500, COMP_Y + 88, 176, 32, {
+    roughness: 0.8, strokeWidth: 1,
+    fill: 'rgba(255,255,255,0.85)', fillStyle: 'solid', stroke: '#aaa'
+  }));
+  addText(`<div style="text-align:center;font-family:'ZCOOL XiaoWei';font-size:12px;color:#555;">加载类信息</div>`,
+    500, COMP_Y + 92, 176);
+
+  // ====== Steps data ======
+  const steps = [
+    {
+      color: '#e67e22', bg: '#fff3e0',
+      title: '类加载检查',
+      descHTML: `
+        <div class="step-desc">
+          · 检查类是否<b>已加载、解析、初始化</b><br>
+          · 未加载 → 触发类加载机制<br>
+          · 从常量池定位类的<b>符号引用</b><br>
+          · 涉及: 类加载器 → 方法区
+        </div>`,
+      noteHTML: `
+        <div class="note-title" style="color:#e67e22;margin-bottom:4px;">💡 关键机制</div>
+        <div class="note-text" style="font-size:13px;">
+          类加载采用<b>双亲委派模型</b>，逐级向上尝试加载。<br>
+          JVM 规范规定: 类在使用前必须完成<b>加载 → 验证 → 准备 → 解析 → 初始化</b>五个阶段。
+        </div>`
+    },
+    {
+      color: '#43a047', bg: '#e8f5e9',
+      title: '分配内存',
+      descHTML: `
+        <div class="step-desc">
+          <b>分配方式:</b><br>
+          · <b>指针碰撞</b> — 内存规整, Serial/ParNew<br>
+          · <b>空闲列表</b> — 内存碎片, CMS<br>
+          <b>线程安全:</b><br>
+          · <b>TLAB</b> — 线程本地分配缓冲<br>
+          · <b>CAS+失败重试</b> — 同步保障<br>
+          · 涉及: 堆内存 → <b>Eden 区</b>
+        </div>`,
+      noteHTML: `
+        <div class="note-title" style="color:#43a047;margin-bottom:4px;">🗂️ 堆内存结构</div>
+        <div class="note-text" style="font-size:13px;">
+          <div style="margin:4px 0;"><b>Young Generation</b></div>
+          <div style="margin:2px 0 2px 14px;">▸ <b>Eden</b> ← 新对象出生地</div>
+          <div style="margin:2px 0 2px 14px;">▸ Survivor0 ← 复制到</div>
+          <div style="margin:2px 0 2px 14px;">▸ Survivor1 ← 复制到</div>
+          <div style="margin:4px 0;"><b>Old Generation</b> — 长期存活对象</div>
+          <div style="margin-top:6px;font-size:12px;color:#888;">
+            TLAB: -XX:+UseTLAB (默认开启)<br>
+            -XX:TLABSize 调整大小
+          </div>
+        </div>`,
+      heap: true
+    },
+    {
+      color: '#1e88e5', bg: '#e3f2fd',
+      title: '内存空间初始化',
+      descHTML: `
+        <div class="step-desc">
+          · <b>零值初始化</b> (Zero Initialization)<br>
+          · int → 0, long → 0L<br>
+          · boolean → false, ref → <b>null</b><br>
+          · float → 0.0f, double → 0.0d<br>
+          · 这就是字段不赋值也能使用的原因<br>
+          · 涉及: 堆内存 (实例数据区)
+        </div>`,
+      noteHTML: `
+        <div class="note-title" style="color:#1e88e5;margin-bottom:4px;">🧠 为什么需要零值初始化?</div>
+        <div class="note-text" style="font-size:13px;">
+          保证对象的实例字段在 <b>赋值前</b> 也能合法使用,<br>
+          避免未初始化的字段读到 <b>随机值</b> (内存脏数据)。<br>
+          排除 static 字段 (类加载阶段已初始化) 和 final 字段 (编译期常量)。
+        </div>`
+    },
+    {
+      color: '#8e24aa', bg: '#f3e5f5',
+      title: '设置对象头',
+      descHTML: `
+        <div class="step-desc">
+          <b>Mark Word</b> (32/64 bit) 包含:<br>
+          · <b>hashCode</b> (25/31 bits)<br>
+          · <b>GC 分代年龄</b> (4 bits, 最大15)<br>
+          · <b>锁状态标志</b> — 偏向/轻量/重量<br>
+          · <b>偏向锁标识</b> (1 bit)<br>
+          <b>Klass Pointer (类型指针)</b><br>
+          · 指向方法区中的<b>类元信息</b><br>
+          · 压缩指针: 4B, 未压缩: 8B<br>
+          · 涉及: 对象头 → 方法区
+        </div>`,
+      noteHTML: `
+        <div class="note-title" style="color:#8e24aa;margin-bottom:4px;">🔍 Mark Word 锁状态变化</div>
+        <div class="note-text" style="font-size:12.5px;line-height:1.7;">
+          <div style="margin:2px 0;color:#888;">无锁 → hashCode | GC年龄 | 001</div>
+          <div style="margin:2px 0;color:#e67e22;">偏向锁 → 线程ID | epoch | GC年龄 | 101</div>
+          <div style="margin:2px 0;color:#43a047;">轻量级锁 → 锁记录指针 | 00</div>
+          <div style="margin:2px 0;color:#e91e63;">重量级锁 → Monitor指针 | 10</div>
+          <div style="margin:2px 0;color:#888;">GC标记 → 标记位 | 11</div>
+          <div style="margin-top:6px;font-size:11px;color:#888;">
+            -XX:+UseCompressedOops (指针压缩)
+          </div>
+        </div>`
+    },
+    {
+      color: '#e91e63', bg: '#fce4ec',
+      title: '执行构造方法',
+      descHTML: `
+        <div class="step-desc">
+          执行 <b>&lt;init&gt;()</b> 方法, 顺序:<br>
+          ❶ <b>super()</b> 调用父类构造<br>
+          ❷ <b>实例变量初始化</b><br>
+          ❸ <b>实例初始化块</b> {}<br>
+          ❹ <b>构造函数体</b> 执行<br>
+          字节码: new → dup → <b>invokespecial</b><br>
+          涉及: 虚拟机栈 (栈帧执行)
+        </div>`,
+      noteHTML: `
+        <div class="note-title" style="color:#e91e63;margin-bottom:4px;">📝 初始化顺序示例</div>
+        <div class="note-text" style="font-size:12px;font-family:'Cascadia Code', monospace;line-height:1.7;">
+          <span style="color:#888;">class MyObj {</span><br>
+          &nbsp;&nbsp;<span style="color:#1e88e5;">int x = 10;</span> <span style="color:#aaa;">// ②</span><br>
+          &nbsp;&nbsp;<span style="color:#888;">{ x = 20; }</span> <span style="color:#aaa;">// ③</span><br>
+          &nbsp;&nbsp;<span style="color:#8e24aa;">MyObj</span>() {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#888;">super();</span> <span style="color:#aaa;">// ①</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e91e63;">x = 30;</span> <span style="color:#aaa;">// ④</span><br>
+          &nbsp;&nbsp;}<br>
+          <span style="color:#888;">}</span><br>
+          <span style="font-size:11px;color:#888;margin-top:4px;display:block;">最终 x = 30 (④ 覆盖 ②③)</span>
+        </div>`
+    }
+  ];
+
+  // ====== Measure and lay out steps ======
+  const stepLayouts = [];
+  let y = STEPS_START_Y;
+
+  steps.forEach((step, i) => {
+    const descHeight = measureHeight(step.descHTML, false);
+    const titleBlockHeight = 38;
+    const mainH = STEP_PAD_TOP + titleBlockHeight + descHeight + STEP_PAD_BOTTOM;
+
+    const noteHeight = measureHeight(step.noteHTML, true);
+    const noteH = STEP_PAD_TOP + titleBlockHeight + noteHeight + STEP_PAD_BOTTOM;
+
+    const boxH = Math.max(mainH, noteH);
+
+    stepLayouts.push({ y, h: boxH });
+
+    y += boxH + ARROW_LEN + (STEP_GAP - ARROW_LEN);
+  });
+
+  // ====== Draw steps ======
+  steps.forEach((step, i) => {
+    const layout = stepLayouts[i];
+    const y0 = layout.y;
+    const h0 = layout.h;
+
+    // Main step box
+    box(BOX_X, y0, BOX_W, h0, step.bg, step.color);
+
+    // Side note box
+    box(NOTE_X, y0, NOTE_W, h0, step.bg, step.color);
+
+    // Number circle
+    circle(BOX_X + 22, y0 + STEP_PAD_TOP, 14, step.color, step.color);
+
+    // Step label
+    addText(`<div class="step-label" style="color:${step.color};">Step ${i + 1}</div>`,
+      BOX_X + 44, y0 + 14, 200);
+
+    // Step title
+    addText(`<div class="step-title" style="color:${step.color};">${step.title}</div>`,
+      BOX_X + 44, y0 + 32, 350);
+
+    // Step description
+    addText(step.descHTML, BOX_X + 22, y0 + STEP_PAD_TOP + 38, BOX_W - 44);
+
+    // Side note content
+    addText(step.noteHTML, NOTE_X + 18, y0 + STEP_PAD_TOP + 12, NOTE_W - 36);
+
+    // Small triangle pointing from main box to side note
+    smallTriangle(BOX_X + BOX_W - 4, y0 + h0 / 2 - 4, step.color);
+
+    // Special: heap illustration for step 2
+    if (step.heap) {
+      const heapY0 = y0 + h0 - 100;
+      box(815, heapY0, 320, 85, '#c8e6c9', '#66bb6a', { roughness: 0.8, strokeWidth: 1.5 });
+      addText(`<div style="text-align:center;padding:6px 0;">
+        <div style="font-family:'ZCOOL XiaoWei';font-size:12px;color:#1b5e20;"><b>📦 堆内存分配示意</b></div>
+        <div style="font-family:'Kalam';font-size:11px;color:#33691e;margin-top:4px;">TLAB → CAS → Eden Space</div>
+        <div style="font-family:'ZCOOL XiaoWei';font-size:10px;color:#558b2f;margin-top:4px;">指针碰撞 / 空闲列表 / 线程安全保证</div>
+      </div>`, 815, heapY0 + 8, 320);
+    }
+
+    // Arrow to next step
+    if (i < steps.length - 1) {
+      const arrowX = BOX_X + BOX_W / 2;
+      const nextY = stepLayouts[i + 1].y;
+      arrow(arrowX, y0 + h0 + 4, arrowX, nextY - 4, '#888');
+    }
+  });
+
+  // ====== Object Memory Layout ======
+  const step5 = stepLayouts[steps.length - 1];
+  const MEM_Y = step5.y + step5.h + STEP_GAP;
+
+  // Final arrow: Step 5 → Memory layout
+  arrow(BOX_X + BOX_W / 2, step5.y + step5.h + 4, BOX_X + BOX_W / 2, MEM_Y - 4, '#00897b');
+
+  const MEM_H = 285;
+
+  // Title
+  addText(`<div style="text-align:center;" class="memory-layout-title" style="color:#00897b;">
+    📦 对象内存布局 (Object Memory Layout)
+  </div>`, 160, MEM_Y - 38, 880);
+
+  // Outer container
+  box(160, MEM_Y, 880, MEM_H, '#e0f2f1', '#00897b');
+
+  // Header block
+  box(195, MEM_Y + 20, 230, 130, '#b2dfdb', '#26a69a');
+  box(210, MEM_Y + 30, 200, 30, '#dcedc8', '#66bb6a', { roughness: 0.8, strokeWidth: 1.2 });
+  box(210, MEM_Y + 65, 200, 30, '#fff9c4', '#ffee58', { roughness: 0.8, strokeWidth: 1.2 });
+  box(210, MEM_Y + 100, 200, 25, '#ffccbc', '#ff7043', { roughness: 0.8, strokeWidth: 1.2 });
+
+  addText(`<div style="text-align:center;">
+    <div class="memory-label" style="color:#2e7d32;">Mark Word</div>
+    <div style="font-family:'ZCOOL XiaoWei';font-size:10px;color:#558b2f;">hashCode · GC年龄 · 锁状态</div>
+  </div>`, 210, MEM_Y + 33, 200);
+
+  addText(`<div style="text-align:center;">
+    <div class="memory-label" style="color:#b68b00;">Klass Pointer</div>
+    <div style="font-family:'ZCOOL XiaoWei';font-size:10px;color:#b68b00;">→ 指向方法区类元信息</div>
+  </div>`, 210, MEM_Y + 68, 200);
+
+  addText(`<div style="text-align:center;">
+    <div style="font-family:'Kalam';font-size:11px;color:#ff7043;">数组长度 (可选, 4B)</div>
+  </div>`, 210, MEM_Y + 102, 200);
+
+  addText(`<div class="memory-label" style="color:#00897b;font-size:14px;">对象头</div>`,
+    440, MEM_Y + 35, 60);
+
+  // Separator line above instance data
+  svg.appendChild(rc.line(195, MEM_Y + 155, 1005, MEM_Y + 155, {
+    roughness: 0.8, strokeWidth: 1.5, stroke: '#00897b', strokeLineDash: [6, 4]
+  }));
+
+  // Instance data
+  box(195, MEM_Y + 160, 810, 50, '#a5d6a7', '#66bb6a');
+  addText(`<div style="text-align:center;" class="memory-label" style="color:#2e7d32;font-size:14px;">
+    实例数据 (Instance Data) — 父类继承 + 自身字段值
+  </div>`, 195, MEM_Y + 170, 810);
+
+  // Separator line above padding
+  svg.appendChild(rc.line(195, MEM_Y + 215, 1005, MEM_Y + 215, {
+    roughness: 0.8, strokeWidth: 1.5, stroke: '#00897b', strokeLineDash: [6, 4]
+  }));
+
+  // Padding
+  box(195, MEM_Y + 220, 810, 50, '#ffe0b2', '#ffb74d');
+  addText(`<div style="text-align:center;" class="memory-label" style="color:#ff8f00;font-size:14px;">
+    对齐填充 (Padding) — 8 字节对齐, 确保 CPU 高效访问
+  </div>`, 195, MEM_Y + 230, 810);
+
+  // ====== Legend ======
+  const LEGEND_Y = MEM_Y + MEM_H + 35;
+  box(30, LEGEND_Y, 1140, 130, 'rgba(255,255,255,0.5)', '#ccc');
+
+  addText(`<div style="text-align:center;" class="note-title" style="font-size:22px;color:#555;margin-bottom:10px;">
+    📌 关键概念速查
+  </div>`, 50, LEGEND_Y + 6, 1100);
+
+  addText(`
+    <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;padding:0 30px;">
+      <div style="min-width:190px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#ffe0b2;border:2px solid #e67e22;margin-right:6px;vertical-align:middle;"></span>
+        <span class="legend-text"><b>指针碰撞</b> — 假设堆中内存绝对规整<br><span style="font-size:11px;color:#888;">Serial / ParNew 收集器</span></span>
+      </div>
+      <div style="min-width:190px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#c8e6c9;border:2px solid #43a047;margin-right:6px;vertical-align:middle;"></span>
+        <span class="legend-text"><b>空闲列表</b> — 堆内存碎片化时使用<br><span style="font-size:11px;color:#888;">CMS / G1 等收集器</span></span>
+      </div>
+      <div style="min-width:190px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#b3e5fc;border:2px solid #1e88e5;margin-right:6px;vertical-align:middle;"></span>
+        <span class="legend-text"><b>TLAB</b> — Thread Local Allocation Buffer<br><span style="font-size:11px;color:#888;">线程本地分配缓冲区, 减少竞争</span></span>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:24px;margin-top:12px;flex-wrap:wrap;padding:0 30px;">
+      <div style="min-width:190px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#e1bee7;border:2px solid #8e24aa;margin-right:6px;vertical-align:middle;"></span>
+        <span class="legend-text"><b>对象头</b> = Mark Word + Klass Pointer<br><span style="font-size:11px;color:#888;">不同锁状态下 Mark Word 结构不同</span></span>
+      </div>
+      <div style="min-width:190px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#ffcdd2;border:2px solid #e91e63;margin-right:6px;vertical-align:middle;"></span>
+        <span class="legend-text"><b>&lt;init&gt;</b> — JVM 层面构造方法调用<br><span style="font-size:11px;color:#888;">new → dup → invokespecial 三字节码</span></span>
+      </div>
+      <div style="min-width:190px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#fff9c4;border:2px solid #fbc02d;margin-right:6px;vertical-align:middle;"></span>
+        <span class="legend-text"><b>双亲委派</b> — 类加载安全保障机制<br><span style="font-size:11px;color:#888;">App → Ext → Bootstrap 逐级向上</span></span>
+      </div>
+    </div>
+  `, 50, LEGEND_Y + 38, 1100);
+
+  // ====== Footnote ======
+  const FOOT_Y = LEGEND_Y + 152;
+  addText(`<div class="footnote">✨ 对象是 JVM 的细胞 / 理解创建过程 = 理解 JVM 的一半 ✨</div>`,
+    0, FOOT_Y, 1200);
+
+  // ====== Decorative elements ======
+  function doodleStar(cx, cy, size, color) {
+    const pts = [];
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+      pts.push([cx + size * Math.cos(angle), cy + size * Math.sin(angle)]);
+    }
+    svg.appendChild(rc.linearPath(pts.concat([pts[0]]), {
+      roughness: 0.6, strokeWidth: 1.5, stroke: color, fill: 'transparent'
+    }));
+  }
+  doodleStar(80, 135, 8, '#f9a825');
+  doodleStar(1120, 135, 7, '#e91e63');
+  doodleStar(60, 380, 6, '#ff9800');
+  circle(1140, 175, 10, '#f9a825');
+  circle(60, 175, 8, '#e91e63');
+
+  svg.appendChild(rc.linearPath([
+    [1185, 15], [1185, 35], [1175, 30], [1190, 40], [1180, 50]
+  ], { roughness: 0.8, strokeWidth: 1.2, stroke: '#ccc' }));
+  svg.appendChild(rc.linearPath([
+    [15, FOOT_Y - 5], [15, FOOT_Y - 25], [25, FOOT_Y - 20], [10, FOOT_Y - 30], [20, FOOT_Y - 40]
+  ], { roughness: 0.8, strokeWidth: 1.2, stroke: '#ccc' }));
+
+  // Dashed link from Class Loader down to Step 1
+  const firstStepY = stepLayouts[0].y;
+  dashedLine(210, COMP_Y + COMP_H, 210, firstStepY - 30, '#f9a825');
+  arrow(210, firstStepY - 30, BOX_X + 10, firstStepY + 20, '#f9a825');
+
+  // Resize SVG canvas and host to actual content height
+  const totalH = FOOT_Y + 40;
+  svg.setAttribute('height', totalH);
+  svg.setAttribute('viewBox', `0 0 1200 ${totalH}`);
+  document.getElementById('canvas-host').style.height = totalH + 'px';
+
+})();
+</script>
+</body>
+</html>

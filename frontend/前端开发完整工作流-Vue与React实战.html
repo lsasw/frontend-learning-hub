@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前端开发完整工作流 · Vue 与 React 实战全指南</title>
+<style>
+:root{
+  --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--border-l:#f1f5f9;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --primary:#2563eb;--primary-d:#1d4ed8;--primary-l:#dbeafe;--primary-ll:#eff6ff;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --green:#059669;--green-l:#d1fae5;
+  --orange:#ea580c;--orange-l:#fed7aa;
+  --red:#dc2626;--red-l:#fee2e2;
+  --teal:#0891b2;--teal-l:#cffafe;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --pink:#db2777;--pink-l:#fce7f3;
+  --indigo:#4f46e5;--indigo-l:#e0e7ff;
+  --radius:10px;--radius-sm:6px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --font-mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+  --vue:#42b883;--vue-d:#369870;--vue-l:#d1f0e2;--vue-ll:#ebf8f2;
+  --react:#61dafb;--react-d:#21b6cf;--react-l:#d5f3fc;--react-ll:#eaf9fd;
+  --workflow:#6366f1;--workflow-l:#e0e7ff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* ── Nav ── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:54px;gap:16px}
+.nav a.home{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--primary);font-weight:700;font-size:.92rem;white-space:nowrap}
+.nav a.home svg{width:24px;height:24px;flex-shrink:0}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:4px;overflow-x:auto;font-size:.78rem}
+.nav .nav-toc a{color:var(--text2);font-weight:500;padding:4px 10px;border-radius:6px;white-space:nowrap;text-decoration:none;transition:all var(--transition)}
+.nav .nav-toc a:hover{background:var(--primary-ll);color:var(--primary)}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 40%,#4338ca 100%);color:#fff;padding:56px 32px 48px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(97,218,251,.18) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-40%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(66,184,131,.22) 0%,transparent 70%);pointer-events:none}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;position:relative;z-index:1}
+.hero .subtitle{font-size:1.02rem;color:#c7d2fe;margin-top:10px;position:relative;z-index:1;max-width:720px;margin-left:auto;margin-right:auto;line-height:1.7}
+.hero .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative;z-index:1}
+.hero .badge{font-size:.72rem;padding:4px 12px;border-radius:20px;font-weight:600;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(4px)}
+.hero .badge.vue{background:rgba(66,184,131,.2);border-color:rgba(66,184,131,.4)}
+.hero .badge.react{background:rgba(97,218,251,.2);border-color:rgba(97,218,251,.4)}
+
+/* ── Part Tabs ── */
+.part-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;position:sticky;top:54px;z-index:49;display:flex;gap:0;overflow-x:auto;box-shadow:var(--shadow-sm)}
+.part-tab{padding:14px 22px;border:none;background:none;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--text3);border-bottom:3px solid transparent;transition:all var(--transition);white-space:nowrap;display:flex;align-items:center;gap:8px}
+.part-tab:hover{color:var(--text)}
+.part-tab .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.part-tab.active{color:var(--text)}
+.part-tab[data-part="workflow"] .dot{background:var(--workflow)}
+.part-tab[data-part="workflow"].active{border-bottom-color:var(--workflow)}
+.part-tab[data-part="vue"] .dot{background:var(--vue)}
+.part-tab[data-part="vue"].active{border-bottom-color:var(--vue)}
+.part-tab[data-part="react"] .dot{background:var(--react)}
+.part-tab[data-part="react"].active{border-bottom-color:var(--react-d)}
+.part-tab[data-part="pitfalls"] .dot{background:var(--orange)}
+.part-tab[data-part="pitfalls"].active{border-bottom-color:var(--orange)}
+
+/* ── Module Nav ── */
+.mod-nav{display:flex;gap:6px;padding:14px 24px;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto;flex-wrap:wrap}
+.mod-nav a{font-size:.76rem;color:var(--text2);text-decoration:none;padding:6px 12px;border-radius:20px;transition:all var(--transition);flex-shrink:0;font-weight:500;border:1px solid var(--border);background:var(--surface)}
+.mod-nav a:hover{background:var(--primary-ll);color:var(--primary);border-color:var(--primary-l)}
+
+/* ── Container ── */
+.container{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+.part-content{display:none}
+.part-content.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Section ── */
+section{margin-bottom:48px;scroll-margin-top:140px}
+.sec-title{display:flex;align-items:center;gap:12px;font-size:1.4rem;font-weight:800;margin-bottom:8px}
+.sec-title .num{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:.9rem;font-weight:800;color:#fff;flex-shrink:0}
+.sec-title .num.workflow{background:var(--workflow)}
+.sec-title .num.vue{background:var(--vue)}
+.sec-title .num.react{background:var(--react-d)}
+.sec-title .num.pitfalls{background:var(--orange)}
+.sec-desc{color:var(--text2);font-size:.92rem;margin-bottom:24px;padding-left:48px}
+.sub-title{font-size:1.05rem;font-weight:700;margin:20px 0 12px;display:flex;align-items:center;gap:8px;color:var(--text)}
+.sub-title::before{content:'';width:4px;height:18px;border-radius:2px;background:var(--primary)}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);transition:all var(--transition);margin-bottom:16px}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h4{font-size:1rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card p{color:var(--text2);font-size:.88rem;line-height:1.7}
+.card ul,.card ol{margin:8px 0;padding-left:22px;color:var(--text2);font-size:.86rem}
+.card li{margin:5px 0}
+.card-vue{border-left:4px solid var(--vue)}
+.card-react{border-left:4px solid var(--react-d)}
+.card-warn{border-left:4px solid var(--orange)}
+
+/* ── Grid ── */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+
+/* ── Code ── */
+pre{background:#1e293b;color:#e2e8f0;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.65;margin:12px 0;position:relative}
+pre .kw{color:#c084fc}pre .str{color:#86efac}pre .cm{color:#64748b;font-style:italic}pre .fn{color:#60a5fa}pre .num{color:#fbbf24}pre .op{color:#f472b6}pre .ty{color:#fde68a}pre .var{color:#fde68a}pre .tag{color:#f472b6}
+code.inline{background:var(--border-l);color:var(--primary-d);padding:2px 8px;border-radius:4px;font-family:var(--font-mono);font-size:.82rem}
+.code-label{font-size:.75rem;color:var(--text3);font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.code-label .lang{background:var(--primary-l);color:var(--primary-d);padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:700}
+.code-label .lang.vue{background:var(--vue-l);color:var(--vue-d)}
+.code-label .lang.react{background:var(--react-l);color:var(--react-d)}
+.code-label .lang.js{background:var(--amber-l);color:var(--amber)}
+
+/* ── Tip/Callout ── */
+.tip{padding:14px 18px;border-radius:var(--radius-sm);margin:12px 0;border-left:4px solid;font-size:.86rem;line-height:1.7;display:flex;gap:10px;align-items:flex-start}
+.tip .icon{font-size:1.1rem;flex-shrink:0}
+.tip .content{flex:1}
+.tip .content strong{display:block;margin-bottom:4px}
+.tip.info{background:var(--primary-ll);border-color:var(--primary);color:var(--primary-d)}
+.tip.warn{background:var(--orange-l);border-color:var(--orange);color:#9a3412}
+.tip.danger{background:var(--red-l);border-color:var(--red);color:#991b1b}
+.tip.good{background:var(--green-l);border-color:var(--green);color:#065f46}
+.tip.vue{background:var(--vue-ll);border-color:var(--vue);color:var(--vue-d)}
+.tip.react{background:var(--react-ll);border-color:var(--react-d);color:var(--react-d)}
+
+/* ── Table ── */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.84rem}
+th{background:var(--primary-ll);color:var(--primary-d);font-weight:700;padding:10px 14px;text-align:left;border-bottom:2px solid var(--primary-l)}
+td{padding:10px 14px;border-bottom:1px solid var(--border-l);color:var(--text2);vertical-align:top}
+tr:hover td{background:var(--primary-ll)}
+.tbl-wrap{overflow-x:auto;margin:12px 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+
+/* ── Tag ── */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;padding:2px 10px;border-radius:12px;font-weight:600}
+.tag-blue{background:var(--primary-l);color:var(--primary-d)}
+.tag-purple{background:var(--purple-l);color:var(--purple)}
+.tag-green{background:var(--green-l);color:var(--green)}
+.tag-orange{background:var(--orange-l);color:var(--orange)}
+.tag-red{background:var(--red-l);color:var(--red)}
+.tag-teal{background:var(--teal-l);color:var(--teal)}
+.tag-vue{background:var(--vue-l);color:var(--vue-d)}
+.tag-react{background:var(--react-l);color:var(--react-d)}
+.tag-amber{background:var(--amber-l);color:var(--amber)}
+
+/* ── Flow Steps ── */
+.flow{display:flex;align-items:stretch;gap:0;margin:20px 0;flex-wrap:wrap}
+.flow-step{flex:1;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;position:relative;text-align:center}
+.flow-step:not(:last-child)::after{content:'→';position:absolute;right:-18px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:1.2rem;font-weight:700;z-index:1}
+.flow-step .flow-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:.78rem;font-weight:800;margin-bottom:8px}
+.flow-step h6{font-size:.86rem;font-weight:700;margin-bottom:4px}
+.flow-step p{font-size:.74rem;color:var(--text2)}
+.flow-step.vue .flow-num{background:var(--vue)}
+.flow-step.react .flow-num{background:var(--react-d)}
+
+/* ── Compare Box ── */
+.compare-box{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.compare-box .side{padding:18px}
+.compare-box .side.vue{background:var(--vue-ll);border-right:1px solid var(--border)}
+.compare-box .side.react{background:var(--react-ll)}
+.compare-box .side h5{font-size:.9rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.compare-box .side ul{list-style:none;padding:0}
+.compare-box .side li{font-size:.82rem;padding:4px 0;display:flex;gap:6px;align-items:flex-start}
+.compare-box .side li::before{content:'•';flex-shrink:0;font-weight:700}
+.compare-box .side.vue li::before{color:var(--vue)}
+.compare-box .side.react li::before{color:var(--react-d)}
+
+/* ── Concept Pill ── */
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.pill{font-size:.76rem;padding:5px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--border);font-weight:500;color:var(--text2)}
+.pill.vue{background:var(--vue-ll);border-color:var(--vue-l);color:var(--vue-d)}
+.pill.react{background:var(--react-ll);border-color:var(--react-l);color:var(--react-d)}
+.pill.workflow{background:var(--workflow-l);border-color:#c7d2fe;color:#3730a3}
+
+/* ── Footer ── */
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);color:var(--text3);font-size:.78rem}
+.footer a{color:var(--primary);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+
+/* ── Copy Button ── */
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:none;color:#cbd5e1;font-size:.7rem;padding:3px 10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--font-sans)}
+.copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* ── Process Diagram ── */
+.process-diagram{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin:20px 0;overflow-x:auto}
+.process-diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+
+/* ── Lifecycle Timeline ── */
+.lifecycle{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.lifecycle-step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center;position:relative}
+.lifecycle-step .lc-num{font-size:.7rem;color:var(--text3);font-weight:700}
+.lifecycle-step .lc-name{font-size:.86rem;font-weight:700;margin:4px 0;color:var(--vue-d)}
+.lifecycle-step.react .lc-name{color:var(--react-d)}
+.lifecycle-step .lc-desc{font-size:.7rem;color:var(--text2)}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:repeat(2,1fr)}
+  .lifecycle{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr}
+  .lifecycle{grid-template-columns:1fr}
+  .hero{padding:36px 16px 32px}
+  .hero h1{font-size:1.5rem}
+  .container{padding:24px 16px 40px}
+  .compare-box{grid-template-columns:1fr}
+  .flow-step:not(:last-child)::after{content:'↓';right:50%;top:auto;bottom:-22px;transform:translateX(50%)}
+  .flow{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav">
+  <a class="home" href="../index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Frontend Hub
+  </a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#workflow">整体流程</a>
+    <a href="#vue">Vue</a>
+    <a href="#react">React</a>
+    <a href="#pitfalls">易忽略点</a>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <h1>🎨 前端开发完整工作流</h1>
+  <p class="subtitle">从需求分析到部署上线 · Vue 3 与 React 18 核心知识体系 · 调接口最佳实践 · 易踩坑点全覆盖</p>
+  <div class="badges">
+    <span class="badge vue">🟢 Vue 3 / Composition API</span>
+    <span class="badge react">🔵 React 18 / Hooks</span>
+    <span class="badge">⚡ Vite 构建</span>
+    <span class="badge">🌐 Axios / Fetch</span>
+    <span class="badge">📦 Pinia / Zustand</span>
+    <span class="badge">🔄 React Query</span>
+  </div>
+</section>
+
+<!-- ═══════ PART TABS ═══════ -->
+<div class="part-tabs">
+  <button class="part-tab active" data-part="workflow"><span class="dot"></span>① 整体工作流</button>
+  <button class="part-tab" data-part="vue"><span class="dot"></span>② Vue 框架</button>
+  <button class="part-tab" data-part="react"><span class="dot"></span>③ React 框架</button>
+  <button class="part-tab" data-part="pitfalls"><span class="dot"></span>④ 易忽略 & 最佳实践</button>
+</div>
+
+<div class="mod-nav">
+  <a href="#sec-requirement">需求分析</a>
+  <a href="#sec-scaffold">项目搭建</a>
+  <a href="#sec-component">组件开发</a>
+  <a href="#sec-state">状态管理</a>
+  <a href="#sec-build">构建部署</a>
+  <a href="#sec-vue-core">Vue 核心</a>
+  <a href="#sec-vue-flow">Vue 流程</a>
+  <a href="#sec-vue-api">Vue 调接口</a>
+  <a href="#sec-react-core">React 核心</a>
+  <a href="#sec-react-flow">React 流程</a>
+  <a href="#sec-react-api">React 调接口</a>
+  <a href="#sec-vue-pitfall">Vue 易忽略</a>
+  <a href="#sec-react-pitfall">React 易忽略</a>
+  <a href="#sec-compare">对比表</a>
+</div>
+
+<div class="container">
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- PART 1: 整体工作流程                                              -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="part-content active" data-pane="workflow">
+
+  <!-- 流程总览图 -->
+  <section>
+    <div class="sec-title"><span class="num workflow">0</span>前端开发全流程总览</div>
+    <div class="sec-desc">一张图看懂从「拿到需求」到「线上运行」的完整链路，5 大阶段 14 个关键节点</div>
+    <div class="process-diagram">
+      <svg viewBox="0 0 1100 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+          <linearGradient id="g2" x1="0" x2="1"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#06b6d4"/></linearGradient>
+          <linearGradient id="g3" x1="0" x2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#22c55e"/></linearGradient>
+          <linearGradient id="g4" x1="0" x2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#f97316"/></linearGradient>
+          <linearGradient id="g5" x1="0" x2="1"><stop offset="0" stop-color="#ef4444"/><stop offset="1" stop-color="#ec4899"/></linearGradient>
+        </defs>
+        <!-- 5个阶段 -->
+        <g>
+          <rect x="20" y="40" width="200" height="60" rx="10" fill="url(#g1)"/>
+          <text x="120" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">① 需求分析</text>
+          <text x="120" y="86" text-anchor="middle" fill="#e0e7ff" font-size="11">PRD / UI / 接口</text>
+        </g>
+        <g>
+          <rect x="240" y="40" width="200" height="60" rx="10" fill="url(#g2)"/>
+          <text x="340" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">② 项目搭建</text>
+          <text x="340" y="86" text-anchor="middle" fill="#cffafe" font-size="11">脚手架 / 规范 / 基建</text>
+        </g>
+        <g>
+          <rect x="460" y="40" width="200" height="60" rx="10" fill="url(#g3)"/>
+          <text x="560" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">③ 组件开发</text>
+          <text x="560" y="86" text-anchor="middle" fill="#d1fae5" font-size="11">路由 / 组件 / 业务</text>
+        </g>
+        <g>
+          <rect x="680" y="40" width="200" height="60" rx="10" fill="url(#g4)"/>
+          <text x="780" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">④ 状态管理</text>
+          <text x="780" y="86" text-anchor="middle" fill="#fed7aa" font-size="11">Store / 缓存 / 通信</text>
+        </g>
+        <g>
+          <rect x="900" y="40" width="180" height="60" rx="10" fill="url(#g5)"/>
+          <text x="990" y="68" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">⑤ 构建部署</text>
+          <text x="990" y="86" text-anchor="middle" fill="#fce7f3" font-size="11">CI / CDN / 监控</text>
+        </g>
+        <!-- 箭头 -->
+        <g fill="#94a3b8" stroke="#94a3b8" stroke-width="2">
+          <line x1="220" y1="70" x2="240" y2="70" marker-end="url(#arr)"/>
+          <line x1="440" y1="70" x2="460" y2="70"/>
+          <line x1="660" y1="70" x2="680" y2="70"/>
+          <line x1="880" y1="70" x2="900" y2="70"/>
+        </g>
+        <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <!-- 下方节点 -->
+        <g font-size="11" fill="#475569">
+          <text x="120" y="130" text-anchor="middle">· 拆解功能</text>
+          <text x="120" y="148" text-anchor="middle">· 评估工期</text>
+          <text x="120" y="166" text-anchor="middle">· 技术选型</text>
+
+          <text x="340" y="130" text-anchor="middle">· 脚手架</text>
+          <text x="340" y="148" text-anchor="middle">· 代码规范</text>
+          <text x="340" y="166" text-anchor="middle">· 公共模块</text>
+
+          <text x="560" y="130" text-anchor="middle">· 路由</text>
+          <text x="560" y="148" text-anchor="middle">· 组件库</text>
+          <text x="560" y="166" text-anchor="middle">· 业务页面</text>
+
+          <text x="780" y="130" text-anchor="middle">· 状态共享</text>
+          <text x="780" y="148" text-anchor="middle">· 数据请求</text>
+          <text x="780" y="166" text-anchor="middle">· 缓存策略</text>
+
+          <text x="990" y="130" text-anchor="middle">· 打包优化</text>
+          <text x="990" y="148" text-anchor="middle">· 自动化部署</text>
+          <text x="990" y="166" text-anchor="middle">· 监控报警</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 1. 需求分析 -->
+  <section id="sec-requirement">
+    <div class="sec-title"><span class="num workflow">1</span>需求分析阶段</div>
+    <div class="sec-desc">拿到需求不要立刻写代码，先花 20% 时间做需求拆解，能省后续 80% 的返工</div>
+
+    <div class="grid-3">
+      <div class="card">
+        <h4>📋 需求拆解</h4>
+        <ul>
+          <li>通读 PRD，列出所有功能点</li>
+          <li>区分 <span class="tag tag-blue">MVP 必做</span> 与 <span class="tag tag-amber">二期优化</span></li>
+          <li>梳理用户路径：登录→首页→详情→下单...</li>
+          <li>识别模糊点，列 TODO 找 PM 确认</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>🎨 UI 评审</h4>
+        <ul>
+          <li>交互细节：动画时长、loading 状态、空状态</li>
+          <li>响应式：移动端 / 平板 / 桌面三端适配</li>
+          <li>组件复用：哪些可抽公共组件？</li>
+          <li>设计交付：Figma 标注 / Zeplin 切图</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>🔌 接口对齐</h4>
+        <ul>
+          <li>列出所有需要的接口（RESTful / GraphQL）</li>
+          <li>字段含义、数据类型、是否必填</li>
+          <li>分页格式、错误码规范</li>
+          <li>联调环境 / Mock 数据策略</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card card-warn">
+      <h4>⚠️ 常见坑：需求不清晰就开始写</h4>
+      <p>写完发现某个字段是后端动态生成 / 某个交互要支持手势回退 / 异常态没考虑... 返工成本是初始的 3-5 倍。<strong>建议</strong>：在需求评审会上把所有模糊点都暴露出来，哪怕多花 1 小时，也比写一半推倒重来划算。</p>
+    </div>
+  </section>
+
+  <!-- 2. 项目搭建 -->
+  <section id="sec-scaffold">
+    <div class="sec-title"><span class="num workflow">2</span>项目搭建阶段</div>
+    <div class="sec-desc">搭好脚手架 = 把工程化标准刻进骨子里。这一步决定整个项目的可维护性上限</div>
+
+    <div class="sub-title">📦 脚手架与构建工具选型</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>工具</th><th>适用场景</th><th>特点</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Vite</strong></td><td>Vue 3 / React 现代项目</td><td>基于原生 ESM，启动 < 1s，HMR 极快</td></tr>
+          <tr><td><strong>Vue CLI</strong></td><td>Vue 2 遗留项目</td><td>Webpack 体系，生态成熟但已停止维护</td></tr>
+          <tr><td><strong>Create React App</strong></td><td>React 简单 demo</td><td>官方脚手架，配置隐藏，同样已弃用</td></tr>
+          <tr><td><strong>Next.js / Nuxt</strong></td><td>需要 SSR / SSG 的项目</td><td>全栈框架，自带路由/SSR/SEO</td></tr>
+          <tr><td><strong>Rsbuild / Webpack 5</strong></td><td>复杂定制化构建</td><td>Rspack 加速版 Webpack，字节主力</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title">🗂 推荐目录结构（Vue 3 示例）</div>
+    <pre><span class="cm">// 标准化的目录划分，避免后期重构</span>
+src/
+├── api/           <span class="cm">// 接口定义，按模块分子目录</span>
+│   ├── user.ts
+│   └── order.ts
+├── assets/        <span class="cm">// 静态资源（图片、字体）</span>
+├── components/    <span class="cm">// 公共组件</span>
+│   ├── BaseButton/
+│   ├── BaseTable/
+│   └── BusinessXXX/   <span class="cm">// 业务组件（多页面复用）</span>
+├── composables/   <span class="cm">// 组合式函数（Vue 3）</span>
+├── directives/    <span class="cm">// 自定义指令</span>
+├── hooks/         <span class="cm">// React 自定义 Hooks（如果用 React）</span>
+├── layouts/       <span class="cm">// 布局组件</span>
+├── pages/         <span class="cm">// 页面级组件</span>
+│   ├── Home.vue
+│   └── Order/
+├── router/        <span class="cm">// 路由配置</span>
+├── stores/        <span class="cm">// Pinia 状态</span>
+├── styles/        <span class="cm">// 全局样式 / 变量</span>
+├── types/         <span class="cm">// TS 类型定义</span>
+├── utils/         <span class="cm">// 工具函数（纯函数）</span>
+├── views/         <span class="cm">// 另一种路由视图划分方案</span>
+├── App.vue
+├── main.ts
+└── env.d.ts</pre>
+
+    <div class="sub-title">🔧 工程化基础建设清单</div>
+    <div class="grid-4">
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">📝 代码规范</h4><p>ESLint + Prettier + Stylelint + Husky + lint-staged</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">🌍 浏览器兼容</h4><p>Browserslist + autoprefixer + babel-preset-env</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">📐 提交规范</h4><p>Commitlint + Conventional Commits 规范</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">🔒 环境变量</h4><p>多环境 .env.* 文件 + Vite 注入</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">🧪 单元测试</h4><p>Vitest / Jest + Vue Test Utils / Testing Library</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">📊 监控埋点</h4><p>Sentry 异常监控 + 自研埋点 SDK</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">🎨 UI 组件库</h4><p>Element Plus / Ant Design Vue / Naive UI</p></div>
+      <div class="card" style="padding:14px"><h4 style="font-size:.88rem">📦 包管理</h4><p>pnpm（推荐，节省磁盘） / npm / yarn</p></div>
+    </div>
+  </section>
+
+  <!-- 3. 组件开发 -->
+  <section id="sec-component">
+    <div class="sec-title"><span class="num workflow">3</span>组件开发阶段</div>
+    <div class="sec-desc">组件是前端的"积木"——好的组件设计 = 好的系统设计</div>
+
+    <div class="sub-title">🧩 组件设计三大原则</div>
+    <div class="grid-3">
+      <div class="card">
+        <h4>1️⃣ 单一职责</h4>
+        <p>一个组件只做一件事。<br>✅ <code class="inline">UserAvatar</code><br>❌ <code class="inline">UserCardWithAvatarAndBadgeAndFollow</code></p>
+      </div>
+      <div class="card">
+        <h4>2️⃣ 受控 / 非受控</h4>
+        <p>明确组件状态由谁管理：<br>· <strong>受控</strong>：value 由父组件传入<br>· <strong>非受控</strong>：内部 state + ref 暴露</p>
+      </div>
+      <div class="card">
+        <h4>3️⃣ 容器 / 展示分离</h4>
+        <p>· <strong>展示组件</strong>：纯 props 进、event 出<br>· <strong>容器组件</strong>：处理数据获取、状态<br>关注点分离，便于复用和测试</p>
+      </div>
+    </div>
+
+    <div class="sub-title">🛣 路由设计模式</div>
+    <div class="compare-box">
+      <div class="side vue">
+        <h5>🟢 Vue Router（Vue）</h5>
+        <ul>
+          <li>支持 hash / history 两种模式</li>
+          <li>嵌套路由 + 路由守卫</li>
+          <li>动态路由：<code class="inline">/user/:id</code></li>
+          <li>懒加载：<code class="inline">component: () =&gt; import()</code></li>
+          <li>4 种导航守卫：beforeEach / beforeEnter / beforeRouteEnter / beforeRouteUpdate</li>
+        </ul>
+      </div>
+      <div class="side react">
+        <h5>🔵 React Router（React）</h5>
+        <ul>
+          <li>v6 后用 <code class="inline">&lt;Routes&gt;&lt;Route&gt;</code> 替代 Switch</li>
+          <li><code class="inline">useNavigate</code> / <code class="inline">useParams</code> / <code class="inline">useLocation</code></li>
+          <li>嵌套路由：<code class="inline">&lt;Outlet /&gt;</code></li>
+          <li>懒加载：<code class="inline">React.lazy + Suspense</code></li>
+          <li>loader / action 数据预加载（v6.4+）</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 状态管理 -->
+  <section id="sec-state">
+    <div class="sec-title"><span class="num workflow">4</span>状态管理阶段</div>
+    <div class="sec-desc">什么时候用全局状态？什么时候用组件内 state？分清楚这 5 层就够了</div>
+
+    <div class="card">
+      <h4>🪜 状态分层的 5 个层级</h4>
+      <table>
+        <thead>
+          <tr><th>层级</th><th>方案</th><th>典型场景</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>L1 · 组件内</td><td>useState / ref</td><td>表单输入、UI 开关、临时标记</td></tr>
+          <tr><td>L2 · 父子共享</td><td>props + emit / 回调</td><td>列表项 → 父组件</td></tr>
+          <tr><td>L3 · 跨组件共享</td><td>provide/inject / Context</td><td>主题、国际化、当前用户基础信息</td></tr>
+          <tr><td>L4 · 全局共享</td><td>Pinia / Redux / Zustand</td><td>购物车、登录态、权限、全局通知</td></tr>
+          <tr><td>L5 · 服务端缓存</td><td>React Query / SWR / Vue Query</td><td>列表数据、详情数据、自动重试</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip warn">
+      <span class="icon">⚠️</span>
+      <div class="content">
+        <strong>不要把所有状态都塞进全局 Store</strong>
+        很多新手把所有 useState 都提到 Pinia / Redux，结果每次 setState 都触发整个 store 订阅者重渲染，性能反而变差。<strong>原则</strong>：能用组件内 state 解决的，绝不上升到全局。
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 构建部署 -->
+  <section id="sec-build">
+    <div class="sec-title"><span class="num workflow">5</span>构建部署阶段</div>
+    <div class="sec-desc">从"在我电脑能跑"到"在生产环境稳定运行"，这一关的坑最多</div>
+
+    <div class="sub-title">🚀 构建优化清单</div>
+    <div class="grid-2">
+      <div class="card">
+        <h4>📦 打包体积优化</h4>
+        <ul>
+          <li>路由懒加载（按需加载页面）</li>
+          <li>组件库按需引入（unplugin-vue-components / babel-plugin-import）</li>
+          <li>图片：WebP + 懒加载 + CDN</li>
+          <li>分析包体积：<code class="inline">rollup-plugin-visualizer</code> / <code class="inline">webpack-bundle-analyzer</code></li>
+          <li>Tree Shaking 生效（避免副作用导入）</li>
+          <li>Gzip / Brotli 压缩</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>⚡ 运行时性能</h4>
+        <ul>
+          <li>虚拟列表：<code class="inline">vue-virtual-scroller</code> / <code class="inline">react-window</code></li>
+          <li>防抖节流：搜索、滚动、resize</li>
+          <li>Web Worker 处理大计算</li>
+          <li>requestAnimationFrame 替代 setTimeout 做动画</li>
+          <li>骨架屏替代 loading 转圈</li>
+          <li>SSR / SSG 提升首屏</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub-title">🚢 部署流程</div>
+    <pre><span class="cm">// 典型 CI/CD 流水线（以 GitHub Actions 为例）</span>
+<span class="kw">name</span>: Deploy
+<span class="kw">on</span>:
+  <span class="kw">push</span>:
+    <span class="kw">branches</span>: [main]
+<span class="kw">jobs</span>:
+  build-and-deploy:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: actions/checkout@v4
+      - <span class="kw">uses</span>: actions/setup-node@v4
+        <span class="kw">with</span>: { node-version: <span class="num">20</span>, cache: <span class="str">'pnpm'</span> }
+      - <span class="kw">run</span>: pnpm install --frozen-lockfile
+      - <span class="kw">run</span>: pnpm lint
+      - <span class="kw">run</span>: pnpm test
+      - <span class="kw">run</span>: pnpm build
+      - <span class="kw">uses</span>: actions/upload-artifact@v4  <span class="cm">// 产物上传</span>
+        <span class="kw">with</span>:
+          <span class="kw">name</span>: dist
+          <span class="kw">path</span>: dist/
+      - <span class="kw">uses</span>: peaceiris/actions-gh-pages@v3  <span class="cm">// 部署到 GH Pages</span>
+        <span class="kw">with</span>:
+          <span class="kw">github_token</span>: ${{ secrets.GITHUB_TOKEN }}
+          <span class="kw">publish_dir</span>: ./dist</pre>
+
+    <div class="sub-title">📊 部署后要做的事</div>
+    <div class="pill-row">
+      <span class="pill">✅ 监控接入（Sentry）</span>
+      <span class="pill">✅ 性能监控（Web Vitals）</span>
+      <span class="pill">✅ 错误日志（前端日志上报）</span>
+      <span class="pill">✅ CDN 预热（首屏静态资源）</span>
+      <span class="pill">✅ HTTPS / HTTP2</span>
+      <span class="pill">✅ 域名收敛 / 缓存策略</span>
+      <span class="pill">✅ 灰度发布 / 蓝绿部署</span>
+      <span class="pill">✅ 回滚预案（保留旧版本）</span>
+    </div>
+  </section>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- PART 2: Vue                                                    -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="part-content" data-pane="vue">
+
+  <section id="sec-vue-core">
+    <div class="sec-title"><span class="num vue">1</span>Vue 核心知识点</div>
+    <div class="sec-desc">Vue 3 + Composition API + TypeScript 已成为主流标配</div>
+
+    <div class="sub-title">💚 响应式原理：ref / reactive / computed / watch</div>
+    <div class="compare-box">
+      <div class="side vue">
+        <h5>🟢 Vue 3 响应式（基于 Proxy）</h5>
+        <ul>
+          <li><code class="inline">ref(x)</code> → 包装基本类型，<code class="inline">.value</code> 访问</li>
+          <li><code class="inline">reactive(obj)</code> → 深度代理整个对象</li>
+          <li><code class="inline">computed(fn)</code> → 自动追踪依赖的缓存值</li>
+          <li><code class="inline">watch(source, cb)</code> → 副作用监听</li>
+          <li><code class="inline">watchEffect(fn)</code> → 自动收集依赖</li>
+          <li>底层用 <strong>Proxy</strong> 拦截 get/set</li>
+        </ul>
+      </div>
+      <div class="side" style="background:var(--orange-l);border-right:1px solid var(--border)">
+        <h5>🟡 Vue 2 响应式（Object.defineProperty）</h5>
+        <ul>
+          <li>用 <code class="inline">Object.defineProperty</code> 递归劫持</li>
+          <li>无法检测对象属性的添加/删除</li>
+          <li>数组需要重写 7 个方法（push/pop/...）</li>
+          <li>Vue 3 改进后这些限制全部消除</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub-title">🔧 Composition API 三大核心</div>
+    <pre><span class="cm">// 1. ref / reactive —— 响应式数据</span>
+<span class="kw">import</span> { ref, reactive, computed } <span class="kw">from</span> <span class="str">'vue'</span>
+
+<span class="kw">const</span> count = <span class="fn">ref</span>(<span class="num">0</span>)            <span class="cm">// 基本类型用 ref</span>
+<span class="kw">const</span> state = <span class="fn">reactive</span>({           <span class="cm">// 对象用 reactive</span>
+  name: <span class="str">'Vue'</span>,
+  list: []
+})
+<span class="kw">const</span> double = <span class="fn">computed</span>(() =&gt; count.value * <span class="num">2</span>)
+
+<span class="cm">// 2. watch / watchEffect —— 副作用</span>
+<span class="kw">import</span> { watch, watchEffect } <span class="kw">from</span> <span class="str">'vue'</span>
+
+<span class="fn">watch</span>(count, (newVal, oldVal) =&gt; {
+  console.<span class="fn">log</span>(<span class="str">`count: ${oldVal} → ${newVal}`</span>)
+})
+
+<span class="fn">watchEffect</span>(() =&gt; {
+  console.<span class="fn">log</span>(<span class="str">'count ='</span>, count.value)  <span class="cm">// 自动追踪 count</span>
+})
+
+<span class="cm">// 3. 生命周期 onMounted / onUnmounted ...</span>
+<span class="kw">import</span> { onMounted, onUnmounted } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="fn">onMounted</span>(() =&gt; { console.<span class="fn">log</span>(<span class="str">'组件挂载'</span>) })
+<span class="fn">onUnmounted</span>(() =&gt; { console.<span class="fn">log</span>(<span class="str">'组件卸载'</span>) })</pre>
+
+    <div class="sub-title">📜 生命周期（Option API vs Composition API）</div>
+    <div class="lifecycle">
+      <div class="lifecycle-step"><div class="lc-num">CREATION</div><div class="lc-name">setup()</div><div class="lc-desc">Composition API 入口</div></div>
+      <div class="lifecycle-step"><div class="lc-num">CREATION</div><div class="lc-name">beforeCreate</div><div class="lc-desc">实例刚创建</div></div>
+      <div class="lifecycle-step"><div class="lc-num">CREATION</div><div class="lc-name">created</div><div class="lc-desc">数据观测完成</div></div>
+      <div class="lifecycle-step"><div class="lc-num">MOUNTING</div><div class="lc-name">beforeMount</div><div class="lc-desc">挂载前</div></div>
+      <div class="lifecycle-step"><div class="lc-num">MOUNTING</div><div class="lc-name">onMounted</div><div class="lc-desc">DOM 挂载完成 ⭐</div></div>
+      <div class="lifecycle-step"><div class="lc-num">UPDATING</div><div class="lc-name">beforeUpdate</div><div class="lc-desc">数据更新前</div></div>
+      <div class="lifecycle-step"><div class="lc-num">UPDATING</div><div class="lc-name">onUpdated</div><div class="lc-desc">DOM 更新后</div></div>
+      <div class="lifecycle-step"><div class="lc-num">DESTROY</div><div class="lc-name">onUnmounted</div><div class="lc-desc">组件销毁 ⭐</div></div>
+    </div>
+
+    <div class="sub-title">🎯 关键概念速查</div>
+    <div class="grid-3">
+      <div class="card card-vue">
+        <h4>📦 组件通信</h4>
+        <ul>
+          <li><strong>props / emit</strong>：父子</li>
+          <li><strong>provide / inject</strong>：跨级</li>
+          <li><strong>v-model</strong>：双向绑定</li>
+          <li><strong>ref + expose</strong>：父调子</li>
+          <li><strong>mitt / tiny-emit</strong>：全局事件总线</li>
+        </ul>
+      </div>
+      <div class="card card-vue">
+        <h4>🪝 组合式函数（Composables）</h4>
+        <p>把<strong>有状态逻辑</strong>抽成可复用函数，类似 React Hooks：</p>
+<pre><span class="kw">function</span> <span class="fn">useMouse</span>() {
+  <span class="kw">const</span> x = <span class="fn">ref</span>(<span class="num">0</span>), y = <span class="fn">ref</span>(<span class="num">0</span>)
+  <span class="fn">onMounted</span>(() =&gt; {
+    <span class="kw">const</span> handler = (e) =&gt; { x.value = e.clientX; y.value = e.clientY }
+    window.<span class="fn">addEventListener</span>(<span class="str">'mousemove'</span>, handler)
+    <span class="fn">onUnmounted</span>(() =&gt; window.<span class="fn">removeEventListener</span>(<span class="str">'mousemove'</span>, handler))
+  })
+  <span class="kw">return</span> { x, y }
+}</pre>
+      </div>
+      <div class="card card-vue">
+        <h4>📌 模板语法亮点</h4>
+        <ul>
+          <li><code class="inline">v-if</code> vs <code class="inline">v-show</code>：DOM 移除 vs display:none</li>
+          <li><code class="inline">v-for</code> 必须加 <code class="inline">:key</code></li>
+          <li><code class="inline">v-model</code> 默认绑 <code class="inline">value</code>，可自定义 prop/event</li>
+          <li>插槽：<code class="inline">#default</code> / <code class="inline">#header</code> / 作用域插槽</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-vue-flow">
+    <div class="sec-title"><span class="num vue">2</span>Vue 项目开发流程</div>
+    <div class="sec-desc">从 create-vue 脚手架到业务模块拆解，标准化的开发节奏</div>
+
+    <div class="sub-title">🚀 初始化项目（推荐 pnpm）</div>
+    <pre><span class="cm"># 1. 创建项目（Vue 3 + TS）</span>
+pnpm create vue@latest my-app
+<span class="cm"># 选项：TypeScript ✅ / Router ✅ / Pinia ✅ / Vitest ✅ / E2E</span>
+
+<span class="cm"># 2. 安装依赖</span>
+cd my-app &amp;&amp; pnpm install
+
+<span class="cm"># 3. 启动</span>
+pnpm dev  <span class="cm"># http://localhost:5173</span>
+
+<span class="cm"># 4. 关键文件</span>
+.
+├── vite.config.ts     <span class="cm"># Vite 配置（别名、proxy、插件）</span>
+├── tsconfig.json
+├── index.html
+└── src/
+    ├── main.ts        <span class="cm"># 入口</span>
+    ├── App.vue
+    ├── router/        <span class="cm"># 路由</span>
+    ├── stores/        <span class="cm"># Pinia</span>
+    ├── views/
+    └── components/</pre>
+
+    <div class="sub-title">🔄 业务模块开发节奏</div>
+    <div class="flow">
+      <div class="flow-step vue"><div class="flow-num">1</div><h6>定义类型</h6><p>types/order.ts</p></div>
+      <div class="flow-step vue"><div class="flow-num">2</div><h6>封装 API</h6><p>api/order.ts</p></div>
+      <div class="flow-step vue"><div class="flow-num">3</div><h6>定义 Store</h6><p>stores/order.ts</p></div>
+      <div class="flow-step vue"><div class="flow-num">4</div><h6>写组件</h6><p>views/Order/*.vue</p></div>
+      <div class="flow-step vue"><div class="flow-num">5</div><h6>配路由</h6><p>router/index.ts</p></div>
+      <div class="flow-step vue"><div class="flow-num">6</div><h6>单测</h6><p>__tests__/</p></div>
+    </div>
+
+    <div class="sub-title">🍍 Pinia 状态管理（Vue 3 官方推荐）</div>
+    <pre><span class="cm">// stores/user.ts —— setup 风格（推荐）</span>
+<span class="kw">import</span> { defineStore } <span class="kw">from</span> <span class="str">'pinia'</span>
+<span class="kw">import</span> { ref, computed } <span class="kw">from</span> <span class="str">'vue'</span>
+
+<span class="kw">export const</span> <span class="fn">useUserStore</span> = <span class="fn">defineStore</span>(<span class="str">'user'</span>, () =&gt; {
+  <span class="cm">// state</span>
+  <span class="kw">const</span> token = <span class="fn">ref</span>(<span class="str">''</span>)
+  <span class="kw">const</span> profile = <span class="fn">ref</span>(<span class="kw">null</span>)
+
+  <span class="cm">// getters</span>
+  <span class="kw">const</span> isLogin = <span class="fn">computed</span>(() =&gt; !!token.value)
+  <span class="kw">const</span> userName = <span class="fn">computed</span>(() =&gt; profile.value?.name ?? <span class="str">'游客'</span>)
+
+  <span class="cm">// actions</span>
+  <span class="kw">async function</span> <span class="fn">login</span>(form) {
+    <span class="kw">const</span> { data } = <span class="kw">await</span> <span class="fn">apiLogin</span>(form)
+    token.value = data.token
+    profile.value = data.user
+  }
+
+  <span class="kw">function</span> <span class="fn">logout</span>() {
+    token.value = <span class="str">''</span>
+    profile.value = <span class="kw">null</span>
+  }
+
+  <span class="kw">return</span> { token, profile, isLogin, userName, login, logout }
+})
+
+<span class="cm">// 组件中使用</span>
+<span class="kw">import</span> { useUserStore } <span class="kw">from</span> <span class="str">'@/stores/user'</span>
+<span class="kw">const</span> userStore = <span class="fn">useUserStore</span>()
+console.<span class="fn">log</span>(userStore.isLogin, userStore.userName)
+<span class="kw">await</span> userStore.<span class="fn">login</span>(form)</pre>
+  </section>
+
+  <section id="sec-vue-api">
+    <div class="sec-title"><span class="num vue">3</span>Vue 如何调用后端接口</div>
+    <div class="sec-desc">Axios 二次封装 + 拦截器 + 错误处理是工程化标配</div>
+
+    <div class="sub-title">🛠 1. Axios 封装（企业级标准方案）</div>
+    <pre><span class="cm">// utils/request.ts</span>
+<span class="kw">import</span> axios <span class="kw">from</span> <span class="str">'axios'</span>
+<span class="kw">import</span> { ElMessage } <span class="kw">from</span> <span class="str">'element-plus'</span>
+<span class="kw">import</span> { useUserStore } <span class="kw">from</span> <span class="str">'@/stores/user'</span>
+<span class="kw">import</span> router <span class="kw">from</span> <span class="str">'@/router'</span>
+
+<span class="kw">const</span> service = axios.<span class="fn">create</span>({
+  baseURL: <span class="kw">import</span>.meta.env.VITE_API_BASE_URL,
+  timeout: <span class="num">15000</span>,
+  headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> }
+})
+
+<span class="cm">// ── 请求拦截器 ──</span>
+service.interceptors.request.<span class="fn">use</span>(
+  (config) =&gt; {
+    <span class="kw">const</span> userStore = <span class="fn">useUserStore</span>()
+    <span class="kw">if</span> (userStore.token) {
+      config.headers.Authorization = <span class="str">`Bearer ${userStore.token}`</span>
+    }
+    <span class="kw">return</span> config
+  },
+  (error) =&gt; Promise.<span class="fn">reject</span>(error)
+)
+
+<span class="cm">// ── 响应拦截器 ──</span>
+service.interceptors.response.<span class="fn">use</span>(
+  (response) =&gt; {
+    <span class="kw">const</span> res = response.data
+    <span class="cm">// 假设后端约定：{ code, message, data }</span>
+    <span class="kw">if</span> (res.code !== <span class="num">0</span>) {
+      <span class="fn">ElMessage.error</span>(res.message || <span class="str">'请求失败'</span>)
+      <span class="cm">// 401 token 失效</span>
+      <span class="kw">if</span> (res.code === <span class="num">401</span>) {
+        <span class="fn">useUserStore</span>().<span class="fn">logout</span>()
+        router.<span class="fn">push</span>(<span class="str">'/login'</span>)
+      }
+      <span class="kw">return</span> Promise.<span class="fn">reject</span>(<span class="kw">new</span> <span class="fn">Error</span>(res.message))
+    }
+    <span class="kw">return</span> res.data  <span class="cm">// 直接返回 data，组件不用再解一层</span>
+  },
+  (error) =&gt; {
+    <span class="cm">// HTTP 状态码错误</span>
+    <span class="kw">if</span> (error.response?.status === <span class="num">404</span>) <span class="fn">ElMessage.error</span>(<span class="str">'资源不存在'</span>)
+    <span class="kw">else if</span> (error.response?.status === <span class="num">500</span>) <span class="fn">ElMessage.error</span>(<span class="str">'服务器错误'</span>)
+    <span class="kw">else if</span> (error.code === <span class="str">'ECONNABORTED'</span>) <span class="fn">ElMessage.error</span>(<span class="str">'请求超时'</span>)
+    <span class="kw">else</span> <span class="fn">ElMessage.error</span>(error.message)
+    <span class="kw">return</span> Promise.<span class="fn">reject</span>(error)
+  }
+)
+
+<span class="kw">export default</span> service</pre>
+
+    <div class="sub-title">📡 2. API 模块化组织</div>
+    <pre><span class="cm">// api/user.ts —— 按业务模块拆</span>
+<span class="kw">import</span> request <span class="kw">from</span> <span class="str">'@/utils/request'</span>
+<span class="kw">import</span> <span class="kw">type</span> { LoginForm, UserInfo } <span class="kw">from</span> <span class="str">'@/types/user'</span>
+
+<span class="kw">export const</span> <span class="fn">apiLogin</span> = (form: LoginForm) =&gt;
+  request.<span class="fn">post</span>&lt;UserInfo&gt;(<span class="str">'/user/login'</span>, form)
+
+<span class="kw">export const</span> <span class="fn">apiGetUserInfo</span> = () =&gt;
+  request.<span class="fn">get</span>&lt;UserInfo&gt;(<span class="str">'/user/info'</span>)
+
+<span class="kw">export const</span> <span class="fn">apiLogout</span> = () =&gt;
+  request.<span class="fn">post</span>(<span class="str">'/user/logout'</span>)
+
+<span class="cm">// api/order.ts</span>
+<span class="kw">export const</span> <span class="fn">apiGetOrderList</span> = (params: { page: number; size: number }) =&gt;
+  request.<span class="fn">get</span>&lt;{ list: Order[]; total: number }&gt;(<span class="str">'/orders'</span>, { params })</pre>
+
+    <div class="sub-title">🎣 3. 在组件中使用（Composition API）</div>
+    <pre>&lt;<span class="tag">template</span>&gt;
+  &lt;<span class="tag">div</span>&gt;
+    &lt;<span class="tag">el-button</span> <span class="var">:loading</span>=<span class="str">"loading"</span> @<span class="var">click</span>=<span class="str">"fetchData"</span>&gt;刷新&lt;/<span class="tag">el-button</span>&gt;
+    &lt;<span class="tag">div</span> <span class="var">v-if</span>=<span class="str">"error"</span> <span class="kw">class</span>=<span class="str">"error"</span>&gt;{{ error }}&lt;/<span class="tag">div</span>&gt;
+    &lt;<span class="tag">ul</span> <span class="var">v-else</span>&gt;
+      &lt;<span class="tag">li</span> <span class="var">v-for</span>=<span class="str">"item in list"</span> <span class="var">:key</span>=<span class="str">"item.id"</span>&gt;{{ item.name }}&lt;/<span class="tag">li</span>&gt;
+    &lt;/<span class="tag">ul</span>&gt;
+  &lt;/<span class="tag">div</span>&gt;
+&lt;/<span class="tag">template</span>&gt;
+
+&lt;<span class="tag">script</span> <span class="var">setup</span> <span class="var">lang</span>=<span class="str">"ts"</span>&gt;
+<span class="kw">import</span> { ref, onMounted } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> { apiGetOrderList } <span class="kw">from</span> <span class="str">'@/api/order'</span>
+<span class="kw">import</span> <span class="kw">type</span> { Order } <span class="kw">from</span> <span class="str">'@/types/order'</span>
+
+<span class="kw">const</span> list = <span class="fn">ref</span>&lt;Order[]&gt;([])
+<span class="kw">const</span> loading = <span class="fn">ref</span>(<span class="kw">false</span>)
+<span class="kw">const</span> error = <span class="fn">ref</span>(<span class="str">''</span>)
+
+<span class="kw">async function</span> <span class="fn">fetchData</span>() {
+  loading.value = <span class="kw">true</span>
+  error.value = <span class="str">''</span>
+  <span class="kw">try</span> {
+    <span class="kw">const</span> { list: data, total } = <span class="kw">await</span> <span class="fn">apiGetOrderList</span>({ page: <span class="num">1</span>, size: <span class="num">20</span>)
+    list.value = data
+    console.<span class="fn">log</span>(<span class="str">'total:'</span>, total)
+  } <span class="kw">catch</span> (e: <span class="kw">any</span>) {
+    error.value = e.message
+  } <span class="kw">finally</span> {
+    loading.value = <span class="kw">false</span>
+  }
+}
+
+<span class="fn">onMounted</span>(fetchData)
+&lt;/<span class="tag">script</span>&gt;</pre>
+
+    <div class="tip vue">
+      <span class="icon">🟢</span>
+      <div class="content">
+        <strong>推荐：使用 VueUse 的 useFetch / Vue Query</strong>
+        · <code class="inline">@vueuse/integrations/useAxios</code>：把 axios 包装成响应式<br>
+        · <code class="inline">@tanstack/vue-query</code>：自带缓存、refetch、乐观更新，复杂业务强烈推荐
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- PART 3: React                                                   -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="part-content" data-pane="react">
+
+  <section id="sec-react-core">
+    <div class="sec-title"><span class="num react">1</span>React 核心知识点</div>
+    <div class="sec-desc">函数组件 + Hooks + 不可变数据是 React 18 的核心范式</div>
+
+    <div class="sub-title">⚛️ 核心理念：UI = f(state)</div>
+    <div class="card card-react">
+      <h4>React 的本质</h4>
+      <p>React 不是框架，而是<strong>声明式 UI 库</strong>。每次 state 变化，React 重新执行 render()，Diffing 算法决定真实 DOM 怎么变。开发者只需关心"状态是什么"，不必关心"DOM 怎么改"。</p>
+    </div>
+
+    <div class="sub-title">🎣 5 个最常用 Hooks</div>
+    <pre><span class="kw">import</span> { useState, useEffect, useMemo, useCallback, useRef } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="cm">// 1. useState —— 状态</span>
+<span class="kw">const</span> [count, setCount] = <span class="fn">useState</span>(<span class="num">0</span>)
+<span class="kw">const</span> [user, setUser] = <span class="fn">useState</span>&lt;User | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+
+<span class="cm">// 2. useEffect —— 副作用（数据请求/订阅/DOM 操作）</span>
+<span class="fn">useEffect</span>(() =&gt; {
+  <span class="kw">const</span> sub = <span class="fn">apiGetUser</span>().<span class="fn">then</span>(setUser)
+  <span class="kw">return</span> () =&gt; sub.<span class="fn">unsubscribe</span>()  <span class="cm">// 清理函数</span>
+}, [userId])  <span class="cm">// 依赖数组</span>
+
+<span class="cm">// 3. useMemo —— 缓存计算结果（依赖变化才重算）</span>
+<span class="kw">const</span> filtered = <span class="fn">useMemo</span>(
+  () =&gt; list.<span class="fn">filter</span>(x =&gt; x.status === filter),
+  [list, filter]
+)
+
+<span class="cm">// 4. useCallback —— 缓存函数引用（避免子组件重渲染）</span>
+<span class="kw">const</span> handleClick = <span class="fn">useCallback</span>((id: <span class="kw">string</span>) =&gt; {
+  <span class="fn">doSomething</span>(id)
+}, [])
+
+<span class="cm">// 5. useRef —— 拿到 DOM 引用 / 跨渲染保存值</span>
+<span class="kw">const</span> inputRef = <span class="fn">useRef</span>&lt;HTMLInputElement&gt;(<span class="kw">null</span>)
+<span class="fn">useEffect</span>(() =&gt; { inputRef.current?.<span class="fn">focus</span>() }, [])
+
+<span class="cm">// 额外：useReducer 适合复杂 state 逻辑</span>
+<span class="kw">const</span> [state, dispatch] = <span class="fn">useReducer</span>(reducer, initialState)</pre>
+
+    <div class="sub-title">🔄 React 生命周期（函数组件版）</div>
+    <div class="lifecycle">
+      <div class="lifecycle-step react"><div class="lc-num">MOUNT</div><div class="lc-name">render()</div><div class="lc-desc">返回 JSX</div></div>
+      <div class="lifecycle-step react"><div class="lc-num">MOUNT</div><div class="lc-name">useEffect []</div><div class="lc-desc">挂载后执行</div></div>
+      <div class="lifecycle-step react"><div class="lc-num">UPDATE</div><div class="lc-name">render()</div><div class="lc-desc">state 变化重渲染</div></div>
+      <div class="lifecycle-step react"><div class="lc-num">UPDATE</div><div class="lc-name">useEffect [dep]</div><div class="lc-desc">依赖变化执行</div></div>
+      <div class="lifecycle-step react"><div class="lc-num">UNMOUNT</div><div class="lc-name">useEffect cleanup</div><div class="lc-desc">清理副作用</div></div>
+      <div class="lifecycle-step react"><div class="lc-num">ERR</div><div class="lc-name">ErrorBoundary</div><div class="lc-desc">捕获子组件错误</div></div>
+    </div>
+
+    <div class="sub-title">🧠 渲染机制核心</div>
+    <div class="grid-2">
+      <div class="card card-react">
+        <h4>📊 虚拟 DOM & Diffing</h4>
+        <ul>
+          <li>JS 对象描述 UI（虚拟 DOM）</li>
+          <li>state 变 → 重 render → 新虚拟 DOM</li>
+          <li>Diff 算法对比新旧树（O(n) 启发式）</li>
+          <li>找到差异后只更新真实 DOM 必要部分</li>
+        </ul>
+      </div>
+      <div class="card card-react">
+        <h4>🚀 React 18 并发特性</h4>
+        <ul>
+          <li><code class="inline">createRoot</code>：启用并发模式</li>
+          <li><code class="inline">useTransition</code>：标记非紧急更新</li>
+          <li><code class="inline">useDeferredValue</code>：延迟更新</li>
+          <li><code class="inline">&lt;Suspense&gt;</code>：异步加载占位</li>
+          <li>自动批处理：多次 setState 合并一次渲染</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-react-flow">
+    <div class="sec-title"><span class="num react">2</span>React 项目开发流程</div>
+    <div class="sec-desc">Vite + React 18 + TypeScript + 状态库 + 路由库的现代化选型</div>
+
+    <div class="sub-title">🚀 初始化项目</div>
+    <pre><span class="cm"># 1. Vite 创建 React + TS 项目（推荐）</span>
+pnpm create vite my-app --template react-ts
+cd my-app &amp;&amp; pnpm install
+
+<span class="cm"># 2. 安装核心依赖</span>
+pnpm add react-router-dom zustand axios
+pnpm add -D tailwindcss postcss autoprefixer
+pnpm add @tanstack/react-query
+
+<span class="cm"># 3. 启动</span>
+pnpm dev</pre>
+
+    <div class="sub-title">🗂 推荐目录结构</div>
+    <pre><span class="cm">// React 项目的标准目录</span>
+src/
+├── api/             <span class="cm">// axios 实例 + 接口</span>
+├── assets/
+├── components/      <span class="cm">// 公共组件（Button/Modal/...）</span>
+├── features/        <span class="cm">// 按业务功能模块（推荐结构）</span>
+│   ├── auth/        <span class="cm">// 登录、token、权限</span>
+│   │   ├── api.ts
+│   │   ├── hooks.ts
+│   │   ├── store.ts
+│   │   └── components/
+│   └── order/
+├── hooks/           <span class="cm">// 跨功能通用 Hooks</span>
+├── layouts/
+├── pages/           <span class="cm">// 页面</span>
+├── router/          <span class="cm">// 路由配置</span>
+├── stores/          <span class="cm">// 全局 zustand stores</span>
+├── styles/
+├── types/           <span class="cm">// 全局类型</span>
+├── utils/
+├── App.tsx
+└── main.tsx</pre>
+
+    <div class="sub-title">🛣 React Router v6 路由</div>
+    <pre><span class="cm">// router/index.tsx</span>
+<span class="kw">import</span> { createBrowserRouter, Navigate } <span class="kw">from</span> <span class="str">'react-router-dom'</span>
+<span class="kw">import</span> { lazy, Suspense } <span class="kw">from</span> <span class="str">'react'</span>
+<span class="kw">import</span> Layout <span class="kw">from</span> <span class="str">'@/layouts/Layout'</span>
+
+<span class="cm">// 路由懒加载</span>
+<span class="kw">const</span> Home = <span class="fn">lazy</span>(() =&gt; <span class="kw">import</span>(<span class="str">'@/pages/Home'</span>))
+<span class="kw">const</span> Login = <span class="fn">lazy</span>(() =&gt; <span class="kw">import</span>(<span class="str">'@/pages/Login'</span>))
+<span class="kw">const</span> OrderList = <span class="fn">lazy</span>(() =&gt; <span class="kw">import</span>(<span class="str">'@/pages/Order/List'</span>))
+
+<span class="kw">export const</span> router = <span class="fn">createBrowserRouter</span>([
+  {
+    <span class="kw">path</span>: <span class="str">'/'</span>,
+    <span class="kw">element</span>: &lt;Layout /&gt;,
+    <span class="kw">children</span>: [
+      { <span class="kw">path</span>: <span class="str">''</span>, <span class="kw">element</span>: &lt;Navigate <span class="kw">to</span>=<span class="str">"/home"</span> /&gt; },
+      { <span class="kw">path</span>: <span class="str">'home'</span>, <span class="kw">element</span>: &lt;Suspense fallback={&lt;Loading /&gt;}&gt;&lt;Home /&gt;&lt;/Suspense&gt; },
+      { <span class="kw">path</span>: <span class="str">'orders'</span>, <span class="kw">element</span>: &lt;Suspense fallback={&lt;Loading /&gt;}&gt;&lt;OrderList /&gt;&lt;/Suspense&gt; }
+    ]
+  },
+  { <span class="kw">path</span>: <span class="str">'/login'</span>, <span class="kw">element</span>: &lt;Login /&gt; }
+])</pre>
+
+    <div class="sub-title">🐻 Zustand 状态管理（推荐）</div>
+    <pre><span class="cm">// stores/useUserStore.ts —— 极简 API，比 Redux 轻 10 倍</span>
+<span class="kw">import</span> { create } <span class="kw">from</span> <span class="str">'zustand'</span>
+<span class="kw">import</span> { apiLogin, apiGetUserInfo } <span class="kw">from</span> <span class="str">'@/api/user'</span>
+
+<span class="kw">interface</span> UserState {
+  token: <span class="kw">string</span>
+  profile: User | <span class="kw">null</span>
+  isLogin: <span class="kw">boolean</span>
+  login: (form: LoginForm) =&gt; <span class="kw">Promise</span>&lt;<span class="kw">void</span>&gt;
+  logout: () =&gt; <span class="kw">void</span>
+  fetchProfile: () =&gt; <span class="kw">Promise</span>&lt;<span class="kw">void</span>&gt;
+}
+
+<span class="kw">export const</span> <span class="fn">useUserStore</span> = <span class="fn">create</span>&lt;UserState&gt;(<span class="fn">set</span> =&gt; ({
+  token: localStorage.<span class="fn">getItem</span>(<span class="str">'token'</span>) || <span class="str">''</span>,
+  profile: <span class="kw">null</span>,
+  isLogin: <span class="kw">false</span>,
+
+  <span class="kw">async</span> <span class="fn">login</span>(form) {
+    <span class="kw">const</span> { token, user } = <span class="kw">await</span> <span class="fn">apiLogin</span>(form)
+    localStorage.<span class="fn">setItem</span>(<span class="str">'token'</span>, token)
+    <span class="fn">set</span>({ token, profile: user, isLogin: <span class="kw">true</span> })
+  },
+
+  <span class="fn">logout</span>() {
+    localStorage.<span class="fn">removeItem</span>(<span class="str">'token'</span>)
+    <span class="fn">set</span>({ token: <span class="str">''</span>, profile: <span class="kw">null</span>, isLogin: <span class="kw">false</span> })
+  },
+
+  <span class="kw">async</span> <span class="fn">fetchProfile</span>() {
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="fn">apiGetUserInfo</span>()
+    <span class="fn">set</span>({ profile: user, isLogin: <span class="kw">true</span> })
+  }
+}))
+
+<span class="cm">// 组件中按需订阅（避免不相关 state 变化触发重渲染）</span>
+<span class="kw">const</span> token = <span class="fn">useUserStore</span>(s =&gt; s.token)
+<span class="kw">const</span> login = <span class="fn">useUserStore</span>(s =&gt; s.login)</pre>
+  </section>
+
+  <section id="sec-react-api">
+    <div class="sec-title"><span class="num react">3</span>React 如何调用后端接口</div>
+    <div class="sec-desc">从裸 axios → 自定义 Hook → React Query 的三种方案演进</div>
+
+    <div class="sub-title">🛠 1. Axios 封装（与 Vue 版几乎一样）</div>
+    <pre><span class="cm">// utils/request.ts</span>
+<span class="kw">import</span> axios, { AxiosError } <span class="kw">from</span> <span class="str">'axios'</span>
+<span class="kw">import</span> { message } <span class="kw">from</span> <span class="str">'antd'</span>
+<span class="kw">import</span> { useUserStore } <span class="kw">from</span> <span class="str">'@/stores/useUserStore'</span>
+
+<span class="kw">const</span> request = axios.<span class="fn">create</span>({
+  baseURL: <span class="kw">import</span>.meta.env.VITE_API_BASE_URL,
+  timeout: <span class="num">15000</span>
+})
+
+request.interceptors.request.<span class="fn">use</span>((config) =&gt; {
+  <span class="kw">const</span> token = <span class="fn">useUserStore</span>.<span class="fn">getState</span>().token  <span class="cm">// zustand 拿 state</span>
+  <span class="kw">if</span> (token) config.headers.Authorization = <span class="str">`Bearer ${token}`</span>
+  <span class="kw">return</span> config
+})
+
+request.interceptors.response.<span class="fn">use</span>(
+  (resp) =&gt; {
+    <span class="kw">const</span> data = resp.data
+    <span class="kw">if</span> (data.code !== <span class="num">0</span>) {
+      <span class="fn">message.error</span>(data.message)
+      <span class="kw">if</span> (data.code === <span class="num">401</span>) <span class="fn">useUserStore</span>.<span class="fn">getState</span>().<span class="fn">logout</span>()
+      <span class="kw">return</span> Promise.<span class="fn">reject</span>(data)
+    }
+    <span class="kw">return</span> data.data
+  },
+  (error: AxiosError) =&gt; {
+    <span class="fn">message.error</span>(error.message)
+    <span class="kw">return</span> Promise.<span class="fn">reject</span>(error)
+  }
+)
+<span class="kw">export default</span> request</pre>
+
+    <div class="sub-title">🎣 2. 自定义 Hook 封装数据请求</div>
+    <pre><span class="cm">// hooks/useRequest.ts —— 极简版</span>
+<span class="kw">import</span> { useState, useEffect, useCallback } <span class="kw">from</span> <span class="str">'react'</span>
+
+<span class="kw">export function</span> <span class="fn">useRequest</span>&lt;T, P <span class="kw">extends</span> <span class="kw">any</span>[]&gt;(
+  service: (...args: P) =&gt; <span class="kw">Promise</span>&lt;T&gt;,
+  deps: P = [] <span class="kw">as</span> <span class="kw">any</span>
+) {
+  <span class="kw">const</span> [data, setData] = <span class="fn">useState</span>&lt;T | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> [error, setError] = <span class="fn">useState</span>&lt;Error | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+
+  <span class="kw">const</span> run = <span class="fn">useCallback</span>(<span class="kw">async</span> (...args: P) =&gt; {
+    <span class="fn">setLoading</span>(<span class="kw">true</span>)
+    <span class="fn">setError</span>(<span class="kw">null</span>)
+    <span class="kw">try</span> {
+      <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">service</span>(...args)
+      <span class="fn">setData</span>(res)
+      <span class="kw">return</span> res
+    } <span class="kw">catch</span> (e) {
+      <span class="fn">setError</span>(e <span class="kw">as</span> Error)
+      <span class="kw">throw</span> e
+    } <span class="kw">finally</span> {
+      <span class="fn">setLoading</span>(<span class="kw">false</span>)
+    }
+  }, deps)
+
+  <span class="fn">useEffect</span>(() =&gt; { <span class="fn">run</span>() }, [run])
+
+  <span class="kw">return</span> { data, loading, error, run }
+}
+
+<span class="cm">// 使用</span>
+<span class="kw">function</span> <span class="fn">OrderList</span>() {
+  <span class="kw">const</span> { data, loading, error, run } = <span class="fn">useRequest</span>(
+    () =&gt; <span class="fn">apiGetOrderList</span>({ page: <span class="num">1</span>, size: <span class="num">20</span> }),
+    []
+  )
+  <span class="kw">if</span> (loading) <span class="kw">return</span> &lt;Skeleton /&gt;
+  <span class="kw">if</span> (error) <span class="kw">return</span> &lt;ErrorPage /&gt;
+  <span class="kw">return</span> &lt;Table dataSource={data?.list} /&gt;
+}</pre>
+
+    <div class="sub-title">🚀 3. 推荐：React Query（生产级方案）</div>
+    <pre><span class="cm">// 解决：缓存、重复请求、loading、错误、自动 refetch、乐观更新...</span>
+<span class="kw">import</span> { useQuery, useMutation, useQueryClient } <span class="kw">from</span> <span class="str">'@tanstack/react-query'</span>
+
+<span class="cm">// 查询订单列表</span>
+<span class="kw">function</span> <span class="fn">useOrders</span>(params: { page: <span class="kw">number</span>; size: <span class="kw">number</span> }) {
+  <span class="kw">return</span> <span class="fn">useQuery</span>({
+    <span class="kw">queryKey</span>: [<span class="str">'orders'</span>, params],   <span class="cm">// 缓存 key</span>
+    <span class="kw">queryFn</span>: () =&gt; <span class="fn">apiGetOrderList</span>(params),
+    <span class="kw">staleTime</span>: <span class="num">5</span> * <span class="num">60</span> * <span class="num">1000</span>,     <span class="cm">// 5 分钟内不重新请求</span>
+    <span class="kw">refetchOnWindowFocus</span>: <span class="kw">true</span>  <span class="cm">// 切回窗口时刷新</span>
+  })
+}
+
+<span class="cm">// 删除订单（变更）</span>
+<span class="kw">function</span> <span class="fn">useDeleteOrder</span>() {
+  <span class="kw">const</span> qc = <span class="fn">useQueryClient</span>()
+  <span class="kw">return</span> <span class="fn">useMutation</span>({
+    <span class="kw">mutationFn</span>: apiDeleteOrder,
+    <span class="kw">onSuccess</span>: () =&gt; {
+      qc.<span class="fn">invalidateQueries</span>({ <span class="kw">queryKey</span>: [<span class="str">'orders'</span>] })  <span class="cm">// 让列表自动重查</span>
+    }
+  })
+}
+
+<span class="cm">// 组件中使用 —— 简洁得让人感动</span>
+<span class="kw">function</span> <span class="fn">OrderList</span>() {
+  <span class="kw">const</span> { data, isLoading, error, refetch } = <span class="fn">useOrders</span>({ page: <span class="num">1</span>, size: <span class="num">20</span> })
+  <span class="kw">const</span> del = <span class="fn">useDeleteOrder</span>()
+
+  <span class="kw">if</span> (isLoading) <span class="kw">return</span> &lt;Skeleton /&gt;
+  <span class="kw">if</span> (error) <span class="kw">return</span> &lt;ErrorPage /&gt;
+  <span class="kw">return</span> (
+    &lt;&gt;
+      &lt;<span class="tag">Button</span> <span class="var">onClick</span>={refetch}&gt;刷新&lt;/<span class="tag">Button</span>&gt;
+      &lt;<span class="tag">Table</span> <span class="var">dataSource</span>={data.list} /&gt;
+    &lt;/&gt;
+  )
+}</pre>
+
+    <div class="tip react">
+      <span class="icon">🔵</span>
+      <div class="content">
+        <strong>为什么 React Query 比 useRequest 强？</strong><br>
+        · 自动<strong>缓存复用</strong>：多个组件用同一个 queryKey，只发 1 次请求<br>
+        · <strong>staleTime</strong> 控制缓存新鲜度<br>
+        · <strong>invalidateQueries</strong> 自动重新拉取<br>
+        · 支持<strong>分页/无限滚动/乐观更新/SSR 预取</strong><br>
+        · 配套 DevTools，调试神器
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- PART 4: 易忽略的最佳实践                                          -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="part-content" data-pane="pitfalls">
+
+  <section id="sec-vue-pitfall">
+    <div class="sec-title"><span class="num pitfalls">⚡</span>Vue 容易被忽略的重要知识点</div>
+    <div class="sec-desc">这些点会让你的 Vue 代码从"能跑"变成"优雅"</div>
+
+    <div class="grid-2">
+      <div class="card card-vue">
+        <h4>1️⃣ nextTick —— 异步更新队列</h4>
+        <p>Vue 在同一事件循环内多次修改数据，DOM 不会立即更新，而是批量处理。要拿到更新后的 DOM，必须用 <code class="inline">nextTick</code>。</p>
+<pre><span class="kw">import</span> { nextTick } <span class="kw">from</span> <span class="str">'vue'</span>
+
+count.value = <span class="num">100</span>
+console.<span class="fn">log</span>(<span class="fn">ref</span>DOM.value.innerText)  <span class="cm">// 还是旧值</span>
+<span class="kw">await</span> <span class="fn">nextTick</span>()
+console.<span class="fn">log</span>(<span class="fn">ref</span>DOM.value.innerText)  <span class="cm">// 新值</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>2️⃣ shallowRef / shallowReactive</h4>
+        <p>大数据列表用深响应式性能差，用 <code class="inline">shallowRef</code> 只代理 .value 引用，内部交给 <code class="inline">triggerRef</code> 手动通知更新。</p>
+<pre><span class="kw">const</span> bigList = <span class="fn">shallowRef</span>([])
+<span class="cm">// bigList.value.push(x) ❌ 不会触发更新</span>
+bigList.value = [...bigList.value, x]  <span class="cm">// ✅ 整体替换</span>
+<span class="cm">// 或</span>
+bigList.value.<span class="fn">push</span>(x); <span class="fn">triggerRef</span>(bigList)  <span class="cm">// ✅ 手动通知</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>3️⃣ markRaw —— 标记永不响应式</h4>
+        <p>第三方类实例（Echarts、地图、Monaco）被 reactive 代理后会失效。用 <code class="inline">markRaw</code> 跳过代理。</p>
+<pre><span class="kw">import</span> { markRaw } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> * <span class="kw">as</span> echarts <span class="kw">from</span> <span class="str">'echarts'</span>
+
+<span class="kw">const</span> chart = <span class="fn">markRaw</span>(echarts.<span class="fn">init</span>(dom))
+chart.<span class="fn">setOption</span>({...})  <span class="cm">// 正常调用</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>4️⃣ defineAsyncComponent 异步组件</h4>
+        <p>大型组件（如富文本编辑器、图表库）按需加载，减小首屏体积。</p>
+<pre><span class="kw">import</span> { defineAsyncComponent } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">const</span> RichEditor = <span class="fn">defineAsyncComponent</span>(() =&gt;
+  <span class="kw">import</span>(<span class="str">'@/components/RichEditor.vue'</span>)
+)
+<span class="cm">// 配 loadingComponent / errorComponent</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>5️⃣ keep-alive 缓存组件</h4>
+        <p>列表 → 详情 → 返回时，组件默认重建，状态丢失。<code class="inline">&lt;keep-alive&gt;</code> 缓存已加载过的组件。</p>
+<pre>&lt;<span class="tag">keep-alive</span> <span class="var">:include</span>=<span class="str">"['Home','List']"</span> <span class="var">:max</span>=<span class="str">"5"</span>&gt;
+  &lt;<span class="tag">component</span> <span class="var">:is</span>=<span class="str">"currentView"</span> /&gt;
+&lt;/<span class="tag">keep-alive</span>&gt;
+<span class="cm">// 配合 onActivated / onDeactivated 监听激活/休眠</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>6️⃣ v-memo 性能优化（Vue 3.2+）</h4>
+        <p>大列表中，只对"依赖变化"的节点重新渲染。</p>
+<pre>&lt;<span class="tag">div</span> <span class="var">v-for</span>=<span class="str">"item in list"</span> <span class="var">:key</span>=<span class="str">"item.id"</span>
+     <span class="var">v-memo</span>=<span class="str">"[item.id, item.selected]"</span>&gt;
+  &lt;<span class="tag">Heavy</span> <span class="var">:data</span>=<span class="str">"item"</span> /&gt;
+&lt;/<span class="tag">div</span>&gt;
+<span class="cm">// 当 id 和 selected 都没变时，跳过该子树的 diff</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>7️⃣ 自定义指令封装 DOM 操作</h4>
+        <p>当某些 DOM 行为在多个组件都需要（如 v-permission、v-debounce、v-copy），抽成自定义指令。</p>
+<pre>app.directive(<span class="str">'permission'</span>, {
+  <span class="fn">mounted</span>(el, binding) {
+    <span class="kw">if</span> (!<span class="fn">hasPerm</span>(binding.value)) {
+      el.parentNode?.<span class="fn">removeChild</span>(el)
+    }
+  }
+})
+&lt;<span class="tag">button</span> <span class="var">v-permission</span>=<span class="str">"'order:delete'"</span>&gt;删除&lt;/<span class="tag">button</span>&gt;</pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>8️⃣ 插槽透传（inheritAttrs）</h4>
+        <p>默认情况下，父作用域的非 props 属性会"穿透"到根元素。多根组件需要 <code class="inline">defineOptions({ inheritAttrs: false })</code>，再用 <code class="inline">$attrs</code> 手动控制。</p>
+<pre>&lt;<span class="tag">script</span> <span class="var">setup</span>&gt;
+<span class="fn">defineOptions</span>({ inheritAttrs: <span class="kw">false</span> })
+&lt;/<span class="tag">script</span>&gt;
+&lt;<span class="tag">template</span>&gt;
+  &lt;<span class="tag">label</span>&gt;姓名&lt;/<span class="tag">label</span>&gt;
+  &lt;<span class="tag">input</span> <span class="kw">v-bind</span>=<span class="str">"$attrs"</span> /&gt;  <span class="cm">// 显式绑定</span>
+&lt;/<span class="tag">template</span>&gt;</pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>9️⃣ defineModel（Vue 3.4+）</h4>
+        <p>新版 v-model 写法，不需要再手写 props + emit。</p>
+<pre>&lt;<span class="tag">script</span> <span class="var">setup</span>&gt;
+<span class="kw">const</span> model = <span class="fn">defineModel</span>&lt;<span class="kw">string</span>&gt;()
+&lt;/<span class="tag">script</span>&gt;
+&lt;<span class="tag">template</span>&gt;
+  &lt;<span class="tag">input</span> <span class="var">v-model</span>=<span class="str">"model"</span> /&gt;
+&lt;/<span class="tag">template</span>&gt;
+<span class="cm">// 父组件：&lt;MyInput v-model="name" /&gt; 默认 prop='modelValue' event='update:modelValue'</span></pre>
+      </div>
+
+      <div class="card card-vue">
+        <h4>🔟 watch 的 4 个细节</h4>
+        <ul>
+          <li>默认<strong>懒执行</strong>，要立刻执行传 <code class="inline">{ immediate: true }</code></li>
+          <li>监听 <code class="inline">reactive</code> 对象无法拿到 oldValue</li>
+          <li>监听多个源：<code class="inline">watch([a, b], ([na, nb], [oa, ob]) =&gt; ...)</code></li>
+          <li>深度监听大对象耗性能，用 <code class="inline">{ deep: 2 }</code> 限制层级</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-react-pitfall">
+    <div class="sec-title"><span class="num pitfalls">⚡</span>React 容易被忽略的重要知识点</div>
+    <div class="sec-desc">这些坑 80% 的 React 项目都犯过，知道了少走 2 年弯路</div>
+
+    <div class="grid-2">
+      <div class="card card-react">
+        <h4>1️⃣ useState 的"看似不变"陷阱</h4>
+        <p>React 用 <code class="inline">Object.is</code> 比较新旧值。<strong>直接修改对象/数组</strong> 不会触发更新！</p>
+<pre><span class="cm">// ❌ 错误</span>
+<span class="kw">const</span> [list, setList] = <span class="fn">useState</span>([])
+list.<span class="fn">push</span>(x)        <span class="cm">// 不更新</span>
+user.name = <span class="str">'new'</span>  <span class="cm">// 不更新</span>
+
+<span class="cm">// ✅ 正确 —— 不可变数据</span>
+<span class="fn">setList</span>([...list, x])
+<span class="fn">setUser</span>({ ...user, name: <span class="str">'new'</span> })</pre>
+        <div class="tip warn"><span class="icon">⚠️</span><div class="content"><strong>进阶方案</strong>：用 Immer（<code class="inline">produce()</code>）可写"可变"语法但生成不可变结果。</div></div>
+      </div>
+
+      <div class="card card-react">
+        <h4>2️⃣ useEffect 依赖数组的"老值"陷阱</h4>
+        <p>如果不把用到的所有 state/props 加进依赖，会拿到<strong>陈旧闭包</strong>。</p>
+<pre><span class="kw">function</span> <span class="fn">Timer</span>() {
+  <span class="kw">const</span> [count, setCount] = <span class="fn">useState</span>(<span class="num">0</span>)
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="kw">const</span> t = <span class="fn">setInterval</span>(() =&gt; {
+      console.<span class="fn">log</span>(count)  <span class="cm">// 永远是 0！</span>
+      <span class="fn">setCount</span>(count + <span class="num">1</span>)  <span class="cm">// 永远 +1 然后停</span>
+    }, <span class="num">1000</span>)
+    <span class="kw">return</span> () =&gt; <span class="fn">clearInterval</span>(t)
+  }, [])  <span class="cm">// ❌ 缺了 count</span>
+
+  <span class="cm">// ✅ 改用函数式更新</span>
+  <span class="fn">setCount</span>(c =&gt; c + <span class="num">1</span>)  <span class="cm">// 不依赖外部 count</span>
+}</pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>3️⃣ useMemo / useCallback 不是"越用越快"</h4>
+        <p>它们本身有开销（依赖比较 + 缓存）。简单计算用它们反而更慢！</p>
+<pre><span class="cm">// ❌ 过度优化</span>
+<span class="kw">const</span> sum = <span class="fn">useMemo</span>(() =&gt; a + b, [a, b])  <span class="cm">// 加法比 useMemo 便宜</span>
+
+<span class="cm">// ✅ 真正值得用的场景</span>
+<span class="cm">// 1. 重计算（千条数据 filter / sort）</span>
+<span class="cm">// 2. 引用稳定性（传给 memo 包裹的子组件）</span>
+<span class="cm">// 3. 引用类型作为 useEffect 依赖</span></pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>4️⃣ key 属性的"硬核作用"</h4>
+        <p>很多人以为 key 只是为了消除 warning。<strong>错！</strong>key 决定了 Diffing 时如何识别节点身份。</p>
+<pre><span class="cm">// ❌ 用 index 作为 key</span>
+{list.<span class="fn">map</span>((item, i) =&gt; &lt;<span class="tag">Item</span> <span class="var">key</span>={i} /&gt;)}
+<span class="cm">// 问题：删除中间项后，后续组件的 state 会"串号"</span>
+
+<span class="cm">// ✅ 用稳定 ID 作为 key</span>
+{list.<span class="fn">map</span>(item =&gt; &lt;<span class="tag">Item</span> <span class="var">key</span>={item.id} /&gt;)}</pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>5️⃣ React.memo 的失效场景</h4>
+        <p>父组件每次都传<strong>新的函数/对象</strong>，memo 直接破功。</p>
+<pre><span class="cm">// ❌ 父组件</span>
+&lt;<span class="tag">Child</span> <span class="var">onClick</span>={() =&gt; <span class="fn">doX</span>()} /&gt;  <span class="cm">// 每次新函数</span>
+&lt;<span class="tag">Child</span> <span class="var">config</span>={{ a: <span class="num">1</span> }} /&gt;  <span class="cm">// 每次新对象</span>
+
+<span class="cm">// ✅ 父组件</span>
+&lt;<span class="tag">Child</span> <span class="var">onClick</span>={handleClick} /&gt;        <span class="cm">// useCallback 缓存</span>
+&lt;<span class="tag">Child</span> <span class="var">config</span>={memoConfig} /&gt;          <span class="cm">// useMemo 缓存</span>
+
+<span class="cm">// 或者：把 Child 的 props 改成 children 渲染 / render props</span></pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>6️⃣ StrictMode 双调用的陷阱</h4>
+        <p>开发模式下 React 故意<strong>双调用</strong>函数组件和 useEffect，帮你发现副作用问题。</p>
+<pre><span class="cm">// 如果 useEffect 里有"非幂等"操作，会被双执行：</span>
+<span class="cm">// - 写 localStorage 用 setItem 而非 getItem 后改回</span>
+<span class="cm">// - 订阅没清理：双重订阅 → 内存泄漏</span>
+<span class="cm">// - 请求没防抖：发两次请求</span>
+
+<span class="cm">// 解决：保证 effect 是幂等的 + 一定有 cleanup</span>
+<span class="fn">useEffect</span>(() =&gt; {
+  <span class="kw">const</span> sub = <span class="fn">subscribe</span>(cb)
+  <span class="kw">return</span> () =&gt; sub.<span class="fn">unsubscribe</span>()  <span class="cm">// ⭐ 必须</span>
+}, [])</pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>7️⃣ 受控 vs 非受控组件</h4>
+        <p>表单输入，状态归谁管是个哲学问题。</p>
+<pre><span class="cm">// 受控 —— React 全权管理（推荐）</span>
+&lt;<span class="tag">input</span> <span class="var">value</span>={name} <span class="var">onChange</span>={e =&gt; <span class="fn">setName</span>(e.target.value)} /&gt;
+
+<span class="cm">// 非受控 —— DOM 自行管理</span>
+&lt;<span class="tag">input</span> <span class="var">ref</span>={inputRef} /&gt;  <span class="cm">// inputRef.current.value 取值</span>
+
+<span class="cm">// 推荐：受控 + 第三方库（react-hook-form / formik）</span></pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>8️⃣ 错误边界（ErrorBoundary）</h4>
+        <p>没有错误边界，组件报错会导致<strong>整棵树卸载</strong>。v18 必须用 class 组件实现。</p>
+<pre><span class="kw">class</span> <span class="ty">ErrorBoundary</span> <span class="kw">extends</span> React.<span class="ty">Component</span> {
+  state = { hasError: <span class="kw">false</span> }
+  <span class="kw">static</span> <span class="fn">getDerivedStateFromError</span>() {
+    <span class="kw">return</span> { hasError: <span class="kw">true</span> }
+  }
+  <span class="fn">componentDidCatch</span>(error, info) {
+    <span class="fn">logToSentry</span>(error, info)
+  }
+  <span class="fn">render</span>() {
+    <span class="kw">if</span> (<span class="kw">this</span>.state.hasError) <span class="kw">return</span> &lt;ErrorPage /&gt;
+    <span class="kw">return</span> <span class="kw">this</span>.props.children
+  }
+}
+&lt;<span class="tag">ErrorBoundary</span>&gt;&lt;<span class="tag">MyWidget</span> /&gt;&lt;/<span class="tag">ErrorBoundary</span>&gt;</pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>9️⃣ Suspense + 异步渲染</h4>
+        <p>v18 的 Suspense 配合 React.lazy / use() 实现<strong>声明式异步 UI</strong>。</p>
+<pre><span class="cm">// 路由级代码分割</span>
+&lt;<span class="tag">Suspense</span> <span class="var">fallback</span>={&lt;Skeleton /&gt;}&gt;
+  &lt;<span class="tag">Routes</span>&gt;
+    &lt;<span class="tag">Route</span> <span class="var">path</span>=<span class="str">"/orders"</span> <span class="var">element</span>={&lt;<span class="tag">OrderList</span> /&gt;} /&gt;
+  &lt;/<span class="tag">Routes</span>&gt;
+&lt;/<span class="tag">Suspense</span>&gt;
+
+<span class="cm">// use() + Promise（v18.3+ 实验性）</span>
+<span class="kw">function</span> <span class="fn">Page</span>({ promise }) {
+  <span class="kw">const</span> data = <span class="fn">use</span>(promise)  <span class="cm">// 挂起直到 Promise resolve</span>
+  <span class="kw">return</span> &lt;<span class="tag">div</span>&gt;{data.name}&lt;/<span class="tag">div</span>&gt;
+}</pre>
+      </div>
+
+      <div class="card card-react">
+        <h4>🔟 useTransition 区分优先级</h4>
+        <p>输入框打字要"立刻响应"，过滤列表可以"慢一点"。</p>
+<pre><span class="kw">function</span> <span class="fn">Search</span>() {
+  <span class="kw">const</span> [input, setInput] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [filter, setFilter] = <span class="fn">useState</span>(<span class="str">''</span>)
+  <span class="kw">const</span> [isPending, startTransition] = <span class="fn">useTransition</span>()
+
+  <span class="kw">const</span> onChange = (e) =&gt; {
+    <span class="fn">setInput</span>(e.target.value)  <span class="cm">// 紧急：立即更新</span>
+    <span class="fn">startTransition</span>(() =&gt; {
+      <span class="fn">setFilter</span>(e.target.value)  <span class="cm">// 非紧急：可中断</span>
+    })
+  }
+  <span class="kw">return</span> &lt;<span class="tag">input</span> <span class="var">value</span>={input} <span class="var">onChange</span>={onChange} /&gt;
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-compare">
+    <div class="sec-title"><span class="num pitfalls">📊</span>Vue vs React 全方位对比</div>
+    <div class="sec-desc">一张表看清两套体系的差异，选型不纠结</div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:18%">维度</th>
+            <th style="width:41%">🟢 Vue 3</th>
+            <th style="width:41%">🔵 React 18</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>核心理念</strong></td>
+            <td>渐进式框架，自带全家桶</td>
+            <td>UI 库，需要自选生态</td>
+          </tr>
+          <tr>
+            <td><strong>API 风格</strong></td>
+            <td>Options API + Composition API</td>
+            <td>函数组件 + Hooks</td>
+          </tr>
+          <tr>
+            <td><strong>响应式原理</strong></td>
+            <td>Proxy 代理，<strong>自动追踪依赖</strong></td>
+            <td>不可变数据 + <strong>手动 setState</strong> 触发更新</td>
+          </tr>
+          <tr>
+            <td><strong>模板 vs JSX</strong></td>
+            <td>HTML-like 模板（v-if/v-for）</td>
+            <td>JSX（JS 里写 HTML）</td>
+          </tr>
+          <tr>
+            <td><strong>状态管理</strong></td>
+            <td>Pinia（官方推荐）</td>
+            <td>Redux / Zustand / Jotai / Recoil</td>
+          </tr>
+          <tr>
+            <td><strong>路由</strong></td>
+            <td>Vue Router（官方）</td>
+            <td>React Router（社区）/ TanStack Router</td>
+          </tr>
+          <tr>
+            <td><strong>服务端渲染</strong></td>
+            <td>Nuxt 3（社区主流）</td>
+            <td>Next.js（Vercel 官方）</td>
+          </tr>
+          <tr>
+            <td><strong>组件通信</strong></td>
+            <td>props / emit / provide-inject / v-model</td>
+            <td>props / callback / Context / 自定义 Hook</td>
+          </tr>
+          <tr>
+            <td><strong>性能优化</strong></td>
+            <td>v-memo / shallowRef / markRaw / computed</td>
+            <td>React.memo / useMemo / useCallback</td>
+          </tr>
+          <tr>
+            <td><strong>TypeScript</strong></td>
+            <td>支持良好，defineProps 推导</td>
+            <td>原生支持，社区生态完善</td>
+          </tr>
+          <tr>
+            <td><strong>学习曲线</strong></td>
+            <td>⭐⭐ 平缓，模板贴近 HTML</td>
+            <td>⭐⭐⭐ 中等，需理解函数式思维</td>
+          </tr>
+          <tr>
+            <td><strong>企业应用占比</strong></td>
+            <td>国内更流行（Element Plus 生态强）</td>
+            <td>全球更流行，海外/外企首选</td>
+          </tr>
+          <tr>
+            <td><strong>适合场景</strong></td>
+            <td>中小项目快速开发 / 后台管理</td>
+            <td>大型应用 / 复杂状态 / SSR 应用</td>
+          </tr>
+          <tr>
+            <td><strong>生态组件库</strong></td>
+            <td>Element Plus / Naive UI / Ant Design Vue</td>
+            <td>Ant Design / Material UI / Chakra UI</td>
+          </tr>
+          <tr>
+            <td><strong>数据请求方案</strong></td>
+            <td>Axios + VueUse.useAxios / Vue Query</td>
+            <td>Axios + 自定义 Hook / React Query / SWR</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-title">🎯 选型建议</div>
+    <div class="grid-2">
+      <div class="card" style="border-left:4px solid var(--vue)">
+        <h4>🟢 选 Vue 的场景</h4>
+        <ul>
+          <li>团队前端水平参差，需要<strong>快速上手</strong></li>
+          <li>项目以<strong>中后台 / 表单密集</strong>为主</li>
+          <li>需要<strong>平滑从 Vue 2 迁移</strong></li>
+          <li>喜欢"约定优于配置"的开发体验</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:4px solid var(--react-d)">
+        <h4>🔵 选 React 的场景</h4>
+        <ul>
+          <li>项目规模大、状态复杂、需要严格类型</li>
+          <li>需要 <strong>React Native</strong> 做跨端 App</li>
+          <li>对接海外生态 / 大量第三方库</li>
+          <li>团队熟悉<strong>函数式编程</strong>理念</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 最后：共同的工程化最佳实践 -->
+  <section>
+    <div class="sec-title"><span class="num pitfalls">✨</span>通用最佳实践（Vue / React 都适用）</div>
+    <div class="sec-desc">不分框架，前端工程师通用的工程素养</div>
+
+    <div class="grid-2">
+      <div class="card card-warn">
+        <h4>🚫 性能反模式</h4>
+        <ul>
+          <li>把所有 state 都放全局</li>
+          <li>列表渲染不写 key 或用 index</li>
+          <li>在 render 函数里发请求 / 写大计算</li>
+          <li>频繁操作 DOM（应批量 / 虚拟化）</li>
+          <li>大文件直接 import（应动态 import）</li>
+        </ul>
+      </div>
+      <div class="card card-warn">
+        <h4>✅ 性能正模式</h4>
+        <ul>
+          <li>路由级 + 组件级双重懒加载</li>
+          <li>图片懒加载 + WebP + 响应式 srcset</li>
+          <li>列表用虚拟滚动（&gt; 100 条）</li>
+          <li>输入防抖、滚动节流</li>
+          <li>SSR / 预渲染提升首屏</li>
+        </ul>
+      </div>
+      <div class="card card-warn">
+        <h4>🔐 安全基线</h4>
+        <ul>
+          <li>永远不要 <code class="inline">v-html</code> / <code class="inline">dangerouslySetInnerHTML</code> 渲染未净化内容</li>
+          <li>用户输入做<strong>前端 + 后端</strong>双校验</li>
+          <li>Token 存 <strong>httpOnly Cookie</strong> 而非 localStorage</li>
+          <li>接口加 <strong>CSRF 防护</strong>，CORS 严格配置</li>
+          <li>依赖定期 <code class="inline">npm audit</code> 扫描</li>
+        </ul>
+      </div>
+      <div class="card card-warn">
+        <h4>🧪 测试金字塔</h4>
+        <ul>
+          <li><strong>单元测试</strong>（最多）：工具函数 / composable / Hook</li>
+          <li><strong>组件测试</strong>：核心交互组件</li>
+          <li><strong>集成测试</strong>：关键业务流程</li>
+          <li><strong>E2E 测试</strong>（最少）：登录、支付等核心路径</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tip good">
+      <span class="icon">🎯</span>
+      <div class="content">
+        <strong>最后一条建议</strong>
+        框架只是工具，<strong>工程能力</strong>（需求拆解、组件设计、状态分层、性能优化、监控部署）才是前端的真正竞争力。两套框架的核心思想是相通的：<strong>声明式 UI + 状态驱动 + 组件化 + 不可变数据</strong>。掌握一个，另一个上手只需 1-2 周。
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</div>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <p>🎨 前端开发完整工作流 · Vue 与 React 实战全指南 · Frontend Learning Hub</p>
+  <p style="margin-top:6px">📚 40+ 交互式技术教程 · <a href="../index.html">返回首页</a></p>
+</footer>
+
+<script>
+// ── 标签切换 ──
+document.querySelectorAll('.part-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.part
+    document.querySelectorAll('.part-tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.part-content').forEach(p => p.classList.remove('active'))
+    tab.classList.add('active')
+    document.querySelector(`[data-pane="${target}"]`).classList.add('active')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+})
+
+// ── 代码复制 ──
+function copyCode(btn) {
+  const pre = btn.parentElement.querySelector('pre')
+  const text = pre.innerText
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerText
+    btn.innerText = '✓ 已复制'
+    setTimeout(() => btn.innerText = orig, 1500)
+  }).catch(() => {
+    btn.innerText = '复制失败'
+  })
+}
+
+// ── 锚点平滑滚动 ──
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', e => {
+    const id = link.getAttribute('href')
+    if (id.length < 2) return
+    const target = document.querySelector(id)
+    if (target) {
+      e.preventDefault()
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  })
+})
+</script>
+</body>
+</html>
