@@ -64,6 +64,7 @@
 | | AI Agent 开发概念全指南 | `AI-Agent-开发概念全指南.html` |
 | | AI Agent 设计决策全景指南 | `AI-Agent-设计决策全景指南.html` |
 | | Java AI 框架学习指南 | `Java-AI框架-SpringAI-LangChain4j-学习指南.html` |
+| | 智能客服 RAG 全流程 | `智能客服Agent-RAG智能体构建全流程.html` |
 | 🛠️ AI 开发工具 | AI 编程 Token 节省 | `AI编码Token节省工具.html` |
 | | AI 前端工程生态 | `AI前端工程生态.html` |
 | 🐍 Python 后端 | Python 后端技术栈全景图 | `Python-后端技术栈全景图.html` |

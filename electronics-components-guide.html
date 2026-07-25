@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电子元件手册 · 电阻 · 电容 · 二极管 · 晶体管 · 集成电路</title>
+<style>
+/* ==================== Variables ==================== */
+:root {
+  --slate-900:#0f172a; --slate-800:#1e293b; --slate-700:#334155; --slate-600:#475569;
+  --slate-500:#64748b; --slate-400:#94a3b8; --slate-300:#cbd5e1; --slate-200:#e2e8f0;
+  --slate-100:#f1f5f9; --slate-50:#f8fafc; --white:#ffffff;
+  --teal-600:#0d9488; --teal-500:#14b8a6; --teal-50:#f0fdfa;
+  --amber-600:#d97706; --amber-500:#f59e0b; --amber-50:#fffbeb;
+  --blue-600:#2563eb; --blue-500:#3b82f6; --blue-50:#eff6ff;
+  --purple-600:#7c3aed; --purple-500:#8b5cf6; --purple-50:#f5f3ff;
+  --green-600:#059669; --green-500:#10b981; --green-50:#ecfdf5;
+  --red-500:#ef4444; --red-50:#fef2f2;
+  --r-sm:8px; --r-md:12px; --r-lg:18px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06); --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:"Cascadia Code","Fira Code",Consolas,monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{font-family:var(--font);font-size:15px;line-height:1.7;color:var(--slate-700);background:var(--slate-100)}
+a{text-decoration:none;color:inherit}ul{list-style:none}
+.container{max-width:1160px;margin:0 auto;padding:0 22px}
+
+/* ==================== Navbar ==================== */
+.navbar{position:fixed;top:0;left:0;right:0;height:62px;background:rgba(255,255,255,0.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--slate-200);z-index:1000;transition:box-shadow .3s}
+.navbar.scrolled{box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.nav-inner{max-width:1160px;height:100%;margin:0 auto;padding:0 22px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;color:var(--slate-900)}
+.nav-logo svg{width:26px;height:26px}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{padding:8px 14px;font-size:13px;font-weight:500;color:var(--slate-500);border-radius:var(--r-sm);transition:all .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--teal-600);background:var(--teal-50)}
+.nav-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px}
+.nav-toggle span{width:22px;height:2px;background:var(--slate-700);border-radius:2px;transition:all .3s}
+.nav-toggle.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.nav-toggle.open span:nth-child(2){opacity:0}
+.nav-toggle.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+/* ==================== Hero ==================== */
+.hero{position:relative;padding:120px 0 64px;background:linear-gradient(170deg,var(--slate-900) 0%,#0f2a2e 60%,#0a1f1d 100%);overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(20,184,166,0.06) 1px,transparent 1px);background-size:32px 32px}
+.hero::after{content:'';position:absolute;top:-20%;right:-5%;width:460px;height:460px;background:radial-gradient(circle,rgba(20,184,166,0.12) 0%,transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:720px;margin:0 auto;padding:0 22px}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 14px;background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.25);border-radius:100px;font-size:12px;font-weight:600;color:var(--teal-500);margin-bottom:22px;letter-spacing:1px}
+.hero-badge .dot{width:7px;height:7px;background:var(--teal-500);border-radius:50%;box-shadow:0 0 10px var(--teal-500);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:800;color:var(--white);line-height:1.2;margin-bottom:18px;letter-spacing:-.5px}
+.hero h1 .grad{background:linear-gradient(135deg,var(--teal-500),#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.8;max-width:540px;margin:0 auto 36px}
+.hero-stats{display:flex;justify-content:center;gap:36px;flex-wrap:wrap}
+.hero-stats .st{text-align:center}
+.hero-stats .st .v{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--teal-500),#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-stats .st .l{font-size:12px;color:rgba(255,255,255,.38);margin-top:4px}
+
+/* ==================== Section ==================== */
+.section{padding:72px 0}
+.section-alt{background:var(--white)}
+.section-head{text-align:center;margin-bottom:48px}
+.section-head .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:12px}
+.tag-passive{background:var(--amber-50);color:var(--amber-600)}
+.tag-semi{background:var(--blue-50);color:var(--blue-600)}
+.tag-integ{background:var(--purple-50);color:var(--purple-600)}
+.section-head h2{font-size:clamp(24px,4vw,34px);font-weight:800;color:var(--slate-900);margin-bottom:10px;letter-spacing:-.3px}
+.section-head .desc{font-size:14px;color:var(--slate-500);max-width:540px;margin:0 auto;line-height:1.7}
+
+/* ==================== Component Card ==================== */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.comp-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-lg);padding:0;overflow:hidden;transition:all .3s;display:flex;flex-direction:column}
+.comp-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);border-color:var(--slate-300)}
+.comp-card-top{display:flex;align-items:center;gap:0;padding:20px 24px 0}
+.comp-symbol{flex-shrink:0;width:110px;height:72px;display:flex;align-items:center;justify-content:center;margin-right:8px}
+.comp-symbol svg{width:100px;height:64px}
+.comp-head{flex:1}
+.comp-head h3{font-size:17px;font-weight:700;color:var(--slate-900);margin-bottom:2px}
+.comp-head .en{font-size:11px;color:var(--slate-400);font-family:var(--mono);letter-spacing:.3px}
+.comp-body{padding:10px 24px 20px}
+.comp-body p{font-size:13px;color:var(--slate-500);line-height:1.7;margin-bottom:12px}
+.comp-params{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.comp-params span{padding:3px 9px;font-size:11px;border-radius:4px;font-weight:500;white-space:nowrap}
+.comp-params .p-k{background:var(--slate-100);color:var(--slate-600)}
+.comp-params .p-v{background:var(--teal-50);color:var(--teal-600);font-family:var(--mono);font-size:10px}
+.comp-apps{font-size:12px;color:var(--slate-400);line-height:1.6;border-top:1px solid var(--slate-100);padding-top:10px}
+.comp-apps strong{color:var(--slate-600)}
+
+/* Category accent colors */
+.comp-card[data-cat="passive"]:hover{border-color:#fcd34d}
+.comp-card[data-cat="semiconductor"]:hover{border-color:#93c5fd}
+.comp-card[data-cat="integrated"]:hover{border-color:#c4b5fd}
+
+/* ==================== Comparison Table ==================== */
+.table-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--slate-200);box-shadow:var(--shadow-sm);margin-top:56px;background:var(--white)}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+.cmp-table thead{background:var(--slate-800)}
+.cmp-table thead th{padding:12px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;letter-spacing:.3px}
+.cmp-table tbody tr{border-bottom:1px solid var(--slate-100);transition:background .2s}
+.cmp-table tbody tr:last-child{border-bottom:none}
+.cmp-table tbody tr:hover{background:var(--teal-50)}
+.cmp-table tbody td{padding:11px 14px;color:var(--slate-600);vertical-align:middle}
+.cmp-table tbody td:first-child{font-weight:700;color:var(--slate-900)}
+.cmp-table .cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.cat-dot.passive{background:var(--amber-500)}
+.cat-dot.semiconductor{background:var(--blue-500)}
+.cat-dot.integrated{background:var(--purple-500)}
+
+/* ==================== Footer ==================== */
+.footer{background:var(--slate-900);padding:42px 0 24px;text-align:center}
+.footer p{font-size:12px;color:rgba(255,255,255,.35)}
+
+/* ==================== Reveal ==================== */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:.06s}.reveal-d2{transition-delay:.12s}.reveal-d3{transition-delay:.18s}
+.reveal-d4{transition-delay:.24s}.reveal-d5{transition-delay:.30s}.reveal-d6{transition-delay:.36s}
+
+/* ==================== Responsive ==================== */
+@media(max-width:768px){
+  .nav-links{position:fixed;top:62px;left:0;right:0;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);flex-direction:column;padding:14px;gap:2px;transform:translateY(-150%);transition:transform .3s;border-bottom:1px solid var(--slate-200);box-shadow:var(--shadow-md)}
+  .nav-links.open{transform:translateY(0)}
+  .nav-links a{width:100%;padding:11px 16px}
+  .nav-toggle{display:flex}
+  .hero{padding:100px 0 48px}
+  .section{padding:52px 0}
+  .comp-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .hero-stats{gap:20px}
+  .hero-stats .st .v{font-size:22px}
+  .comp-symbol{width:90px;height:60px}
+  .comp-symbol svg{width:80px;height:50px}
+  .comp-card-top{padding:16px 16px 0}
+  .comp-body{padding:8px 16px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== Navbar ==================== -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="6" y1="6" x2="18" y2="18"/><circle cx="9" cy="10" r="1.5" fill="var(--teal-600)"/><circle cx="16" cy="14" r="1.5" fill="var(--teal-600)"/></svg>
+      <span>电子元件手册</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#passive">无源元件</a></li>
+      <li><a href="#semiconductor">半导体器件</a></li>
+      <li><a href="#integrated">集成与模块</a></li>
+      <li><a href="#compare">对比总览</a></li>
+    </ul>
+    <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+  </div>
+</nav>
+
+<!-- ==================== Hero ==================== -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span>ELECTRONIC COMPONENTS GUIDE</div>
+    <h1>电子元件<span class="grad">速查手册</span></h1>
+    <p>从基础的电阻电容到复杂的集成电路——系统介绍嵌入式与电子工程中最常见的硬件元件，包含功能说明、关键参数、典型应用与电路符号示意图。</p>
+    <div class="hero-stats">
+      <div class="st"><div class="v">3</div><div class="l">大类</div></div>
+      <div class="st"><div class="v">11</div><div class="l">核心元件</div></div>
+      <div class="st"><div class="v">40+</div><div class="l">关键参数</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Passive Components ==================== -->
+<section class="section" id="passive">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag tag-passive">CATEGORY 01 · 无源元件</span>
+      <h2>电阻 · 电容 · 电感</h2>
+      <p class="desc">无源元件不需要外部电源即可工作，是电路中最基础、最不可或缺的组成部分。</p>
+    </div>
+
+    <div class="comp-grid">
+      <!-- 电阻 -->
+      <div class="comp-card reveal reveal-d1" data-cat="passive">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="32" x2="16" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <polyline points="16,32 22,44 28,20 34,44 40,20 46,44 52,20 58,44 64,32" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+              <line x1="64" y1="32" x2="78" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <line x1="78" y1="26" x2="78" y2="38" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <line x1="82" y1="26" x2="82" y2="38" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <text x="40" y="60" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">R</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>电阻</h3>
+            <div class="en">Resistor</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>限制电流流过的大小，将电能转化为热能。是电路中最基础的无源元件，分压、限流、上拉/下拉均依赖它。</p>
+          <div class="comp-params">
+            <span class="p-k">阻值</span><span class="p-v">1Ω ~ 10MΩ</span>
+            <span class="p-k">精度</span><span class="p-v">±0.1% ~ ±10%</span>
+            <span class="p-k">功率</span><span class="p-v">1/8W ~ 5W</span>
+            <span class="p-k">温度系数</span><span class="p-v">±50~±500 ppm/°C</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>LED 限流、分压电路、上拉/下拉、RC 滤波、电流采样</div>
+        </div>
+      </div>
+
+      <!-- 电容 -->
+      <div class="comp-card reveal reveal-d2" data-cat="passive">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="32" x2="30" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <line x1="30" y1="10" x2="30" y2="54" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="42" y1="10" x2="42" y2="54" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="42" y1="32" x2="66" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <line x1="66" y1="22" x2="66" y2="42" stroke="#d97706" stroke-width="1.8" stroke-linecap="round"/>
+              <text x="50" y="60" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">C</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>电容</h3>
+            <div class="en">Capacitor</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>存储电荷和电场能量，在电路中用于滤波、耦合、去耦、储能和时序控制。直流隔断、交流通路。</p>
+          <div class="comp-params">
+            <span class="p-k">容值</span><span class="p-v">pF ~ F</span>
+            <span class="p-k">耐压</span><span class="p-v">6.3V ~ kV</span>
+            <span class="p-k">ESR</span><span class="p-v">mΩ ~ Ω</span>
+            <span class="p-k">类型</span><span class="p-v">陶瓷/电解/钽</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>电源滤波、去耦电容、RC 定时、耦合隔直、复位电路</div>
+        </div>
+      </div>
+
+      <!-- 电感 -->
+      <div class="comp-card reveal reveal-d3" data-cat="passive">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="32" x2="16" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <path d="M16 32 Q22 10 28 32 Q34 54 40 32 Q46 10 52 32 Q58 54 64 32" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="64" y1="32" x2="78" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <line x1="78" y1="26" x2="82" y2="38" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <text x="42" y="60" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">L</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>电感</h3>
+            <div class="en">Inductor</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>存储磁场能量，阻碍电流变化。在开关电源、滤波和振荡电路中发挥关键作用。频率越高感抗越大。</p>
+          <div class="comp-params">
+            <span class="p-k">感值</span><span class="p-v">nH ~ H</span>
+            <span class="p-k">饱和电流</span><span class="p-v">mA ~ A</span>
+            <span class="p-k">直流电阻</span><span class="p-v">mΩ ~ Ω</span>
+            <span class="p-k">SRF</span><span class="p-v">自谐振频率</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>开关电源(DC-DC)、LC 滤波、EMI 抑制、阻抗匹配、振荡器</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Semiconductor Devices ==================== -->
+<section class="section section-alt" id="semiconductor">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag tag-semi">CATEGORY 02 · 半导体器件</span>
+      <h2>二极管 · 晶体管 · MOSFET</h2>
+      <p class="desc">半导体器件利用 PN 结特性实现开关、放大和整流等功能，是现代电子电路的核心。</p>
+    </div>
+
+    <div class="comp-grid">
+      <!-- 二极管 -->
+      <div class="comp-card reveal reveal-d1" data-cat="semiconductor">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="32" x2="24" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <polygon points="52,32 24,14 24,50" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round"/>
+              <line x1="52" y1="14" x2="52" y2="50" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="52" y1="32" x2="78" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <text x="42" y="60" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">D</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>二极管</h3>
+            <div class="en">Diode</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>具有单向导电性——正向导通、反向截止。PN 结形成约 0.7V（硅管）的正向导通压降。</p>
+          <div class="comp-params">
+            <span class="p-k">正向压降 Vf</span><span class="p-v">0.2V ~ 1.2V</span>
+            <span class="p-k">反向耐压</span><span class="p-v">几十V ~ kV</span>
+            <span class="p-k">开关速度</span><span class="p-v">ns ~ μs</span>
+            <span class="p-k">类型</span><span class="p-v">整流/肖特基/齐纳</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>整流桥、反接保护、续流保护、检波、稳压(齐纳)</div>
+        </div>
+      </div>
+
+      <!-- LED -->
+      <div class="comp-card reveal reveal-d2" data-cat="semiconductor">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="32" x2="26" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <polygon points="54,32 26,14 26,50" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round"/>
+              <line x1="54" y1="14" x2="54" y2="50" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="54" y1="32" x2="72" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <line x1="54" y1="6" x2="60" y2="12" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="64" y1="2" x2="60" y2="10" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="54" y1="18" x2="60" y2="24" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/>
+              <text x="42" y="60" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">LED</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>发光二极管</h3>
+            <div class="en">LED · Light Emitting Diode</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>通电时发光的特殊二极管，电致发光效应。不同材料产生不同颜色，是嵌入式开发中最常用的指示元件。</p>
+          <div class="comp-params">
+            <span class="p-k">工作电压</span><span class="p-v">1.8V ~ 3.3V</span>
+            <span class="p-k">工作电流</span><span class="p-v">5mA ~ 20mA</span>
+            <span class="p-k">颜色</span><span class="p-v">红/绿/蓝/白/IR</span>
+            <span class="p-k">发光强度</span><span class="p-v">mcd 级</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>状态指示灯、数码管、背光源、红外通信、光耦</div>
+        </div>
+      </div>
+
+      <!-- BJT 晶体管 -->
+      <div class="comp-card reveal reveal-d3" data-cat="semiconductor">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="46" cy="32" r="18" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="46" y1="14" x2="46" y2="4" stroke="#475569" stroke-width="2.5"/> <!-- Collector -->
+              <line x1="46" y1="4" x2="40" y2="1" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <line x1="46" y1="4" x2="52" y2="1" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <line x1="32" y1="46" x2="18" y2="60" stroke="#475569" stroke-width="2.5"/> <!-- Base -->
+              <line x1="46" y1="50" x2="46" y2="62" stroke="#475569" stroke-width="2.5"/> <!-- Emitter -->
+              <line x1="30" y1="40" x2="46" y2="32" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/> <!-- base-emitter arrow -->
+              <text x="46" y="76" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">Q (NPN)</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>双极型晶体管 BJT</h3>
+            <div class="en">Bipolar Junction Transistor</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>电流控制型器件，小基极电流控制大集电极电流。NPN 和 PNP 两种类型，是模拟放大的基础。</p>
+          <div class="comp-params">
+            <span class="p-k">放大倍数 hFE</span><span class="p-v">50 ~ 800</span>
+            <span class="p-k">Vce 耐压</span><span class="p-v">数十V</span>
+            <span class="p-k">Ic 电流</span><span class="p-v">mA ~ A</span>
+            <span class="p-k">类型</span><span class="p-v">NPN / PNP</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>小信号放大、开关驱动、(继电器/电机/蜂鸣器)、电平转换</div>
+        </div>
+      </div>
+
+      <!-- MOSFET -->
+      <div class="comp-card reveal reveal-d4" data-cat="semiconductor">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="46" cy="32" r="18" stroke="#2563eb" stroke-width="2.5"/>
+              <!-- Gate (left) -->
+              <line x1="28" y1="32" x2="12" y2="32" stroke="#475569" stroke-width="2.5"/>
+              <line x1="16" y1="28" x2="16" y2="36" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <!-- Gate insulation gap -->
+              <line x1="28" y1="28" x2="28" y2="36" stroke="#2563eb" stroke-width="2.5"/>
+              <!-- Drain (top) -->
+              <line x1="46" y1="14" x2="46" y2="4" stroke="#475569" stroke-width="2.5"/>
+              <line x1="46" y1="4" x2="40" y2="1" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <line x1="46" y1="4" x2="52" y2="1" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <!-- Source (bottom) with arrow -->
+              <line x1="46" y1="50" x2="46" y2="62" stroke="#475569" stroke-width="2.5"/>
+              <line x1="40" y1="38" x2="46" y2="32" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/> <!-- arrow -->
+              <text x="46" y="76" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">Q (N-MOS)</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>场效应管 MOSFET</h3>
+            <div class="en">Metal-Oxide-Semiconductor FET</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>电压控制型器件，输入阻抗极高，开关速度快。NMOS 低边驱动和 PMOS 高边驱动是电源管理的核心方案。</p>
+          <div class="comp-params">
+            <span class="p-k">导通电阻 Rds(on)</span><span class="p-v">mΩ 级</span>
+            <span class="p-k">阈值电压 Vgs(th)</span><span class="p-v">1V ~ 4V</span>
+            <span class="p-k">Vds 耐压</span><span class="p-v">数十V ~ 数百V</span>
+            <span class="p-k">开关频率</span><span class="p-v">kHz ~ MHz</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>电源开关、电机驱动(H桥)、DC-DC 转换、负载开关、PWM 调光</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Integrated & Module ==================== -->
+<section class="section" id="integrated">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag tag-integ">CATEGORY 03 · 集成与模块</span>
+      <h2>集成电路 · 晶振 · 继电器 · 连接器</h2>
+      <p class="desc">集成与模块元件将复杂功能封装为独立单元，大幅简化电路设计，提升系统可靠性。</p>
+    </div>
+
+    <div class="comp-grid">
+      <!-- 集成电路 -->
+      <div class="comp-card reveal reveal-d1" data-cat="integrated">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="8" width="72" height="48" rx="2" fill="#e0e7ff" stroke="#2563eb" stroke-width="2.5"/>
+              <line x1="10" y1="20" x2="3" y2="20" stroke="#475569" stroke-width="2"/>
+              <line x1="10" y1="28" x2="3" y2="28" stroke="#475569" stroke-width="2"/>
+              <line x1="10" y1="36" x2="3" y2="36" stroke="#475569" stroke-width="2"/>
+              <line x1="10" y1="44" x2="3" y2="44" stroke="#475569" stroke-width="2"/>
+              <line x1="82" y1="20" x2="89" y2="20" stroke="#475569" stroke-width="2"/>
+              <line x1="82" y1="28" x2="89" y2="28" stroke="#475569" stroke-width="2"/>
+              <line x1="82" y1="36" x2="89" y2="36" stroke="#475569" stroke-width="2"/>
+              <line x1="82" y1="44" x2="89" y2="44" stroke="#475569" stroke-width="2"/>
+              <circle cx="10" cy="20" r="1.5" fill="#475569"/>
+              <circle cx="10" cy="28" r="1.5" fill="#475569"/>
+              <text x="46" y="36" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#475569">IC</text>
+              <text x="46" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">U</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>集成电路</h3>
+            <div class="en">Integrated Circuit · IC</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>将大量晶体管、电阻、电容集成于单硅片。从逻辑门到 MCU、从运放到电源管理——IC 是现代电子的基石。</p>
+          <div class="comp-params">
+            <span class="p-k">封装</span><span class="p-v">DIP/SOP/QFP/BGA</span>
+            <span class="p-k">工作电压</span><span class="p-v">1.8V ~ 5V</span>
+            <span class="p-k">引脚数</span><span class="p-v">8 ~ 数百 pin</span>
+            <span class="p-k">类型</span><span class="p-v">模拟/数字/混合</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>MCU(STM32)、运放(LM358)、电源管理、通信芯片、传感器 IC</div>
+        </div>
+      </div>
+
+      <!-- 晶振 -->
+      <div class="comp-card reveal reveal-d2" data-cat="integrated">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="22" y="16" width="20" height="32" rx="1" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+              <rect x="50" y="16" width="20" height="32" rx="1" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+              <line x1="4" y1="24" x2="22" y2="24" stroke="#475569" stroke-width="2.5"/>
+              <line x1="4" y1="40" x2="22" y2="40" stroke="#475569" stroke-width="2.5"/>
+              <line x1="70" y1="24" x2="88" y2="24" stroke="#475569" stroke-width="2.5"/>
+              <line x1="70" y1="40" x2="88" y2="40" stroke="#475569" stroke-width="2.5"/>
+              <rect x="42" y="28" width="8" height="8" rx="1" fill="none" stroke="#475569" stroke-width="1.5"/>
+              <text x="46" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">Y</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>晶振</h3>
+            <div class="en">Crystal Oscillator</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>利用石英压电效应产生精确频率信号。为 MCU、时钟芯片、通信模块提供稳定的时钟基准。</p>
+          <div class="comp-params">
+            <span class="p-k">频率</span><span class="p-v">32.768kHz ~ 50MHz</span>
+            <span class="p-k">精度</span><span class="p-v">±10 ~ ±100 ppm</span>
+            <span class="p-k">负载电容</span><span class="p-v">6pF ~ 20pF</span>
+            <span class="p-k">类型</span><span class="p-v">有源/无源</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>MCU 外部时钟、RTC 实时时钟、通信波特率基准、PLL 锁相</div>
+        </div>
+      </div>
+
+      <!-- 继电器 -->
+      <div class="comp-card reveal reveal-d3" data-cat="integrated">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Coil -->
+              <rect x="12" y="12" width="16" height="40" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+              <line x1="20" y1="4" x2="20" y2="12" stroke="#475569" stroke-width="2"/>
+              <line x1="20" y1="52" x2="20" y2="60" stroke="#475569" stroke-width="2"/>
+              <!-- Contacts -->
+              <line x1="48" y1="14" x2="68" y2="14" stroke="#475569" stroke-width="2"/>
+              <line x1="48" y1="22" x2="68" y2="22" stroke="#475569" stroke-width="2"/>
+              <line x1="68" y1="14" x2="68" y2="22" stroke="#475569" stroke-width="2"/>
+              <line x1="66" y1="20" x2="70" y2="20" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+              <!-- Dashed control line -->
+              <line x1="28" y1="18" x2="48" y2="18" stroke="#d97706" stroke-width="1.2" stroke-dasharray="3,3"/>
+              <text x="46" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">K</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>继电器</h3>
+            <div class="en">Relay</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>电磁控制的机械开关，通过低压线圈控制高压大电流触点的通断。实现强弱电之间的物理隔离。</p>
+          <div class="comp-params">
+            <span class="p-k">线圈电压</span><span class="p-v">5V / 12V / 24V</span>
+            <span class="p-k">触点容量</span><span class="p-v">数A @ 220V</span>
+            <span class="p-k">动作时间</span><span class="p-v">ms 级</span>
+            <span class="p-k">类型</span><span class="p-v">电磁/固态(SSR)</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>家电控制、工业自动化(PLC)、大功率设备开关、安防系统</div>
+        </div>
+      </div>
+
+      <!-- 连接器 -->
+      <div class="comp-card reveal reveal-d4" data-cat="integrated">
+        <div class="comp-card-top">
+          <div class="comp-symbol">
+            <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Left header -->
+              <rect x="10" y="12" width="20" height="40" rx="3" fill="#e0e7ff" stroke="#2563eb" stroke-width="2"/>
+              <rect x="15" y="18" width="10" height="6" rx="1" fill="#475569"/>
+              <rect x="15" y="28" width="10" height="6" rx="1" fill="#475569"/>
+              <rect x="15" y="38" width="10" height="6" rx="1" fill="#475569"/>
+              <!-- Arrow plug -->
+              <path d="M42 32 L55 18 L68 32 L55 46 Z" fill="none" stroke="#475569" stroke-width="2"/>
+              <!-- Right socket -->
+              <rect x="68" y="18" width="14" height="28" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+              <rect x="74" y="22" width="16" height="4" rx="1" fill="#475569"/>
+              <rect x="74" y="28" width="16" height="4" rx="1" fill="#475569"/>
+              <rect x="74" y="34" width="16" height="4" rx="1" fill="#475569"/>
+              <text x="55" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">J / P</text>
+            </svg>
+          </div>
+          <div class="comp-head">
+            <h3>连接器</h3>
+            <div class="en">Connector</div>
+          </div>
+        </div>
+        <div class="comp-body">
+          <p>实现电路板之间、设备之间的电气连接和信号传输。从排针排母到 USB/HDMI，连接器无处不在。</p>
+          <div class="comp-params">
+            <span class="p-k">类型</span><span class="p-v">排针/排母/端子/USB</span>
+            <span class="p-k">间距</span><span class="p-v">1.0/2.0/2.54mm</span>
+            <span class="p-k">Pin 数</span><span class="p-v">2 ~ 40+</span>
+            <span class="p-k">额定电流</span><span class="p-v">mA ~ A</span>
+          </div>
+          <div class="comp-apps"><strong>典型应用：</strong>开发板扩展接口、电源接入、串口通信、传感器模块插接</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Comparison Table ==================== -->
+<section class="section section-alt" id="compare">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag tag-passive" style="background:var(--slate-100);color:var(--slate-600)">OVERVIEW</span>
+      <h2>元件对比总览</h2>
+      <p class="desc">快速查阅所有元件的核心特性和典型用途，便于选型和电路设计参考。</p>
+    </div>
+
+    <div class="table-wrap reveal">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>元件</th><th>类别</th><th>核心功能</th><th>关键参数</th><th>典型型号</th><th>典型应用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cat-dot passive"></span>电阻</td><td>无源</td><td>限流 · 分压</td><td>阻值 / 功率 / 精度</td><td>0805/0603 贴片</td><td>LED 限流 · 分压电路</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot passive"></span>电容</td><td>无源</td><td>储能 · 滤波 · 耦合</td><td>容值 / 耐压 / ESR</td><td>104(100nF) 瓷片</td><td>电源去耦 · 复位延时</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot passive"></span>电感</td><td>无源</td><td>储能 · 滤波 · 扼流</td><td>感值 / 饱和电流</td><td>100μH 功率电感</td><td>DC-DC · EMI 抑制</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot semiconductor"></span>二极管</td><td>半导体</td><td>单向导电 · 整流</td><td>Vf · 反向耐压</td><td>1N4007 · 1N4148</td><td>整流桥 · 反接保护</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot semiconductor"></span>LED</td><td>半导体</td><td>发光指示</td><td>工作电压 · 电流</td><td>3mm/5mm 直插</td><td>指示灯 · 数码管</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot semiconductor"></span>BJT 晶体管</td><td>半导体</td><td>电流放大 · 开关</td><td>hFE · Vce · Ic</td><td>S8050(NPN) · S8550(PNP)</td><td>驱动继电器 · 信号放大</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot semiconductor"></span>MOSFET</td><td>半导体</td><td>电压控制开关</td><td>Rds(on) · Vgs(th)</td><td>IRFZ44N · AO3400</td><td>电源开关 · 电机驱动</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot integrated"></span>集成电路</td><td>集成</td><td>复杂功能集成</td><td>封装 · 工作电压</td><td>STM32F103 · LM358</td><td>MCU · 运放 · 电源管理</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot integrated"></span>晶振</td><td>集成</td><td>精确时钟源</td><td>频率 · 精度</td><td>8MHz · 32.768kHz</td><td>MCU 时钟 · RTC</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot integrated"></span>继电器</td><td>集成</td><td>强弱电隔离开关</td><td>线圈电压 · 触点电流</td><td>SRD-05VDC</td><td>家电控制 · 工业自动化</td>
+          </tr>
+          <tr>
+            <td><span class="cat-dot integrated"></span>连接器</td><td>集成</td><td>电气连接接口</td><td>间距 · Pin 数</td><td>排针 2.54mm</td><td>开发板扩展 · 电源接口</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Footer ==================== -->
+<footer class="footer">
+  <div class="container">
+    <p>© 2025 电子元件速查手册 · 电阻 · 电容 · 二极管 · 晶体管 · 集成电路 · 供学习参考</p>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll
+const navbar=document.getElementById('navbar');
+window.addEventListener('scroll',()=>{navbar.classList.toggle('scrolled',window.scrollY>30)});
+
+// Mobile toggle
+const navToggle=document.getElementById('navToggle');
+const navLinks=document.getElementById('navLinks');
+navToggle.addEventListener('click',()=>{navToggle.classList.toggle('open');navLinks.classList.toggle('open')});
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{navToggle.classList.remove('open');navLinks.classList.remove('open')}));
+
+// Active nav
+const sections=document.querySelectorAll('section[id]');
+const navItems=document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  sections.forEach(s=>{if(window.scrollY>=s.offsetTop-100)cur=s.getAttribute('id')});
+  navItems.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+
+// Reveal
+const reveals=document.querySelectorAll('.reveal');
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+reveals.forEach(el=>obs.observe(el));
+</script>
+
+</body>
+</html>

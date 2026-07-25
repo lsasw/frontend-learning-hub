@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepTutor 架构深度分析</title>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-light: #dbeafe;
+  --primary-dark: #1d4ed8;
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --code-bg: #f1f5f9;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --accent-purple: #8b5cf6;
+  --accent-red: #ef4444;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 24px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid #1e293b;
+}
+
+.sidebar-header {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid #1e293b;
+  margin-bottom: 16px;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.sidebar-header .version {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 10px 20px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.sidebar nav a:hover {
+  color: #e2e8f0;
+  background: rgba(255,255,255,0.05);
+}
+
+.sidebar nav a.active {
+  color: #fff;
+  background: rgba(37,99,235,0.2);
+  border-left-color: var(--primary);
+}
+
+.sidebar nav .nav-section {
+  padding: 16px 20px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #475569;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  padding: 32px 48px;
+  max-width: 1100px;
+}
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1d4ed8 100%);
+  border-radius: var(--radius-lg);
+  padding: 40px 48px;
+  color: #fff;
+  margin-bottom: 36px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.hero p {
+  font-size: 16px;
+  opacity: 0.85;
+  max-width: 700px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.hero-meta-item {
+  background: rgba(255,255,255,0.12);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  backdrop-filter: blur(4px);
+}
+
+.hero-meta-item strong {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Sections */
+section {
+  margin-bottom: 40px;
+  scroll-margin-top: 24px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title .icon {
+  font-size: 24px;
+}
+
+.section-desc {
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 12px;
+}
+
+.card h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--text);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: var(--code-bg);
+  font-weight: 600;
+  color: var(--text);
+  font-size: 13px;
+}
+
+tr:hover td {
+  background: #f8fafc;
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 2px;
+}
+
+.tag-primary { background: var(--primary-light); color: var(--primary-dark); }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-orange { background: #fef3c7; color: #92400e; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+
+/* Code */
+code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--primary-dark);
+}
+
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 20px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+
+/* Architecture diagram */
+.arch-diagram {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.arch-diagram svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Flow */
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.flow-num {
+  background: var(--primary);
+  color: #fff;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.flow-content {
+  flex: 1;
+}
+
+.flow-content h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.flow-content p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 20px 16px; }
+  .hero { padding: 28px 24px; }
+  .hero h1 { font-size: 24px; }
+  .arch-diagram { overflow-x: scroll; }
+}
+
+/* Callout */
+.callout {
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+.callout strong {
+  color: var(--primary-dark);
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2>DeepTutor</h2>
+    <span class="version">架构分析 v1.5.2 · HKUDS</span>
+  </div>
+  <nav>
+    <div class="nav-section">项目概览</div>
+    <a href="#overview">项目概述</a>
+    <a href="#tech-stack">技术栈总览</a>
+
+    <div class="nav-section">架构拆解</div>
+    <a href="#directory">目录结构</a>
+    <a href="#modules">核心模块详解</a>
+    <a href="#dependencies">模块依赖关系</a>
+    <a href="#call-chain">调用链路</a>
+
+    <div class="nav-section">功能实现</div>
+    <a href="#data-flow">数据流向</a>
+    <a href="#features">核心功能实现</a>
+    <a href="#agents-loop">Agent 循环机制</a>
+
+    <div class="nav-section">代码分析</div>
+    <a href="#python-patterns">Python 语法与范式</a>
+    <a href="#protocols">协议与接口设计</a>
+
+    <div class="nav-section">总结</div>
+    <a href="#summary">架构总结</a>
+    <a href="#learn">学习要点</a>
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>DeepTutor 完整架构分析</h1>
+    <p>一个以智能体为核心（Agent-native）的开源终身个性化辅导系统，集成了多智能体协作、多引擎知识检索、实时工作空间等能力。</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><strong>版本</strong> v1.5.2</div>
+      <div class="hero-meta-item"><strong>语言</strong> Python 3.11+</div>
+      <div class="hero-meta-item"><strong>前端</strong> Next.js 16</div>
+      <div class="hero-meta-item"><strong>许可</strong> Apache 2.0</div>
+      <div class="hero-meta-item"><strong>组织</strong> HKUDS</div>
+      <div class="hero-meta-item"><strong>提交</strong> 1,075+</div>
+    </div>
+  </div>
+
+  <!-- ==================== Overview ==================== -->
+  <section id="overview">
+    <h2 class="section-title"><span class="icon">📋</span> 项目概述</h2>
+    <p class="section-desc">DeepTutor 由香港大学数据智能实验室开发，定位为 "agent-native learning workspace"。</p>
+
+    <div class="card">
+      <h3>设计哲学</h3>
+      <p>DeepTutor 核心理念是 <strong>"一个运行时，多种模式"</strong> — Chat、Quiz、Research、Visualize、Solve、Mastery Path 都运行在同一个智能体循环之上。系统采用 <strong>两层插件模型</strong>：</p>
+      <ul style="margin:12px 0 0 20px;color:var(--text-muted);font-size:14px;">
+        <li><strong>L1 — Tools（工具层）</strong>：单次调用的功能工具，LLM 按需选择</li>
+        <li><strong>L2 — Capabilities（能力层）</strong>：多阶段管道，接管完整的对话回合</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>三大入口</h3>
+      <table>
+        <tr><th>入口</th><th>说明</th><th>实现</th></tr>
+        <tr><td><code>CLI</code></td><td>命令行交互式 REPL + 一次性执行</td><td>Typer + Rich</td></tr>
+        <tr><td><code>WebSocket API</code></td><td>实时双向通信</td><td>FastAPI + WebSocket</td></tr>
+        <tr><td><code>Python SDK</code></td><td>程序化调用</td><td>DeepTutorApp 门面类</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Tech Stack ==================== -->
+  <section id="tech-stack">
+    <h2 class="section-title"><span class="icon">🛠️</span> 技术栈总览</h2>
+
+    <div class="card">
+      <h3>完整技术栈</h3>
+      <table>
+        <tr><th>类别</th><th>技术</th><th>说明</th></tr>
+        <tr><td>后端语言</td><td><span class="tag tag-primary">Python 3.11+</span></td><td>核心运行时，支持 3.11–3.14</td></tr>
+        <tr><td>前端框架</td><td><span class="tag tag-primary">Next.js 16</span></td><td>React 全栈框架，App Router</td></tr>
+        <tr><td>API 框架</td><td><span class="tag tag-primary">FastAPI</span> + Uvicorn</td><td>异步 REST + WebSocket</td></tr>
+        <tr><td>LLM SDK</td><td><span class="tag tag-green">OpenAI</span> + <span class="tag tag-green">Anthropic</span></td><td>原生 SDK 直接调用</td></tr>
+        <tr><td>RAG 引擎</td><td>LlamaIndex, PageIndex, GraphRAG, LightRAG</td><td>多引擎可插拔知识检索</td></tr>
+        <tr><td>文档解析</td><td>MinerU, Docling, markitdown, PyMuPDF4LLM</td><td>可插拔解析引擎链</td></tr>
+        <tr><td>容器化</td><td><span class="tag tag-orange">Docker</span> / Podman</td><td>支持 rootless 部署</td></tr>
+        <tr><td>数据库</td><td>PocketBase (可选), aiosqlite</td><td>单用户集成 + 本地 SQLite</td></tr>
+        <tr><td>向量存储</td><td>FAISS (cpu)</td><td>本地向量索引</td></tr>
+        <tr><td>通信协议</td><td>WebSocket, HTTP/SSE, JWT</td><td>实时双向 + 认证</td></tr>
+        <tr><td>安全</td><td>bcrypt, defusedxml, sandbox</td><td>密码哈希 + XML 验证 + 沙箱</td></tr>
+        <tr><td>CI/CD</td><td>GitHub Actions + pre-commit</td><td>自动化测试与检查</td></tr>
+        <tr><td>代码质量</td><td>Ruff, Black, MyPy, Bandit</td><td>Linting + 格式化 + 安全扫描</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>可选依赖组</h3>
+      <p style="margin-bottom:10px;font-size:14px;">DeepTutor 使用 pip extra 机制实现按需安装：</p>
+      <table>
+        <tr><th>Extra</th><th>功能</th><th>关键包</th></tr>
+        <tr><td><code>[cli]</code></td><td>CLI 客户端</td><td>anthropic, llama-index, faiss-cpu</td></tr>
+        <tr><td><code>[server]</code></td><td>Web 服务</td><td>fastapi, uvicorn, websockets, bcrypt, pocketbase</td></tr>
+        <tr><td><code>[partners]</code></td><td>IM 渠道集成</td><td>lark-oapi, dingtalk-stream, slack-sdk, qq-botpy, python-telegram-bot</td></tr>
+        <tr><td><code>[matrix]</code></td><td>Matrix 渠道</td><td>matrix-nio, mistune, nh3</td></tr>
+        <tr><td><code>[math-animator]</code></td><td>数学动画</td><td>manim >= 0.19.0</td></tr>
+        <tr><td><code>[graphrag]</code></td><td>GraphRAG 检索引擎</td><td>graphrag >= 3.0.1</td></tr>
+        <tr><td><code>[parse]</code></td><td>文档解析引擎全集</td><td>markitdown, docling, pymupdf4llm</td></tr>
+        <tr><td><code>[dev]</code></td><td>开发工具</td><td>pytest, pre-commit, bandit</td></tr>
+        <tr><td><code>[all]</code></td><td>完整安装</td><td>以上全部</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Directory Structure ==================== -->
+  <section id="directory">
+    <h2 class="section-title"><span class="icon">📂</span> 目录结构</h2>
+    <p class="section-desc">项目根目录包含 10 个子目录和 24 个配置文件，总计 74 个第三方依赖。</p>
+
+    <div class="card">
+      <h3>源代码目录树</h3>
+      <pre>
+DeepTutor/
+├── deeptutor/                    # 🧠 核心后端 (Python)
+│   ├── __init__.py               #   包入口
+│   ├── __version__.py            #   版本号 (v1.5.2)
+│   ├── agents/                   #   智能体定义与工厂
+│   ├── api/                      #   FastAPI 路由层
+│   │   ├── main.py               #     API 主入口
+│   │   └── routers/              #     功能路由 (auth, ws)
+│   ├── app/                      #   Python SDK 门面
+│   ├── book/                     #   BookEngine 活书生成
+│   ├── capabilities/             #   L2 多阶段能力管道
+│   │   ├── _shared.py            #     共享工具函数
+│   │   ├── chat/                 #     聊天能力（默认）
+│   │   ├── deep_solve/           #     深度解题
+│   │   ├── deep_question/        #     题目生成
+│   │   ├── deep_research/        #     深度研究
+│   │   ├── visualize/            #     可视化生成
+│   │   ├── math_animator/        #     数学动画
+│   │   └── prompts/{en,zh}/     #     多语言提示词
+│   ├── co_writer/               #   Co-Writer 协作写作
+│   ├── config/                  #   配置管理
+│   ├── core/                    #   ⭐ 核心抽象层
+│   │   ├── context.py           #     UnifiedContext 数据类
+│   │   ├── stream.py            #     StreamEvent 协议
+│   │   ├── stream_bus.py        #     StreamBus 发布/订阅
+│   │   ├── tool_protocol.py     #     BaseTool + ToolDefinition
+│   │   └── capability_protocol.py #  BaseCapability + CapabilityManifest
+│   ├── events/                  #   全局 EventBus
+│   ├── i18n/                    #   国际化翻译
+│   ├── knowledge/               #   知识库管理 (RAG 引擎)
+│   ├── learning/                #   学习引擎 (Mastery Path)
+│   ├── logging/                 #   日志与审计
+│   ├── multi_user/              #   多用户认证与授权
+│   ├── partners/                #   Partner 伴侣系统 + IM 渠道
+│   ├── runtime/                 #   ⭐ 运行时引擎
+│   │   ├── orchestrator.py      #     ChatOrchestrator 统一入口
+│   │   ├── launcher.py          #     前后端生命周期管理
+│   │   └── registry/            #     Tool + Capability 注册表
+│   ├── services/                #   业务服务层
+│   ├── skills/builtin/          #   内置技能库
+│   ├── tools/                   #   L1 工具层
+│   │   └── builtin/             #     内置工具集合
+│   └── utils/                   #   通用工具函数
+│
+├── deeptutor_cli/               # ⌨️ CLI 客户端
+│   └── main.py                  #   Typer 入口
+│
+├── deeptutor_web/               # 🌐 Web 服务入口
+│
+├── web/                         # 🎨 Next.js 前端
+│   ├── app/                     #   App Router
+│   │   ├── (auth)/              #     登录/注册
+│   │   └── (admin)/             #     管理面板
+│   ├── lib/                     #   工具库 (api, auth, session)
+│   ├── middleware.ts            #   路由保护
+│   └── proxy.ts                 #   反向代理
+│
+├── tests/                       # 🧪 测试代码
+├── scripts/                     # 📜 辅助脚本
+├── packaging/deeptutor-cli/     # 📦 CLI 分发包
+├── requirements/                # 📋 依赖文件
+├── assets/                      # 🖼️ 静态资源
+│   ├── figs/logo/               #   Logo & Banner
+│   ├── figs/system/             #   系统架构图
+│   └── README/                  #   10 种语言翻译
+│
+├── pyproject.toml               # 📄 项目配置 (deps, tools, lint)
+├── Dockerfile                   # 🐳 主容器镜像
+├── Dockerfile.runner            # 🐳 沙箱运行器镜像
+├── compose.yaml                 # 🐳 Podman Compose
+├── docker-compose.yml           # 🐳 Docker Compose
+├── SKILL.md                     # 🤖 Agent 技能描述 (~150 行)
+├── AGENTS.md                    # 📖 AI Agent 开发指南
+└── .env.example                 # ⚙️  环境变量模板
+</pre>
+    </div>
+  </section>
+
+  <!-- ==================== Core Modules ==================== -->
+  <section id="modules">
+    <h2 class="section-title"><span class="icon">🧩</span> 核心模块详解</h2>
+
+    <div class="card">
+      <h3>L1 — 工具层 (Tools)</h3>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">单函数工具，LLM 在对话中按需拾取调用。所有工具实现 <code>BaseTool</code> 抽象基类。</p>
+      <table>
+        <tr><th>类型</th><th>工具</th><th>说明</th></tr>
+        <tr><td rowspan="4"><span class="tag tag-primary">用户可开关</span></td>
+          <td><code>brainstorm</code></td><td>广度优先头脑风暴，附带推理</td></tr>
+        <tr><td><code>web_search</code></td><td>网络搜索，带引用来源</td></tr>
+        <tr><td><code>paper_search</code></td><td>arXiv 论文检索</td></tr>
+        <tr><td><code>reason</code></td><td>专用深度推理 LLM 调用</td></tr>
+        <tr><td rowspan="12"><span class="tag tag-green">上下文自动挂载</span></td>
+          <td><code>rag</code></td><td>知识库检索增强生成</td></tr>
+        <tr><td><code>read_source</code></td><td>读取附件源文档</td></tr>
+        <tr><td><code>read_memory</code></td><td>读取记忆</td></tr>
+        <tr><td><code>write_memory</code></td><td>写入记忆</td></tr>
+        <tr><td><code>read_skill</code></td><td>读取技能描述文件</td></tr>
+        <tr><td><code>load_tools</code></td><td>延迟加载工具完整 schema</td></tr>
+        <tr><td><code>exec</code> / <code>code_execution</code></td><td>沙箱化 Python 代码执行</td></tr>
+        <tr><td><code>list_notebook</code></td><td>浏览笔记本记录</td></tr>
+        <tr><td><code>write_note</code></td><td>写入笔记</td></tr>
+        <tr><td><code>web_fetch</code></td><td>获取网页内容</td></tr>
+        <tr><td><code>github</code></td><td>GitHub 操作</td></tr>
+        <tr><td><code>ask_user</code></td><td>暂停回合，向用户提问后恢复</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>L2 — 能力层 (Capabilities)</h3>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">多阶段管道，接管完整对话回合。所有能力实现 <code>BaseCapability</code> 抽象基类。</p>
+      <table>
+        <tr><th>能力</th><th>阶段</th><th>说明</th></tr>
+        <tr><td><code>chat</code></td><td>exploring → responding</td><td>默认单智能体循环，所有功能的起点</td></tr>
+        <tr><td><code>mastery_path</code></td><td>responding</td><td>引导式学习，按主题类型门控掌握工具</td></tr>
+        <tr><td><code>deep_solve</code></td><td>planning → reasoning → writing</td><td>多 agent 问题求解分解</td></tr>
+        <tr><td><code>deep_question</code></td><td>ideation → generation</td><td>题目/测验生成</td></tr>
+        <tr><td><code>deep_research</code></td><td>rephrasing → decomposing → researching → reporting</td><td>研究模式，分解问题多步调研</td></tr>
+        <tr><td><code>visualize</code></td><td>analyzing → generating → reviewing</td><td>SVG / Chart.js / Mermaid / HTML 可视化</td></tr>
+        <tr><td><code>math_animator</code></td><td>concept_analysis → concept_design → code_generation → code_retry → summary → render_output</td><td>Manim 数学动画生成</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>其他关键模块</h3>
+      <table>
+        <tr><th>模块</th><th>路径</th><th>职责</th></tr>
+        <tr><td>BookEngine</td><td><code>deeptutor/book/</code></td><td>从 KB/笔记/题库生成"活书"，每章含类型化块 + Page Chat</td></tr>
+        <tr><td>Co-Writer</td><td><code>deeptutor/co_writer/</code></td><td>分屏 Markdown 编辑器，精确编辑 + 差异对比</td></tr>
+        <tr><td>Knowledge Center</td><td><code>deeptutor/knowledge/</code></td><td>多引擎 RAG 管理：LlamaIndex / PageIndex / GraphRAG / LightRAG / Obsidian</td></tr>
+        <tr><td>Memory System</td><td><code>deeptutor/services/</code></td><td>三层记忆：L1 事件追踪 → L2 表层事实 → L3 跨表面综合</td></tr>
+        <tr><td>Partners</td><td><code>deeptutor/partners/</code></td><td>持久化 IM 伴侣，15 种渠道，独立 SOUL.md + 工作区</td></tr>
+        <tr><td>Multi-User</td><td><code>deeptutor/multi_user/</code></td><td>可选认证 (bcrypt+JWT)，管理员粒度授权</td></tr>
+        <tr><td>EduHub</td><td><code>deeptutor/skills/</code></td><td>社区技能市场，安全门导入，兼容 ClawHub</td></tr>
+        <tr><td>CLI</td><td><code>deeptutor_cli/</code></td><td>Typer + Rich REPL，支持 JSON/NDJSON 输出</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Module Dependencies ==================== -->
+  <section id="dependencies">
+    <h2 class="section-title"><span class="icon">🔗</span> 模块依赖关系</h2>
+
+    <div class="arch-diagram">
+      <svg viewBox="0 0 960 620" font-family="system-ui, sans-serif">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/>
+          </marker>
+          <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#2563eb"/>
+          </marker>
+          <filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/></filter>
+        </defs>
+
+        <!-- Entry Points -->
+        <rect x="30" y="20" width="160" height="48" rx="8" fill="#0f172a" filter="url(#shadow)"/>
+        <text x="110" y="40" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">CLI (Typer)</text>
+        <text x="110" y="56" text-anchor="middle" fill="#94a3b8" font-size="11">deeptutor_cli</text>
+
+        <rect x="240" y="20" width="160" height="48" rx="8" fill="#0f172a" filter="url(#shadow)"/>
+        <text x="320" y="40" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">WebSocket API</text>
+        <text x="320" y="56" text-anchor="middle" fill="#94a3b8" font-size="11">FastAPI /api/v1/ws</text>
+
+        <rect x="450" y="20" width="160" height="48" rx="8" fill="#0f172a" filter="url(#shadow)"/>
+        <text x="530" y="40" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Python SDK</text>
+        <text x="530" y="56" text-anchor="middle" fill="#94a3b8" font-size="11">DeepTutorApp</text>
+
+        <rect x="740" y="20" width="190" height="48" rx="8" fill="#0f172a" filter="url(#shadow)"/>
+        <text x="835" y="40" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Next.js Web UI</text>
+        <text x="835" y="56" text-anchor="middle" fill="#94a3b8" font-size="11">web/ App Router</text>
+
+        <!-- ChatOrchestrator -->
+        <rect x="280" y="130" width="400" height="56" rx="10" fill="#1d4ed8" filter="url(#shadow)"/>
+        <text x="480" y="155" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">ChatOrchestrator (统一入口)</text>
+        <text x="480" y="174" text-anchor="middle" fill="#bfdbfe" font-size="11">deeptutor/runtime/orchestrator.py</text>
+
+        <!-- Connections to Orchestrator -->
+        <line x1="110" y1="68" x2="110" y2="100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="110" y1="100" x2="400" y2="130" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="320" y1="68" x2="400" y2="130" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="530" y1="68" x2="560" y2="130" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="835" y1="68" x2="835" y2="100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="835" y1="100" x2="560" y2="130" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- Registries -->
+        <rect x="140" y="240" width="200" height="60" rx="8" fill="#dbeafe" filter="url(#shadow)"/>
+        <text x="240" y="264" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="700">ToolRegistry (L1)</text>
+        <text x="240" y="286" text-anchor="middle" fill="#3b82f6" font-size="11">内置工具 + 插件工具</text>
+
+        <rect x="620" y="240" width="200" height="60" rx="8" fill="#dbeafe" filter="url(#shadow)"/>
+        <text x="720" y="264" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="700">CapabilityRegistry (L2)</text>
+        <text x="720" y="286" text-anchor="middle" fill="#3b82f6" font-size="11">chat · solve · research · visualize</text>
+
+        <line x1="480" y1="186" x2="480" y2="216" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+        <line x1="480" y1="216" x2="240" y2="240" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+        <line x1="480" y1="216" x2="720" y2="240" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+        <!-- StreamBus -->
+        <rect x="380" y="360" width="200" height="48" rx="8" fill="#f59e0b" filter="url(#shadow)"/>
+        <text x="480" y="380" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">StreamBus (事件总线)</text>
+        <text x="480" y="398" text-anchor="middle" fill="#fef3c7" font-size="11">Fan-out 异步分发</text>
+
+        <line x1="240" y1="300" x2="400" y2="360" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="720" y1="300" x2="560" y2="360" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- Core Abstraction -->
+        <rect x="380" y="460" width="200" height="48" rx="8" fill="#8b5cf6" filter="url(#shadow)"/>
+        <text x="480" y="480" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Core 抽象层</text>
+        <text x="480" y="498" text-anchor="middle" fill="#ede9fe" font-size="11">Protocols + Context + EventBus</text>
+
+        <line x1="480" y1="408" x2="480" y2="460" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- Bottom modules -->
+        <rect x="60" y="560" width="150" height="40" rx="8" fill="#e2e8f0"/>
+        <text x="135" y="584" text-anchor="middle" fill="#475569" font-size="12">Knowledge / RAG</text>
+
+        <rect x="240" y="560" width="150" height="40" rx="8" fill="#e2e8f0"/>
+        <text x="315" y="584" text-anchor="middle" fill="#475569" font-size="12">Memory System</text>
+
+        <rect x="420" y="560" width="120" height="40" rx="8" fill="#e2e8f0"/>
+        <text x="480" y="584" text-anchor="middle" fill="#475569" font-size="12">Partners</text>
+
+        <rect x="570" y="560" width="150" height="40" rx="8" fill="#e2e8f0"/>
+        <text x="645" y="584" text-anchor="middle" fill="#475569" font-size="12">Multi-User Auth</text>
+
+        <rect x="750" y="560" width="150" height="40" rx="8" fill="#e2e8f0"/>
+        <text x="825" y="584" text-anchor="middle" fill="#475569" font-size="12">EduHub Skills</text>
+
+        <line x1="480" y1="508" x2="215" y2="560" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+        <line x1="480" y1="508" x2="480" y2="560" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+        <line x1="480" y1="508" x2="680" y2="560" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+        <line x1="480" y1="508" x2="825" y2="560" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ==================== Call Chain ==================== -->
+  <section id="call-chain">
+    <h2 class="section-title"><span class="icon">⚡</span> 调用链路</h2>
+
+    <div class="card">
+      <h3>一次用户请求的完整调用路径</h3>
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <h4>入口接收</h4>
+          <p><code>CLI: deeptutor chat</code> / <code>WebSocket: /api/v1/ws</code> / <code>SDK: DeepTutorApp.handle()</code> → 构造 <code>UnifiedContext</code></p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <h4>Orchestrator 路由</h4>
+          <p><code>ChatOrchestrator.handle(context)</code> → 检查 <code>context.active_capability</code>，默认使用 <code>chat</code> 能力</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <h4>Capability 初始化</h4>
+          <p>从 <code>CapabilityRegistry</code> 获取对应能力实例，创建 <code>StreamBus</code>，注册 <code>turn_id</code></p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <h4>能力管道执行</h4>
+          <p><code>capability.run(context, bus)</code> → 通过 <code>bus.stage()</code> 声明阶段边界，内部调用 LLM + 工具</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content">
+          <h4>Agent Loop (Chat 能力内部)</h4>
+          <p>LLM 推理 → 决定调用工具 → <code>ToolRegistry.execute(name, args)</code> → 观察结果 → 继续推理，直到生成无工具调用的最终回复</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">6</div>
+        <div class="flow-content">
+          <h4>流式事件分发</h4>
+          <p>每条 <code>StreamEvent</code> (CONTENT, TOOL_CALL, TOOL_RESULT, STAGE_START/END...) 通过 <code>StreamBus</code> fan-out 到所有订阅者</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">7</div>
+        <div class="flow-content">
+          <h4>消费者渲染</h4>
+          <p>CLI: Rich 终端渲染 / WebSocket: NDJSON 推送到前端 / SDK: 返回 AsyncIterator</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">8</div>
+        <div class="flow-content">
+          <h4>完成与审计</h4>
+          <p>发送 <code>DONE</code> 事件，发布 <code>CAPABILITY_COMPLETE</code> 到全局 EventBus，触发审计日志、记忆合并等后置处理</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Data Flow ==================== -->
+  <section id="data-flow">
+    <h2 class="section-title"><span class="icon">📊</span> 数据流向</h2>
+
+    <div class="card">
+      <h3>核心数据流</h3>
+      <div class="arch-diagram">
+        <svg viewBox="0 0 820 500" font-family="system-ui, sans-serif">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#2563eb"/>
+            </marker>
+            <marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#10b981"/>
+            </marker>
+            <filter id="sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.08"/></filter>
+          </defs>
+
+          <!-- Input -->
+          <rect x="280" y="20" width="260" height="44" rx="8" fill="#0f172a" filter="url(#sh)"/>
+          <text x="410" y="47" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">User Input + Attachments</text>
+
+          <rect x="280" y="90" width="260" height="36" rx="8" fill="#dbeafe" filter="url(#sh)"/>
+          <text x="410" y="113" text-anchor="middle" fill="#1e40af" font-size="12" font-weight="600">UnifiedContext (dataclass)</text>
+
+          <rect x="280" y="155" width="260" height="36" rx="8" fill="#2563eb" filter="url(#sh)"/>
+          <text x="410" y="178" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">ChatOrchestrator.handle()</text>
+
+          <!-- Line down -->
+          <line x1="410" y1="64" x2="410" y2="90" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="410" y1="126" x2="410" y2="155" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- Branch -->
+          <rect x="60" y="230" width="200" height="44" rx="8" fill="#dbeafe" filter="url(#sh)"/>
+          <text x="160" y="248" text-anchor="middle" fill="#1e40af" font-size="12" font-weight="600">ToolRegistry</text>
+          <text x="160" y="264" text-anchor="middle" fill="#3b82f6" font-size="10">工具查询 → execute()</text>
+
+          <rect x="560" y="230" width="200" height="44" rx="8" fill="#dbeafe" filter="url(#sh)"/>
+          <text x="660" y="248" text-anchor="middle" fill="#1e40af" font-size="12" font-weight="600">Capability.run()</text>
+          <text x="660" y="264" text-anchor="middle" fill="#3b82f6" font-size="10">多阶段管道</text>
+
+          <line x1="300" y1="191" x2="160" y2="230" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="520" y1="191" x2="660" y2="230" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- StreamBus -->
+          <rect x="310" y="340" width="200" height="44" rx="8" fill="#f59e0b" filter="url(#sh)"/>
+          <text x="410" y="358" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">StreamBus (fan-out)</text>
+          <text x="410" y="374" text-anchor="middle" fill="#fef3c7" font-size="10">yield StreamEvent</text>
+
+          <line x1="160" y1="274" x2="310" y2="340" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="660" y1="274" x2="510" y2="340" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- Consumers -->
+          <rect x="80" y="440" width="160" height="36" rx="8" fill="#10b981" filter="url(#sh)"/>
+          <text x="160" y="463" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">CLI Rich Renderer</text>
+
+          <rect x="290" y="440" width="240" height="36" rx="8" fill="#10b981" filter="url(#sh)"/>
+          <text x="410" y="463" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">WebSocket → Frontend (NDJSON)</text>
+
+          <rect x="580" y="440" width="160" height="36" rx="8" fill="#10b981" filter="url(#sh)"/>
+          <text x="660" y="463" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">SDK AsyncIterator</text>
+
+          <line x1="160" y1="384" x2="160" y2="440" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="410" y1="384" x2="410" y2="440" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="660" y1="384" x2="660" y2="440" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr2)"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>数据持久化路径</h3>
+      <table>
+        <tr><th>数据类型</th><th>存储路径</th><th>格式</th></tr>
+        <tr><td>会话消息</td><td><code>data/users/&lt;uid&gt;/sessions/&lt;sid&gt;/</code></td><td>JSON</td></tr>
+        <tr><td>记忆追踪 (L1)</td><td><code>data/users/&lt;uid&gt;/memory/trace/&lt;surface&gt;/&lt;date&gt;.jsonl</code></td><td>JSONL 追加</td></tr>
+        <tr><td>记忆事实 (L2)</td><td><code>data/users/&lt;uid&gt;/memory/L2/&lt;surface&gt;.md</code></td><td>Markdown</td></tr>
+        <tr><td>记忆综合 (L3)</td><td><code>data/users/&lt;uid&gt;/memory/L3/</code></td><td>Markdown</td></tr>
+        <tr><td>知识库索引</td><td><code>data/knowledge/&lt;kb_name&gt;/&lt;version-N&gt;/</code></td><td>FAISS + BM25</td></tr>
+        <tr><td>全局设置</td><td><code>data/user/settings/*.json</code></td><td>JSON</td></tr>
+        <tr><td>认证数据</td><td><code>data/system/auth/users.json</code></td><td>JSON + bcrypt</td></tr>
+        <tr><td>使用审计</td><td><code>data/system/audit/usage.jsonl</code></td><td>JSONL 追加</td></tr>
+        <tr><td>书籍数据</td><td><code>data/users/&lt;uid&gt;/books/&lt;book_id&gt;/</code></td><td>JSON + 块文件</td></tr>
+        <tr><td>Partner 工作区</td><td><code>data/partners/&lt;id&gt;/workspace/</code></td><td>独立隔离</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Core Features ==================== -->
+  <section id="features">
+    <h2 class="section-title"><span class="icon">🚀</span> 核心功能实现</h2>
+
+    <div class="card">
+      <h3>1. Ask-User 机制</h3>
+      <p>智能体在对话中暂停回合，提出结构化澄清问题，等待用户回答后继续同一回合。</p>
+      <pre># 工具返回 pause_for_user 标记
+return ToolResult(
+    content="Which topic should I focus on?",
+    pause_for_user={"question": "...", "options": [...]}
+)
+# Chat 循环检测到此标记后：
+# 1. 发送 pending_user_input 事件
+# 2. await 用户回复 (通过 reply queue)
+# 3. 将回复替换到工具消息体中
+# 4. 继续同一轮 LLM 迭代</pre>
+    </div>
+
+    <div class="card">
+      <h3>2. 多引擎 RAG 知识检索</h3>
+      <p>支持 5 种检索引擎，通过统一接口切换：</p>
+      <table>
+        <tr><th>引擎</th><th>特点</th><th>适用场景</th></tr>
+        <tr><td>LlamaIndex</td><td>本地 FAISS 向量 + BM25 混合</td><td>默认引擎，通用场景</td></tr>
+        <tr><td>PageIndex</td><td>托管推理检索，页级引用</td><td>精细引用溯源</td></tr>
+        <tr><td>GraphRAG</td><td>知识图谱检索</td><td>关系型知识发现</td></tr>
+        <tr><td>LightRAG</td><td>轻量级图谱检索 + 外部服务器</td><td>低资源部署</td></tr>
+        <tr><td>Obsidian</td><td>链接 Obsidian 保险库，原位读写</td><td>个人知识管理集成</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>3. 三层记忆系统</h3>
+      <table>
+        <tr><th>层级</th><th>名称</th><th>存储</th><th>说明</th></tr>
+        <tr><td>L1</td><td>事件追踪</td><td>JSONL 仅追加</td><td>工作区镜像 + 事件流，记录 chat/notebook/quiz/kb/book/partner/cowriter</td></tr>
+        <tr><td>L2</td><td>表层事实</td><td>Markdown</td><td>按 surface 整理的策划事实</td></tr>
+        <tr><td>L3</td><td>跨表面综合</td><td>Markdown</td><td>profile / recent / scope / preferences 全局文档</td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">记忆图谱可视化整个金字塔结构，任何合成声明可追溯到原始事件。</p>
+    </div>
+
+    <div class="card">
+      <h3>4. Partner 伴侣系统</h3>
+      <p>每个 Partner 是完整的独立智能体实例，拥有：</p>
+      <ul style="margin:8px 0 0 20px;color:var(--text-muted);font-size:14px;">
+        <li><code>SOUL.md</code> — 个性与行为定义</li>
+        <li>独立模型选择、频道配置、工具策略</li>
+        <li>读写主人记忆，但只写入自己的记忆</li>
+        <li>15 种 IM 渠道：Feishu、Telegram、Discord、Slack、DingTalk、QQ、WeCom、WhatsApp、Zulip、Mattermost、Matrix、Mochat、Teams</li>
+        <li>可作为子智能体从普通聊天中通过 <code>consult_subagent</code> 咨询</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>5. 文档解析引擎链</h3>
+      <p>可插拔的文档解析管道，支持 4 种引擎：</p>
+      <table>
+        <tr><th>引擎</th><th>包名</th><th>格式支持</th></tr>
+        <tr><td>Text-only</td><td>内置</td><td>纯文本 (.txt, .md)</td></tr>
+        <tr><td>MinerU</td><td><code>[parse]</code></td><td>PDF 结构化解析</td></tr>
+        <tr><td>Docling</td><td><code>[parse-docling]</code></td><td>多格式（PDF, DOCX, PPTX, XLSX）</td></tr>
+        <tr><td>MarkItDown</td><td><code>[parse-markitdown]</code></td><td>Office 文档转 Markdown</td></tr>
+        <tr><td>PyMuPDF4LLM</td><td><code>[parse-pymupdf4llm]</code></td><td>PDF 转 LLM 格式</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Agent Loop ==================== -->
+  <section id="agents-loop">
+    <h2 class="section-title"><span class="icon">🔄</span> Agent 循环机制</h2>
+
+    <div class="card">
+      <h3>Chat 能力的智能体循环</h3>
+      <div class="flow-step">
+        <div class="flow-num">①</div>
+        <div class="flow-content">
+          <h4>构建 Prompt 上下文</h4>
+          <p>组装 system prompt (memory_context + persona_context + skills_manifest + source_manifest + i18n 模板) + conversation_history + user_message</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">②</div>
+        <div class="flow-content">
+          <h4>组装工具列表</h4>
+          <p>合并用户开关工具 (brainstorm/web_search/paper_search/reason) + 上下文自动挂载工具 (rag/read_memory/web_fetch...) + MCP 工具 + 延迟工具条目</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">③</div>
+        <div class="flow-content">
+          <h4>LLM 推理 (Streaming)</h4>
+          <p>调用 LLM SDK (OpenAI/Anthropic/DashScope/Perplexity)，通过 <code>bus.content()</code> 流式输出 CONTENT 事件</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">④</div>
+        <div class="flow-content">
+          <h4>工具调用检测</h4>
+          <p>如果 LLM 返回 <code>tool_calls</code>：通过 <code>bus.tool_call()</code> 发出事件 → <code>ToolRegistry.execute()</code> 执行 → 通过 <code>bus.tool_result()</code> 返回结果 → 将结果追加到对话历史 → 回到 ③ 继续推理</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">⑤</div>
+        <div class="flow-content">
+          <h4>用户交互暂停 (Ask-User)</h4>
+          <p>如果工具返回 <code>pause_for_user</code>：暂停循环 → 等待前端/CLI 回复 → 将回复注入 → 继续循环</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">⑥</div>
+        <div class="flow-content">
+          <h4>结束条件</h4>
+          <p>LLM 返回不含工具调用的纯文本回复 → 通过 <code>bus.result()</code> 发送最终结果 → 发送 <code>DONE</code> 事件 → 保存会话、更新记忆</p>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:16px;">
+        <strong>设计要点：</strong>Chat 是默认能力，Deep Solve、Quiz、Research、Visualize 等能力在 Chat 循环的基础上叠加阶段层（stage）管理，通过 <code>bus.stage()</code> 声明多阶段边界，但内核仍是同一个 LLM + Tool 迭代循环。
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Python Patterns ==================== -->
+  <section id="python-patterns">
+    <h2 class="section-title"><span class="icon">🐍</span> Python 语法与编程范式</h2>
+
+    <div class="card">
+      <h3>关键 Python 特性使用</h3>
+      <table>
+        <tr><th>特性</th><th>应用场景</th><th>示例</th></tr>
+        <tr><td><code>dataclass</code></td><td>数据协议定义</td><td><code>UnifiedContext</code>, <code>StreamEvent</code>, <code>ToolDefinition</code>, <code>CapabilityManifest</code>, <code>ToolResult</code>, <code>Attachment</code></td></tr>
+        <tr><td><code>ABC</code> + <code>@abstractmethod</code></td><td>插件协议</td><td><code>BaseTool</code>, <code>BaseCapability</code> — 强制子类实现 <code>execute()</code> 和 <code>run()</code></td></tr>
+        <tr><td><code>Protocol</code></td><td>鸭子类型接口</td><td><code>ToolEventSink</code> — 工具内部流式回调接口</td></tr>
+        <tr><td><code>async/await + asyncio</code></td><td>全异步架构</td><td>所有 IO 操作异步：LLM 调用、WebSocket、文件读写、数据库查询</td></tr>
+        <tr><td><code>AsyncIterator</code></td><td>流式输出</td><td><code>ChatOrchestrator.handle() → AsyncIterator[StreamEvent]</code></td></tr>
+        <tr><td><code>asyncio.Queue</code></td><td>事件总线</td><td><code>StreamBus</code> 内部用队列管理订阅者，<code>EventBus</code> 用队列缓冲事件</td></tr>
+        <tr><td><code>@asynccontextmanager</code></td><td>阶段管理</td><td><code>StreamBus.stage()</code> — 自动发送 STAGE_START/STAGE_END 事件</td></tr>
+        <tr><td><code>__new__</code> 重写</td><td>单例模式</td><td><code>EventBus</code> — 全局唯一事件总线实例</td></tr>
+        <tr><td><code>Enum</code></td><td>类型安全常量</td><td><code>StreamEventType</code>, <code>EventType</code></td></tr>
+        <tr><td><code>from __future__ import annotations</code></td><td>延迟类型求值</td><td>所有模块使用，避免循环引用支持前向引用</td></tr>
+        <tr><td><code>dict[str, Any] | None</code></td><td>PEP 604 联合类型</td><td>Python 3.10+ 新语法，替代 <code>Optional[dict]</code></td></tr>
+        <tr><td><code>dataclass + field(default_factory=list)</code></td><td>可变默认值</td><td>安全创建列表/字典类型默认值，避免经典 Python 陷阱</td></tr>
+        <tr><td><code>__all__</code> 未显式使用</td><td>包暴露控制</td><td>依赖目录级 <code>__init__.py</code> 控制公开 API</td></tr>
+        <tr><td>PEP 636 结构化模式匹配</td><td>未使用</td><td>项目兼容 Python 3.11 但未采用 match/case</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>项目级编程范式</h3>
+      <table>
+        <tr><th>范式</th><th>体现</th></tr>
+        <tr><td><strong>插件化架构</strong></td><td>Tool / Capability 注册表模式，通过 <code>BaseTool</code> / <code>BaseCapability</code> 抽象基类定义合约</td></tr>
+        <tr><td><strong>事件驱动</strong></td><td><code>StreamBus</code> (单回合 fan-out) + <code>EventBus</code> (全局 pub/sub) 双层事件系统</td></tr>
+        <tr><td><strong>上下文对象模式</strong></td><td><code>UnifiedContext</code> 作为不可变数据载体在整条链路中传递</td></tr>
+        <tr><td><strong>策略模式</strong></td><td>RAG 引擎 (5 种互换) + 文档解析引擎 (4 种互换) + LLM Provider (多 SDK 适配)</td></tr>
+        <tr><td><strong>依赖注入</strong></td><td>Settings 通过 JSON 配置 + 环境变量覆盖，<code>pydantic-settings</code> 管理运行时配置</td></tr>
+        <tr><td><strong>渐进式类型</strong></td><td>使用 MyPy 类型检查 (非严格模式)，通过 <code>pyproject.toml</code> 模块级屏蔽</td></tr>
+        <tr><td><strong>防御式安全编码</strong></td><td><code>shell=False</code>、PDF 大小限制、MIME 校验、defusedxml、沙箱隔离</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>代码质量工具链</h3>
+      <pre># Ruff — Linting (pycodestyle E + pyflakes F + isort I)
+# Black — 代码格式化 (line-length=100, target py311–py314)
+# MyPy  — 类型检查 (渐进式，非严格模式)
+# Bandit — 安全扫描 (跳过 B101/B311/B403/B404 等)
+# Pytest — 异步测试 (pytest-asyncio, --strict-markers)
+# Safety — 依赖安全审计</pre>
+    </div>
+  </section>
+
+  <!-- ==================== Protocols ==================== -->
+  <section id="protocols">
+    <h2 class="section-title"><span class="icon">📐</span> 协议与接口设计</h2>
+
+    <div class="card">
+      <h3>核心协议层次</h3>
+      <table>
+        <tr><th>协议</th><th>文件</th><th>关键类</th></tr>
+        <tr><td>数据载体</td><td><code>core/context.py</code></td><td><code>UnifiedContext</code>, <code>Attachment</code></td></tr>
+        <tr><td>流式事件</td><td><code>core/stream.py</code></td><td><code>StreamEvent</code>, <code>StreamEventType</code> (14 种类型)</td></tr>
+        <tr><td>事件总线</td><td><code>core/stream_bus.py</code></td><td><code>StreamBus</code> — emit/subscribe/stage/content/error</td></tr>
+        <tr><td>工具协议</td><td><code>core/tool_protocol.py</code></td><td><code>BaseTool</code>, <code>ToolDefinition</code>, <code>ToolResult</code>, <code>ToolParameter</code></td></tr>
+        <tr><td>能力协议</td><td><code>core/capability_protocol.py</code></td><td><code>BaseCapability</code>, <code>CapabilityManifest</code></td></tr>
+        <tr><td>全局事件</td><td><code>events/event_bus.py</code></td><td><code>EventBus</code>, <code>Event</code>, <code>EventType</code></td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>StreamEventType 枚举 (14 种事件)</h3>
+      <table>
+        <tr><th>事件类型</th><th>用途</th></tr>
+        <tr><td><code>STAGE_START</code> / <code>STAGE_END</code></td><td>多阶段能力管道的阶段边界标记</td></tr>
+        <tr><td><code>THINKING</code></td><td>LLM 内部推理过程 (不展示给用户的内容)</td></tr>
+        <tr><td><code>OBSERVATION</code></td><td>工具执行期间的系统观察</td></tr>
+        <tr><td><code>CONTENT</code></td><td>LLM 生成的正文内容 (流式增量)</td></tr>
+        <tr><td><code>TOOL_CALL</code></td><td>工具调用请求 (含参数)</td></tr>
+        <tr><td><code>TOOL_RESULT</code></td><td>工具执行结果</td></tr>
+        <tr><td><code>PROGRESS</code></td><td>进度更新 (current/total)</td></tr>
+        <tr><td><code>SOURCES</code></td><td>引用来源列表</td></tr>
+        <tr><td><code>RESULT</code></td><td>最终结果数据</td></tr>
+        <tr><td><code>ERROR</code></td><td>错误信息</td></tr>
+        <tr><td><code>SESSION</code></td><td>会话元数据 (session_id, turn_id)</td></tr>
+        <tr><td><code>SESSION_META</code></td><td>会话扩展元数据</td></tr>
+        <tr><td><code>DONE</code></td><td>回合结束信号</td></tr>
+        <tr><td><code>WAIT_FOR_INPUT</code></td><td>暂停等待用户输入</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Summary ==================== -->
+  <section id="summary">
+    <h2 class="section-title"><span class="icon">📝</span> 架构总结</h2>
+
+    <div class="card">
+      <h3>架构优势</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <h4 style="color:var(--accent-green);">✅ 高度可扩展</h4>
+          <p style="font-size:13px;color:var(--text-muted);">工具和能力通过注册表模式实现插件化，新增功能只需实现接口。MCP 协议支持外部工具无缝接入。</p>
+        </div>
+        <div>
+          <h4 style="color:var(--accent-green);">✅ 流式优先设计</h4>
+          <p style="font-size:13px;color:var(--text-muted);">StreamBus 实现了生产者/消费者解耦，同一事件流可同时供给 CLI、WebSocket、SDK 三种消费端。</p>
+        </div>
+        <div>
+          <h4 style="color:var(--accent-green);">✅ 全异步架构</h4>
+          <p style="font-size:13px;color:var(--text-muted);">asyncio 贯穿全栈，从 LLM API 调用到文件 IO、WebSocket 通信都使用原生 async/await。</p>
+        </div>
+        <div>
+          <h4 style="color:var(--accent-green);">✅ 模块化设计</h4>
+          <p style="font-size:13px;color:var(--text-muted);">pip extra 机制实现按需安装，75 个第三方包根据使用场景分级引入。</p>
+        </div>
+        <div>
+          <h4 style="color:var(--accent-green);">✅ 安全优先</h4>
+          <p style="font-size:13px;color:var(--text-muted);">沙箱代码执行、SVG 验证、MIME 检查、PDF 大小限制、bcrypt 密码哈希、JWT 认证。</p>
+        </div>
+        <div>
+          <h4 style="color:var(--accent-green);">✅ 国际化就绪</h4>
+          <p style="font-size:13px;color:var(--text-muted);">能力提示词和 UI 支持中英文，YAML 模板化，易于扩展新语言。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>关键数据</h3>
+      <table>
+        <tr><td>Python 源文件</td><td>20 个子目录，核心模块 ~12 个</td></tr>
+        <tr><td>第三方依赖</td><td>74 个独立包 （核心运行时 43 个）</td></tr>
+        <tr><td>内置工具</td><td>16+ 个（4 个用户可开关 + 12+ 上下文自动挂载）</td></tr>
+        <tr><td>内置能力</td><td>7 个（chat / deep_solve / deep_question / deep_research / visualize / math_animator / mastery_path）</td></tr>
+        <tr><td>IM 渠道</td><td>15 种（Feishu / Telegram / Slack / Discord / DingTalk / QQ / WeCom / WhatsApp / Zulip / Mattermost / Matrix / Mochat / Teams / 等）</td></tr>
+        <tr><td>RAG 引擎</td><td>5 种（LlamaIndex / PageIndex / GraphRAG / LightRAG / Obsidian）</td></tr>
+        <tr><td>文档解析引擎</td><td>4 种（MinerU / Docling / markitdown / PyMuPDF4LLM）</td></tr>
+        <tr><td>安装方式</td><td>4 种（PyPI / 源码 / Docker / CLI Only）</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== Learn ==================== -->
+  <section id="learn">
+    <h2 class="section-title"><span class="icon">💡</span> 学习要点</h2>
+
+    <div class="card">
+      <h3>可以从 DeepTutor 学到什么</h3>
+      <ol style="margin:0 0 0 20px;color:var(--text-muted);font-size:14px;line-height:2;">
+        <li><strong>插件化架构设计</strong> — 通过抽象基类 + 注册表实现高度可扩展的工具/能力系统</li>
+        <li><strong>流式事件总线模式</strong> — 生产者/消费者解耦，同一数据流多端消费</li>
+        <li><strong>全异步 Python 编程</strong> — asyncio + AsyncIterator + Queue 构建高性能 IO 密集型应用</li>
+        <li><strong>多引擎策略模式</strong> — RAG / 文档解析 / LLM Provider 统一接口下的可插拔实现</li>
+        <li><strong>LLM Agent 循环实现</strong> — Tool Calling → 观察 → 推理 → 再调用的完整循环</li>
+        <li><strong>Python dataclass 协议设计</strong> — 用数据类而非字典传递结构化数据</li>
+        <li><strong>现代化 Python 项目治理</strong> — pyproject.toml + Ruff + Black + MyPy + Bandit 完整工具链</li>
+        <li><strong>渐进式安全设计</strong> — 沙箱隔离、输入验证、认证授权分层实现</li>
+        <li><strong>CLI + Web + SDK 三入口统一</strong> — 共享核心逻辑，入口层只做适配</li>
+        <li><strong>多语言 i18n 实践</strong> — YAML 模板化提示词，能力层与 UI 层解耦语言</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer style="text-align:center;padding:32px 0;color:var(--text-muted);font-size:13px;border-top:1px solid var(--border);margin-top:40px;">
+    <p>DeepTutor Architecture Analysis · Generated 2026-07-23 · <a href="https://github.com/HKUDS/DeepTutor" style="color:var(--primary);">github.com/HKUDS/DeepTutor</a></p>
+    <p style="margin-top:4px;"><a href="../index.html" style="color:var(--primary);">← 返回 Frontend Learning Hub</a></p>
+  </footer>
+
+</main>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.sidebar nav a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 80) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+</body>
+</html>
