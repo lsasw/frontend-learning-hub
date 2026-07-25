@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevPortal Design System · 设计系统规范</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   Design Tokens — The Single Source of Truth
+   ═══════════════════════════════════════════════════ */
+:root{
+  /* ── Color: Neutral ── */
+  --gray-50:  #fafafa;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-300: #d4d4d8;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
+  --gray-800: #27272a;
+  --gray-900: #18181b;
+  --gray-950: #09090b;
+
+  /* ── Color: Brand Blue ── */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+
+  /* ── Color: Accent Purple ── */
+  --purple-50:  #faf5ff;
+  --purple-100: #f3e8ff;
+  --purple-400: #c084fc;
+  --purple-500: #a855f7;
+  --purple-600: #9333ea;
+  --purple-700: #7c3aed;
+
+  /* ── Semantic ── */
+  --green-500: #10b981;
+  --green-600: #059669;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --red-500:   #ef4444;
+  --red-600:   #dc2626;
+
+  /* ── Theme: Light (default) ── */
+  --bg:          var(--gray-50);
+  --bg-subtle:   var(--gray-100);
+  --surface:     #ffffff;
+  --surface-hover: var(--gray-50);
+  --border:      var(--gray-200);
+  --border-subtle: var(--gray-100);
+  --text:        var(--gray-900);
+  --text-2:      var(--gray-600);
+  --text-3:      var(--gray-400);
+  --primary:     var(--blue-600);
+  --primary-hover: var(--blue-700);
+  --primary-light: var(--blue-50);
+  --accent:      var(--purple-600);
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.04);
+  --shadow:      0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:   0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:   0 12px 32px rgba(0,0,0,.12);
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --fs-xs:  12px;
+  --fs-sm:  13px;
+  --fs-base:14px;
+  --fs-md:  15px;
+  --fs-lg:  17px;
+  --fs-xl:  20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-4xl: 36px;
+
+  /* ── Spacing ── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+
+  /* ── Layout ── */
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+  --topbar-h: 56px;
+  --sidebar-w: 240px;
+  --content-max: 1280px;
+  --transition: .18s cubic-bezier(.4,0,.2,1);
+  --transition-slow: .3s cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="dark"]{
+  --bg:          var(--gray-950);
+  --bg-subtle:   var(--gray-900);
+  --surface:     var(--gray-900);
+  --surface-hover: var(--gray-800);
+  --border:      var(--gray-800);
+  --border-subtle: var(--gray-800);
+  --text:        var(--gray-50);
+  --text-2:      var(--gray-400);
+  --text-3:      var(--gray-500);
+  --primary:     var(--blue-400);
+  --primary-hover: var(--blue-300);
+  --primary-light: rgba(59,130,246,.12);
+  --accent:      var(--purple-400);
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.2);
+  --shadow:      0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:   0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg:   0 12px 32px rgba(0,0,0,.5);
+}
+
+/* ═════ Reset ═════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);
+  font-size:var(--fs-base);
+  line-height:1.6;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  transition:background var(--transition),color var(--transition);
+}
+
+/* ═════ Top Bar ═════ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  height:var(--topbar-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 var(--sp-6);
+  gap:var(--sp-4);
+}
+.topbar .logo{
+  display:flex;align-items:center;gap:var(--sp-2);
+  font-weight:700;font-size:var(--fs-md);color:var(--text);
+  text-decoration:none;white-space:nowrap;
+}
+.topbar .logo-badge{
+  width:28px;height:28px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:13px;flex-shrink:0;
+}
+.topbar .logo span{color:var(--text-3);font-weight:400;font-size:var(--fs-sm)}
+.topbar .search-box{
+  flex:1;max-width:480px;
+  display:flex;align-items:center;gap:var(--sp-2);
+  background:var(--bg-subtle);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:7px var(--sp-3);
+  color:var(--text-3);font-size:var(--fs-sm);
+  cursor:pointer;transition:all var(--transition);
+}
+.topbar .search-box:hover{border-color:var(--primary);background:var(--surface)}
+.topbar .search-box svg{width:16px;height:16px;flex-shrink:0}
+.topbar .search-box .kbd{
+  margin-left:auto;
+  font-family:var(--font-mono);font-size:11px;
+  padding:2px 6px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text-3);
+}
+.topbar .theme-toggle{
+  background:none;border:1px solid var(--border);
+  border-radius:var(--radius);padding:6px 10px;
+  cursor:pointer;color:var(--text-2);font-size:16px;
+  transition:all var(--transition);display:flex;align-items:center;
+}
+.topbar .theme-toggle:hover{border-color:var(--primary);color:var(--primary)}
+.topbar .spacer{flex:1}
+
+/* ═════ Layout ═════ */
+.page-layout{display:flex;min-height:calc(100vh - var(--topbar-h))}
+.side-nav{
+  width:220px;flex-shrink:0;
+  border-right:1px solid var(--border);
+  padding:var(--sp-5) var(--sp-4);
+  position:sticky;top:var(--topbar-h);
+  height:calc(100vh - var(--topbar-h));
+  overflow-y:auto;
+}
+.side-nav a{
+  display:block;padding:6px var(--sp-3);
+  font-size:var(--fs-sm);color:var(--text-2);
+  text-decoration:none;border-radius:var(--radius-sm);
+  transition:all var(--transition);line-height:1.5;
+}
+.side-nav a:hover{background:var(--bg-subtle);color:var(--text)}
+.side-nav a.active{
+  background:var(--primary-light);color:var(--primary);
+  font-weight:600;
+}
+.side-nav .nav-label{
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-3);padding:var(--sp-4) var(--sp-3) var(--sp-2);
+}
+
+/* ═════ Content ═════ */
+.content{flex:1;padding:var(--sp-10) var(--sp-8);max-width:960px}
+.section{margin-bottom:var(--sp-16)}
+.section-anchor{scroll-margin-top:calc(var(--topbar-h) + var(--sp-4))}
+
+/* ── Headings ── */
+.eyebrow{
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--primary);font-weight:600;
+  text-transform:uppercase;letter-spacing:.05em;
+  margin-bottom:var(--sp-2);
+}
+h2.section-title{
+  font-size:var(--fs-2xl);font-weight:700;
+  letter-spacing:-.02em;margin-bottom:var(--sp-2);
+}
+.section-desc{
+  color:var(--text-2);font-size:var(--fs-md);
+  line-height:1.7;margin-bottom:var(--sp-6);
+  max-width:680px;
+}
+h3.sub-title{
+  font-size:var(--fs-lg);font-weight:600;
+  margin-top:var(--sp-8);margin-bottom:var(--sp-3);
+}
+
+/* ── Spec card ── */
+.spec-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  overflow:hidden;
+  margin-bottom:var(--sp-4);
+}
+.spec-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--sp-3) var(--sp-4);
+  border-bottom:1px solid var(--border-subtle);
+  background:var(--bg-subtle);
+}
+.spec-header .label{font-weight:600;font-size:var(--fs-sm)}
+.spec-header .tag{
+  font-family:var(--font-mono);font-size:11px;
+  padding:2px 8px;border-radius:var(--radius-full);
+  background:var(--primary-light);color:var(--primary);
+}
+.spec-body{padding:var(--sp-4)}
+.spec-note{
+  font-size:var(--fs-xs);color:var(--text-3);
+  margin-top:var(--sp-2);font-family:var(--font-mono);
+}
+
+/* ── Color swatches ── */
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--sp-3)}
+.swatch{
+  border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);
+}
+.swatch .chip{height:64px;position:relative}
+.swatch .info{padding:var(--sp-2) var(--sp-3)}
+.swatch .name{font-size:var(--fs-xs);font-weight:600}
+.swatch .hex{font-size:11px;color:var(--text-3);font-family:var(--font-mono)}
+
+/* ── Typography specimens ── */
+.type-spec{padding:var(--sp-4) 0;border-bottom:1px solid var(--border-subtle)}
+.type-spec:last-child{border-bottom:none}
+.type-spec .meta{display:flex;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-2)}
+.type-spec .name{font-weight:600;font-size:var(--fs-sm)}
+.type-spec .val{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-3)}
+
+/* ── Spacing scale ── */
+.space-row{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-2) 0}
+.space-row .bar{background:var(--primary);border-radius:2px;height:16px;flex-shrink:0}
+.space-row .label{font-size:var(--fs-sm);min-width:80px;font-weight:600}
+.space-row .px{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-3)}
+
+/* ── Component preview ── */
+.preview-row{
+  display:flex;align-items:center;gap:var(--sp-3);
+  flex-wrap:wrap;padding:var(--sp-4);
+}
+.preview-row.col{flex-direction:column;align-items:stretch;gap:var(--sp-3)}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--font-sans);font-weight:600;font-size:var(--fs-sm);
+  padding:7px 14px;border-radius:var(--radius);
+  border:1px solid transparent;cursor:pointer;
+  transition:all var(--transition);text-decoration:none;
+  line-height:1.4;white-space:nowrap;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary);background:var(--surface-hover)}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent}
+.btn-ghost:hover{background:var(--bg-subtle);color:var(--text)}
+.btn-icon{padding:7px;width:34px;height:34px}
+.btn-sm{padding:4px 10px;font-size:var(--fs-xs)}
+.btn-lg{padding:10px 20px;font-size:var(--fs-md)}
+.btn:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* ── Tags ── */
+.tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:var(--radius-full);
+  line-height:1.5;
+}
+.tag-blue{background:var(--blue-50);color:var(--blue-700)}
+.tag-purple{background:var(--purple-50);color:var(--purple-700)}
+.tag-green{background:#ecfdf5;color:var(--green-600)}
+.tag-amber{background:#fffbeb;color:var(--amber-600)}
+.tag-red{background:#fef2f2;color:var(--red-600)}
+.tag-gray{background:var(--gray-100);color:var(--gray-600)}
+
+[data-theme="dark"] .tag-blue{background:rgba(59,130,246,.15);color:var(--blue-300)}
+[data-theme="dark"] .tag-purple{background:rgba(168,85,247,.15);color:var(--purple-400)}
+[data-theme="dark"] .tag-green{background:rgba(16,185,129,.15);color:var(--green-500)}
+[data-theme="dark"] .tag-amber{background:rgba(245,158,11,.15);color:var(--amber-500)}
+[data-theme="dark"] .tag-red{background:rgba(239,68,68,.15);color:var(--red-500)}
+[data-theme="dark"] .tag-gray{background:var(--gray-800);color:var(--gray-400)}
+
+/* ── Tutorial Card (key component) ── */
+.tut-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:var(--sp-4);
+  display:flex;flex-direction:column;gap:var(--sp-2);
+  cursor:pointer;text-decoration:none;color:inherit;
+  transition:all var(--transition);
+  position:relative;
+}
+.tut-card:hover{
+  border-color:var(--primary);
+  box-shadow:var(--shadow-md);
+  transform:translateY(-2px);
+}
+.tut-card .card-top{display:flex;align-items:center;gap:var(--sp-2)}
+.tut-card .card-icon{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.tut-card h4{font-size:var(--fs-sm);font-weight:600;line-height:1.4}
+.tut-card p{font-size:var(--fs-xs);color:var(--text-2);line-height:1.5}
+.tut-card .card-meta{
+  display:flex;align-items:center;gap:var(--sp-3);
+  margin-top:auto;padding-top:var(--sp-2);
+  border-top:1px solid var(--border-subtle);
+  font-size:11px;color:var(--text-3);font-family:var(--font-mono);
+}
+.tut-card .card-meta span{display:flex;align-items:center;gap:3px}
+.tut-card .card-tags{display:flex;gap:4px;flex-wrap:wrap}
+
+/* ── Sidebar nav item ── */
+.nav-item-demo{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:7px var(--sp-3);border-radius:var(--radius-sm);
+  font-size:var(--fs-sm);color:var(--text-2);
+  cursor:pointer;transition:all var(--transition);
+  text-decoration:none;border-left:2px solid transparent;
+  margin:1px 0;
+}
+.nav-item-demo:hover{background:var(--bg-subtle);color:var(--text)}
+.nav-item-demo.active{
+  background:var(--primary-light);color:var(--primary);
+  font-weight:600;border-left-color:var(--primary);
+}
+.nav-item-demo .nav-icon{
+  width:18px;height:18px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-item-demo .nav-new{
+  margin-left:auto;font-size:10px;font-weight:700;
+  padding:1px 6px;border-radius:var(--radius-full);
+  background:var(--green-500);color:#fff;
+}
+
+/* ── Code block ── */
+.code-block{
+  background:var(--gray-950);
+  border-radius:var(--radius);
+  padding:var(--sp-4);
+  overflow-x:auto;
+  margin:var(--sp-3) 0;
+}
+[data-theme="dark"] .code-block{background:var(--gray-950);border:1px solid var(--gray-800)}
+.code-block code{
+  font-family:var(--font-mono);
+  font-size:var(--fs-xs);
+  color:var(--gray-100);
+  line-height:1.7;
+}
+.code-block .ck{color:#93c5fd}    /* keyword */
+.code-block .cv{color:#c4b5fd}    /* value */
+.code-block .cc{color:#6ee7b7}    /* comment */
+.code-block .cp{color:#f9a8d4}    /* property */
+
+/* ── Annotation badge ── */
+.anno{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;
+  padding:2px 7px;border-radius:var(--radius-sm);
+  background:#fffbeb;color:var(--amber-600);
+  border:1px solid #fde68a;
+}
+[data-theme="dark"] .anno{background:rgba(245,158,11,.12);color:var(--amber-500);border-color:rgba(245,158,11,.3)}
+
+/* ── Comparison table ── */
+.compare-table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+.compare-table th,.compare-table td{
+  text-align:left;padding:var(--sp-2) var(--sp-3);
+  border-bottom:1px solid var(--border-subtle);
+}
+.compare-table th{
+  font-weight:600;color:var(--text-2);
+  font-size:var(--fs-xs);text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.compare-table td:first-child{font-weight:600}
+
+/* ── BP / IP cards ── */
+.bp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--sp-3)}
+.bp-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:var(--sp-4);
+}
+.bp-card .bp-label{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;margin-bottom:var(--sp-2);
+}
+.bp-card.do .bp-label{color:var(--green-600)}
+.bp-card.dont .bp-label{color:var(--red-600)}
+.bp-card p{font-size:var(--fs-sm);color:var(--text-2);line-height:1.6}
+
+/* ── Breakpoint diagram ── */
+.bp-diagram{display:flex;flex-direction:column;gap:var(--sp-2)}
+.bp-bar{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-2) var(--sp-3);
+  background:var(--bg-subtle);border-radius:var(--radius);
+}
+.bp-bar .bp-name{font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:600;min-width:80px}
+.bp-bar .bp-range{font-size:var(--fs-xs);color:var(--text-3);font-family:var(--font-mono)}
+.bp-bar .bp-track{
+  flex:1;height:8px;background:var(--border);border-radius:4px;
+  position:relative;overflow:hidden;
+}
+.bp-bar .bp-fill{
+  position:absolute;top:0;bottom:0;
+  background:linear-gradient(90deg,var(--blue-500),var(--purple-500));
+  border-radius:4px;
+}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .side-nav{display:none}
+  .content{padding:var(--sp-6) var(--sp-4)}
+}
+
+/* ── Misc ── */
+.divider{height:1px;background:var(--border);margin:var(--sp-6) 0}
+.callout{
+  background:var(--primary-light);
+  border:1px solid var(--blue-200);
+  border-radius:var(--radius-md);
+  padding:var(--sp-3) var(--sp-4);
+  font-size:var(--fs-sm);color:var(--text);
+  display:flex;gap:var(--sp-2);align-items:flex-start;
+  margin:var(--sp-4) 0;
+}
+[data-theme="dark"] .callout{border-color:rgba(59,130,246,.3)}
+.callout svg{width:18px;height:18px;flex-shrink:0;color:var(--primary);margin-top:1px}
+
+/* ═════ Reduced Motion ═════ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ TOPBAR ═══════════ -->
+<header class="topbar">
+  <a href="#" class="logo">
+    <span class="logo-badge">D</span>
+    DevPortal <span>· Design System v2.0</span>
+  </a>
+  <div class="search-box" onclick="document.getElementById('interaction').scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer" title="查看交互模式">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="m11 11 3 3"/></svg>
+    <span>搜索设计规范…</span>
+    <span class="kbd">⌘K</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">
+    <span id="themeIcon">🌙</span>
+  </button>
+</header>
+
+<!-- ═══════════ LAYOUT ═══════════ -->
+<div class="page-layout">
+
+  <!-- ═════ SIDENAV ═════ -->
+  <nav class="side-nav">
+    <div class="nav-label">设计系统</div>
+    <a href="#philosophy" class="active">设计理念</a>
+    <a href="#colors">色彩系统</a>
+    <a href="#typography">字体系统</a>
+    <a href="#spacing">间距系统</a>
+    <a href="#components">组件库</a>
+    <div class="nav-label">布局与交互</div>
+    <a href="#layout">页面布局</a>
+    <a href="#interaction">交互模式</a>
+    <a href="#responsive">响应式策略</a>
+    <div class="nav-label">工程交接</div>
+    <a href="#accessibility">无障碍标准</a>
+    <a href="#handoff">开发标注</a>
+    <a href="#changelog">改进对比</a>
+  </nav>
+
+  <!-- ═════ CONTENT ═════ -->
+  <main class="content">
+
+    <!-- ════ 1. Philosophy ════ -->
+    <section class="section section-anchor" id="philosophy">
+      <div class="eyebrow">DESIGN PHILOSOPHY</div>
+      <h2 class="section-title">设计理念：开发者优先</h2>
+      <p class="section-desc">
+        DevPortal 2.0 采用 <strong>「开发者优先」</strong>的设计语言，参考 Linear、Vercel、GitHub 等一线开发者工具的视觉风格。
+        核心原则：<strong>高信息密度</strong>、<strong>低视觉噪音</strong>、<strong>键盘可操作</strong>、<strong>暗色原生</strong>。
+        目标是让 5 年+经验的开发者用户在 3 秒内找到目标教程。
+      </p>
+      <div class="bp-grid">
+        <div class="bp-card do">
+          <div class="bp-label">✓ 设计原则</div>
+          <p><strong>信息密度优先</strong>：紧凑布局，减少空白浪费，单屏可见更多内容</p>
+        </div>
+        <div class="bp-card do">
+          <div class="bp-label">✓ 设计原则</div>
+          <p><strong>键盘驱动</strong>：Cmd+K 搜索、方向键导航、Esc 返回，全键盘可达</p>
+        </div>
+        <div class="bp-card do">
+          <div class="bp-label">✓ 设计原则</div>
+          <p><strong>暗色原生</strong>：深色模式不是附属功能，而是与浅色同等优先的一等公民</p>
+        </div>
+        <div class="bp-card do">
+          <div class="bp-label">✓ 设计原则</div>
+          <p><strong>专业图标系统</strong>：统一 SVG 线条图标，弃用 emoji，保持视觉一致性</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 2. Colors ════ -->
+    <section class="section section-anchor" id="colors">
+      <div class="eyebrow">COLOR SYSTEM</div>
+      <h2 class="section-title">色彩系统</h2>
+      <p class="section-desc">
+        采用 <strong>Zinc 灰阶 + Blue 主色 + Purple 点缀</strong> 的三层色彩体系。
+        所有颜色通过 CSS 变量定义，支持明暗双主题无缝切换。
+        色彩对比度全部满足 WCAG AA 标准（正文 4.5:1，大字 3:1）。
+      </p>
+
+      <h3 class="sub-title">中性色 · Zinc 灰阶</h3>
+      <div class="color-grid" id="grayScale"></div>
+
+      <h3 class="sub-title">品牌主色 · Blue</h3>
+      <div class="color-grid" id="blueScale"></div>
+
+      <h3 class="sub-title">强调色 · Purple</h3>
+      <div class="color-grid" id="purpleScale"></div>
+
+      <h3 class="sub-title">语义色</h3>
+      <div class="color-grid">
+        <div class="swatch"><div class="chip" style="background:#10b981"></div><div class="info"><div class="name">Success</div><div class="hex">#10b981</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#f59e0b"></div><div class="info"><div class="name">Warning</div><div class="hex">#f59e0b</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#ef4444"></div><div class="info"><div class="name">Error</div><div class="hex">#ef4444</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#2563eb"></div><div class="info"><div class="name">Info</div><div class="hex">#2563eb</div></div></div>
+      </div>
+
+      <h3 class="sub-title">语义映射 · CSS 变量</h3>
+      <div class="code-block"><code><span class="cc">/* Light theme (default) */</span>
+<span class="cp">--bg</span>:          <span class="cv">#fafafa</span>;  <span class="cc">/* 页面背景 */</span>
+<span class="cp">--surface</span>:     <span class="cv">#ffffff</span>;  <span class="cc">/* 卡片/面板背景 */</span>
+<span class="cp">--border</span>:      <span class="cv">#e4e4e7</span>;  <span class="cc">/* 边框 */</span>
+<span class="cp">--text</span>:        <span class="cv">#18181b</span>;  <span class="cc">/* 主文字 */</span>
+<span class="cp">--text-2</span>:      <span class="cv">#52525b</span>;  <span class="cc">/* 次要文字 */</span>
+<span class="cp">--text-3</span>:      <span class="cv">#a1a1aa</span>;  <span class="cc">/* 辅助文字 */</span>
+<span class="cp">--primary</span>:     <span class="cv">#2563eb</span>;  <span class="cc">/* 品牌蓝 */</span>
+
+<span class="cc">/* Dark theme */</span>
+<span class="cp">--bg</span>:          <span class="cv">#09090b</span>;
+<span class="cp">--surface</span>:     <span class="cv">#18181b</span>;
+<span class="cp">--border</span>:      <span class="cv">#27272a</span>;
+<span class="cp">--text</span>:        <span class="cv">#fafafa</span>;
+<span class="cp">--text-2</span>:      <span class="cv">#a1a1aa</span>;
+<span class="cp">--text-3</span>:      <span class="cv">#71717a</span>;
+<span class="cp">--primary</span>:     <span class="cv">#60a5fa</span>;  <span class="cc">/* 暗色下蓝色提亮 */</span></code></div>
+      <div class="spec-note">↳ 所有颜色必须通过 CSS 变量引用，禁止硬编码 hex 值</div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 3. Typography ════ -->
+    <section class="section section-anchor" id="typography">
+      <div class="eyebrow">TYPOGRAPHY</div>
+      <h2 class="section-title">字体系统</h2>
+      <p class="section-desc">
+        双字体体系：<strong>Inter</strong>（正文/UI） + <strong>JetBrains Mono</strong>（代码/数据）。
+        字号采用 <strong>14px 基准</strong>，比传统 16px 更紧凑，适合开发者的高密度信息阅读习惯。
+        字重控制在 400/600/700 三档，避免视觉碎片化。
+      </p>
+
+      <div class="spec-block">
+        <div class="spec-header"><span class="label">字体族</span><span class="tag">font-family</span></div>
+        <div class="spec-body">
+          <div class="type-spec">
+            <div class="meta"><span class="name">Sans · 正文与 UI</span><span class="val">--font-sans</span></div>
+            <div style="font-family:var(--font-sans);font-size:24px;font-weight:700">Frontend Learning Hub</div>
+            <div style="font-family:var(--font-sans);font-size:14px;color:var(--text-2);margin-top:4px">'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif</div>
+          </div>
+          <div class="type-spec">
+            <div class="meta"><span class="name">Mono · 代码与数据</span><span class="val">--font-mono</span></div>
+            <div style="font-family:var(--font-mono);font-size:20px;font-weight:600">const dev = true;</div>
+            <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-2);margin-top:4px">'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-block">
+        <div class="spec-header"><span class="label">字号阶梯</span><span class="tag">9 级</span></div>
+        <div class="spec-body">
+          <div class="type-spec"><div class="meta"><span class="name">Display</span><span class="val">36px / 700 / 1.2</span></div><div style="font-size:36px;font-weight:700;letter-spacing:-.02em">Display Heading</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">H1</span><span class="val">30px / 700 / 1.3</span></div><div style="font-size:30px;font-weight:700;letter-spacing:-.02em">Page Title</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">H2</span><span class="val">24px / 700 / 1.35</span></div><div style="font-size:24px;font-weight:700">Section Title</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">H3</span><span class="val">20px / 600 / 1.4</span></div><div style="font-size:20px;font-weight:600">Subsection Title</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">Body LG</span><span class="val">17px / 400 / 1.6</span></div><div style="font-size:17px">Large body text for lead paragraphs and important content.</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">Body</span><span class="val">14px / 400 / 1.6</span></div><div style="font-size:14px">Default body text used across the entire interface.</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">Small</span><span class="val">13px / 400 / 1.5</span></div><div style="font-size:13px">Small text for secondary information and metadata.</div></div>
+          <div class="type-spec"><div class="meta"><span class="name">Caption</span><span class="val">12px / 400 / 1.5</span></div><div style="font-size:12px;color:var(--text-3)">Caption text for annotations and micro-labels.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 4. Spacing ════ -->
+    <section class="section section-anchor" id="spacing">
+      <div class="eyebrow">SPACING SYSTEM</div>
+      <h2 class="section-title">间距系统</h2>
+      <p class="section-desc">
+        基于 <strong>4px 基准单位</strong>的数学比例间距系统。
+        所有间距（padding、margin、gap）必须使用 spacing token，确保全站视觉节奏一致。
+      </p>
+      <div class="spec-block">
+        <div class="spec-body">
+          <div class="space-row"><span class="label">--sp-1</span><div class="bar" style="width:4px"></div><span class="px">4px</span></div>
+          <div class="space-row"><span class="label">--sp-2</span><div class="bar" style="width:8px"></div><span class="px">8px</span></div>
+          <div class="space-row"><span class="label">--sp-3</span><div class="bar" style="width:12px"></div><span class="px">12px</span></div>
+          <div class="space-row"><span class="label">--sp-4</span><div class="bar" style="width:16px"></div><span class="px">16px</span></div>
+          <div class="space-row"><span class="label">--sp-5</span><div class="bar" style="width:20px"></div><span class="px">20px</span></div>
+          <div class="space-row"><span class="label">--sp-6</span><div class="bar" style="width:24px"></div><span class="px">24px</span></div>
+          <div class="space-row"><span class="label">--sp-8</span><div class="bar" style="width:32px"></div><span class="px">32px</span></div>
+          <div class="space-row"><span class="label">--sp-10</span><div class="bar" style="width:40px"></div><span class="px">40px</span></div>
+          <div class="space-row"><span class="label">--sp-12</span><div class="bar" style="width:48px"></div><span class="px">48px</span></div>
+          <div class="space-row"><span class="label">--sp-16</span><div class="bar" style="width:64px"></div><span class="px">64px</span></div>
+        </div>
+      </div>
+      <div class="callout">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l2 2"/></svg>
+        <div><strong>使用规范</strong>：组件内部用 --sp-1~--sp-4；组件间距用 --sp-4~--sp-8；区块间距用 --sp-8~--sp-16。禁止使用 5px、7px、10px 等非 token 值。</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 5. Components ════ -->
+    <section class="section section-anchor" id="components">
+      <div class="eyebrow">COMPONENT LIBRARY</div>
+      <h2 class="section-title">组件库规范</h2>
+      <p class="section-desc">
+        组件采用 BEM 命名规范，统一通过 CSS 变量驱动样式。
+        每个组件均包含完整状态：default / hover / active / focus / disabled。
+        所有交互组件满足 44px 最小触控区域和键盘可达性。
+      </p>
+
+      <!-- Buttons -->
+      <h3 class="sub-title">按钮 · Button <span class="anno">3 变体 × 3 尺寸</span></h3>
+      <div class="spec-block">
+        <div class="spec-body">
+          <div class="preview-row">
+            <button class="btn btn-primary">Primary</button>
+            <button class="btn btn-secondary">Secondary</button>
+            <button class="btn btn-ghost">Ghost</button>
+            <button class="btn btn-primary" disabled>Disabled</button>
+          </div>
+          <div class="preview-row">
+            <button class="btn btn-primary btn-sm">Small</button>
+            <button class="btn btn-primary">Default</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+          </div>
+          <div class="preview-row">
+            <button class="btn btn-secondary btn-icon" title="设置">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2m0 10v2m5.7-12.7-1.4 1.4m-8.6 8.6-1.4 1.4M15 8h-2M3 8H1m12.7 5.7-1.4-1.4M3.7 3.7 2.3 2.3"/></svg>
+            </button>
+            <button class="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+              新建教程
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="spec-note">↳ padding: 7px 14px | border-radius: 8px | font-weight: 600 | transition: .18s | focus-visible: 2px solid primary</div>
+
+      <!-- Tags -->
+      <h3 class="sub-title">标签 · Tag <span class="anno">6 色系</span></h3>
+      <div class="spec-block">
+        <div class="spec-body">
+          <div class="preview-row">
+            <span class="tag tag-blue">AI 智能体</span>
+            <span class="tag tag-purple">RAG</span>
+            <span class="tag tag-green">NEW</span>
+            <span class="tag tag-amber">进阶</span>
+            <span class="tag tag-red">重要</span>
+            <span class="tag tag-gray">Python</span>
+          </div>
+        </div>
+      </div>
+      <div class="spec-note">↳ font-size: 11px | padding: 2px 8px | border-radius: 9999px | font-weight: 600</div>
+
+      <!-- Tutorial Card -->
+      <h3 class="sub-title">教程卡片 · Tutorial Card <span class="anno">核心组件</span></h3>
+      <div class="spec-block">
+        <div class="spec-header"><span class="label">卡片结构标注</span><span class="tag">key component</span></div>
+        <div class="spec-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+            <a class="tut-card" href="#">
+              <div class="card-top">
+                <div class="card-icon" style="background:#ede9fe;color:#7c3aed">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 9h14M9 3v14"/></svg>
+                </div>
+                <h4>RAG 检索增强生成全指南</h4>
+              </div>
+              <p>RAG 原理与架构图解 · 嵌入模型 · Chunk 分割 · 混合检索 · 重排序机制 · 8 大优化策略对比</p>
+              <div class="card-tags">
+                <span class="tag tag-purple">RAG</span>
+                <span class="tag tag-amber">进阶</span>
+              </div>
+              <div class="card-meta">
+                <span>⏱ 25min</span>
+                <span>📊 1.2K</span>
+                <span>📅 2026.07</span>
+              </div>
+            </a>
+            <a class="tut-card" href="#">
+              <div class="card-top">
+                <div class="card-icon" style="background:#dbeafe;color:#2563eb">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2 3 7l7 5 7-5-7-5z"/><path d="M3 12l7 5 7-5"/></svg>
+                </div>
+                <h4>LangChain 深入学习教程</h4>
+              </div>
+              <p>六大核心组件详解 · LCEL 现代写法 · RAG 全流程实战 · Agent 开发 · 10 个高频踩坑点</p>
+              <div class="card-tags">
+                <span class="tag tag-blue">LangChain</span>
+                <span class="tag tag-green">NEW</span>
+              </div>
+              <div class="card-meta">
+                <span>⏱ 30min</span>
+                <span>📊 890</span>
+                <span>📅 2026.07</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="spec-note">↳ card-icon: 32×32 | padding: 16px | gap: 8px | hover: border→primary + shadow-md + translateY(-2px) | card-meta: mono 11px</div>
+
+      <!-- Sidebar Nav Item -->
+      <h3 class="sub-title">侧边栏导航项 · Nav Item <span class="anno">3 状态</span></h3>
+      <div class="spec-block">
+        <div class="spec-body" style="max-width:240px">
+          <a class="nav-item-demo" href="#">
+            <span class="nav-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+            </span>
+            Default 状态
+          </a>
+          <a class="nav-item-demo" href="#">
+            <span class="nav-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2 2"/></svg>
+            </span>
+            Hover 状态
+          </a>
+          <a class="nav-item-demo active" href="#">
+            <span class="nav-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8l4 4 8-8"/></svg>
+            </span>
+            Active 状态
+            <span class="nav-new">NEW</span>
+          </a>
+        </div>
+      </div>
+      <div class="spec-note">↳ padding: 7px 12px | margin: 1px 0 | border-radius: 6px | border-left: 2px transparent→primary | font-size: 13px</div>
+
+      <!-- Search bar -->
+      <h3 class="sub-title">搜索框 · Search Bar <span class="anno">顶栏核心</span></h3>
+      <div class="spec-block">
+        <div class="spec-body">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px;padding:7px 12px;max-width:480px;color:var(--text-3);font-size:13px;cursor:pointer">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="m11 11 3 3"/></svg>
+            <span>搜索 47 个教程…</span>
+            <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px;padding:2px 6px;border-radius:6px;background:var(--surface);border:1px solid var(--border)">⌘K</span>
+          </div>
+        </div>
+      </div>
+      <div class="spec-note">↳ max-width: 480px | height: 34px | border-radius: 8px | flex:1 (占满顶栏剩余空间) | kbd badge 右对齐</div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 6. Layout ════ -->
+    <section class="section section-anchor" id="layout">
+      <div class="eyebrow">LAYOUT STRUCTURE</div>
+      <h2 class="section-title">页面布局结构</h2>
+      <p class="section-desc">
+        三栏式布局：<strong>顶栏（56px）</strong> + <strong>侧边栏（240px）</strong> + <strong>主内容区（弹性）</strong>。
+        顶栏放置全局搜索和主题切换，侧边栏放置分类导航，主内容区按分类区块组织卡片网格。
+      </p>
+      <div class="callout">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="14" height="3" rx="1"/><rect x="2" y="6" width="4" height="10" rx="1"/><rect x="7" y="6" width="9" height="10" rx="1"/></svg>
+        <div><strong>布局变更</strong>：侧边栏从 250px→240px（更紧凑）；顶栏从 54px→56px（容纳搜索框）；首页从居中 Hero 改为左对齐信息流，提升信息密度。</div>
+      </div>
+      <div class="code-block"><code><span class="cc">/* 布局尺寸 token */</span>
+<span class="cp">--topbar-h</span>:   <span class="cv">56px</span>;   <span class="cc">/* 顶栏高度 */</span>
+<span class="cp">--sidebar-w</span>:  <span class="cv">240px</span>;  <span class="cc">/* 侧边栏宽度 */</span>
+<span class="cp">--content-max</span>: <span class="cv">1280px</span>; <span class="cc">/* 内容区最大宽度 */</span>
+
+<span class="cc">/* 顶栏布局 */</span>
+<span class="ck">.topbar</span> {
+  <span class="cp">height</span>: <span class="cv">var(--topbar-h)</span>;
+  <span class="cp">display</span>: <span class="cv">flex</span>;
+  <span class="cp">align-items</span>: <span class="cv">center</span>;
+  <span class="cp">gap</span>: <span class="cv">var(--sp-4)</span>;
+  <span class="cp">padding</span>: <span class="cv">0 var(--sp-6)</span>;
+}
+
+<span class="cc">/* 三栏弹性布局 */</span>
+<span class="ck">.page-layout</span> { <span class="cp">display</span>: <span class="cv">flex</span>; }
+<span class="ck">.side-nav</span>   { <span class="cp">width</span>: <span class="cv">var(--sidebar-w)</span>; <span class="cp">flex-shrink</span>: <span class="cv">0</span>; }
+<span class="ck">.content</span>    { <span class="cp">flex</span>: <span class="cv">1</span>; <span class="cp">max-width</span>: <span class="cv">var(--content-max)</span>; }</code></div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 7. Interaction ════ -->
+    <section class="section section-anchor" id="interaction">
+      <div class="eyebrow">INTERACTION PATTERNS</div>
+      <h2 class="section-title">交互流程设计</h2>
+      <p class="section-desc">
+        核心交互围绕<strong>「搜索 → 浏览 → 进入」</strong>三步路径设计。
+        新增 Cmd+K 命令面板、键盘方向键导航、主题快速切换三大交互能力。
+      </p>
+
+      <table class="compare-table">
+        <thead><tr><th>场景</th><th>触发方式</th><th>反馈</th></tr></thead>
+        <tbody>
+          <tr><td>全局搜索</td><td>⌘K / 点击搜索框</td><td>弹出命令面板，模糊匹配标题+描述+标签</td></tr>
+          <tr><td>键盘导航</td><td>↑↓ 方向键</td><td>在搜索结果/侧边栏间移动焦点</td></tr>
+          <tr><td>进入教程</td><td>Enter / 点击</td><td>iframe 加载，顶栏显示面包屑，加载进度条</td></tr>
+          <tr><td>返回首页</td><td>Esc / 点击 Logo</td><td>回到首页，侧边栏聚焦当前分类</td></tr>
+          <tr><td>主题切换</td><td>点击按钮 / ⇧⌘L</td><td>明暗主题无缝切换，localStorage 持久化</td></tr>
+          <tr><td>侧边栏折叠</td><td>移动端汉堡菜单</td><td>侧边栏滑入，遮罩层出现</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-title">命令面板 · Command Palette <span class="anno">新增</span></h3>
+      <div class="callout">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4h8M5 9h8M5 14h5"/><circle cx="2" cy="4" r=".5" fill="currentColor"/><circle cx="2" cy="9" r=".5" fill="currentColor"/><circle cx="2" cy="14" r=".5" fill="currentColor"/></svg>
+        <div><strong>核心交互</strong>：⌘K 打开 → 输入关键词 → ↑↓ 选择 → Enter 进入。支持分类前缀过滤（如输入 "ai" 只显示 AI 分类）。ESC 关闭。</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 8. Responsive ════ -->
+    <section class="section section-anchor" id="responsive">
+      <div class="eyebrow">RESPONSIVE STRATEGY</div>
+      <h2 class="section-title">响应式适配策略</h2>
+      <p class="section-desc">
+        采用 <strong>Mobile-First</strong> + <strong>Desktop-First</strong> 混合策略：
+        桌面端优先设计（主要用户群体），移动端做降级适配。
+        四个断点覆盖从手机到大屏全部场景。
+      </p>
+
+      <div class="bp-diagram">
+        <div class="bp-bar">
+          <span class="bp-name">Mobile</span>
+          <div class="bp-track"><div class="bp-fill" style="left:0;width:34%"></div></div>
+          <span class="bp-range">320–767px</span>
+        </div>
+        <div class="bp-bar">
+          <span class="bp-name">Tablet</span>
+          <div class="bp-track"><div class="bp-fill" style="left:34%;width:21%"></div></div>
+          <span class="bp-range">768–1023px</span>
+        </div>
+        <div class="bp-bar">
+          <span class="bp-name">Desktop</span>
+          <div class="bp-track"><div class="bp-fill" style="left:55%;width:26%"></div></div>
+          <span class="bp-range">1024–1439px</span>
+        </div>
+        <div class="bp-bar">
+          <span class="bp-name">Wide</span>
+          <div class="bp-track"><div class="bp-fill" style="left:81%;width:19%"></div></div>
+          <span class="bp-range">1440px+</span>
+        </div>
+      </div>
+
+      <table class="compare-table">
+        <thead><tr><th>断点</th><th>宽度</th><th>布局变化</th><th>卡片列数</th></tr></thead>
+        <tbody>
+          <tr><td>Mobile</td><td>320–767px</td><td>侧边栏隐藏→汉堡菜单；单列卡片</td><td>1</td></tr>
+          <tr><td>Tablet</td><td>768–1023px</td><td>侧边栏可折叠；双列卡片</td><td>2</td></tr>
+          <tr><td>Desktop</td><td>1024–1439px</td><td>侧边栏固定；三列卡片</td><td>3</td></tr>
+          <tr><td>Wide</td><td>1440px+</td><td>内容区 max-width 1280px 居中；四列卡片</td><td>4</td></tr>
+        </tbody>
+      </table>
+      <div class="spec-note">↳ 卡片网格: grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))</div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 9. Accessibility ════ -->
+    <section class="section section-anchor" id="accessibility">
+      <div class="eyebrow">ACCESSIBILITY</div>
+      <h2 class="section-title">无障碍标准</h2>
+      <p class="section-desc">全面遵循 WCAG 2.1 AA 标准，确保所有用户均可高效使用。</p>
+      <div class="bp-grid">
+        <div class="bp-card do"><div class="bp-label">色彩对比</div><p>正文 ≥4.5:1，大字 ≥3:1。明暗模式均通过验证。</p></div>
+        <div class="bp-card do"><div class="bp-label">键盘可达</div><p>所有交互组件可通过 Tab 键访问，焦点环清晰可见。</p></div>
+        <div class="bp-card do"><div class="bp-label">触控目标</div><p>移动端可交互元素 ≥44×44px，间距充足防误触。</p></div>
+        <div class="bp-card do"><div class="bp-label">语义化</div><p>使用语义化 HTML 标签 + ARIA 标签，屏幕阅读器友好。</p></div>
+        <div class="bp-card do"><div class="bp-label">动画偏好</div><p>尊重 prefers-reduced-motion，降低动画幅度。</p></div>
+        <div class="bp-card do"><div class="bp-label">文字缩放</div><p>支持浏览器 200% 文字缩放，布局不溢出。</p></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 10. Handoff ════ -->
+    <section class="section section-anchor" id="handoff">
+      <div class="eyebrow">DEVELOPER HANDOFF</div>
+      <h2 class="section-title">开发标注与交接</h2>
+      <p class="section-desc">
+        所有设计 Token 以 CSS 变量形式定义在 <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-subtle);padding:1px 6px;border-radius:4px">:root</code> 中。
+        开发团队可直接复制 <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-subtle);padding:1px 6px;border-radius:4px">:root</code> 块到项目中，所有组件样式引用这些变量即可实现主题切换。
+      </p>
+      <div class="callout">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 7h8m-8 4h5"/><rect x="2" y="3" width="14" height="12" rx="2"/></svg>
+        <div><strong>实施优先级</strong>：① 定义 CSS 变量 → ② 替换硬编码颜色 → ③ 实现顶栏搜索 + Cmd+K → ④ 实现暗色模式 → ⑤ 替换 emoji 为 SVG 图标 → ⑥ 响应式适配</div>
+      </div>
+      <div class="bp-grid">
+        <div class="bp-card"><div class="bp-label" style="color:var(--primary)">📄 设计稿</div><p>homepage-redesign.html — 高保真交互原型，所有组件均可操作预览</p></div>
+        <div class="bp-card"><div class="bp-label" style="color:var(--primary)">📋 Token 清单</div><p>本页 :root 块包含全部 40+ 设计变量，可直接复制使用</p></div>
+        <div class="bp-card"><div class="bp-label" style="color:var(--primary)">🎨 图标库</div><p>统一使用 16px 线条 SVG 图标，stroke-width: 1.5，可从 Lucide / Heroicons 取用</p></div>
+        <div class="bp-card"><div class="bp-label" style="color:var(--primary)">🔧 组件 CSS</div><p>每个组件标注块下方有 spec-note，列出关键尺寸值</p></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════ 11. Changelog ════ -->
+    <section class="section section-anchor" id="changelog">
+      <div class="eyebrow">IMPROVEMENT COMPARISON</div>
+      <h2 class="section-title">改进对比</h2>
+      <p class="section-desc">旧版 vs 新版核心差异一览。</p>
+      <table class="compare-table">
+        <thead><tr><th>维度</th><th>旧版 v1</th><th>新版 v2 (DevPortal)</th></tr></thead>
+        <tbody>
+          <tr><td>顶栏</td><td>Logo + 页标题，无搜索</td><td>Logo + 全局搜索框 + 主题切换 + ⌘K</td></tr>
+          <tr><td>侧边栏</td><td>250px，emoji 图标</td><td>240px，SVG 线条图标，更紧凑</td></tr>
+          <tr><td>首页 Hero</td><td>居中大标题 + 统计数字</td><td>左对齐信息流，统计数字嵌入正文</td></tr>
+          <tr><td>卡片</td><td>300px minmax，大间距</td><td>280px minmax，紧凑间距，含元数据</td></tr>
+          <tr><td>图标</td><td>Emoji（📊⛓️🧩…）</td><td>统一 SVG 线条图标，16px stroke-1.5</td></tr>
+          <tr><td>搜索</td><td>❌ 无</td><td>✅ Cmd+K 命令面板 + 模糊搜索</td></tr>
+          <tr><td>暗色模式</td><td>❌ 无</td><td>✅ 原生支持 + localStorage 持久化</td></tr>
+          <tr><td>键盘操作</td><td>仅 Esc 关侧边栏</td><td>⌘K / ↑↓ / Enter / Esc / ⇧⌘L 全覆盖</td></tr>
+          <tr><td>卡片元数据</td><td>仅标签</td><td>阅读时长 + 浏览量 + 日期 + 难度标签</td></tr>
+          <tr><td>信息密度</td><td>低（大间距、大卡片）</td><td>高（紧凑布局，单屏更多内容）</td></tr>
+          <tr><td>字体</td><td>系统默认 16px</td><td>Inter 14px 基准 + JetBrains Mono</td></tr>
+          <tr><td>色彩体系</td><td>扁平定义</td><td>CSS 变量 Token 系统，明暗双主题</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ═════ Theme Toggle ═════ */
+function toggleTheme(){
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+  try{ localStorage.setItem('devportal-theme', next); }catch(e){}
+}
+
+/* ═════ Init theme from storage ═════ */
+(function(){
+  try{
+    const saved = localStorage.getItem('devportal-theme');
+    if(saved){
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('themeIcon').textContent = saved === 'dark' ? '☀️' : '🌙';
+    }
+  }catch(e){}
+})();
+
+/* ═════ Keyboard shortcuts ═════ */
+document.addEventListener('keydown',(e)=>{
+  // Shift + Cmd/Ctrl + L → toggle theme
+  if((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')){
+    e.preventDefault();
+    toggleTheme();
+  }
+});
+
+/* ═════ Generate color swatches ═════ */
+const scales = {
+  grayScale: [
+    ['50','#fafafa'],['100','#f4f4f5'],['200','#e4e4e7'],['300','#d4d4d8'],
+    ['400','#a1a1aa'],['500','#71717a'],['600','#52525b'],['700','#3f3f46'],
+    ['800','#27272a'],['900','#18181b'],['950','#09090b']
+  ],
+  blueScale: [
+    ['50','#eff6ff'],['100','#dbeafe'],['200','#bfdbfe'],['300','#93c5fd'],
+    ['400','#60a5fa'],['500','#3b82f6'],['600','#2563eb'],['700','#1d4ed8'],
+    ['800','#1e40af'],['900','#1e3a8a']
+  ],
+  purpleScale: [
+    ['50','#faf5ff'],['100','#f3e8ff'],['300','#d8b4fe'],['400','#c084fc'],
+    ['500','#a855f7'],['600','#9333ea'],['700','#7c3aed']
+  ]
+};
+for(const [id, colors] of Object.entries(scales)){
+  const el = document.getElementById(id);
+  if(!el) continue;
+  el.innerHTML = colors.map(([name,hex]) =>
+    `<div class="swatch"><div class="chip" style="background:${hex};border-bottom:1px solid var(--border-subtle)"></div><div class="info"><div class="name">${name}</div><div class="hex">${hex}</div></div></div>`
+  ).join('');
+}
+
+/* ═════ Sidebar active tracking ═════ */
+const navLinks = document.querySelectorAll('.side-nav a');
+const sections = document.querySelectorAll('.section-anchor');
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      navLinks.forEach(l=>l.classList.remove('active'));
+      const link = document.querySelector(`.side-nav a[href="#${entry.target.id}"]`);
+      if(link) link.classList.add('active');
+    }
+  });
+},{rootMargin:'-20% 0px -70% 0px'});
+sections.forEach(s=>observer.observe(s));
+</script>
+
+</body>
+</html>

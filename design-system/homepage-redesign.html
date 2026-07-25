@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevPortal · 教程门户重设计稿 v2.0</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   DevPortal 2.0 Design Tokens
+   ═══════════════════════════════════════════════════ */
+:root{
+  --gray-50:#fafafa;--gray-100:#f4f4f5;--gray-200:#e4e4e7;--gray-300:#d4d4d8;
+  --gray-400:#a1a1aa;--gray-500:#71717a;--gray-600:#52525b;--gray-700:#3f3f46;
+  --gray-800:#27272a;--gray-900:#18181b;--gray-950:#09090b;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;--blue-300:#93c5fd;
+  --blue-400:#60a5fa;--blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;
+  --purple-50:#faf5ff;--purple-100:#f3e8ff;--purple-400:#c084fc;--purple-500:#a855f7;--purple-600:#9333ea;--purple-700:#7c3aed;
+  --green-500:#10b981;--green-600:#059669;
+  --amber-500:#f59e0b;--amber-600:#d97706;
+  --red-500:#ef4444;--red-600:#dc2626;
+  --teal-500:#14b8a6;--cyan-500:#06b6d4;--indigo-500:#6366f1;--rose-500:#f43f5e;--orange-500:#f97316;
+
+  --bg:var(--gray-50);--bg-subtle:var(--gray-100);--surface:#ffffff;--surface-hover:var(--gray-50);
+  --border:var(--gray-200);--border-subtle:var(--gray-100);
+  --text:var(--gray-900);--text-2:var(--gray-600);--text-3:var(--gray-400);
+  --primary:var(--blue-600);--primary-hover:var(--blue-700);--primary-light:var(--blue-50);
+  --accent:var(--purple-600);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 32px rgba(0,0,0,.12);
+
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code','Fira Code','Consolas',monospace;
+  --fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:17px;--fs-xl:20px;--fs-2xl:24px;--fs-3xl:30px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;--sp-10:40px;--sp-12:48px;
+  --radius-sm:6px;--radius:8px;--radius-md:10px;--radius-lg:14px;--radius-full:9999px;
+  --topbar-h:56px;--sidebar-w:240px;--content-max:1280px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);--transition-slow:.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:var(--gray-950);--bg-subtle:var(--gray-900);--surface:var(--gray-900);--surface-hover:var(--gray-800);
+  --border:var(--gray-800);--border-subtle:var(--gray-800);
+  --text:var(--gray-50);--text-2:var(--gray-400);--text-3:var(--gray-500);
+  --primary:var(--blue-400);--primary-hover:var(--blue-300);--primary-light:rgba(59,130,246,.12);
+  --accent:var(--purple-400);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);--shadow:0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:0 4px 12px rgba(0,0,0,.4);--shadow-lg:0 12px 32px rgba(0,0,0,.5);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);font-size:var(--fs-base);line-height:1.6;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background var(--transition),color var(--transition)}
+::selection{background:var(--blue-200);color:var(--blue-900)}
+[data-theme="dark"] ::selection{background:rgba(59,130,246,.3);color:var(--blue-100)}
+a{text-decoration:none;color:inherit}
+
+/* ═════ Scrollbar ═════ */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--gray-400)}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:var(--gray-700)}
+
+/* ═════ TOPBAR ═════ */
+.topbar{
+  position:sticky;top:0;z-index:100;height:var(--topbar-h);
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 var(--sp-6);gap:var(--sp-4);
+  backdrop-filter:saturate(180%) blur(8px);
+}
+.topbar .logo{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:var(--fs-md);color:var(--text);white-space:nowrap;cursor:pointer}
+.topbar .logo-badge{
+  width:28px;height:28px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:13px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.topbar .logo span{color:var(--text-3);font-weight:400;font-size:var(--fs-sm)}
+.topbar .search-trigger{
+  flex:1;max-width:420px;display:flex;align-items:center;gap:var(--sp-2);
+  background:var(--bg-subtle);border:1px solid var(--border);
+  border-radius:var(--radius);padding:7px var(--sp-3);
+  color:var(--text-3);font-size:var(--fs-sm);cursor:pointer;
+  transition:all var(--transition);
+}
+.topbar .search-trigger:hover{border-color:var(--primary);background:var(--surface);box-shadow:var(--shadow-sm)}
+.topbar .search-trigger svg{width:16px;height:16px;flex-shrink:0}
+.topbar .search-trigger .kbd{
+  margin-left:auto;font-family:var(--font-mono);font-size:11px;
+  padding:2px 6px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border);color:var(--text-3);
+}
+.topbar .spacer{flex:1}
+.topbar .icon-btn{
+  width:34px;height:34px;border-radius:var(--radius);
+  border:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text-2);transition:all var(--transition);flex-shrink:0;
+}
+.topbar .icon-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--surface-hover)}
+.topbar .icon-btn svg{width:16px;height:16px}
+.topbar .hamburger{display:none}
+
+/* ═════ LAYOUT ═════ */
+.layout{display:flex;min-height:calc(100vh - var(--topbar-h))}
+
+/* ═════ SIDEBAR ═════ */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  border-right:1px solid var(--border);
+  padding:var(--sp-4) var(--sp-3);
+  position:sticky;top:var(--topbar-h);
+  height:calc(100vh - var(--topbar-h));overflow-y:auto;overflow-x:hidden;
+}
+.sidebar .cat-label{
+  font-size:11px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.08em;
+  padding:var(--sp-4) var(--sp-3) var(--sp-1);
+  display:flex;align-items:center;gap:6px;
+}
+.sidebar .cat-label:first-child{padding-top:var(--sp-1)}
+.sidebar .nav-item{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:6px var(--sp-3);border-radius:var(--radius-sm);
+  font-size:var(--fs-sm);color:var(--text-2);
+  cursor:pointer;transition:all var(--transition);
+  border-left:2px solid transparent;margin:1px 0;line-height:1.4;
+}
+.sidebar .nav-item:hover{background:var(--bg-subtle);color:var(--text)}
+.sidebar .nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;border-left-color:var(--primary)}
+.sidebar .cat-label.cat-active{color:var(--primary)}
+.sidebar .nav-item .ic{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.7}
+.sidebar .nav-item.active .ic{opacity:1}
+.sidebar .nav-item .ic svg{width:16px;height:16px}
+.sidebar .nav-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar .nav-item .badge-new{
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-full);
+  background:var(--green-500);color:#fff;letter-spacing:.03em;
+}
+
+/* ═════ MAIN ═════ */
+.main{flex:1;overflow-x:hidden;min-width:0}
+.content-wrap{max-width:var(--content-max);margin:0 auto;padding:var(--sp-8) var(--sp-8) var(--sp-16)}
+
+/* ═════ HERO ═════ */
+.hero{margin-bottom:var(--sp-10)}
+.hero .hero-eyebrow{
+  font-family:var(--font-mono);font-size:12px;color:var(--primary);
+  font-weight:600;letter-spacing:.03em;margin-bottom:var(--sp-2);
+  display:flex;align-items:center;gap:6px;
+}
+.hero .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green-500);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:var(--fs-3xl);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:var(--sp-3)}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+[data-theme="dark"] .hero h1 .grad{background:linear-gradient(135deg,var(--blue-400),var(--purple-400));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .hero-desc{color:var(--text-2);font-size:var(--fs-md);line-height:1.7;max-width:620px}
+.hero .hero-stats{display:flex;gap:var(--sp-6);margin-top:var(--sp-5)}
+.hero .stat{display:flex;align-items:baseline;gap:6px}
+.hero .stat .num{font-size:var(--fs-xl);font-weight:700;font-family:var(--font-mono);color:var(--text)}
+.hero .stat .lbl{font-size:var(--fs-sm);color:var(--text-3)}
+.hero .stat .sep{color:var(--gray-300);margin:0 var(--sp-1)}
+
+/* ═════ SECTION ═════ */
+.cat-section{margin-bottom:var(--sp-10);scroll-margin-top:calc(var(--topbar-h) + var(--sp-4))}
+.cat-header{
+  display:flex;align-items:center;gap:var(--sp-3);
+  margin-bottom:var(--sp-4);padding-bottom:var(--sp-3);
+  border-bottom:1px solid var(--border);
+}
+.cat-header .cat-icon-box{
+  width:32px;height:32px;border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.cat-header .cat-icon-box svg{width:18px;height:18px}
+.cat-header .cat-title{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.01em}
+.cat-header .cat-count{
+  font-size:var(--fs-xs);color:var(--text-3);font-family:var(--font-mono);
+  padding:2px 8px;background:var(--bg-subtle);border-radius:var(--radius-full);
+}
+.cat-header .cat-link{
+  margin-left:auto;font-size:var(--fs-sm);color:var(--primary);
+  display:flex;align-items:center;gap:4px;transition:opacity var(--transition);
+  cursor:pointer;
+}
+.cat-header .cat-link:hover{opacity:.7}
+
+/* ═════ CARD GRID ═════ */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp-4)}
+.tut-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:var(--sp-4);
+  display:flex;flex-direction:column;gap:var(--sp-2);
+  cursor:pointer;transition:all var(--transition);
+  position:relative;overflow:hidden;
+}
+.tut-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--card-accent,var(--blue-500));
+  opacity:0;transition:opacity var(--transition);
+}
+.tut-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.tut-card:hover::before{opacity:1}
+.tut-card .card-top{display:flex;align-items:flex-start;gap:var(--sp-3)}
+.tut-card .card-icon{
+  width:36px;height:36px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.tut-card .card-icon svg{width:18px;height:18px}
+.tut-card h4{font-size:var(--fs-sm);font-weight:600;line-height:1.4;flex:1}
+.tut-card .card-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tut-card .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:var(--sp-1)}
+.tut-card .card-meta{
+  display:flex;align-items:center;gap:var(--sp-3);
+  margin-top:auto;padding-top:var(--sp-2);
+  border-top:1px solid var(--border-subtle);
+  font-size:11px;color:var(--text-3);font-family:var(--font-mono);
+}
+.tut-card .card-meta span{display:flex;align-items:center;gap:3px}
+.tut-card .card-meta svg{width:12px;height:12px;opacity:.6}
+
+/* Tag colors */
+.tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:1px 7px;border-radius:var(--radius-full);line-height:1.6;white-space:nowrap}
+.t-blue{background:var(--blue-50);color:var(--blue-700)}
+.t-purple{background:var(--purple-50);color:var(--purple-700)}
+.t-green{background:#ecfdf5;color:var(--green-600)}
+.t-amber{background:#fffbeb;color:var(--amber-600)}
+.t-red{background:#fef2f2;color:var(--red-600)}
+.t-gray{background:var(--gray-100);color:var(--gray-600)}
+.t-teal{background:#f0fdfa;color:var(--teal-500)}
+.t-indigo{background:#eef2ff;color:var(--indigo-500)}
+.t-cyan{background:#ecfeff;color:var(--cyan-500)}
+.t-rose{background:#fff1f2;color:var(--rose-500)}
+.t-orange{background:#fff7ed;color:var(--orange-500)}
+[data-theme="dark"] .t-blue{background:rgba(59,130,246,.15);color:var(--blue-300)}
+[data-theme="dark"] .t-purple{background:rgba(168,85,247,.15);color:var(--purple-400)}
+[data-theme="dark"] .t-green{background:rgba(16,185,129,.15);color:var(--green-500)}
+[data-theme="dark"] .t-amber{background:rgba(245,158,11,.15);color:var(--amber-500)}
+[data-theme="dark"] .t-red{background:rgba(239,68,68,.15);color:var(--red-500)}
+[data-theme="dark"] .t-gray{background:var(--gray-800);color:var(--gray-400)}
+[data-theme="dark"] .t-teal{background:rgba(20,184,166,.15);color:var(--teal-500)}
+[data-theme="dark"] .t-indigo{background:rgba(99,102,241,.15);color:var(--indigo-500)}
+[data-theme="dark"] .t-cyan{background:rgba(6,182,212,.15);color:var(--cyan-500)}
+[data-theme="dark"] .t-rose{background:rgba(244,63,94,.15);color:var(--rose-500)}
+[data-theme="dark"] .t-orange{background:rgba(249,115,22,.15);color:var(--orange-500)}
+
+/* Icon backgrounds */
+.ic-bg-blue{background:var(--blue-50);color:var(--blue-600)}
+.ic-bg-purple{background:var(--purple-50);color:var(--purple-600)}
+.ic-bg-green{background:#ecfdf5;color:var(--green-600)}
+.ic-bg-amber{background:#fffbeb;color:var(--amber-600)}
+.ic-bg-red{background:#fef2f2;color:var(--red-600)}
+.ic-bg-teal{background:#f0fdfa;color:var(--teal-500)}
+.ic-bg-indigo{background:#eef2ff;color:var(--indigo-500)}
+.ic-bg-cyan{background:#ecfeff;color:var(--cyan-500)}
+.ic-bg-orange{background:#fff7ed;color:var(--orange-500)}
+.ic-bg-gray{background:var(--gray-100);color:var(--gray-600)}
+[data-theme="dark"] .ic-bg-blue{background:rgba(59,130,246,.12);color:var(--blue-400)}
+[data-theme="dark"] .ic-bg-purple{background:rgba(168,85,247,.12);color:var(--purple-400)}
+[data-theme="dark"] .ic-bg-green{background:rgba(16,185,129,.12);color:var(--green-500)}
+[data-theme="dark"] .ic-bg-amber{background:rgba(245,158,11,.12);color:var(--amber-500)}
+[data-theme="dark"] .ic-bg-red{background:rgba(239,68,68,.12);color:var(--red-500)}
+[data-theme="dark"] .ic-bg-teal{background:rgba(20,184,166,.12);color:var(--teal-500)}
+[data-theme="dark"] .ic-bg-indigo{background:rgba(99,102,241,.12);color:var(--indigo-500)}
+[data-theme="dark"] .ic-bg-cyan{background:rgba(6,182,212,.12);color:var(--cyan-500)}
+[data-theme="dark"] .ic-bg-orange{background:rgba(249,115,22,.12);color:var(--orange-500)}
+[data-theme="dark"] .ic-bg-gray{background:var(--gray-800);color:var(--gray-400)}
+
+/* ═════ COMMAND PALETTE ═════ */
+.cmd-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.4);backdrop-filter:blur(4px);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:15vh;
+}
+.cmd-overlay.show{display:flex;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.cmd-panel{
+  width:90%;max-width:560px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+  overflow:hidden;
+}
+.cmd-input-wrap{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-3) var(--sp-4);
+  border-bottom:1px solid var(--border);
+}
+.cmd-input-wrap svg{width:18px;height:18px;color:var(--text-3);flex-shrink:0}
+.cmd-input{
+  flex:1;border:none;outline:none;background:none;
+  font-size:var(--fs-md);color:var(--text);font-family:var(--font-sans);
+}
+.cmd-input::placeholder{color:var(--text-3)}
+.cmd-esc{
+  font-family:var(--font-mono);font-size:11px;
+  padding:2px 6px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);color:var(--text-3);
+}
+.cmd-results{max-height:400px;overflow-y:auto;padding:var(--sp-2)}
+.cmd-group-label{
+  font-size:11px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.08em;
+  padding:var(--sp-2) var(--sp-3) var(--sp-1);
+}
+.cmd-item{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-2) var(--sp-3);border-radius:var(--radius);
+  cursor:pointer;transition:background var(--transition);
+}
+.cmd-item.selected{background:var(--primary-light)}
+.cmd-item .ci-icon{
+  width:28px;height:28px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.cmd-item .ci-icon svg{width:14px;height:14px}
+.cmd-item .ci-info{flex:1;min-width:0}
+.cmd-item .ci-title{font-size:var(--fs-sm);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmd-item .ci-cat{font-size:11px;color:var(--text-3);font-family:var(--font-mono)}
+.cmd-item .ci-enter{font-size:11px;color:var(--text-3);opacity:0;transition:opacity var(--transition)}
+.cmd-item.selected .ci-enter{opacity:1}
+.cmd-empty{padding:var(--sp-8);text-align:center;color:var(--text-3);font-size:var(--fs-sm)}
+.cmd-footer{
+  display:flex;align-items:center;gap:var(--sp-4);
+  padding:var(--sp-2) var(--sp-4);border-top:1px solid var(--border);
+  font-size:11px;color:var(--text-3);background:var(--bg-subtle);
+}
+.cmd-footer span{display:flex;align-items:center;gap:4px}
+.cmd-footer kbd{
+  font-family:var(--font-mono);font-size:10px;
+  padding:1px 5px;border-radius:4px;
+  background:var(--surface);border:1px solid var(--border);
+}
+
+/* ═════ MOBILE OVERLAY ═════ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
+.overlay.show{display:block}
+
+/* ═════ RESPONSIVE ═════ */
+@media(max-width:1024px){
+  .content-wrap{padding:var(--sp-6) var(--sp-5) var(--sp-12)}
+  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+}
+@media(max-width:768px){
+  .topbar{padding:0 var(--sp-3);gap:var(--sp-2)}
+  .topbar .logo span{display:none}
+  .topbar .search-trigger{max-width:none}
+  .topbar .search-trigger .kbd{display:none}
+  .topbar .hamburger{display:flex;width:34px;height:34px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);align-items:center;justify-content:center;cursor:pointer;color:var(--text-2)}
+  .topbar .hamburger svg{width:18px;height:18px}
+  .sidebar{
+    position:fixed;top:var(--topbar-h);left:0;bottom:0;z-index:95;
+    transform:translateX(-100%);box-shadow:var(--shadow-lg);
+    transition:transform var(--transition-slow);background:var(--surface);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .content-wrap{padding:var(--sp-4) var(--sp-3) var(--sp-10)}
+  .cards-grid{grid-template-columns:1fr}
+  .hero h1{font-size:var(--fs-2xl)}
+  .hero .hero-stats{flex-wrap:wrap;gap:var(--sp-3)}
+}
+
+/* ═════ TOAST ═════ */
+.toast-container{
+  position:fixed;bottom:24px;right:24px;z-index:300;
+  display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;
+}
+.toast{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
+  padding:12px 16px;max-width:380px;
+  display:flex;align-items:flex-start;gap:10px;
+  pointer-events:auto;
+  animation:toastIn .25s cubic-bezier(.4,0,.2,1);
+}
+.toast.toast-out{animation:toastOut .2s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{to{transform:translateX(100%);opacity:0}}
+.toast .toast-icon{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.toast .toast-icon svg{width:16px;height:16px}
+.toast .toast-body{flex:1;min-width:0}
+.toast .toast-title{font-size:var(--fs-sm);font-weight:600;margin-bottom:2px}
+.toast .toast-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.5}
+.toast .toast-close{
+  flex-shrink:0;width:20px;height:20px;border-radius:var(--radius-sm);
+  border:none;background:none;cursor:pointer;color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+  transition:color var(--transition);
+}
+.toast .toast-close:hover{color:var(--text)}
+.toast .toast-close svg{width:14px;height:14px}
+
+/* ═════ REDUCED MOTION ═════ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ TOPBAR ═══════════ -->
+<header class="topbar">
+  <button class="hamburger" id="hamburger" aria-label="菜单">
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
+  </button>
+  <a class="logo" onclick="goHome()">
+    <span class="logo-badge">D</span>
+    DevPortal <span>· 教程合集</span>
+  </a>
+  <div class="search-trigger" onclick="openCmd()">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="m11 11 3 3"/></svg>
+    <span>搜索 47 个教程…</span>
+    <span class="kbd">⌘K</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" title="切换主题 (⇧⌘L)" aria-label="切换主题">
+    <svg id="iconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
+    <svg id="iconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><circle cx="8" cy="8" r="3"/><path d="M8 1v2m0 10v2m5.7-12.7-1.4 1.4m-8.6 8.6-1.4 1.4M15 8h-2M3 8H1m12.7 5.7-1.4-1.4M3.7 3.7 2.3 2.3"/></svg>
+  </button>
+  <a class="icon-btn" href="https://github.com/lsasw/frontend-learning-hub" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.82 1.23.82.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+  </a>
+</header>
+
+<!-- ═══════════ LAYOUT ═══════════ -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="content-wrap" id="content"></div>
+  </main>
+</div>
+
+<!-- ═══════════ TOAST CONTAINER ═══════════ -->
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ═══════════ COMMAND PALETTE ═══════════ -->
+<div class="cmd-overlay" id="cmdOverlay" onclick="if(event.target===this)closeCmd()">
+  <div class="cmd-panel">
+    <div class="cmd-input-wrap">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="m13 13 3 3"/></svg>
+      <input class="cmd-input" id="cmdInput" placeholder="搜索教程标题、分类、标签…" autocomplete="off" spellcheck="false" aria-label="搜索教程" role="combobox" aria-expanded="true" aria-controls="cmdResults">
+      <span class="cmd-esc">ESC</span>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+    <div class="cmd-footer">
+      <span><kbd>↑↓</kbd> 导航</span>
+      <span><kbd>↵</kbd> 打开</span>
+      <span><kbd>ESC</kbd> 关闭</span>
+      <span style="margin-left:auto;color:var(--text-3)">DevPortal Command Palette</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SVG Icon Library (16px, stroke-1.5, Lucide-style)
+   ═══════════════════════════════════════════════════ */
+const I = {
+  brain: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M6 5H4a2 2 0 0 0 0 4h2M10 5h2a2 2 0 0 1 0 4h-2M6 9H4a2 2 0 0 0 0 4h2M10 9h2a2 2 0 0 1 0 4h-2"/></svg>',
+  bot: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="10" height="8" rx="2"/><path d="M8 2v3"/><circle cx="6" cy="9" r=".5" fill="currentColor"/><circle cx="10" cy="9" r=".5" fill="currentColor"/><path d="M2 9H0M16 9h-2"/></svg>',
+  chain: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 9.5 6.5"/><path d="M5 4 4 5a3 3 0 0 0 0 4l1 1M11 12l1-1a3 3 0 0 0 0-4l-1-1"/></svg>',
+  bolt: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1 3 9h4l-1 6 6-8H8l1-6z"/></svg>',
+  puzzle: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2v2a1 1 0 0 1-2 0H3v3h2a1 1 0 0 1 0 2H3v3h1a1 1 0 0 1 2 0 1 1 0 0 1 2 0h1V8h-1a1 1 0 0 1 0-2h1V3h-1a1 1 0 0 1-2 0V2z"/></svg>',
+  shield: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 2 3v5c0 3.5 2.5 6 6 7 3.5-1 6-3.5 6-7V3l-6-2z"/></svg>',
+  layers: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 1 7 4-7 4-7-4 7-4z"/><path d="m1 9 7 4 7-4M1 12l7 4 7-4"/></svg>',
+  graph: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><path d="M5.5 5 7 11M10.5 5 9 11M6 4h4"/></svg>',
+  code: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5 3-4 5 4 5M11 3l4 5-4 5"/></svg>',
+  terminal: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="12" rx="1"/><path d="m4 6 2 2-2 2M8 10h4"/></svg>',
+  wrench: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2 9 7l-2 6-5 1 1-5 6-2 5-5z"/></svg>',
+  server: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="5" rx="1"/><rect x="1" y="9" width="14" height="5" rx="1"/><circle cx="4" cy="4.5" r=".5" fill="currentColor"/><circle cx="4" cy="11.5" r=".5" fill="currentColor"/></svg>',
+  database: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="3" rx="6" ry="2"/><path d="M2 3v5c0 1 2.5 2 6 2s6-1 6-2V3M2 8v5c0 1 2.5 2 6 2s6-1 6-2V8"/></svg>',
+  message: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6l-3 3v-3H4a2 2 0 0 1-2-2V4z"/></svg>',
+  grid: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>',
+  box: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 1 4.5v7L8 15l7-3.5v-7L8 1z"/><path d="M1 4.5 8 8l7-3.5M8 8v7"/></svg>',
+  cpu: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 1v2M10 1v2M6 13v2M10 13v2M1 6h2M1 10h2M13 6h2M13 10h2"/></svg>',
+  rocket: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1c3 2 4 5 4 8l-2 2H6L4 9c0-3 1-6 4-8z"/><circle cx="8" cy="6" r="1.5"/><path d="M6 11l-2 3M10 11l2 3"/></svg>',
+  flask: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1h4v4l3 8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1l3-8V1z"/><path d="M6 1h4"/></svg>',
+  book: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/><path d="M14 3a1 1 0 0 0-1-1H9a2 2 0 0 0-2 2v10a1 1 0 0 1 1-1h5a1 1 0 0 0 1-1V3z"/></svg>',
+  git: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="4" cy="12" r="2"/><path d="M4 6v4M4 10h6M9 5l3 3"/></svg>',
+  container: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 5 8 2l7 3v6l-7 3-7-3V5z"/><path d="M1 5l7 3 7-3M8 8v6"/></svg>',
+  lock: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>',
+  java: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/><path d="M7 9v2"/></svg>',
+  python: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6a2 2 0 0 1 2 2v3H6a2 2 0 0 0-2 2v3H2a1 1 0 0 1-1-1V4a2 2 0 0 1 2-2z"/><circle cx="8" cy="4" r=".5" fill="currentColor"/></svg>',
+  spark: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v4M8 11v4M1 8h4M11 8h4M3.5 3.5l2.5 2.5M10 10l2.5 2.5M3.5 12.5 6 10M10 6l2.5-2.5"/></svg>',
+  compass: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="m10 6-2 5-2-5 4 0z"/></svg>',
+  plug: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1v4M10 1v4M4 5h8v2a4 4 0 0 1-8 0V5zM8 11v4"/></svg>',
+  chip: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 1v2M10 1v2M6 13v2M10 13v2M1 6h2M1 10h2M13 6h2M13 10h2"/></svg>',
+  clock: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1"/></svg>',
+  eye: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6s2-3.5 5-3.5S11 6 11 6s-2 3.5-5 3.5S1 6 1 6z"/><circle cx="6" cy="6" r="1.5"/></svg>',
+  calendar: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="9" height="8" rx="1"/><path d="M1.5 5h9M4 1.5v2M8 1.5v2"/></svg>',
+  arrow: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>',
+};
+
+/* ═══════════════════════════════════════════════════
+   Tutorial Data
+   ═══════════════════════════════════════════════════ */
+const categories = [
+  {
+    id:'ai-agent',label:'AI 智能体 & 工作流',icon:'brain',iconBg:'ic-bg-purple',accent:'var(--purple-500)',
+    tutorials:[
+      {t:'MetaGPT vs CrewAI 分析报告',d:'深度对比两大 AI 多智能体框架：架构设计、角色分工、工作流引擎、适用场景全覆盖',icon:'graph',tags:[{l:'AI 智能体',c:'t-purple'},{l:'Python',c:'t-gray'}],time:'20',views:'1.2K',date:'06.15',isNew:false},
+      {t:'LangChain & LangGraph 实战',d:'三合一教程：LangChain 链式调用 + LangGraph 状态图编排 + Python 最佳实践',icon:'chain',tags:[{l:'LangChain',c:'t-purple'},{l:'Python',c:'t-gray'}],time:'25',views:'2.1K',date:'06.20',isNew:false},
+      {t:'RAG 进阶全攻略 · 避坑指南',d:'全链路深度解析：基础概念 → Multi-hop/Agentic/Graph/Self-RAG/CRAG 架构演进 → 7 大实战避坑攻略',icon:'puzzle',tags:[{l:'RAG进阶',c:'t-purple'},{l:'变体架构',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'35',views:'890',date:'07.10',isNew:true},
+      {t:'Transformer 架构深度解析',d:'Self-Attention 数学推导 · Multi-Head · Positional Encoding · Encoder-Decoder · BERT/GPT 演进全景',icon:'bot',tags:[{l:'Transformer',c:'t-purple'},{l:'注意力机制',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'30',views:'1.5K',date:'07.05',isNew:true},
+      {t:'Agent 执行沙盒机制全解析',d:'沙盒隔离边界 · 六大技术手段 · 14 类操作矩阵 · 5 级风险体系 · 安全桥接层 · 4 大实战案例',icon:'shield',tags:[{l:'沙盒安全',c:'t-red'},{l:'隔离机制',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'28',views:'670',date:'07.12',isNew:true},
+      {t:'AI Agent 设计决策全景指南',d:'从零设计功能全面的 Agent：CLI vs 桌面 vs Web 形态对比 · 框架 vs 裸写决策 · 语言选型 · 完整构建清单',icon:'compass',tags:[{l:'架构决策',c:'t-purple'},{l:'从零构建',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'22',views:'540',date:'07.08',isNew:true},
+    ]
+  },
+  {
+    id:'ai-tools',label:'AI 开发工具',icon:'wrench',iconBg:'ic-bg-blue',accent:'var(--blue-500)',
+    tutorials:[
+      {t:'AI 编程 Token 拯救计划',d:'精选 AI 编程效率工具集：Token 优化、上下文压缩、Prompt 缓存 —— 让每一分 Token 花在刀刃上',icon:'bolt',tags:[{l:'AI 工具',c:'t-blue'},{l:'效率',c:'t-green'}],time:'15',views:'3.2K',date:'05.28',isNew:false},
+      {t:'AI 前端工程化生态全景图',d:'Vercel AI SDK · Cursor · Copilot · v0 · Bolt 等下一代 AI 前端工具链全景式梳理与架构对比',icon:'layers',tags:[{l:'AI 工程',c:'t-blue'},{l:'前端',c:'t-cyan'}],time:'18',views:'1.8K',date:'06.02',isNew:false},
+    ]
+  },
+  {
+    id:'python',label:'Python 后端',icon:'python',iconBg:'ic-bg-teal',accent:'var(--teal-500)',
+    tutorials:[
+      {t:'Python 后端技术栈全景图',d:'Web 框架 · ORM · 异步服务器 · API 工具 · 缓存 · 任务队列 · 认证权限 —— 7 大分类主流 vs 替代方案全对比',icon:'grid',tags:[{l:'Python',c:'t-teal'},{l:'后端',c:'t-gray'},{l:'选型',c:'t-amber'}],time:'20',views:'2.5K',date:'05.15',isNew:false},
+      {t:'Python3 语法与语法糖',d:'基础语法 + 推导式/海象运算符/f-string/解包/enumerate/with —— Pyodide 浏览器内实时运行 Python 代码',icon:'python',tags:[{l:'Python',c:'t-teal'},{l:'语法糖',c:'t-green'},{l:'NEW',c:'t-green'}],time:'25',views:'1.1K',date:'07.03',isNew:true},
+      {t:'Pandas 数据处理全指南',d:'Series/DataFrame 创建与操作 · 数据筛选与条件过滤 · 分组聚合 · 缺失值检测/填充/删除 —— 真实业务场景代码演示',icon:'server',tags:[{l:'Pandas',c:'t-teal'},{l:'数据分析',c:'t-cyan'},{l:'NEW',c:'t-green'}],time:'22',views:'780',date:'07.06',isNew:true},
+      {t:'NumPy 科学计算全指南',d:'数组创建 · 切片/布尔/花式索引 · 广播机制 · 通用函数 · 线性代数 —— 含金融与 ML 场景实战',icon:'cpu',tags:[{l:'NumPy',c:'t-teal'},{l:'科学计算',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'650',date:'07.07',isNew:true},
+    ]
+  },
+  {
+    id:'java',label:'Java 进阶',icon:'java',iconBg:'ic-bg-amber',accent:'var(--amber-500)',
+    tutorials:[
+      {t:'JUC 并发工具包',d:'Lock / Atomic / 线程池 / 并发集合 / AQS 源码剖析 —— 从 API 到底层原理',icon:'lock',tags:[{l:'Java',c:'t-amber'},{l:'并发',c:'t-orange'}],time:'30',views:'3.1K',date:'04.10',isNew:false},
+      {t:'JVM 虚拟机',d:'类加载 → 内存模型 → GC 算法 → JIT 编译 → 性能调优，完整知识体系',icon:'box',tags:[{l:'Java',c:'t-amber'},{l:'JVM',c:'t-orange'}],time:'28',views:'2.8K',date:'04.15',isNew:false},
+      {t:'Java 分布式锁 · Redisson 深度解析',d:'看门狗续期机制 · 可重入锁 Hash 存储 · 公平锁排队 · RedLock · ZK/MySQL 方案对比',icon:'lock',tags:[{l:'分布式',c:'t-amber'},{l:'Redisson',c:'t-red'},{l:'NEW',c:'t-green'}],time:'25',views:'1.3K',date:'07.02',isNew:true},
+      {t:'JMM 三大特性与 DCL 推导',d:'可见性/原子性/有序性定义 · DCL 单例逐步推导 · 指令重排导致半初始化对象 · volatile 内存屏障解决方案',icon:'cpu',tags:[{l:'JMM',c:'t-amber'},{l:'并发',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'22',views:'890',date:'07.09',isNew:true},
+    ]
+  },
+  {
+    id:'infra',label:'基础设施',icon:'server',iconBg:'ic-bg-red',accent:'var(--red-500)',
+    tutorials:[
+      {t:'分布式系统交互式学习',d:'CAP 定理可视化 · Gossip/Raft 模拟 · Quorum 读写 · 负载均衡策略 —— 动手学分布式',icon:'git',tags:[{l:'分布式',c:'t-red'},{l:'共识',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'25',views:'1.6K',date:'06.28',isNew:true},
+      {t:'Redis 交互式学习指南',d:'数据结构 / 持久化 / 缓存策略 / 分布式锁 / 集群方案，从入门到精通',icon:'database',tags:[{l:'NoSQL',c:'t-red'},{l:'Redis',c:'t-rose'}],time:'30',views:'4.2K',date:'03.20',isNew:false},
+      {t:'消息队列综合演示平台',d:'Kafka / RabbitMQ / RocketMQ / Pulsar 四合一：架构对比 + 实时仪表盘 + 场景模拟',icon:'message',tags:[{l:'MQ',c:'t-red'},{l:'消息队列',c:'t-rose'}],time:'28',views:'2.3K',date:'04.01',isNew:false},
+      {t:'MQ 防重复消费详解',d:'3 实例场景下两层防护：MQ 层负载隔离 + 业务层幂等兜底，Kafka/RocketMQ/RabbitMQ 全覆盖',icon:'shield',tags:[{l:'幂等',c:'t-red'},{l:'生产实战',c:'t-amber'}],time:'15',views:'1.1K',date:'06.25',isNew:false},
+    ]
+  },
+  {
+    id:'architecture',label:'系统架构',icon:'box',iconBg:'ic-bg-indigo',accent:'var(--indigo-500)',
+    tutorials:[
+      {t:'系统架构师知识体系',d:'设计原则 (SOLID/CAP) + 8 大架构模式 + 质量属性 + 技术选型矩阵 + ADR 决策流程，含可视化图表',icon:'compass',tags:[{l:'架构',c:'t-indigo'},{l:'系统设计',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'35',views:'2.9K',date:'06.18',isNew:true},
+      {t:'Docker & Kubernetes',d:'Docker 三大核心概念 + 命令速查 + Dockerfile 多阶段构建 + K8s 集群架构 + Pod/Service/Deployment',icon:'container',tags:[{l:'Docker',c:'t-indigo'},{l:'K8s',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'3.5K',date:'06.22',isNew:true},
+      {t:'高并发系统设计全指南',d:'QPS 预估 → 架构选型 → 分层设计 → 限流降级熔断 → MQ削峰 → 分布式锁 → 最终一致性 → 全链路监控',icon:'bolt',tags:[{l:'高并发',c:'t-indigo'},{l:'系统设计',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'32',views:'1.9K',date:'07.01',isNew:true},
+      {t:'软件设计模式与设计原则',d:'SOLID 五大原则 + DRY/KISS/YAGNI + GoF 22 种设计模式，每个模式含定义、适用场景与代码示例',icon:'grid',tags:[{l:'设计原则',c:'t-indigo'},{l:'设计模式',c:'t-purple'},{l:'NEW',c:'t-green'}],time:'28',views:'1.4K',date:'07.04',isNew:true},
+    ]
+  },
+  {
+    id:'big-data',label:'大数据处理',icon:'database',iconBg:'ic-bg-orange',accent:'var(--orange-500)',
+    tutorials:[
+      {t:'Spark & Flink 大数据全指南',d:'Spark RDD/DataFrame/Spark SQL/Streaming · Flink DataStream/Table API/窗口/状态管理 · 深度对比与选型',icon:'bolt',tags:[{l:'Spark',c:'t-orange'},{l:'Flink',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'35',views:'1.7K',date:'07.03',isNew:true},
+    ]
+  },
+  {
+    id:'frontend',label:'前端开发',icon:'code',iconBg:'ic-bg-cyan',accent:'var(--cyan-500)',
+    tutorials:[
+      {t:'前端开发完整工作流 · Vue/React 实战',d:'需求分析→项目搭建→组件开发→状态管理→构建部署全流程；Vue 3 / React 18 核心知识体系；20+ 易踩坑点全覆盖',icon:'rocket',tags:[{l:'Vue 3',c:'t-cyan'},{l:'React 18',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'2.2K',date:'07.05',isNew:true},
+    ]
+  },
+  {
+    id:'embedded',label:'嵌入式开发',icon:'plug',iconBg:'ic-bg-green',accent:'var(--green-500)',
+    tutorials:[
+      {t:'嵌入式开发宣讲',d:'嵌入式概述 · 6 大应用领域 · 5 层技术栈架构 · 8 步开发流程 · 行业前景与薪资分析',icon:'plug',tags:[{l:'嵌入式',c:'t-green'},{l:'IoT',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'18',views:'680',date:'07.10',isNew:true},
+      {t:'嵌入式工程学习指南',d:'5 阶段学习路径 · 硬件平台对比（STM32/ESP32/树莓派/Arduino）· 软件工具链 · 开源框架',icon:'book',tags:[{l:'STM32',c:'t-green'},{l:'ESP32',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'22',views:'450',date:'07.11',isNew:true},
+      {t:'电子元件速查手册',d:'11 种核心元件 · SVG 电路符号 · 参数标签 · 典型应用场景 · 分类对比总览表',icon:'chip',tags:[{l:'电子元件',c:'t-green'},{l:'硬件',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'15',views:'380',date:'07.13',isNew:true},
+    ]
+  },
+];
+
+/* ═══════════════════════════════════════════════════
+   Render Sidebar
+   ═══════════════════════════════════════════════════ */
+function renderSidebar(){
+  const el = document.getElementById('sidebar');
+  let html = '<div class="cat-label">全部教程</div>';
+  html += `<a class="nav-item active" id="nav-home" onclick="scrollToTop()" style="cursor:pointer">
+    <span class="ic">${I.grid}</span><span class="nm">首页总览</span>
+  </a>`;
+  for(const cat of categories){
+    html += `<div class="cat-label" id="cat-label-${cat.id}" data-cat="${cat.id}">${escapeHtml(cat.label)}</div>`;
+    for(const t of cat.tutorials){
+      html += `<a class="nav-item" style="cursor:pointer" data-cat="${cat.id}" data-title="${escapeHtml(t.t)}" onclick="scrollToSection('${cat.id}')">
+        <span class="ic">${I[t.icon] || I.book}</span>
+        <span class="nm">${escapeHtml(t.t.length > 22 ? t.t.slice(0,20)+'…' : t.t)}</span>
+        ${t.isNew ? '<span class="badge-new">NEW</span>' : ''}
+      </a>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════
+   Render Content
+   ═══════════════════════════════════════════════════ */
+function renderContent(){
+  const el = document.getElementById('content');
+  let totalTuts = categories.reduce((s,c)=>s+c.tutorials.length,0);
+  let totalCats = categories.length;
+
+  let html = `
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-eyebrow"><span class="dot"></span> 持续更新 · 最近更新于 2026.07.13</div>
+      <h1>交互式技术教程合集<br><span class="grad">打开即用，边学边练</span></h1>
+      <p class="hero-desc">覆盖 AI 智能体、Python、Java、大数据、基础设施、系统架构、前端与嵌入式 ${totalCats} 大领域的 ${totalTuts} 个精心制作的单文件 HTML 教程。每个教程均为独立文件，支持交互式学习与代码实时运行。</p>
+      <div class="hero-stats">
+        <div class="stat"><span class="num">${totalTuts}</span><span class="lbl">教程</span><span class="sep">/</span></div>
+        <div class="stat"><span class="num">${totalCats}</span><span class="lbl">分类</span><span class="sep">/</span></div>
+        <div class="stat"><span class="num">~115K</span><span class="lbl">行代码</span></div>
+      </div>
+    </section>
+  `;
+
+  // Category sections
+  for(const cat of categories){
+    html += `<section class="cat-section" id="cat-${cat.id}">
+      <div class="cat-header">
+        <div class="card-icon-box ${cat.iconBg}">${I[cat.icon]}</div>
+        <span class="cat-title">${escapeHtml(cat.label)}</span>
+        <span class="cat-count">${cat.tutorials.length}</span>
+        <span class="cat-link" onclick="scrollToSection('${cat.id}')">查看全部 ${I.arrow}</span>
+      </div>
+      <div class="cards-grid">`;
+    for(const t of cat.tutorials){
+      html += `<a class="tut-card" style="--card-accent:${cat.accent}" onclick="openTutorial('${escapeHtml(t.t)}')" >
+        <div class="card-top">
+          <div class="card-icon ${cat.iconBg}">${I[t.icon] || I.book}</div>
+          <h4>${escapeHtml(t.t)}</h4>
+        </div>
+        <p class="card-desc">${escapeHtml(t.d)}</p>
+        <div class="card-tags">`;
+      for(const tag of t.tags){
+        html += `<span class="tag ${tag.c}">${escapeHtml(tag.l)}</span>`;
+      }
+      html += `</div>
+        <div class="card-meta">
+          <span>${I.clock}${t.time}min</span>
+          <span>${I.eye}${t.views}</span>
+          <span>${I.calendar}${t.date}</span>
+        </div>
+      </a>`;
+    }
+    html += `</div></section>`;
+  }
+
+  el.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════════ */
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});closeSidebar();setActiveNav('home')}
+function scrollToSection(id){document.getElementById('cat-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});closeSidebar();setActiveNav(id)}
+function openTutorial(title){
+  showToast({
+    title:'准备打开教程',
+    desc:title + '（原型演示 — 实际实现时将加载对应 HTML 到 iframe）',
+    icon:I.book,iconBg:'ic-bg-blue'
+  });
+}
+function goHome(){scrollToTop()}
+
+/* ═══════════════════════════════════════════════════
+   Toast Notification
+   ═══════════════════════════════════════════════════ */
+function showToast({title,desc,icon,iconBg,duration=4000}){
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.setAttribute('role','alert');
+  toast.innerHTML = `
+    <div class="toast-icon ${iconBg||'ic-bg-blue'}">${icon||I.book}</div>
+    <div class="toast-body">
+      <div class="toast-title">${escapeHtml(title)}</div>
+      <div class="toast-desc">${escapeHtml(desc)}</div>
+    </div>
+    <button class="toast-close" aria-label="关闭通知">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+    </button>
+  `;
+  const closeBtn = toast.querySelector('.toast-close');
+  let timer;
+  const dismiss = ()=>{
+    clearTimeout(timer);
+    toast.classList.add('toast-out');
+    setTimeout(()=>toast.remove(),200);
+  };
+  closeBtn.addEventListener('click',dismiss);
+  container.appendChild(toast);
+  timer = setTimeout(dismiss,duration);
+}
+
+/* ═══════════════════════════════════════════════════
+   Sidebar Active State (Scroll Spy)
+   ═══════════════════════════════════════════════════ */
+function setActiveNav(catId){
+  // Remove active from all nav items and cat labels
+  document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.sidebar .cat-label').forEach(l=>l.classList.remove('cat-active'));
+  if(catId === 'home'){
+    document.getElementById('nav-home')?.classList.add('active');
+  } else {
+    // Highlight the category label for the active section
+    document.getElementById('cat-label-'+catId)?.classList.add('cat-active');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   Theme Toggle
+   ═══════════════════════════════════════════════════ */
+function toggleTheme(){
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('iconMoon').style.display = next === 'dark' ? 'none' : 'block';
+  document.getElementById('iconSun').style.display = next === 'dark' ? 'block' : 'none';
+  try{localStorage.setItem('devportal-theme',next)}catch(e){}
+}
+
+/* ═══════════════════════════════════════════════════
+   Mobile Sidebar
+   ═══════════════════════════════════════════════════ */
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+
+/* ═══════════════════════════════════════════════════
+   Command Palette
+   ═══════════════════════════════════════════════════ */
+let cmdItems = [];
+let cmdSelected = 0;
+
+function buildCmdIndex(){
+  cmdItems = [];
+  for(const cat of categories){
+    for(const t of cat.tutorials){
+      cmdItems.push({
+        title:t.t, desc:t.d, cat:cat.label, icon:t.icon, iconBg:cat.iconBg,
+        tags:t.tags.map(x=>x.l).join(' '),
+        searchText:(t.t+' '+t.d+' '+cat.label+' '+t.tags.map(x=>x.l).join(' ')).toLowerCase()
+      });
+    }
+  }
+}
+
+function openCmd(){
+  document.getElementById('cmdOverlay').classList.add('show');
+  const input = document.getElementById('cmdInput');
+  input.value = '';
+  input.focus();
+  renderCmdResults('');
+}
+function closeCmd(){
+  document.getElementById('cmdOverlay').classList.remove('show');
+}
+
+function renderCmdResults(query){
+  const el = document.getElementById('cmdResults');
+  let results = cmdItems;
+  if(query.trim()){
+    const q = query.toLowerCase().trim();
+    results = cmdItems.filter(item => item.searchText.includes(q));
+  }
+  cmdSelected = 0;
+  if(results.length === 0){
+    el.innerHTML = '<div class="cmd-empty">未找到匹配的教程 🤔<br>试试搜索 "RAG"、"Java"、"分布式"…</div>';
+    el._results = [];
+    return;
+  }
+  // Group by category, preserving DOM render order
+  const groups = {};
+  const groupOrder = [];
+  for(const r of results){
+    if(!groups[r.cat]){groups[r.cat]=[];groupOrder.push(r.cat)}
+    groups[r.cat].push(r);
+  }
+  // Build flat array in DOM order (groups concatenated) — fixes idx mismatch
+  const flatResults = [];
+  let html = '';
+  for(const cat of groupOrder){
+    const items = groups[cat];
+    html += `<div class="cmd-group-label">${escapeHtml(cat)}</div>`;
+    for(const item of items){
+      const idx = flatResults.length;
+      html += `<div class="cmd-item ${idx===0?'selected':''}" data-idx="${idx}" onclick="cmdSelect(${idx})">
+        <div class="ci-icon ${item.iconBg}">${I[item.icon] || I.book}</div>
+        <div class="ci-info">
+          <div class="ci-title">${escapeHtml(item.title)}</div>
+          <div class="ci-cat">${escapeHtml(item.cat)}</div>
+        </div>
+        <span class="ci-enter">↵</span>
+      </div>`;
+      flatResults.push(item);
+    }
+  }
+  el.innerHTML = html;
+  // Store flat results in DOM order for keyboard nav
+  el._results = flatResults;
+}
+
+function cmdSelect(idx){
+  const el = document.getElementById('cmdResults');
+  const results = el._results || [];
+  if(results[idx]){
+    closeCmd();
+    openTutorial(results[idx].title);
+  }
+}
+
+function cmdMove(dir){
+  const items = document.querySelectorAll('.cmd-item');
+  if(items.length === 0) return;
+  items[cmdSelected]?.classList.remove('selected');
+  cmdSelected = (cmdSelected + dir + items.length) % items.length;
+  items[cmdSelected]?.classList.add('selected');
+  items[cmdSelected]?.scrollIntoView({block:'nearest'});
+}
+
+/* ═══════════════════════════════════════════════════
+   Keyboard Shortcuts
+   ═══════════════════════════════════════════════════ */
+document.addEventListener('keydown',(e)=>{
+  // Cmd/Ctrl + K → open command palette
+  if((e.metaKey || e.ctrlKey) && e.key === 'k'){
+    e.preventDefault();
+    if(document.getElementById('cmdOverlay').classList.contains('show')){
+      closeCmd();
+    }else{
+      openCmd();
+    }
+    return;
+  }
+  // Shift + Cmd/Ctrl + L → toggle theme
+  if((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')){
+    e.preventDefault();
+    toggleTheme();
+    return;
+  }
+  // Escape → close overlays
+  if(e.key === 'Escape'){
+    closeCmd();
+    closeSidebar();
+    return;
+  }
+  // Command palette navigation
+  const cmdOpen = document.getElementById('cmdOverlay').classList.contains('show');
+  if(cmdOpen){
+    if(e.key === 'ArrowDown'){e.preventDefault();cmdMove(1)}
+    else if(e.key === 'ArrowUp'){e.preventDefault();cmdMove(-1)}
+    else if(e.key === 'Enter'){e.preventDefault();cmdSelect(cmdSelected)}
+    else if(e.key === 'Tab'){e.preventDefault();cmdMove(e.shiftKey?-1:1)}
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   Init
+   ═══════════════════════════════════════════════════ */
+(function init(){
+  // Theme
+  try{
+    const saved = localStorage.getItem('devportal-theme');
+    if(saved === 'dark'){
+      document.documentElement.setAttribute('data-theme','dark');
+      document.getElementById('iconMoon').style.display = 'none';
+      document.getElementById('iconSun').style.display = 'block';
+    }
+  }catch(e){}
+
+  // Hamburger
+  document.getElementById('hamburger').addEventListener('click',()=>{
+    const sb = document.getElementById('sidebar');
+    if(sb.classList.contains('open')) closeSidebar(); else openSidebar();
+  });
+
+  // Cmd input
+  document.getElementById('cmdInput').addEventListener('input',(e)=>{
+    renderCmdResults(e.target.value);
+  });
+
+  // Build & render
+  buildCmdIndex();
+  renderSidebar();
+  renderContent();
+
+  // Scroll spy — track which section is in view
+  const spy = new IntersectionObserver((entries)=>{
+    for(const entry of entries){
+      if(entry.isIntersecting){
+        const catId = entry.target.id.replace('cat-','');
+        setActiveNav(catId);
+      }
+    }
+  },{rootMargin:'-30% 0px -60% 0px',threshold:0});
+  document.querySelectorAll('.cat-section').forEach(s=>spy.observe(s));
+
+  // Hero spy — when at top, highlight home
+  const heroEl = document.querySelector('.hero');
+  if(heroEl){
+    const heroSpy = new IntersectionObserver((entries)=>{
+      for(const entry of entries){
+        if(entry.isIntersecting) setActiveNav('home');
+      }
+    },{rootMargin:'0px 0px -70% 0px',threshold:0});
+    heroSpy.observe(heroEl);
+  }
+})();
+</script>
+
+</body>
+</html>
