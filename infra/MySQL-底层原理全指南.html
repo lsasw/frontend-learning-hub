@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MySQL 底层原理全指南 · Frontend Learning Hub</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   MySQL 底层原理全指南 — Design Tokens
+   ═══════════════════════════════════════════════════ */
+:root{
+  --pri:#1a6fb5;--pri-dark:#145a8c;--pri-light:#e8f4fd;
+  --bg:#f8fafc;--surface:#fff;--surface-hover:#f4f8fb;
+  --border:#dde5ed;--border-light:#edf2f7;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#8899aa;
+  --code-bg:#1a1a2e;--code-text:#e2e8f0;
+  --green:#059669;--green-bg:#ecfdf5;
+  --amber:#d97706;--amber-bg:#fffbeb;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --teal:#0d9488;--teal-bg:#f0fdfa;
+  --radius:10px;--radius-sm:6px;--radius-lg:14px;
+  --mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans:-apple-system,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.1);
+  --nav-h:56px;--toc-w:220px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{
+  font-family:var(--sans);font-size:15px;line-height:1.75;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--pri-light);color:var(--pri-dark)}
+
+/* ═════ NAV ═════ */
+.nav{
+  position:sticky;top:0;z-index:100;height:var(--nav-h);
+  background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(8px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+}
+.nav .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--text);text-decoration:none}
+.nav .logo-badge{
+  width:28px;height:28px;border-radius:6px;
+  background:linear-gradient(135deg,var(--pri),#0d9488);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:12px;flex-shrink:0;
+}
+.nav .logo span{color:var(--text3);font-weight:400}
+.nav .spacer{flex:1}
+.nav .nav-toc-btn{
+  display:none;padding:6px 12px;border:1px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--surface);
+  font-size:13px;color:var(--text2);cursor:pointer;
+  transition:all var(--transition);
+}
+.nav .nav-toc-btn:hover{border-color:var(--pri);color:var(--pri)}
+
+/* ═════ HERO ═════ */
+.hero{
+  background:linear-gradient(135deg,var(--pri-light) 0%,#f0fdfa 50%,#f8fafc 100%);
+  padding:56px 24px 48px;text-align:center;
+  border-bottom:1px solid var(--border-light);
+}
+.hero .badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 14px;border-radius:20px;
+  background:var(--surface);border:1px solid var(--border);
+  font-size:12px;color:var(--pri);font-weight:600;font-family:var(--mono);
+  margin-bottom:20px;
+}
+.hero .badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.hero h1{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-bottom:12px}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--pri),var(--teal));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero .sub{font-size:16px;color:var(--text2);max-width:580px;margin:0 auto 20px;line-height:1.6}
+.hero .tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.hero .tags span{
+  padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;
+}
+.tag-blue{background:var(--pri-light);color:var(--pri)}
+.tag-teal{background:var(--teal-bg);color:var(--teal)}
+.tag-purple{background:var(--purple-bg);color:var(--purple)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.hero .stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.hero .stat{display:flex;align-items:baseline;gap:6px}
+.hero .stat .num{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--text)}
+.hero .stat .lbl{font-size:13px;color:var(--text3)}
+
+/* ═════ LAYOUT ═════ */
+.layout{display:flex;max-width:1200px;margin:0 auto;position:relative}
+
+/* ═════ TOC ═════ */
+.toc{
+  position:sticky;top:var(--nav-h);width:var(--toc-w);flex-shrink:0;
+  height:calc(100vh - var(--nav-h));overflow-y:auto;
+  padding:24px 16px;border-right:1px solid var(--border-light);
+  background:var(--surface);
+}
+.toc-title{
+  font-size:11px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:12px;padding:0 8px;
+}
+.toc a{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:6px;
+  font-size:13px;color:var(--text2);text-decoration:none;
+  transition:all var(--transition);line-height:1.4;margin:1px 0;
+  border-left:2px solid transparent;
+}
+.toc a:hover{background:var(--bg);color:var(--text)}
+.toc a.active{background:var(--pri-light);color:var(--pri);font-weight:600;border-left-color:var(--pri)}
+.toc .toc-l2{padding-left:28px;font-size:12px}
+.toc .toc-divider{border:none;border-top:1px solid var(--border-light);margin:12px 8px}
+
+/* ═════ CONTENT ═════ */
+.content{flex:1;min-width:0;padding:32px 40px 80px;max-width:820px}
+
+/* ═════ SECTION ═════ */
+.sec{margin-bottom:48px}
+.sec-title{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;padding-bottom:12px;
+  border-bottom:2px solid var(--border-light);
+}
+.sec-title .num{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  background:var(--pri);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;font-family:var(--mono);
+}
+.sec-title h2{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.sec-title .line{flex:1;height:2px;background:var(--pri);border-radius:1px;max-width:40px}
+
+/* ═════ SUB SECTION ═════ */
+.subsec{margin:28px 0}
+.subsec-title{
+  position:relative;padding-left:14px;margin-bottom:14px;
+  font-size:17px;font-weight:700;color:var(--pri-dark);
+}
+.subsec-title::before{
+  content:'';position:absolute;left:0;top:4px;bottom:4px;
+  width:3px;background:var(--pri);border-radius:2px;
+}
+
+/* ═════ CARD ═════ */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px 24px;
+  margin-bottom:16px;box-shadow:var(--shadow);
+  transition:box-shadow var(--transition);
+}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h4{font-size:15px;font-weight:700;margin-bottom:8px;color:var(--pri-dark)}
+.card p,.card li{margin-bottom:6px;color:var(--text2);font-size:14px;line-height:1.7}
+.card ul,.card ol{padding-left:20px;margin:8px 0}
+.card li{margin-bottom:4px}
+
+/* ═════ TIP BLOCKS ═════ */
+.tip{
+  padding:14px 18px;border-radius:var(--radius);margin:16px 0;
+  border-left:4px solid;font-size:14px;line-height:1.7;
+}
+.tip-info{background:var(--pri-light);border-color:var(--pri);color:var(--pri-dark)}
+.tip-warn{background:var(--amber-bg);border-color:var(--amber);color:#92400e}
+.tip-good{background:var(--green-bg);border-color:var(--green);color:#065f46}
+.tip-red{background:var(--red-bg);border-color:var(--red);color:#991b1b}
+.tip-purple{background:var(--purple-bg);border-color:var(--purple);color:#5b21b6}
+.tip strong{display:block;margin-bottom:4px;font-size:13px}
+.tip code{
+  background:rgba(0,0,0,.06);padding:1px 6px;border-radius:4px;
+  font-family:var(--mono);font-size:13px;
+}
+
+/* ═════ CODE BLOCK ═════ */
+.code-block{
+  background:var(--code-bg);border-radius:var(--radius);
+  margin:16px 0;overflow:hidden;position:relative;
+}
+.code-block .code-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;background:rgba(255,255,255,.05);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.code-block .code-lang{
+  font-size:11px;font-weight:700;color:var(--teal);
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;
+}
+.code-block .copy-btn{
+  padding:3px 10px;border:1px solid rgba(255,255,255,.15);
+  border-radius:4px;background:transparent;
+  color:rgba(255,255,255,.5);font-size:11px;font-family:var(--mono);
+  cursor:pointer;transition:all var(--transition);
+}
+.code-block .copy-btn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.code-block .copy-btn.copied{color:var(--green);border-color:var(--green)}
+.code-block pre{
+  padding:16px;overflow-x:auto;margin:0;
+  font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--code-text);
+  tab-size:2;
+}
+.code-block pre .kw{color:#c678dd}
+.code-block pre .fn{color:#61afef}
+.code-block pre .str{color:#98c379}
+.code-block pre .num{color:#d19a66}
+.code-block pre .cm{color:#5c6370;font-style:italic}
+.code-block pre .op{color:#abb2bf}
+.code-block pre .ty{color:#e5c07b}
+.code-block pre .highlight{background:rgba(97,175,239,.15);padding:1px 0}
+
+/* ═════ TABLE ═════ */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead{background:var(--pri-light)}
+thead th{padding:10px 14px;text-align:left;font-weight:600;color:var(--pri-dark);font-size:13px;border-bottom:2px solid var(--border)}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border-light);color:var(--text2)}
+tbody tr:hover{background:var(--bg)}
+tbody tr:last-child td{border-bottom:none}
+table code{background:var(--pri-light);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:12px;color:var(--pri-dark)}
+
+/* ═════ SVG DIAGRAM ═════ */
+.viz{
+  margin:20px 0;padding:20px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  text-align:center;overflow-x:auto;
+}
+.viz-caption{font-size:12px;color:var(--text3);margin-top:10px;font-style:italic}
+.viz svg{max-width:100%;height:auto}
+
+/* ═════ GRID ═════ */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+
+/* ═════ FLOW DIAGRAM (TEXT-BASED) ═════ */
+.flow{
+  margin:16px 0;padding:16px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  font-family:var(--mono);font-size:12px;line-height:2;
+  overflow-x:auto;white-space:pre;color:var(--text2);
+}
+
+/* ═════ REVIEW BOX ═════ */
+.review{
+  background:linear-gradient(135deg,var(--pri-light),#f0fdfa);
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:24px;margin:24px 0;
+}
+.review h4{
+  display:flex;align-items:center;gap:8px;
+  font-size:15px;color:var(--pri-dark);margin-bottom:12px;
+}
+.review h4 svg{width:18px;height:18px}
+.review ul{padding-left:20px;color:var(--text2);font-size:14px;line-height:1.9}
+.review ul li{margin-bottom:2px}
+
+/* ═════ RESPONSIVE ═════ */
+@media(max-width:900px){
+  .toc{display:none;position:fixed;top:var(--nav-h);left:0;bottom:0;z-index:99;
+    width:260px;box-shadow:var(--shadow-lg);border-right:1px solid var(--border)}
+  .toc.show{display:block}
+  .nav .nav-toc-btn{display:inline-flex}
+  .content{padding:24px 20px 80px}
+  .hero{padding:40px 16px 36px}
+  .hero h1{font-size:26px}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .hero .stats{gap:16px}
+  .content{padding:20px 14px 60px}
+  .card{padding:16px}
+}
+
+/* ═════ TOC OVERLAY ═════ */
+.toc-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:98}
+.toc-overlay.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav class="nav">
+  <a href="../index.html" class="logo" title="返回门户">
+    <span class="logo-badge">F</span>
+    Frontend Learning Hub <span>· MySQL 底层原理</span>
+  </a>
+  <div class="spacer"></div>
+  <button class="nav-toc-btn" id="tocToggle" aria-label="目录">&#9776; 目录</button>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="badge"><span class="dot"></span> 2026.07 更新 · 系统化底层原理</div>
+  <h1>MySQL <span class="grad">底层原理</span>全指南</h1>
+  <p class="sub">从 InnoDB 底层原理到分库分表架构，再到数据库选型决策 —— 覆盖 MySQL 开发者必知必会的完整知识体系</p>
+  <div class="tags">
+    <span class="tag-blue">MySQL 8.0</span>
+    <span class="tag-teal">InnoDB</span>
+    <span class="tag-purple">索引优化</span>
+    <span class="tag-amber">事务锁</span>
+    <span class="tag-blue">分库分表</span>
+    <span class="tag-teal">数据库选型</span>
+    <span class="tag-amber">FAQ</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="num">7</span><span class="lbl">核心模块</span></div>
+    <div class="stat"><span class="num">~75</span><span class="lbl">分钟阅读</span></div>
+    <div class="stat"><span class="num">35+</span><span class="lbl">图示</span></div>
+    <div class="stat"><span class="num">25+</span><span class="lbl">代码示例</span></div>
+  </div>
+</section>
+
+<!-- ═══════════ LAYOUT ═══════════ -->
+<div class="layout">
+  <!-- TOC Overlay -->
+  <div class="toc-overlay" id="tocOverlay"></div>
+
+  <!-- Sidebar TOC -->
+  <aside class="toc" id="toc">
+    <div class="toc-title">目录导航</div>
+    <a href="#sec1">1. 索引原理</a>
+    <a href="#sec1-1" class="toc-l2">B+Tree 数据结构</a>
+    <a href="#sec1-2" class="toc-l2">聚簇索引 vs 二级索引</a>
+    <a href="#sec1-3" class="toc-l2">索引查找过程</a>
+    <hr class="toc-divider">
+    <a href="#sec2">2. 索引优化</a>
+    <a href="#sec2-1" class="toc-l2">覆盖索引</a>
+    <a href="#sec2-2" class="toc-l2">最左前缀原则</a>
+    <a href="#sec2-3" class="toc-l2">索引下推 (ICP)</a>
+    <a href="#sec2-4" class="toc-l2">索引失效场景</a>
+    <a href="#sec2-5" class="toc-l2">EXPLAIN 执行计划</a>
+    <hr class="toc-divider">
+    <a href="#sec3">3. 事务与锁</a>
+    <a href="#sec3-1" class="toc-l2">ACID 特性</a>
+    <a href="#sec3-2" class="toc-l2">MVCC 多版本并发控制</a>
+    <a href="#sec3-3" class="toc-l2">事务隔离级别</a>
+    <a href="#sec3-4" class="toc-l2">锁机制全景</a>
+    <hr class="toc-divider">
+    <a href="#sec4">4. InnoDB 存储引擎</a>
+    <a href="#sec4-1" class="toc-l2">Buffer Pool</a>
+    <a href="#sec4-2" class="toc-l2">Redo Log</a>
+    <a href="#sec4-3" class="toc-l2">Undo Log</a>
+    <a href="#sec4-4" class="toc-l2">Binlog</a>
+    <a href="#sec4-5" class="toc-l2">写入流程全景</a>
+    <hr class="toc-divider">
+    <a href="#sec5">5. 分库分表</a>
+    <a href="#sec5-1" class="toc-l2">为什么需要拆分</a>
+    <a href="#sec5-2" class="toc-l2">垂直拆分 vs 水平拆分</a>
+    <a href="#sec5-3" class="toc-l2">分片策略</a>
+    <a href="#sec5-4" class="toc-l2">中间件方案</a>
+    <a href="#sec5-5" class="toc-l2">核心问题与解决方案</a>
+    <hr class="toc-divider">
+    <a href="#sec6">6. 数据库选型</a>
+    <a href="#sec6-1" class="toc-l2">关系型数据库对比</a>
+    <a href="#sec6-2" class="toc-l2">NoSQL 分类与选型</a>
+    <a href="#sec6-3" class="toc-l2">典型场景推荐</a>
+    <a href="#sec6-4" class="toc-l2">混合架构</a>
+    <hr class="toc-divider">
+    <a href="#sec7">7. 常见问题 FAQ</a>
+    <a href="#sec7-1" class="toc-l2">连接与认证</a>
+    <a href="#sec7-2" class="toc-l2">性能优化</a>
+    <a href="#sec7-3" class="toc-l2">事务与一致性</a>
+    <a href="#sec7-4" class="toc-l2">存储引擎</a>
+    <a href="#sec7-5" class="toc-l2">备份与恢复</a>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="content">
+
+    <!-- ═══════════ SECTION 1: INDEX ═══════════ -->
+    <section class="sec" id="sec1">
+      <div class="sec-title">
+        <span class="num">1</span>
+        <h2>索引原理</h2>
+        <span class="line"></span>
+      </div>
+
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px">
+        索引是 MySQL 高效查询的基石。理解索引底层数据结构，是写出高性能 SQL 的前提。InnoDB 使用 <strong>B+Tree</strong> 作为默认索引结构，这一选择直接决定了索引的查找效率、范围查询能力和磁盘 I/O 特性。
+      </p>
+
+      <!-- 1.1 B+Tree -->
+      <div class="subsec" id="sec1-1">
+        <div class="subsec-title">1.1 B+Tree 数据结构</div>
+
+        <div class="card">
+          <h4>为什么选择 B+Tree？</h4>
+          <p>数据库索引需要同时支持 <strong>等值查询</strong> 和 <strong>范围查询</strong>，且数据存储在磁盘上，必须最小化 I/O 次数。常见的索引结构对比如下：</p>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>数据结构</th><th>等值查询</th><th>范围查询</th><th>磁盘 I/O</th><th>插入/删除</th><th>MySQL 使用</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Hash</strong></td><td>O(1) 极快</td><td>&#10007; 不支持</td><td>O(1)</td><td>O(1)</td><td>Memory 引擎、自适应 Hash</td></tr>
+              <tr><td><strong>二叉搜索树</strong></td><td>O(log n)</td><td>O(log n + k)</td><td>高（树高过大）</td><td>O(log n)</td><td>&#10007; 不适用</td></tr>
+              <tr><td><strong>B-Tree</strong></td><td>O(log n)</td><td>需回溯</td><td>低（矮胖）</td><td>O(log n)</td><td>&#10007;</td></tr>
+              <tr><td style="color:var(--pri);font-weight:700">B+Tree</td><td style="color:var(--pri)">O(log n)</td><td style="color:var(--pri)">O(log n + k) 极优</td><td style="color:var(--pri)">最低</td><td style="color:var(--pri)">O(log n)</td><td style="color:var(--pri)">&#10004; InnoDB/MyISAM</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h4>B+Tree 核心特征</h4>
+          <ul>
+            <li><strong>所有数据存储在叶子节点</strong>：非叶子节点只存 key，不存 data，因此一个节点能容纳更多 key，树更"矮胖"</li>
+            <li><strong>叶子节点形成有序双向链表</strong>：支持高效的范围查询（无需回溯父节点）</li>
+            <li><strong>每个节点对应一个磁盘页</strong>（默认 16KB）：一次 I/O 加载一整个节点</li>
+            <li><strong>树高极低</strong>：通常 2~4 层，每层一次 I/O，百万级数据只需 2~3 次 I/O</li>
+          </ul>
+        </div>
+
+        <!-- B+Tree SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#1a6fb5" stop-opacity="0.06"/></linearGradient>
+              <linearGradient id="leafBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d1fae5"/><stop offset="100%" stop-color="#a7f3d0"/></linearGradient>
+              <filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/></filter>
+            </defs>
+            <rect width="700" height="320" rx="10" fill="url(#bgGrad)"/>
+
+            <!-- 标题 -->
+            <text x="350" y="24" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">B+Tree 索引结构示意（3层）</text>
+
+            <!-- 根节点 -->
+            <rect x="270" y="38" width="160" height="38" rx="6" fill="#fff" stroke="#1a6fb5" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="350" y="62" text-anchor="middle" font-size="12" fill="#1a6fb5" font-weight="700" font-family="system-ui">[ 30 | 60 ] 根节点</text>
+            <!-- 根到第二层连线 -->
+            <line x1="310" y1="76" x2="110" y2="128" stroke="#1a6fb5" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <line x1="350" y1="76" x2="350" y2="128" stroke="#1a6fb5" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <line x1="390" y1="76" x2="590" y2="128" stroke="#1a6fb5" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+            <!-- 第二层 -->
+            <rect x="70" y="130" width="140" height="38" rx="6" fill="#fff" stroke="#888" stroke-width="1" filter="url(#shadow)"/>
+            <text x="140" y="154" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui">[ 10 | 20 ]</text>
+            <rect x="250" y="130" width="200" height="38" rx="6" fill="#fff" stroke="#888" stroke-width="1" filter="url(#shadow)"/>
+            <text x="350" y="154" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui">[ 40 | 50 ]</text>
+            <rect x="490" y="130" width="140" height="38" rx="6" fill="#fff" stroke="#888" stroke-width="1" filter="url(#shadow)"/>
+            <text x="560" y="154" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui">[ 70 | 80 ]</text>
+
+            <!-- 第二层到叶子连线 -->
+            <line x1="95" y1="168" x2="75" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="140" y1="168" x2="175" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="195" y1="168" x2="245" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="295" y1="168" x2="305" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="350" y1="168" x2="350" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="405" y1="168" x2="395" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="440" y1="168" x2="455" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="520" y1="168" x2="525" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="560" y1="168" x2="595" y2="220" stroke="#059669" stroke-width="1" stroke-dasharray="3,2"/>
+
+            <!-- 叶子节点（绿色） -->
+            <rect x="30" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="75" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">5 → 8</text>
+            <text x="75" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="130" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="175" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">10 → 15</text>
+            <text x="175" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="200" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="245" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">22 → 28</text>
+            <text x="245" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="260" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="305" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">32 → 38</text>
+            <text x="305" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="305" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="350" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">42 → 48</text>
+            <text x="350" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="350" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="395" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">55 → 58</text>
+            <text x="395" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="410" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="455" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">61 → 68</text>
+            <text x="455" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="480" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="525" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">72 → 78</text>
+            <text x="525" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+            <rect x="560" y="222" width="90" height="44" rx="5" fill="url(#leafBg)" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+            <text x="605" y="242" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600" font-family="system-ui">82 → 90</text>
+            <text x="605" y="258" text-anchor="middle" font-size="9" fill="#065f46" font-family="system-ui">data</text>
+
+            <!-- 叶子双向链表箭头 -->
+            <line x1="120" y1="244" x2="130" y2="244" stroke="#059669" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+            <!-- 标注 -->
+            <text x="350" y="290" text-anchor="middle" font-size="11" fill="#059669" font-weight="600" font-family="system-ui">&#8596; 叶子节点双向链表：支持高效范围扫描</text>
+
+            <!-- 左侧标注 -->
+            <text x="12" y="62" font-size="10" fill="#1a6fb5" font-weight="700" font-family="system-ui">根</text>
+            <text x="12" y="152" font-size="10" fill="#888" font-weight="600" font-family="system-ui">内部</text>
+            <text x="12" y="246" font-size="10" fill="#059669" font-weight="600" font-family="system-ui">叶子</text>
+
+            <defs><marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#059669"/></marker></defs>
+          </svg>
+          <div class="viz-caption">B+Tree 三层结构：根节点和内部节点只存索引 key（非叶子节点），叶子节点存储完整数据行，并通过双向指针串联以支持范围查询</div>
+        </div>
+
+        <div class="tip tip-info">
+          <strong>&#128161; 磁盘 I/O 估算</strong>
+          假设一条索引记录 16 字节，磁盘页 16KB，每个非叶子节点可存约 <code>16KB / 16B ≈ 1000</code> 个 key。3 层 B+Tree 最多容纳 <code>1000 × 1000 × 1000 = 10 亿</code> 条记录，只需 3 次 I/O。
+        </div>
+      </div>
+
+      <!-- 1.2 聚簇索引 vs 二级索引 -->
+      <div class="subsec" id="sec1-2">
+        <div class="subsec-title">1.2 聚簇索引 vs 二级索引</div>
+
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--pri)">
+            <h4>聚簇索引 (Clustered Index)</h4>
+            <ul>
+              <li>叶子节点直接存储<strong>完整数据行</strong></li>
+              <li>每张表<strong>有且仅有一个</strong>聚簇索引（通常是主键）</li>
+              <li>主键查询性能最优：一次 B+Tree 搜索直达数据</li>
+              <li>InnoDB 自动选择主键作为聚簇索引；无主键则选唯一非空索引；都没有则生成隐藏 <code>row_id</code></li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid var(--teal)">
+            <h4>二级索引 (Secondary Index)</h4>
+            <ul>
+              <li>叶子节点存储的是索引列 + <strong>主键值</strong>（不存完整行）</li>
+              <li>一张表可以有多个二级索引</li>
+              <li>查询需要<strong>回表</strong>：先在二级索引找到主键，再用主键去聚簇索引查完整行</li>
+              <li><strong>回表代价高</strong>：多一次 B+Tree 搜索（多一次随机 I/O）</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Clustered vs Secondary SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="400" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="24" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">聚簇索引 VS 二级索引：回表过程示意</text>
+
+            <!-- 左侧：二级索引 -->
+            <text x="180" y="52" text-anchor="middle" font-size="11" fill="#0d9488" font-weight="700" font-family="system-ui">二级索引 (idx_age)</text>
+            <rect x="90" y="62" width="180" height="40" rx="6" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.5"/>
+            <text x="180" y="80" text-anchor="middle" font-size="10" fill="#0d9488" font-family="system-ui" font-weight="600">key=25</text>
+            <text x="180" y="94" text-anchor="middle" font-size="10" fill="#0f766e" font-family="system-ui">&#8594; PK=1003</text>
+
+            <rect x="90" y="108" width="58" height="36" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+            <text x="119" y="130" text-anchor="middle" font-size="9" fill="#555" font-family="system-ui">age=22</text>
+            <rect x="151" y="108" width="58" height="36" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+            <text x="180" y="130" text-anchor="middle" font-size="9" fill="#555" font-family="system-ui">age=25</text>
+            <rect x="212" y="108" width="58" height="36" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+            <text x="241" y="130" text-anchor="middle" font-size="9" fill="#555" font-family="system-ui">age=30</text>
+            <text x="180" y="164" text-anchor="middle" font-size="9" fill="#0d9488" font-family="system-ui">&#9650; 找到 PK=1003</text>
+
+            <!-- 右侧：聚簇索引 -->
+            <text x="500" y="52" text-anchor="middle" font-size="11" fill="#1a6fb5" font-weight="700" font-family="system-ui">聚簇索引 (PRIMARY KEY)</text>
+            <rect x="410" y="62" width="180" height="60" rx="6" fill="#e8f4fd" stroke="#1a6fb5" stroke-width="1.5"/>
+            <text x="500" y="82" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui" font-weight="600">PK=1003</text>
+            <text x="500" y="98" text-anchor="middle" font-size="10" fill="#145a8c" font-family="system-ui">name=张三, age=25</text>
+            <text x="500" y="114" text-anchor="middle" font-size="10" fill="#145a8c" font-family="system-ui">email=zhang@test.com</text>
+
+            <rect x="410" y="128" width="58" height="36" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+            <text x="439" y="150" text-anchor="middle" font-size="9" fill="#555" font-family="system-ui">PK=1001</text>
+            <rect x="471" y="128" width="58" height="36" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+            <text x="500" y="150" text-anchor="middle" font-size="9" fill="#555" font-family="system-ui">PK=1003</text>
+            <rect x="532" y="128" width="58" height="36" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+            <text x="561" y="150" text-anchor="middle" font-size="9" fill="#555" font-family="system-ui">PK=1005</text>
+            <text x="500" y="184" text-anchor="middle" font-size="9" fill="#1a6fb5" font-family="system-ui">&#9650; 获得完整行数据</text>
+
+            <!-- 回表箭头 -->
+            <path d="M270 140 L380 140" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowRed)"/>
+            <text x="325" y="134" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700" font-family="system-ui">回表</text>
+            <text x="325" y="160" text-anchor="middle" font-size="9" fill="#dc2626" font-family="system-ui">多一次随机 I/O</text>
+
+            <defs><marker id="arrowRed" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#dc2626"/></marker></defs>
+
+            <!-- 底部说明 -->
+            <rect x="60" y="210" width="580" height="85" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1"/>
+            <text x="350" y="234" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700" font-family="system-ui">&#9888; 回表性能影响</text>
+            <text x="350" y="254" text-anchor="middle" font-size="10" fill="#92400e" font-family="system-ui">二级索引查询 = 1次(二级B+Tree) + 1次(聚簇B+Tree) = 2次随机I/O</text>
+            <text x="350" y="272" text-anchor="middle" font-size="10" fill="#92400e" font-family="system-ui">当查询大量行时，回表开销成倍放大。优化手段：覆盖索引（见下一章）</text>
+            <text x="350" y="290" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui" font-weight="600">&#10004; 主键查询直达数据 = 1次I/O | 覆盖索引避免回表 = 1次I/O</text>
+          </svg>
+          <div class="viz-caption">聚簇索引叶子存完整行，二级索引叶子只存主键。非覆盖索引查询需"回表"——多一次随机 I/O</div>
+        </div>
+      </div>
+
+      <!-- 1.3 查找过程 -->
+      <div class="subsec" id="sec1-3">
+        <div class="subsec-title">1.3 索引查找过程</div>
+
+        <div class="card">
+          <h4>等值查询 <code>SELECT * FROM users WHERE id = 1003</code></h4>
+          <div class="flow" style="background:#e8f4fd;border-left:4px solid var(--pri)">
+从根节点开始 &#8594; 比较 id=1003 与节点内 key 区间
+  &#8594; 确定下一层子节点 &#8594; 重复比较直到叶子节点
+  &#8594; 在叶子节点二分查找 id=1003
+  &#8594; 找到，返回完整行数据（聚簇索引直接拿到 data）
+<b>复杂度：O(log n)，通常 2~3 次磁盘 I/O</b></div>
+        </div>
+
+        <div class="card">
+          <h4>范围查询 <code>SELECT * FROM users WHERE id BETWEEN 1000 AND 2000</code></h4>
+          <div class="flow" style="background:#f0fdfa;border-left:4px solid var(--teal)">
+先等值定位到 id=1000 &#8594; 沿叶子节点双向链表
+  &#8594; 顺序扫描至 id > 2000 &#8594; 停止
+  &#8594; 返回所有匹配行
+<b>复杂度：O(log n + k)，k 为结果集大小</b></div>
+        </div>
+
+        <div class="tip tip-warn">
+          <strong>&#9888; 主键设计建议</strong>
+          自增主键（AUTO_INCREMENT）是最优选择：插入时直接在链表尾部追加，无需页分裂；UUID 或随机主键会导致频繁的页分裂和页填充率降低，严重影响写入性能和空间利用率。
+        </div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> 索引原理 · 记忆要点</h4>
+          <ul>
+            <li>InnoDB 使用 <strong>B+Tree</strong>——非叶子节点只存 key，叶子节点存数据 + 双向链表</li>
+            <li><strong>聚簇索引</strong>叶子节点存完整行数据，一张表只有一个</li>
+            <li><strong>二级索引</strong>叶子节点存主键值，查完整行需要<strong>回表</strong></li>
+            <li><strong>自增主键</strong>最优，避免页分裂；UUID 主键是性能杀手</li>
+            <li>3 层 B+Tree 可索引 10 亿行，只需 2~3 次 I/O</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SECTION 2: INDEX OPTIMIZATION ═══════════ -->
+    <section class="sec" id="sec2">
+      <div class="sec-title">
+        <span class="num">2</span>
+        <h2>索引优化</h2>
+        <span class="line"></span>
+      </div>
+
+      <!-- 2.1 覆盖索引 -->
+      <div class="subsec" id="sec2-1">
+        <div class="subsec-title">2.1 覆盖索引 (Covering Index)</div>
+
+        <div class="card">
+          <h4>核心思想</h4>
+          <p>当查询的所有列都在同一个索引中时，无需回表查聚簇索引，直接从二级索引拿到结果。这是性能优化的<strong>第一优先</strong>手段。</p>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- &#10060; 需要回表：idx_age 只索引了 age，SELECT * 需要全部列
+SELECT * FROM users WHERE age = 25;
+
+-- &#10004; 覆盖索引：idx_age_name 索引了 (age, name)，无需回表
+CREATE INDEX idx_age_name ON users(age, name);
+SELECT age, name FROM users WHERE age = 25;
+
+-- &#10004; 使用 EXPLAIN 验证，Extra 列会显示 Using index
+EXPLAIN SELECT age, name FROM users WHERE age = 25;</pre>
+</div>
+
+        <div class="tip tip-good">
+          <strong>&#10004; Using index 判断方法</strong>
+          执行 <code>EXPLAIN</code> 后，<code>Extra</code> 列出现 <code>Using index</code> 即表示使用了覆盖索引，这是最优的查询方式。如果出现 <code>Using index condition</code> 则是索引下推（见 2.3）。
+        </div>
+
+        <div class="tip tip-warn">
+          <strong>&#9888; SELECT * 是覆盖索引的敌人</strong>
+          <code>SELECT *</code> 几乎不可能被覆盖索引优化（除非索引包含所有列）。在生产环境应明确列出需要的列。
+        </div>
+      </div>
+
+      <!-- 2.2 最左前缀 -->
+      <div class="subsec" id="sec2-2">
+        <div class="subsec-title">2.2 最左前缀原则</div>
+
+        <div class="card">
+          <h4>联合索引的匹配规则</h4>
+          <p>联合索引 <code>(a, b, c)</code> 按列顺序构建 B+Tree：先按 a 排序，a 相同再按 b 排序，b 相同再按 c 排序。因此索引从左到右匹配，<strong>跳过中间列则后续列失效</strong>。</p>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>查询条件</th><th>是否使用索引</th><th>原因</th></tr></thead>
+            <tbody>
+              <tr><td><code>WHERE a = 1 AND b = 2 AND c = 3</code></td><td style="color:var(--green)">&#10004; 完全匹配</td><td>三列全部命中</td></tr>
+              <tr><td><code>WHERE a = 1 AND b = 2</code></td><td style="color:var(--green)">&#10004; 匹配 a, b</td><td>前缀命中</td></tr>
+              <tr><td><code>WHERE a = 1 AND c = 3</code></td><td style="color:var(--amber)">&#9888; 仅匹配 a</td><td>b 缺失，c 无法使用</td></tr>
+              <tr><td><code>WHERE b = 2 AND c = 3</code></td><td style="color:var(--red)">&#10007; 全表扫描</td><td>缺少 a，索引完全失效</td></tr>
+              <tr><td><code>WHERE a = 1 AND b > 2 AND c = 3</code></td><td style="color:var(--amber)">&#9888; 匹配 a, b(range)</td><td>范围查询 b 之后的 c 失效</td></tr>
+              <tr><td><code>WHERE a = 1 AND b LIKE 'x%'</code></td><td style="color:var(--green)">&#10004; 匹配 a, b</td><td>LIKE 'x%' 相当于范围，可用前缀</td></tr>
+              <tr><td><code>WHERE a = 1 AND b LIKE '%x'</code></td><td style="color:var(--red)">&#10007; 仅匹配 a</td><td>LIKE '%x' 前缀模糊，b 失效</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 联合索引
+CREATE INDEX idx_a_b_c ON orders(user_id, status, create_time);
+
+-- &#10004; 走 idx_a_b_c
+SELECT * FROM orders WHERE user_id = 100 AND status = 'paid';
+
+-- &#10004; 走 idx_a_b_c（范围后 status 也失效）
+SELECT * FROM orders WHERE user_id = 100 AND create_time > '2024-01-01';
+
+-- &#10004; 走 idx_a_b_c（ORDER BY 也可利用索引有序性）
+SELECT * FROM orders WHERE user_id = 100 ORDER BY status;
+
+-- &#10007; 不走索引：缺少 user_id
+SELECT * FROM orders WHERE status = 'paid';</pre>
+</div>
+
+        <div class="tip tip-info">
+          <strong>&#128161; ORDER BY / GROUP BY 也受最左前缀约束</strong>
+          联合索引 <code>(a, b)</code> 下，<code>WHERE a = 1 ORDER BY b</code> 可以用索引排序；<code>WHERE a = 1 ORDER BY c</code> 则需要 filesort。
+        </div>
+      </div>
+
+      <!-- 2.3 索引下推 -->
+      <div class="subsec" id="sec2-3">
+        <div class="subsec-title">2.3 索引下推 (ICP, Index Condition Pushdown)</div>
+
+        <div class="card">
+          <h4>MySQL 5.6+ 的优化利器</h4>
+          <p>传统流程中，存储引擎只按索引条件过滤，剩余条件交给 Server 层处理——这意味着不符合全部条件的行也要回表。ICP 将部分 WHERE 条件下推到存储引擎层，<strong>在索引层面就过滤掉不满足条件的行，减少回表次数</strong>。</p>
+        </div>
+
+        <div class="viz">
+          <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="220" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">ICP 优化对比</text>
+
+            <!-- 无 ICP -->
+            <text x="180" y="48" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="system-ui">&#10060; 无 ICP</text>
+            <rect x="30" y="56" width="100" height="28" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+            <text x="80" y="74" text-anchor="middle" font-size="9" fill="#dc2626" font-family="system-ui">索引扫描</text>
+            <text x="145" y="74" font-size="14" fill="#888">&#8594;</text>
+            <rect x="160" y="56" width="80" height="28" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+            <text x="200" y="74" text-anchor="middle" font-size="9" fill="#dc2626" font-family="system-ui">全部回表</text>
+            <text x="255" y="74" font-size="14" fill="#888">&#8594;</text>
+            <rect x="270" y="56" width="100" height="28" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+            <text x="320" y="74" text-anchor="middle" font-size="9" fill="#dc2626" font-family="system-ui">Server 过滤</text>
+            <text x="180" y="108" text-anchor="middle" font-size="10" fill="#dc2626" font-family="system-ui">假设 1000 行匹配 age=25，其中只有 10 行 name LIKE '张%'</text>
+            <text x="180" y="124" text-anchor="middle" font-size="10" fill="#dc2626" font-family="system-ui">需要回表 1000 次！</text>
+
+            <!-- 有 ICP -->
+            <text x="520" y="48" text-anchor="middle" font-size="11" fill="#059669" font-weight="700" font-family="system-ui">&#10004; 有 ICP</text>
+            <rect x="370" y="56" width="100" height="28" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+            <text x="420" y="74" text-anchor="middle" font-size="9" fill="#059669" font-family="system-ui">索引扫描+过滤</text>
+            <text x="485" y="74" font-size="14" fill="#888">&#8594;</text>
+            <rect x="500" y="56" width="80" height="28" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+            <text x="540" y="74" text-anchor="middle" font-size="9" fill="#059669" font-family="system-ui">10次回表</text>
+            <text x="595" y="74" font-size="14" fill="#888">&#8594;</text>
+            <rect x="610" y="56" width="60" height="28" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+            <text x="640" y="74" text-anchor="middle" font-size="9" fill="#059669" font-family="system-ui">返回</text>
+            <text x="520" y="108" text-anchor="middle" font-size="10" fill="#059669" font-family="system-ui">存储引擎直接过滤 name LIKE '张%'，只回表 10 次！</text>
+            <text x="520" y="124" text-anchor="middle" font-size="10" fill="#059669" font-family="system-ui">EXTRA 列显示 Using index condition</text>
+
+            <!-- 分隔线 -->
+            <line x1="30" y1="150" x2="670" y2="150" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="172" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui">ICP 本质：将部分 WHERE 条件下推到存储引擎，利用二级索引已包含的列预先过滤</text>
+            <text x="350" y="192" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui">适用条件：联合索引中前面的列做范围查询时，后面的列过滤可下推</text>
+          </svg>
+          <div class="viz-caption">ICP 在索引层面预先过滤，减少回表次数，尤其适合联合索引中前面列做范围查询的场景</div>
+        </div>
+      </div>
+
+      <!-- 2.4 索引失效 -->
+      <div class="subsec" id="sec2-4">
+        <div class="subsec-title">2.4 索引失效的常见场景</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>场景</th><th>示例</th><th>原因</th></tr></thead>
+            <tbody>
+              <tr><td><strong>对索引列做函数/运算</strong></td><td><code>WHERE YEAR(create_time) = 2024</code></td><td>索引存的是原值，函数结果无法匹配</td></tr>
+              <tr><td><strong>隐式类型转换</strong></td><td><code>WHERE phone = 13800138000</code>（phone 是 VARCHAR）</td><td>MySQL 将字符串转数字，等同于在索引列上做函数</td></tr>
+              <tr><td><strong>LIKE 前置 %</strong></td><td><code>WHERE name LIKE '%张三'</code></td><td>B+Tree 按前缀排序，前置通配符无法确定范围</td></tr>
+              <tr><td><strong>OR 条件中有非索引列</strong></td><td><code>WHERE id = 1 OR name = 'test'</code></td><td>OR 两边都要走索引才能整体走索引</td></tr>
+              <tr><td><strong>!= 或 NOT IN</strong></td><td><code>WHERE status != 'deleted'</code></td><td>不等于条件范围太大，优化器倾向全表扫描</td></tr>
+              <tr><td><strong>IS NULL / IS NOT NULL</strong></td><td><code>WHERE name IS NULL</code></td><td>取决于 NULL 值占比，优化器自行决定</td></tr>
+              <tr><td><strong>联合索引不满足最左前缀</strong></td><td>见 2.2 节</td><td>跳过前导列导致后续列无法使用</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- &#10060; 索引列上做运算
+SELECT * FROM orders WHERE YEAR(create_time) = 2024;
+-- &#10004; 改为范围查询
+SELECT * FROM orders WHERE create_time >= '2024-01-01' AND create_time < '2025-01-01';
+
+-- &#10060; 隐式类型转换（phone 是 VARCHAR）
+SELECT * FROM users WHERE phone = 13800138000;
+-- &#10004; 字符串类型用引号
+SELECT * FROM users WHERE phone = '13800138000';
+
+-- &#10060; 前置模糊
+SELECT * FROM users WHERE name LIKE '%张三';
+-- &#10004; 如需后缀匹配，考虑全文索引或 Elasticsearch
+SELECT * FROM users WHERE name LIKE '张三%';
+
+-- &#10060; OR 混用（name 无索引）
+SELECT * FROM users WHERE id = 1 OR name = 'test';
+-- &#10004; 改用 UNION
+SELECT * FROM users WHERE id = 1
+UNION
+SELECT * FROM users WHERE name = 'test';</pre>
+</div>
+      </div>
+
+      <!-- 2.5 EXPLAIN -->
+      <div class="subsec" id="sec2-5">
+        <div class="subsec-title">2.5 EXPLAIN 执行计划解读</div>
+
+        <div class="card">
+          <h4>EXPLAIN 核心列速查</h4>
+          <p>通过 EXPLAIN 可以精确判断查询是否用了索引、访问了多少行、是否使用了临时表或文件排序。</p>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>列名</th><th>含义</th><th>需要关注的值</th></tr></thead>
+            <tbody>
+              <tr><td><strong>type</strong></td><td>访问类型（越靠前越好）</td><td><code>system</code> > <code>const</code> > <code>eq_ref</code> > <code>ref</code> > <code>range</code> > <code>index</code> > <strong style="color:var(--red)">ALL</strong></td></tr>
+              <tr><td><strong>key</strong></td><td>实际使用的索引</td><td>NULL = 未使用索引，需要排查</td></tr>
+              <tr><td><strong>key_len</strong></td><td>使用的索引长度</td><td>越小越好，可判断联合索引用了几列</td></tr>
+              <tr><td><strong>rows</strong></td><td>预估扫描行数</td><td>越小越好，是优化器估算值</td></tr>
+              <tr><td><strong>Extra</strong></td><td>附加信息</td><td><code>Using index</code>（覆盖索引）/ <code>Using filesort</code>（需优化）/ <code>Using temporary</code>（需优化）/ <code>Using where</code>（Server 层过滤）/ <code>Using index condition</code>（ICP）</td></tr>
+              <tr><td><strong>possible_keys</strong></td><td>可能使用的索引</td><td>列表中的索引都可能被用上</td></tr>
+              <tr><td><strong>ref</strong></td><td>索引匹配的列或常量</td><td>const = 常量匹配，列名 = 关联匹配</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- type=ALL, 全表扫描，需要加索引
+EXPLAIN SELECT * FROM users WHERE name = '张三';
+-- type: ALL | key: NULL | rows: 100000 | Extra: Using where
+
+-- type=ref, 非唯一索引查找
+EXPLAIN SELECT * FROM users WHERE age = 25;
+-- type: ref | key: idx_age | rows: 500 | Extra: NULL
+
+-- type=range, 范围扫描
+EXPLAIN SELECT * FROM orders WHERE create_time >= '2024-01-01';
+-- type: range | key: idx_ctime | rows: 10000 | Extra: Using index condition
+
+-- type=const, 主键或唯一索引等值查询（最优）
+EXPLAIN SELECT * FROM users WHERE id = 1003;
+-- type: const | key: PRIMARY | rows: 1 | Extra: NULL</pre>
+</div>
+
+        <div class="tip tip-info">
+          <strong>&#128161; EXPLAIN ANALYZE (MySQL 8.0.18+)</strong>
+          比 EXPLAIN 更精确，它会<strong>实际执行</strong>查询并输出每一步的真实耗时和行数，格式为树状结构。调试慢查询首选。
+        </div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> 索引优化 · 记忆要点</h4>
+          <ul>
+            <li><strong>覆盖索引</strong>避免回表，是最高效的优化手段（EXPLAIN 看 <code>Using index</code>）</li>
+            <li><strong>最左前缀</strong>：联合索引 (a,b,c) 跳 a 则 b/c 全失效</li>
+            <li><strong>ICP 索引下推</strong>：MySQL 5.6+，存储引擎层预过滤，减少回表</li>
+            <li><strong>索引失效 7 大场景</strong>：函数运算、类型转换、前置 %、OR 混用、!=、最左缺失、IS NULL</li>
+            <li><strong>EXPLAIN</strong>：关注 type（避免 ALL）、key（是否用到索引）、Extra（Using filesort/temporary 需优化）</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SECTION 3: TRANSACTIONS & LOCKS ═══════════ -->
+    <section class="sec" id="sec3">
+      <div class="sec-title">
+        <span class="num">3</span>
+        <h2>事务与锁机制</h2>
+        <span class="line"></span>
+      </div>
+
+      <!-- 3.1 ACID -->
+      <div class="subsec" id="sec3-1">
+        <div class="subsec-title">3.1 ACID 特性</div>
+
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--pri)">
+            <h4>A — 原子性 (Atomicity)</h4>
+            <p>事务是不可分割的最小单元，要么全部成功，要么全部失败回滚。由 <strong>Undo Log</strong> 保证。</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--teal)">
+            <h4>C — 一致性 (Consistency)</h4>
+            <p>事务前后数据必须满足所有约束（主键、外键、NOT NULL 等）。由 A+I+D 共同保证。</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--purple)">
+            <h4>I — 隔离性 (Isolation)</h4>
+            <p>并发事务之间互相隔离，互不干扰。由 <strong>MVCC + 锁</strong> 保证。</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--amber)">
+            <h4>D — 持久性 (Durability)</h4>
+            <p>事务一旦提交，数据永久保存，即使系统崩溃也不丢失。由 <strong>Redo Log</strong> 保证。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>各特性对应机制</h4>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>特性</th><th>核心机制</th><th>作用</th></tr></thead>
+              <tbody>
+                <tr><td>原子性</td><td><strong>Undo Log</strong></td><td>回滚时恢复数据到事务开始前的状态</td></tr>
+                <tr><td>隔离性</td><td><strong>MVCC + 锁</strong></td><td>并发控制，避免事务间互相干扰</td></tr>
+                <tr><td>持久性</td><td><strong>Redo Log</strong></td><td>崩溃恢复，确保已提交数据不丢失</td></tr>
+                <tr><td>一致性</td><td><strong>以上三者 + 约束</strong></td><td>数据完整性由 A+I+D 联合保障</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3.2 MVCC -->
+      <div class="subsec" id="sec3-2">
+        <div class="subsec-title">3.2 MVCC 多版本并发控制</div>
+
+        <div class="card">
+          <h4>MVCC 核心机制</h4>
+          <p>MVCC（Multi-Version Concurrency Control）通过维护数据的<strong>多个版本</strong>，让读操作不加锁、不阻塞写操作，写操作也不阻塞读操作。这是 InnoDB 实现高并发读写的关键。</p>
+        </div>
+
+        <div class="card">
+          <h4>MVCC 四大组件</h4>
+          <ul>
+            <li><strong>隐藏列</strong>：每行有 <code>DB_TRX_ID</code>（最近修改的事务 ID）、<code>DB_ROLL_PTR</code>（回滚指针，指向 Undo Log）、<code>DB_ROW_ID</code>（无主键时用）</li>
+            <li><strong>Undo Log 版本链</strong>：每次修改生成一条 Undo Log，通过 DB_ROLL_PTR 串联成历史版本链</li>
+            <li><strong>ReadView</strong>：快照读时生成，决定了当前事务能看到哪些版本。包含 <code>m_ids</code>（活跃事务列表）、<code>min_trx_id</code>（最小活跃事务 ID）、<code>max_trx_id</code>（下一个待分配的事务 ID）、<code>creator_trx_id</code>（当前事务 ID）</li>
+            <li><strong>可见性判断</strong>：根据 ReadView 和行版本的 DB_TRX_ID 判断该版本是否对当前事务可见</li>
+          </ul>
+        </div>
+
+        <!-- MVCC SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="300" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">MVCC Undo Log 版本链</text>
+
+            <!-- 当前行 -->
+            <rect x="40" y="38" width="140" height="54" rx="6" fill="#e8f4fd" stroke="#1a6fb5" stroke-width="2"/>
+            <text x="110" y="58" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui" font-weight="700">当前记录</text>
+            <text x="110" y="74" text-anchor="middle" font-size="9" fill="#145a8c" font-family="system-ui">name='王五' trx=300</text>
+            <text x="110" y="88" text-anchor="middle" font-size="9" fill="#145a8c" font-family="system-ui">roll_ptr &#8594;</text>
+
+            <text x="195" y="70" font-size="18" fill="#888">&#8594;</text>
+
+            <!-- Undo 1 -->
+            <rect x="220" y="38" width="130" height="54" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="285" y="58" text-anchor="middle" font-size="10" fill="#7c3aed" font-family="system-ui" font-weight="600">Undo #1</text>
+            <text x="285" y="74" text-anchor="middle" font-size="9" fill="#5b21b6" font-family="system-ui">name='李四' trx=200</text>
+            <text x="285" y="88" text-anchor="middle" font-size="9" fill="#5b21b6" font-family="system-ui">roll_ptr &#8594;</text>
+
+            <text x="365" y="70" font-size="18" fill="#888">&#8594;</text>
+
+            <!-- Undo 2 -->
+            <rect x="390" y="38" width="130" height="54" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="455" y="58" text-anchor="middle" font-size="10" fill="#7c3aed" font-family="system-ui" font-weight="600">Undo #2</text>
+            <text x="455" y="74" text-anchor="middle" font-size="9" fill="#5b21b6" font-family="system-ui">name='张三' trx=100</text>
+            <text x="455" y="88" text-anchor="middle" font-size="9" fill="#5b21b6" font-family="system-ui">roll_ptr = NULL</text>
+
+            <!-- ReadView 说明 -->
+            <rect x="60" y="115" width="580" height="95" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1"/>
+            <text x="350" y="138" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="700" font-family="system-ui">ReadView 可见性判断（事务 T=250 进行快照读）</text>
+            <text x="350" y="158" text-anchor="middle" font-size="10" fill="#5b21b6" font-family="system-ui">m_ids = [200, 300]（活跃事务）  min_trx_id = 200  max_trx_id = 301  creator_trx_id = 250</text>
+            <text x="350" y="178" text-anchor="middle" font-size="10" fill="#5b21b6" font-family="system-ui">当前行 trx=300 在活跃列表中 &#8594; 不可见 &#8594; 沿 roll_ptr 找上一版本</text>
+            <text x="350" y="198" text-anchor="middle" font-size="10" fill="#059669" font-family="system-ui" font-weight="600">Undo #1 trx=200（活跃）不可见 &#8594; Undo #2 trx=100（已提交）可见 &#8594; 读到 name='张三'</text>
+
+            <!-- RC vs RR -->
+            <rect x="60" y="220" width="280" height="45" rx="6" fill="#fffbeb" stroke="#d97706" stroke-width="1"/>
+            <text x="200" y="240" text-anchor="middle" font-size="11" fill="#92400e" font-family="system-ui" font-weight="600">RC（读已提交）：每次 SELECT 生成新 ReadView</text>
+            <text x="200" y="258" text-anchor="middle" font-size="10" fill="#92400e" font-family="system-ui">&#8594; 能看到其他事务已提交的修改</text>
+            <rect x="360" y="220" width="280" height="45" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+            <text x="500" y="240" text-anchor="middle" font-size="11" fill="#065f46" font-family="system-ui" font-weight="600">RR（可重复读）：首次 SELECT 时生成 ReadView</text>
+            <text x="500" y="258" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">&#8594; 事务内所有 SELECT 用同一个 ReadView</text>
+          </svg>
+          <div class="viz-caption">MVCC 通过 Undo Log 版本链 + ReadView 实现无锁的快照读。RC 每次读生成新 ReadView，RR 整个事务共用同一个 ReadView</div>
+        </div>
+      </div>
+
+      <!-- 3.3 隔离级别 -->
+      <div class="subsec" id="sec3-3">
+        <div class="subsec-title">3.3 事务隔离级别</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>隔离级别</th><th>脏读</th><th>不可重复读</th><th>幻读</th><th>实现方式</th></tr></thead>
+            <tbody>
+              <tr><td><strong>READ UNCOMMITTED</strong> 读未提交</td><td style="color:var(--red)">&#10007; 可能</td><td style="color:var(--red)">&#10007; 可能</td><td style="color:var(--red)">&#10007; 可能</td><td>不加锁，直接读最新</td></tr>
+              <tr><td><strong>READ COMMITTED</strong> 读已提交</td><td style="color:var(--green)">&#10004; 解决</td><td style="color:var(--red)">&#10007; 可能</td><td style="color:var(--red)">&#10007; 可能</td><td>每次 SELECT 生成新 ReadView</td></tr>
+              <tr><td style="color:var(--pri);font-weight:700"><strong>REPEATABLE READ</strong> 可重复读 (InnoDB 默认)</td><td style="color:var(--green)">&#10004; 解决</td><td style="color:var(--green)">&#10004; 解决</td><td style="color:var(--green)">&#10004; 大部分解决</td><td>首次 SELECT 生成 ReadView + 间隙锁</td></tr>
+              <tr><td><strong>SERIALIZABLE</strong> 串行化</td><td style="color:var(--green)">&#10004; 解决</td><td style="color:var(--green)">&#10004; 解决</td><td style="color:var(--green)">&#10004; 解决</td><td>所有 SELECT 加共享锁</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h4>三种并发问题图解</h4>
+          <ul>
+            <li><strong>脏读</strong>：事务 A 读到事务 B <strong>未提交</strong>的修改。B 回滚后 A 读到的数据是"脏"的</li>
+            <li><strong>不可重复读</strong>：事务 A 内两次读同一行，结果不同（因为 B 在两次读之间<strong>修改并提交</strong>了该行）</li>
+            <li><strong>幻读</strong>：事务 A 内两次范围查询，结果集行数不同（因为 B 在两次读之间<strong>插入</strong>了新行）</li>
+          </ul>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看当前隔离级别
+SELECT @@transaction_isolation;
+
+-- 设置隔离级别
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+-- 不可重复读演示（RC 级别）
+-- 事务 A                          事务 B
+BEGIN;                            BEGIN;
+SELECT name FROM users            -- name='张三'
+  WHERE id = 1;
+                                  UPDATE users SET name='李四' WHERE id = 1;
+                                  COMMIT;
+SELECT name FROM users            -- name='李四'（RC 下读到了 B 的提交）
+  WHERE id = 1;
+COMMIT;</pre>
+</div>
+      </div>
+
+      <!-- 3.4 锁 -->
+      <div class="subsec" id="sec3-4">
+        <div class="subsec-title">3.4 锁机制全景</div>
+
+        <div class="grid3">
+          <div class="card" style="text-align:center;padding:16px">
+            <h4 style="color:var(--pri)">行锁</h4>
+            <p style="font-size:13px;margin:0">锁定具体行记录<br>并发度最高<br>基于索引加锁</p>
+          </div>
+          <div class="card" style="text-align:center;padding:16px">
+            <h4 style="color:var(--amber)">间隙锁</h4>
+            <p style="font-size:13px;margin:0">锁定索引记录间隙<br>防止幻读（插入）<br>RR 级别自动添加</p>
+          </div>
+          <div class="card" style="text-align:center;padding:16px">
+            <h4 style="color:var(--red)">表锁</h4>
+            <p style="font-size:13px;margin:0">锁定整张表<br>DDL 操作 / MyISAM<br>并发度最低</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>行锁类型（InnoDB）</h4>
+          <ul>
+            <li><strong>共享锁（S 锁 / 读锁）</strong>：<code>SELECT ... LOCK IN SHARE MODE</code>（MySQL 8.0: <code>FOR SHARE</code>）。允许其他事务读，不允许写。S 锁之间兼容。</li>
+            <li><strong>排他锁（X 锁 / 写锁）</strong>：<code>SELECT ... FOR UPDATE</code> 或 DML 语句自动加。与任何其他锁互斥。</li>
+            <li><strong>意向锁（IS / IX）</strong>：表级锁，表明事务打算在表中的行上加 S/X 锁。用于快速判断表是否与表锁冲突。</li>
+            <li><strong>记录锁（Record Lock）</strong>：锁定单行索引记录。</li>
+            <li><strong>间隙锁（Gap Lock）</strong>：锁定索引记录之间的间隙，防止插入，解决幻读。RR 级别下自动添加。</li>
+            <li><strong>临键锁（Next-Key Lock）</strong>：<strong>记录锁 + 间隙锁</strong> 的组合，InnoDB 默认的行锁算法。锁住索引记录及其前间隙。</li>
+          </ul>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看当前锁信息（MySQL 8.0）
+SELECT * FROM performance_schema.data_locks;
+-- 查看锁等待
+SELECT * FROM performance_schema.data_lock_waits;
+
+-- 查看当前事务
+SELECT * FROM information_schema.innodb_trx;
+
+-- 死锁检测（InnoDB 默认开启，自动回滚代价最小的事务）
+SHOW VARIABLES LIKE 'innodb_deadlock_detect';
+
+-- 排他锁示例：锁定 id=1 的行，其他事务无法写
+BEGIN;
+SELECT * FROM users WHERE id = 1 FOR UPDATE;
+-- ...业务操作...
+COMMIT;</pre>
+</div>
+
+        <div class="tip tip-red">
+          <strong>&#9888; 死锁预防</strong>
+          <ol style="margin:8px 0 0 16px">
+            <li>按固定顺序访问资源（所有事务先锁 A 再锁 B）</li>
+            <li>缩短事务时间，尽早提交</li>
+            <li>合理使用索引（无索引会导致行锁升级为表锁）</li>
+            <li>设置 <code>innodb_lock_wait_timeout</code> 避免无限等待</li>
+          </ol>
+        </div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> 事务与锁 · 记忆要点</h4>
+          <ul>
+            <li><strong>ACID</strong>：原子性(Undo Log) / 一致性(约束+AID) / 隔离性(MVCC+锁) / 持久性(Redo Log)</li>
+            <li><strong>MVCC</strong> = 隐藏列(DB_TRX_ID+DB_ROLL_PTR) + Undo Log 版本链 + ReadView + 可见性判断</li>
+            <li><strong>RC vs RR</strong>：RC 每次 SELECT 新 ReadView（不可重复读），RR 首次 SELECT 生成 ReadView（可重复读）</li>
+            <li><strong>锁</strong>：行锁（S/X）→ 间隙锁（防幻读）→ 临键锁（行锁+间隙锁，InnoDB 默认）</li>
+            <li><strong>默认隔离级别 RR</strong>，已解决脏读/不可重复读/大部分幻读</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SECTION 4: INNODB ═══════════ -->
+    <section class="sec" id="sec4">
+      <div class="sec-title">
+        <span class="num">4</span>
+        <h2>InnoDB 存储引擎</h2>
+        <span class="line"></span>
+      </div>
+
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px">
+        InnoDB 是 MySQL 的默认存储引擎，通过 <strong>Buffer Pool</strong> 缓存热点数据减少磁盘 I/O，通过 <strong>Redo Log + Undo Log + Binlog</strong> 三大日志体系保证事务的原子性和持久性。
+      </p>
+
+      <!-- 4.1 Buffer Pool -->
+      <div class="subsec" id="sec4-1">
+        <div class="subsec-title">4.1 Buffer Pool 缓冲池</div>
+
+        <div class="card">
+          <h4>什么是 Buffer Pool？</h4>
+          <p>InnoDB 在内存中开辟的一块<strong>连续内存区域</strong>，用于缓存数据页和索引页。所有读写操作首先访问 Buffer Pool，命中则直接返回，未命中则从磁盘加载。这是 InnoDB 最核心的性能组件。</p>
+        </div>
+
+        <div class="card">
+          <h4>核心特性</h4>
+          <ul>
+            <li><strong>默认大小</strong>：128MB（建议设为物理内存的 50%~80%），参数 <code>innodb_buffer_pool_size</code></li>
+            <li><strong>页（Page）</strong>：Buffer Pool 的最小管理单位，默认 16KB</li>
+            <li><strong>LRU 链表</strong>：分 Young（5/8，热数据）和 Old（3/8，冷数据）两个子链表。新读入的页先放入 Old 区头部，再次访问时移到 Young 区。防止全表扫描污染热数据</li>
+            <li><strong>Free 链表</strong>：管理空闲页</li>
+            <li><strong>Flush 链表</strong>：管理脏页（内存中修改过但未刷盘的页）</li>
+            <li><strong>自适应 Hash 索引</strong>：对频繁访问的索引页自动建立 Hash 索引，加速等值查询</li>
+            <li><strong>Change Buffer</strong>：对非唯一二级索引的插入/更新操作先缓存在内存，异步合并。减少随机 I/O</li>
+          </ul>
+        </div>
+
+        <!-- Buffer Pool SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="240" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">Buffer Pool 结构</text>
+
+            <!-- 大框 -->
+            <rect x="40" y="36" width="620" height="120" rx="8" fill="#e8f4fd" stroke="#1a6fb5" stroke-width="1.5" stroke-dasharray="6,3"/>
+            <text x="350" y="54" text-anchor="middle" font-size="11" fill="#1a6fb5" font-weight="700" font-family="system-ui">Buffer Pool (innodb_buffer_pool_size)</text>
+
+            <!-- Young 区 -->
+            <rect x="56" y="64" width="370" height="40" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="241" y="89" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600" font-family="system-ui">Young 区 (5/8): 热数据 · 频繁命中</text>
+
+            <!-- Old 区 -->
+            <rect x="436" y="64" width="210" height="40" rx="5" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>
+            <text x="541" y="89" text-anchor="middle" font-size="11" fill="#4b5563" font-weight="600" font-family="system-ui">Old 区 (3/8): 冷数据</text>
+
+            <!-- 三个链表 -->
+            <rect x="56" y="112" width="180" height="32" rx="4" fill="#fff" stroke="#059669" stroke-width="1"/>
+            <text x="146" y="133" text-anchor="middle" font-size="10" fill="#059669" font-family="system-ui" font-weight="600">Free 链表 → 空闲页</text>
+
+            <rect x="250" y="112" width="180" height="32" rx="4" fill="#fff" stroke="#d97706" stroke-width="1"/>
+            <text x="340" y="133" text-anchor="middle" font-size="10" fill="#d97706" font-family="system-ui" font-weight="600">Flush 链表 → 脏页</text>
+
+            <rect x="444" y="112" width="200" height="32" rx="4" fill="#fff" stroke="#1a6fb5" stroke-width="1"/>
+            <text x="544" y="133" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui" font-weight="600">LRU 链表 → 淘汰策略</text>
+
+            <!-- 下方说明 -->
+            <text x="350" y="175" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui">自适应 Hash 索引: 自动为热点索引页建 Hash 索引</text>
+            <text x="350" y="195" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui">Change Buffer: 缓存非唯一二级索引的写操作，异步 Merge</text>
+
+            <!-- 磁盘箭头 -->
+            <rect x="250" y="210" width="200" height="22" rx="4" fill="#f3f4f6" stroke="#bbb" stroke-width="1"/>
+            <text x="350" y="225" text-anchor="middle" font-size="10" fill="#666" font-family="system-ui">&#8596; 磁盘（异步刷盘 + 预读）</text>
+          </svg>
+          <div class="viz-caption">Buffer Pool 内存架构：LRU 双区链表 + Free/Flush 链表 + 自适应 Hash + Change Buffer</div>
+        </div>
+      </div>
+
+      <!-- 4.2 Redo Log -->
+      <div class="subsec" id="sec4-2">
+        <div class="subsec-title">4.2 Redo Log（重做日志）</div>
+
+        <div class="card">
+          <h4>作用：崩溃恢复，保证持久性</h4>
+          <p>Redo Log 是 InnoDB 引擎层的<strong>物理日志</strong>，记录"对哪个数据页的哪个位置做了什么修改"。采用 WAL（Write-Ahead Logging）策略：先写日志，再写磁盘。</p>
+          <p>如果每次更新都直接写磁盘，就是随机 I/O，性能极差。Redo Log 是<strong>顺序追加写入</strong>，性能远高于随机写。数据页的刷盘则可以延迟、批量进行。</p>
+        </div>
+
+        <div class="card">
+          <h4>核心概念</h4>
+          <ul>
+            <li><strong>固定大小、循环写</strong>：由 <code>innodb_log_file_size</code> × <code>innodb_log_files_in_group</code> 决定总大小（默认 48MB × 2 = 96MB，生产建议 1~4GB）</li>
+            <li><strong>两个文件交替写</strong>：ib_logfile0 和 ib_logfile1</li>
+            <li><strong>LSN（Log Sequence Number）</strong>：单调递增的日志编号，全局唯一，标识 Redo Log 的写入位置</li>
+            <li><strong>Checkpoint</strong>：当脏页刷盘后，对应的 Redo Log 可以被覆盖。Checkpoint LSN 之前的日志已不再需要</li>
+            <li><strong>刷盘策略</strong>：<code>innodb_flush_log_at_trx_commit</code>
+              <ul>
+                <li><strong>= 1</strong>（默认，最安全）：每次提交都刷盘</li>
+                <li><strong>= 2</strong>：每次提交写 OS 缓存，每秒刷盘</li>
+                <li><strong>= 0</strong>：每秒刷盘一次（性能最好但可能丢失 1 秒数据）</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Redo Log 循环写 SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">Redo Log 循环写</text>
+
+            <!-- 环形 -->
+            <ellipse cx="350" cy="110" rx="280" ry="60" fill="none" stroke="#e2e8f0" stroke-width="4"/>
+            <!-- 已写入部分 -->
+            <path d="M 130 140 A 280 60 0 0 1 550 80" fill="none" stroke="#1a6fb5" stroke-width="6" stroke-linecap="round"/>
+            <!-- 可覆盖部分 -->
+            <path d="M 550 80 A 280 60 0 0 1 350 50" fill="none" stroke="#059669" stroke-width="4" stroke-dasharray="8,4"/>
+            <!-- 空闲部分 -->
+            <path d="M 350 50 A 280 60 0 0 1 130 140" fill="none" stroke="#ccc" stroke-width="4" stroke-dasharray="4,4"/>
+
+            <!-- 标注 -->
+            <circle cx="175" cy="115" r="8" fill="#1a6fb5"/>
+            <text x="175" y="118" text-anchor="middle" font-size="9" fill="#fff" font-family="system-ui" font-weight="700">W</text>
+            <text x="175" y="135" text-anchor="middle" font-size="9" fill="#1a6fb5" font-family="system-ui">write pos</text>
+
+            <circle cx="530" cy="85" r="8" fill="#059669"/>
+            <text x="530" y="88" text-anchor="middle" font-size="9" fill="#fff" font-family="system-ui" font-weight="700">C</text>
+            <text x="530" y="102" text-anchor="middle" font-size="9" fill="#059669" font-family="system-ui">checkpoint</text>
+
+            <!-- 图例 -->
+            <rect x="80" y="158" width="16" height="10" rx="2" fill="#1a6fb5"/>
+            <text x="102" y="168" font-size="10" fill="#555" font-family="system-ui">已写入待刷盘</text>
+            <rect x="230" y="158" width="16" height="10" rx="2" fill="#059669"/>
+            <text x="252" y="168" font-size="10" fill="#555" font-family="system-ui">已刷盘可覆盖</text>
+            <rect x="380" y="158" width="16" height="10" rx="2" fill="#ccc"/>
+            <text x="402" y="168" font-size="10" fill="#555" font-family="system-ui">空闲</text>
+          </svg>
+          <div class="viz-caption">Redo Log 循环写：write pos 和 checkpoint 之间的区域是已写入的部分。checkpoint 推进后前面的空间可复用</div>
+        </div>
+      </div>
+
+      <!-- 4.3 Undo Log -->
+      <div class="subsec" id="sec4-3">
+        <div class="subsec-title">4.3 Undo Log（回滚日志）</div>
+
+        <div class="card">
+          <h4>两大作用</h4>
+          <ul>
+            <li><strong>事务回滚</strong>：记录数据修改前的旧值，ROLLBACK 时根据 Undo Log 将数据恢复到事务开始前的状态</li>
+            <li><strong>MVCC 快照读</strong>：通过 Undo Log 构建历史版本链，使读操作能访问到事务开始时的数据版本</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>核心概念</h4>
+          <ul>
+            <li><strong>逻辑日志</strong>：记录的是 SQL 的逆操作（INSERT 对应 DELETE，UPDATE 对应反向 UPDATE，DELETE 对应 INSERT）</li>
+            <li><strong>存储位置</strong>：Undo Tablespace（默认在共享表空间 ibdata1，MySQL 8.0 支持独立 Undo 表空间）</li>
+            <li><strong>Undo 页链表</strong>：每个事务的 Undo Log 通过 DB_ROLL_PTR 链式连接</li>
+            <li><strong>purge 线程</strong>：当事务提交后，Undo Log 不再需要用于回滚，但如果还有 ReadView 在引用就还不能删除。purge 线程定期清理不再被任何 ReadView 需要的 Undo Log</li>
+            <li><strong>长事务的危害</strong>：长事务会阻止 Undo Log 清理，导致 Undo 表空间膨胀</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4.4 Binlog -->
+      <div class="subsec" id="sec4-4">
+        <div class="subsec-title">4.4 Binlog（归档日志）</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>对比维度</th><th>Redo Log</th><th>Binlog</th></tr></thead>
+            <tbody>
+              <tr><td><strong>所属层</strong></td><td>InnoDB 引擎层</td><td>MySQL Server 层</td></tr>
+              <tr><td><strong>日志类型</strong></td><td>物理日志（页级修改）</td><td>逻辑日志（SQL 语句或行变更）</td></tr>
+              <tr><td><strong>写入方式</strong></td><td>循环写，固定大小</td><td>追加写，文件不断增长</td></tr>
+              <tr><td><strong>主要用途</strong></td><td>崩溃恢复（crash-safe）</td><td>主从复制、数据恢复、审计</td></tr>
+              <tr><td><strong>刷盘参数</strong></td><td><code>innodb_flush_log_at_trx_commit</code></td><td><code>sync_binlog</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h4>Binlog 三种格式</h4>
+          <ul>
+            <li><strong>STATEMENT</strong>：记录 SQL 语句本身。体积小，但某些函数（NOW()、UUID()）在主从环境下结果可能不一致</li>
+            <li><strong>ROW</strong>（<strong>推荐</strong>）：记录每行数据的具体变更。体积大，但最精确、最安全，不会产生主从不一致</li>
+            <li><strong>MIXED</strong>：默认 STATEMENT，特殊情况下自动切换为 ROW。折中方案</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4.5 写入流程 -->
+      <div class="subsec" id="sec4-5">
+        <div class="subsec-title">4.5 更新语句完整写入流程</div>
+
+        <div class="card">
+          <h4><code>UPDATE users SET name='王五' WHERE id=1</code> 的执行全流程</h4>
+          <div class="flow" style="font-size:13px;line-height:2.2">
+1. <b>执行器</b> 调用 InnoDB 接口，搜索 id=1 的数据行
+2. 数据页在 <b>Buffer Pool</b> 中？是 → 直接使用；否 → 从磁盘加载
+3. 将目标行<b>加 X 锁</b>（排他锁），防止其他事务并发修改
+4. 将旧值写入 <b>Undo Log</b>（用于回滚 + MVCC）
+5. 修改 Buffer Pool 中的数据页（name='张三' → '王五'），页变为<b>脏页</b>
+6. 将修改操作写入 <b>Redo Log</b>（prepare 阶段）
+7. <b>Server 层</b>写 <b>Binlog</b>
+8. Redo Log 提交（commit 阶段）—— 这就是<b>两阶段提交</b>
+9. 事务提交成功，返回客户端
+10. 后台线程<b>异步</b>将脏页刷入磁盘（不阻塞事务提交）</div>
+        </div>
+
+        <!-- 两阶段提交 SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="280" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">两阶段提交（2PC）—— 保证 Redo Log 与 Binlog 一致</text>
+
+            <!-- 时间线 -->
+            <line x1="80" y1="120" x2="640" y2="120" stroke="#ccc" stroke-width="2"/>
+
+            <!-- 阶段 1 -->
+            <rect x="80" y="55" width="180" height="50" rx="6" fill="#e8f4fd" stroke="#1a6fb5" stroke-width="2"/>
+            <text x="170" y="75" text-anchor="middle" font-size="12" fill="#1a6fb5" font-weight="700" font-family="system-ui">Prepare 阶段</text>
+            <text x="170" y="93" text-anchor="middle" font-size="10" fill="#145a8c" font-family="system-ui">写 Redo Log (prepare)</text>
+            <line x1="170" y1="105" x2="170" y2="120" stroke="#1a6fb5" stroke-width="2"/>
+
+            <!-- 阶段 2 -->
+            <rect x="300" y="55" width="140" height="50" rx="6" fill="#f0fdfa" stroke="#059669" stroke-width="2"/>
+            <text x="370" y="75" text-anchor="middle" font-size="12" fill="#059669" font-weight="700" font-family="system-ui">写 Binlog</text>
+            <text x="370" y="93" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">Server 层写入</text>
+            <line x1="370" y1="105" x2="370" y2="120" stroke="#059669" stroke-width="2"/>
+
+            <!-- 阶段 3 -->
+            <rect x="480" y="55" width="160" height="50" rx="6" fill="#e8f4fd" stroke="#1a6fb5" stroke-width="2"/>
+            <text x="560" y="75" text-anchor="middle" font-size="12" fill="#1a6fb5" font-weight="700" font-family="system-ui">Commit 阶段</text>
+            <text x="560" y="93" text-anchor="middle" font-size="10" fill="#145a8c" font-family="system-ui">Redo Log commit</text>
+            <line x1="560" y1="105" x2="560" y2="120" stroke="#1a6fb5" stroke-width="2"/>
+
+            <!-- 时间线箭头 -->
+            <text x="650" y="124" font-size="18" fill="#888">&#8594;</text>
+
+            <!-- 崩溃恢复说明 -->
+            <rect x="80" y="140" width="560" height="70" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1" stroke-dasharray="4,2"/>
+            <text x="360" y="162" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="system-ui">&#9888; 如果在某个阶段崩溃？</text>
+            <text x="360" y="182" text-anchor="middle" font-size="10" fill="#991b1b" font-family="system-ui">Prepare 后崩溃: Binlog 未写入 → 回滚事务</text>
+            <text x="360" y="198" text-anchor="middle" font-size="10" fill="#991b1b" font-family="system-ui">Binlog 后崩溃: Binlog 已写入但 Redo 未 commit → 补 commit（保证一致性）</text>
+
+            <!-- 底部关键参数 -->
+            <text x="360" y="240" text-anchor="middle" font-size="11" fill="#1a6fb5" font-weight="600" font-family="system-ui">生产建议: innodb_flush_log_at_trx_commit=1 + sync_binlog=1</text>
+            <text x="360" y="262" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui">双 1 配置确保提交时 Redo Log 和 Binlog 都刷盘，crash-safe 最强保障</text>
+          </svg>
+          <div class="viz-caption">两阶段提交：Prepare (Redo) → 写 Binlog → Commit (Redo)，保证两个日志的一致性</div>
+        </div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> InnoDB 存储引擎 · 记忆要点</h4>
+          <ul>
+            <li><strong>Buffer Pool</strong>：内存缓存数据页和索引页，LRU 分 Young/Old 区防污染，Change Buffer 优化非唯一二级索引写</li>
+            <li><strong>Redo Log</strong>：循环写物理日志 → 崩溃恢复（WAL），写 Redo 是顺序 I/O 远快于随机写磁盘</li>
+            <li><strong>Undo Log</strong>：逻辑日志 → 事务回滚 + MVCC 构建历史版本链</li>
+            <li><strong>Binlog</strong>：Server 层逻辑日志 → 主从复制 + 数据恢复，推荐 ROW 格式</li>
+            <li><strong>两阶段提交</strong>：Prepare (Redo) → Binlog → Commit (Redo)，保证两者一致</li>
+            <li><strong>生产配置</strong>：<code>innodb_flush_log_at_trx_commit=1</code> + <code>sync_binlog=1</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SECTION 5: SHARDING ═══════════ -->
+    <section class="sec" id="sec5">
+      <div class="sec-title">
+        <span class="num">5</span>
+        <h2>分库分表知识体系</h2>
+        <span class="line"></span>
+      </div>
+
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px">
+        当单表数据量超过 <strong>500 万行</strong>或单库 <strong>QPS 超过 2000</strong> 时，MySQL 单机性能开始遇到瓶颈。分库分表是解决海量数据存储和高并发访问的核心架构手段，但它也带来跨分片查询、分布式事务等一系列挑战。
+      </p>
+
+      <!-- 5.1 为什么需要拆分 -->
+      <div class="subsec" id="sec5-1">
+        <div class="subsec-title">5.1 为什么需要分库分表</div>
+
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--red)">
+            <h4>数据量瓶颈</h4>
+            <ul>
+              <li>单表超过 <strong>2000 万行</strong>后 B+Tree 树高增加，查询变慢</li>
+              <li>索引过大无法全部载入 Buffer Pool，缓存命中率骤降</li>
+              <li>备份恢复时间线性增长，运维窗口拉长</li>
+              <li>DDL 操作（加字段、建索引）可能锁表数小时</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid var(--amber)">
+            <h4>并发压力瓶颈</h4>
+            <ul>
+              <li>单库连接数有限（通常 2000~5000），高并发耗尽连接</li>
+              <li>写入集中在同一张表的同一个数据页，产生<strong>热点争用</strong></li>
+              <li>单机磁盘 I/O 带宽成为瓶颈（即使上了 SSD）</li>
+              <li>主从延迟随写入量增大而恶化</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tip tip-info">
+          <strong>&#128161; 500 万行还是一亿行？</strong>
+          没有绝对阈值。核心是要<strong>监控</strong>：慢查询占比、Buffer Pool 命中率、磁盘 IOPS。通常建议在 <code>1000 万 ~ 2000 万</code> 行时开始规划拆分，而不是等到出问题再救火。
+        </div>
+      </div>
+
+      <!-- 5.2 垂直拆分 vs 水平拆分 -->
+      <div class="subsec" id="sec5-2">
+        <div class="subsec-title">5.2 垂直拆分 vs 水平拆分</div>
+
+        <div class="card">
+          <h4>垂直拆分（Vertical Sharding）—— 按业务列拆分</h4>
+          <p>将一张宽表的字段按<strong>访问频率</strong>拆到多张表中。高频字段（如标题、状态）放主表，低频大字段（如正文、附件）放扩展表。</p>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 垂直拆分前：一张大宽表
+CREATE TABLE article (
+  id BIGINT PRIMARY KEY,
+  title VARCHAR(200),      -- 高频：列表页展示
+  status TINYINT,           -- 高频
+  content TEXT,             -- 低频：只在详情页用
+  author_bio TEXT,          -- 低频
+  INDEX idx_status(status)
+);
+
+-- 垂直拆分后：主表 + 扩展表
+CREATE TABLE article_main (
+  id BIGINT PRIMARY KEY,
+  title VARCHAR(200),
+  status TINYINT,
+  INDEX idx_status(status)
+);
+CREATE TABLE article_detail (
+  id BIGINT PRIMARY KEY,
+  content TEXT,
+  author_bio TEXT
+);</pre>
+</div>
+
+        <div class="tip tip-good">
+          <strong>&#10004; 垂直拆分优点</strong>
+          主表行变小 → 一个数据页能放更多行 → Buffer Pool 命中率提升 → 列表页查询更快。扩展表只在需要时才 JOIN。
+        </div>
+
+        <div class="card">
+          <h4>水平拆分（Horizontal Sharding）—— 按行拆分到多个库/表</h4>
+          <p>将同一张表的数据行按某种规则<strong>分散到多个库或表</strong>中。每个分片结构完全相同，只是数据不同。这是解决海量数据的核心手段。</p>
+        </div>
+
+        <!-- 水平拆分 SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="280" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">水平拆分示意：单表 —→ 4 分片</text>
+
+            <!-- 单表 -->
+            <rect x="120" y="42" width="180" height="60" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="210" y="64" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="system-ui">单表：users</text>
+            <text x="210" y="84" text-anchor="middle" font-size="10" fill="#991b1b" font-family="system-ui">4000 万行 &#9785;</text>
+            <text x="210" y="98" text-anchor="middle" font-size="9" fill="#991b1b" font-family="system-ui">查询缓慢</text>
+
+            <text x="330" y="80" font-size="24" fill="#059669" font-weight="700">&#8594;</text>
+
+            <!-- 4 分片 -->
+            <rect x="370" y="38" width="130" height="44" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+            <text x="435" y="58" text-anchor="middle" font-size="11" fill="#065f46" font-weight="700" font-family="system-ui">users_0</text>
+            <text x="435" y="74" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">id % 4 = 0</text>
+
+            <rect x="510" y="38" width="130" height="44" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+            <text x="575" y="58" text-anchor="middle" font-size="11" fill="#065f46" font-weight="700" font-family="system-ui">users_1</text>
+            <text x="575" y="74" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">id % 4 = 1</text>
+
+            <rect x="370" y="90" width="130" height="44" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+            <text x="435" y="110" text-anchor="middle" font-size="11" fill="#065f46" font-weight="700" font-family="system-ui">users_2</text>
+            <text x="435" y="126" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">id % 4 = 2</text>
+
+            <rect x="510" y="90" width="130" height="44" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+            <text x="575" y="110" text-anchor="middle" font-size="11" fill="#065f46" font-weight="700" font-family="system-ui">users_3</text>
+            <text x="575" y="126" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">id % 4 = 3</text>
+
+            <!-- 对比表 -->
+            <text x="350" y="170" text-anchor="middle" font-size="12" fill="#1a6fb5" font-weight="700" font-family="system-ui">拆前 vs 拆后</text>
+            <rect x="80" y="182" width="540" height="70" rx="6" fill="#e8f4fd" stroke="#1a6fb5" stroke-width="1"/>
+            <text x="350" y="202" text-anchor="middle" font-size="11" fill="#1a6fb5" font-family="system-ui">拆前: 4000万行 / 1 张表 &#8212;&#8250; 每张表 4000 万，B+Tree 3~4 层，全表扫描灾难</text>
+            <text x="350" y="222" text-anchor="middle" font-size="11" fill="#059669" font-family="system-ui" font-weight="600">拆后: 1000万行 / 4 张表 &#8212;&#8250; 每张表 1000 万，B+Tree 2~3 层，读写压力分散</text>
+            <text x="350" y="242" text-anchor="middle" font-size="10" fill="#1a6fb5" font-family="system-ui">关键是：拆分后依然能路由到正确的分片（知道数据在哪）</text>
+          </svg>
+          <div class="viz-caption">水平拆分将一张大表的数据分散到多个结构相同的分片中，每个分片独立存储、独立查询</div>
+        </div>
+      </div>
+
+      <!-- 5.3 分片策略 -->
+      <div class="subsec" id="sec5-3">
+        <div class="subsec-title">5.3 分片策略（Sharding Strategy）</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>策略</th><th>原理</th><th>优点</th><th>缺点</th><th>适用场景</th></tr></thead>
+            <tbody>
+              <tr><td><strong>范围分片</strong></td><td><code>id BETWEEN 1~10M</code> → 分片0</td><td>实现简单，天然支持范围查询</td><td>数据分布不均（新数据集中在一个分片）</td><td>按时间归档的日志、订单</td></tr>
+              <tr><td><strong>Hash 分片</strong></td><td><code>shard = id % N</code></td><td>数据分布均匀</td><td>扩容时数据迁移量大（N 变化后所有数据需要重新 hash）</td><td>用户表、商品表等按 ID 均匀访问</td></tr>
+              <tr><td><strong>一致性 Hash</strong></td><td>Hash 环 + 虚拟节点</td><td>扩容时只迁移相邻分片数据</td><td>实现复杂，可能产生数据倾斜</td><td>动态扩缩容频繁的场景</td></tr>
+              <tr><td><strong>复合分片</strong></td><td>先按业务维度再 Hash</td><td>兼顾业务隔离+数据均匀</td><td>路由逻辑复杂</td><td>多租户 SaaS 平台（先按租户再按用户 Hash）</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 一致性 Hash SVG -->
+        <div class="viz">
+          <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+            <rect width="700" height="300" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="350" y="22" text-anchor="middle" font-size="12" fill="#8899aa" font-weight="600" font-family="system-ui">一致性 Hash 环（扩容对比）</text>
+
+            <!-- Hash 环 -->
+            <circle cx="200" cy="180" r="100" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+            <!-- 节点 -->
+            <circle cx="280" cy="140" r="14" fill="#1a6fb5"/>
+            <text x="280" y="144" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" font-family="system-ui">N0</text>
+            <text x="300" y="140" font-size="10" fill="#1a6fb5" font-family="system-ui" font-weight="600">shard_0</text>
+
+            <circle cx="120" cy="160" r="14" fill="#059669"/>
+            <text x="120" y="164" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" font-family="system-ui">N1</text>
+            <text x="90" y="160" text-anchor="end" font-size="10" fill="#059669" font-family="system-ui" font-weight="600">shard_1</text>
+
+            <circle cx="160" cy="260" r="14" fill="#7c3aed"/>
+            <text x="160" y="264" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" font-family="system-ui">N2</text>
+            <text x="160" y="280" text-anchor="middle" font-size="10" fill="#7c3aed" font-family="system-ui" font-weight="600">shard_2</text>
+
+            <!-- 数据 -->
+            <circle cx="200" cy="100" r="5" fill="#f59e0b"/>
+            <text x="210" y="100" font-size="9" fill="#555" font-family="system-ui">数据A</text>
+            <circle cx="250" cy="220" r="5" fill="#f59e0b"/>
+            <text x="260" y="220" font-size="9" fill="#555" font-family="system-ui">数据B</text>
+            <circle cx="100" y="200" r="5" fill="#f59e0b"/>
+            <text x="80" y="200" text-anchor="end" font-size="9" fill="#555" font-family="system-ui">数据C</text>
+
+            <!-- 右侧说明 -->
+            <text x="420" y="80" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="system-ui">&#10060; 普通 Hash: id % 3 → id % 4</text>
+            <rect x="370" y="92" width="100" height="24" rx="4" fill="#fee2e2" stroke="#dc2626"/>
+            <text x="420" y="109" text-anchor="middle" font-size="10" fill="#dc2626" font-family="system-ui">3/4 数据需迁移</text>
+
+            <text x="540" y="80" text-anchor="middle" font-size="11" fill="#059669" font-weight="700" font-family="system-ui">&#10004; 一致性Hash: </text>
+            <rect x="490" y="92" width="100" height="24" rx="4" fill="#d1fae5" stroke="#059669"/>
+            <text x="540" y="109" text-anchor="middle" font-size="10" fill="#065f46" font-family="system-ui">仅 ~1/4 需迁移</text>
+
+            <line x1="380" y1="140" x2="650" y2="140" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,2"/>
+
+            <text x="420" y="170" font-size="10" fill="#555" font-family="system-ui" font-weight="600">核心思想：</text>
+            <text x="420" y="190" font-size="10" fill="#555" font-family="system-ui">&#8226; 数据和节点都映射到同一个 Hash 环上</text>
+            <text x="420" y="210" font-size="10" fill="#555" font-family="system-ui">&#8226; 数据存入顺时针第一个遇到的节点</text>
+            <text x="420" y="230" font-size="10" fill="#555" font-family="system-ui">&#8226; 新增/删除节点只影响相邻节点数据</text>
+            <text x="420" y="250" font-size="10" fill="#555" font-family="system-ui">&#8226; 虚拟节点：每个物理节点映射多个虚拟</text>
+            <text x="420" y="270" font-size="10" fill="#555" font-family="system-ui">&#8195; 节点，进一步均衡数据分布</text>
+          </svg>
+          <div class="viz-caption">一致性 Hash：节点和数据都在同一个环上，新增节点只影响相邻节点的数据迁移，大大减少扩容成本</div>
+        </div>
+      </div>
+
+      <!-- 5.4 中间件方案 -->
+      <div class="subsec" id="sec5-4">
+        <div class="subsec-title">5.4 中间件方案对比</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>中间件</th><th>类型</th><th>核心特性</th><th>适用场景</th></tr></thead>
+            <tbody>
+              <tr><td><strong>ShardingSphere</strong></td><td>SDK 嵌入 / Proxy</td><td>分库分表 + 读写分离 + 数据加密 + 影子库</td><td>Java 生态首选，Apache 顶级项目</td></tr>
+              <tr><td><strong>MyCat / MyCat2</strong></td><td>Proxy 代理</td><td>MySQL 协议兼容（对应用透明），支持跨库 JOIN</td><td>异构语言栈、需要 SQL 层路由</td></tr>
+              <tr><td><strong>Vitess</strong></td><td>Proxy（CNCF）</td><td>YouTube 开源 · 原生 K8s 支持 · 连接池管理 · 在线 DDL</td><td>大规模 K8s 部署，云原生场景</td></tr>
+              <tr><td><strong>DRDS</strong>（阿里云）</td><td>云服务</td><td>托管式分库分表 + 分布式事务 + 全局二级索引</td><td>阿里云生态，不想自运维</td></tr>
+              <tr><td><strong>TDSQL</strong>（腾讯云）</td><td>分布式数据库</td><td>原生分布式，MySQL 兼容，自动分片</td><td>金融级强一致需求</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tip tip-warn">
+          <strong>&#9888; SDK 嵌入 vs Proxy 代理</strong>
+          SDK（如 ShardingSphere-JDBC）性能更好但耦合业务代码、需要每种语言适配。Proxy 对应用透明但多一层网络跳转、运维复杂度更高。小团队推荐 Proxy，大团队可评估 SDK 嵌入。
+        </div>
+      </div>
+
+      <!-- 5.5 核心问题 -->
+      <div class="subsec" id="sec5-5">
+        <div class="subsec-title">5.5 核心问题与解决方案</div>
+
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--red)">
+            <h4>1. 跨分片查询</h4>
+            <p style="font-size:13px;color:var(--text2)">当查询条件不是分片键时，需要扫描所有分片然后合并结果，性能急剧下降。</p>
+            <p style="font-size:13px"><strong>解决：</strong>冗余存储（下单索引表）、ES 做二级索引、尽量让查询带分片键</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--amber)">
+            <h4>2. 分布式事务</h4>
+            <p style="font-size:13px;color:var(--text2)">跨分片操作需要保证 ACID，单机事务不再适用。</p>
+            <p style="font-size:13px"><strong>解决：</strong>Seata AT/TCC 模式、事务消息（RocketMQ）、最终一致性方案</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--purple)">
+            <h4>3. 全局唯一 ID</h4>
+            <p style="font-size:13px;color:var(--text2)">自增主键在各个分片独立增长，会重复。</p>
+            <p style="font-size:13px"><strong>解决：</strong>Snowflake 雪花算法（推荐）、数据库号段模式、Redis 自增、美团 Leaf</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--teal)">
+            <h4>4. 数据迁移与扩容</h4>
+            <p style="font-size:13px;color:var(--text2)">分片数不够时需增加分片，历史数据需要重新分布。</p>
+            <p style="font-size:13px"><strong>解决：</strong>一致性 Hash（减少迁移量）、双写 + 灰度切流、ShardingSphere Scaling</p>
+          </div>
+        </div>
+
+        <div class="code-block"><div class="code-header"><span class="code-lang">JAVA</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>// Snowflake 雪花算法 ID 结构（64位）
+//   1位符号位 + 41位时间戳 + 10位工作机器ID + 12位序列号
+//   = 支持每毫秒 4096 个 ID，分布式唯一且趋势递增
+
+public class SnowflakeId {
+    private long workerId;      // 0~31
+    private long datacenterId;  // 0~31
+    private long sequence = 0L;
+    private long lastTimestamp = -1L;
+
+    // 时间起始点：2020-01-01
+    private final long twepoch = 1577808000000L;
+
+    public synchronized long nextId() {
+        long timestamp = System.currentTimeMillis();
+        if (timestamp < lastTimestamp) {
+            throw new RuntimeException("Clock moved backwards!");
+        }
+        if (timestamp == lastTimestamp) {
+            sequence = (sequence + 1) & 4095; // 12位序列号
+            if (sequence == 0) timestamp = tilNextMillis(lastTimestamp);
+        } else {
+            sequence = 0L;
+        }
+        lastTimestamp = timestamp;
+        return ((timestamp - twepoch) << 22)   // 时间戳左移22位
+             | (datacenterId << 17)              // 数据中心ID左移17位
+             | (workerId << 12)                  // 机器ID左移12位
+             | sequence;                         // 序列号
+    }
+}</pre>
+</div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> 分库分表 · 记忆要点</h4>
+          <ul>
+            <li><strong>拆分时机</strong>：单表 1000~2000 万行或 QPS > 2000 时开始规划，看慢查询和 Buffer Pool 命中率</li>
+            <li><strong>垂直拆分</strong>：按列拆宽表，高频字段和低频大字段分离；<strong>水平拆分</strong>：按行拆大表到多库多表</li>
+            <li><strong>4 种分片策略</strong>：范围（简单但不均）、Hash（均匀但难扩容）、一致性 Hash（易扩容）、复合（租户隔离）</li>
+            <li><strong>中间件</strong>：ShardingSphere（Java SDK）、MyCat（Proxy 透明）、Vitess（云原生 K8s）</li>
+            <li><strong>4 大核心问题</strong>：跨分片查询 → 索引表；分布式事务 → Seata/事务消息；全局 ID → 雪花算法；扩容 → 一致性 Hash + 灰度</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SECTION 6: DB SELECTION ═══════════ -->
+    <section class="sec" id="sec6">
+      <div class="sec-title">
+        <span class="num">6</span>
+        <h2>数据库选型指南</h2>
+        <span class="line"></span>
+      </div>
+
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px">
+        "用 MySQL 还是 PostgreSQL？要不要上 NoSQL？Redis 和 MongoDB 怎么选？" —— 选型不是选"最好"的数据库，而是选<strong>最适合当前场景</strong>的那一个。理解各类数据库的核心竞争力，才能做出正确的架构决策。
+      </p>
+
+      <!-- 6.1 关系型数据库 -->
+      <div class="subsec" id="sec6-1">
+        <div class="subsec-title">6.1 关系型数据库对比</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>维度</th><th>MySQL</th><th>PostgreSQL</th><th>Oracle</th></tr></thead>
+            <tbody>
+              <tr><td><strong>许可证</strong></td><td style="color:var(--green)">开源 GPL</td><td style="color:var(--green)">开源 PostgreSQL</td><td style="color:var(--red)">商业授权（贵）</td></tr>
+              <tr><td><strong>SQL 标准</strong></td><td>基本兼容，部分特性较弱</td><td style="color:var(--green)">最接近 SQL 标准</td><td>自有扩展 + 标准兼容</td></tr>
+              <tr><td><strong>JSON</strong></td><td>JSON 类型（5.7+），函数较少</td><td style="color:var(--green)">JSONB（二进制存储+索引），GIN 索引</td><td>JSON 支持</td></tr>
+              <tr><td><strong>全文搜索</strong></td><td>基本支持（ngram 中文分词）</td><td style="color:var(--green)">内置强大（tsvector + 多语言）</td><td>Oracle Text</td></tr>
+              <tr><td><strong>地理空间</strong></td><td>基本空间索引</td><td style="color:var(--green)">PostGIS（行业标准）</td><td>Oracle Spatial</td></tr>
+              <tr><td><strong>并发模型</strong></td><td>MVCC（Undo Log）</td><td style="color:var(--green)">MVCC（元组版本，无 Undo 开销）</td><td>MVCC + 锁</td></tr>
+              <tr><td><strong>运维难度</strong></td><td style="color:var(--green)">低，社区资源最多</td><td>中，调优参数多</td><td>高，需要专业 DBA</td></tr>
+              <tr><td><strong>生态工具</strong></td><td style="color:var(--green)">最丰富</td><td>丰富，追赶中</td><td>企业级完整套件</td></tr>
+              <tr><td><strong>典型用户</strong></td><td>互联网公司首选</td><td>数据分析、GIS、金融科技</td><td>银行、保险、大型企业</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tip tip-info">
+          <strong>&#128161; MySQL vs PostgreSQL 选择建议</strong>
+          <strong>选 MySQL：</strong>读多写少 / 对运维简单性要求高 / 团队熟悉 MySQL / 已有 MySQL 生态工具链。<br>
+          <strong>选 PostgreSQL：</strong>需要复杂查询（CTE/窗口函数） / 需要 JSONB + 关系型的混合查询 / GIS 地理数据 / 对数据一致性要求高（如金融）。
+        </div>
+      </div>
+
+      <!-- 6.2 NoSQL -->
+      <div class="subsec" id="sec6-2">
+        <div class="subsec-title">6.2 NoSQL 分类与选型</div>
+
+        <div class="card">
+          <h4>NoSQL 不是"No SQL"，而是"Not Only SQL"</h4>
+          <p>NoSQL 牺牲了 ACID 和复杂 JOIN，换取了<strong>水平扩展能力、特定数据模型的高效存取、和极高的吞吐量</strong>。每一种 NoSQL 都有其独特的主战场。</p>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>分类</th><th>代表产品</th><th>数据模型</th><th>核心优势</th><th>典型场景</th></tr></thead>
+            <tbody>
+              <tr><td><strong>KV 键值</strong></td><td>Redis / Memcached</td><td>Key → Value</td><td>极低延迟（微秒级）、丰富数据结构</td><td>缓存 / Session / 排行榜 / 分布式锁</td></tr>
+              <tr><td><strong>文档型</strong></td><td>MongoDB / Couchbase</td><td>JSON/BSON 文档</td><td>Schema 灵活、嵌套结构天然、水平扩展容易</td><td>内容管理 / 用户画像 / 日志存储 / 游戏数据</td></tr>
+              <tr><td><strong>列式</strong></td><td>HBase / ClickHouse / Cassandra</td><td>列族</td><td>超高写入吞吐、列压缩比高、分析查询快</td><td>时序数据 / 日志分析 / 用户行为 / 推荐系统</td></tr>
+              <tr><td><strong>图数据库</strong></td><td>Neo4j / NebulaGraph</td><td>节点 + 边</td><td>多跳关系查询（毫秒级）、天然表达网络结构</td><td>社交关系 / 知识图谱 / 风控关联分析</td></tr>
+              <tr><td><strong>时序</strong></td><td>InfluxDB / TDengine / TimescaleDB</td><td>时间戳 + 指标</td><td>高压缩比（10:1~30:1）、聚合下推、自动过期</td><td>IoT 监控 / APM / 金融 tick 数据</td></tr>
+              <tr><td><strong>搜索引擎</strong></td><td>Elasticsearch</td><td>倒排索引</td><td>全文检索、聚合分析、相关性评分</td><td>商品搜索 / 日志分析(ELK) / 关键词检索</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- NoSQL 场景对照 -->
+        <div class="grid2" style="margin-top:16px">
+          <div class="card" style="border-left:4px solid var(--red)">
+            <h4>Redis — 缓存首选</h4>
+            <ul style="font-size:13px">
+              <li>5 种数据结构：String / Hash / List / Set / ZSet</li>
+              <li>持久化：RDB 快照 + AOF 日志</li>
+              <li>典型场景：热点数据缓存、分布式锁、计数器、排行榜(ZSet)、消息队列(List/Stream)</li>
+              <li><strong>不要</strong>存大量冷数据（内存贵）</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid var(--green)">
+            <h4>MongoDB — 文档型首选</h4>
+            <ul style="font-size:13px">
+              <li>JSON-like BSON 存储，无需预定义 Schema</li>
+              <li>支持嵌套文档、数组，减少 JOIN</li>
+              <li>原生水平扩展（Sharding + Replica Set）</li>
+              <li><strong>不适合</strong>：复杂多表关联、强事务一致性（4.0+ 虽支持但不如 RDBMS）</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid var(--blue)">
+            <h4>Elasticsearch — 搜索首选</h4>
+            <ul style="font-size:13px">
+              <li>基于 Lucene 倒排索引，全文检索王者</li>
+              <li>Kibana 可视化、Logstash 日志采集 → ELK 三件套</li>
+              <li>聚合分析能力极强（比 MySQL GROUP BY 快 100 倍）</li>
+              <li><strong>不适合</strong>：频繁更新的主存储、强事务</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left:4px solid var(--purple)">
+            <h4>ClickHouse — 分析首选</h4>
+            <ul style="font-size:13px">
+              <li>列式存储 + 向量化执行引擎，单表查询比 MySQL 快 100~1000 倍</li>
+              <li>超高压缩比（5:1~10:1），支持 SQL</li>
+              <li>实时 OLAP 分析，支持物化视图/聚合表</li>
+              <li><strong>不适合</strong>：点查/频繁更新/事务操作</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6.3 场景推荐 -->
+      <div class="subsec" id="sec6-3">
+        <div class="subsec-title">6.3 典型场景推荐</div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>场景</th><th>推荐方案</th><th>理由</th></tr></thead>
+            <tbody>
+              <tr><td><strong>电商订单系统</strong></td><td>MySQL + Redis</td><td>MySQL 保证事务 + Redis 缓存热点商品/库存</td></tr>
+              <tr><td><strong>内容管理系统 (CMS)</strong></td><td>MongoDB 或 MySQL</td><td>MongoDB 更灵活（不同文章类型无需改表）；MySQL 更成熟</td></tr>
+              <tr><td><strong>用户社交网络</strong></td><td>Neo4j + MySQL</td><td>好友关系/推荐用图数据库，用户基础信息用 MySQL</td></tr>
+              <tr><td><strong>IoT 设备监控</strong></td><td>TDengine / TimescaleDB</td><td>时序数据高压缩 + 自动降采样 + 过期策略</td></tr>
+              <tr><td><strong>商品搜索</strong></td><td>Elasticsearch + MySQL</td><td>MySQL 做主存储，ES 同步做全文检索和多维筛选</td></tr>
+              <tr><td><strong>实时数据大屏</strong></td><td>ClickHouse + Redis</td><td>ClickHouse 做 OLAP 聚合，Redis 做实时计数器</td></tr>
+              <tr><td><strong>金融风控</strong></td><td>PostgreSQL + Neo4j</td><td>PG 做交易记录，图数据库做关联分析（洗钱/欺诈网络）</td></tr>
+              <tr><td><strong>日志平台</strong></td><td>ELK (ES + Logstash + Kibana)</td><td>业界标准方案，日志收集 + 搜索 + 可视化一站式</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 6.4 混合架构 -->
+      <div class="subsec" id="sec6-4">
+        <div class="subsec-title">6.4 混合架构：NewSQL 与多模数据库</div>
+
+        <div class="card">
+          <h4>NewSQL —— 兼具 SQL 和 NoSQL 的优势</h4>
+          <p>NewSQL 试图融合 RDBMS 的 ACID 事务 + SQL 接口 和 NoSQL 的水平扩展能力。代表产品：</p>
+        </div>
+
+        <div class="grid3">
+          <div class="card" style="text-align:center;padding:16px">
+            <h4 style="color:var(--pri)">TiDB</h4>
+            <p style="font-size:12px;margin:0">PingCAP 开源 · MySQL 兼容<br>自动分片 · HTAP（OLTP+OLAP）<br>金融级分布式数据库</p>
+          </div>
+          <div class="card" style="text-align:center;padding:16px">
+            <h4 style="color:var(--purple)">CockroachDB</h4>
+            <p style="font-size:12px;margin:0">Google Spanner 启发 · PG 兼容<br>全球多活部署<br>极高容错能力</p>
+          </div>
+          <div class="card" style="text-align:center;padding:16px">
+            <h4 style="color:var(--amber)">OceanBase</h4>
+            <p style="font-size:12px;margin:0">蚂蚁集团 · MySQL 兼容<br>TPC-C 基准世界纪录<br>银行核心系统验证</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>现实世界架构：没有人只用一种数据库</h4>
+          <div class="flow" style="font-size:12px;line-height:2.4">
+&#128736; <b>一个典型电商后端的数据架构：</b>
+  MySQL  → 订单 / 用户 / 商品（主存储 + 事务）
+  Redis  → 商品缓存 / Session / 秒杀库存扣减
+  Elasticsearch → 商品全文搜索 / 日志分析
+  MongoDB → 商品评论 / 用户行为日志（Schema 灵活）
+  ClickHouse → 实时数据大屏 / 运营日报 / 漏斗分析</div>
+        </div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> 数据库选型 · 记忆要点</h4>
+          <ul>
+            <li><strong>关系型</strong>：MySQL（互联网首选，运维简单）/ PostgreSQL（复杂查询+JSONB+GIS）/ Oracle（金融/大型企业）</li>
+            <li><strong>NoSQL 六大类</strong>：Redis(KV缓存) / MongoDB(文档) / ClickHouse(列式分析) / Neo4j(图) / InfluxDB(时序) / ES(搜索)</li>
+            <li><strong>选型铁律</strong>：没有银弹，根据<strong>数据模型、查询模式、一致性要求、团队能力</strong>综合决策</li>
+            <li><strong>现实架构</strong>：多数据库并存 —— MySQL 做核心事务，Redis 做缓存，ES 做搜索，ClickHouse 做分析</li>
+            <li><strong>NewSQL</strong>：TiDB/CockroachDB/OceanBase，兼具 SQL 兼容 + 水平扩展，适合大规模分布式场景</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SECTION 7: FAQ ═══════════ -->
+    <section class="sec" id="sec7">
+      <div class="sec-title">
+        <span class="num">7</span>
+        <h2>常见问题 FAQ</h2>
+        <span class="line"></span>
+      </div>
+
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px">
+        生产环境中遇到的 MySQL 问题往往有规律可循。本章按<strong>连接认证 → 性能优化 → 事务一致性 → 存储引擎 → 备份恢复</strong>五大类梳理高频问题，每个问题给出<strong>现象描述 → 原因分析 → 解决方案</strong>的完整排查链路。
+      </p>
+
+      <!-- 7.1 连接与认证 -->
+      <div class="subsec" id="sec7-1">
+        <div class="subsec-title">7.1 连接与认证问题</div>
+
+        <!-- FAQ: Too many connections -->
+        <div class="card" style="border-left:4px solid var(--red)">
+          <h4>Q1: Too many connections —— 连接数耗尽</h4>
+          <p><strong>现象：</strong>应用报错 <code>ERROR 1040 (HY000): Too many connections</code>，新连接无法建立。</p>
+          <p><strong>原因：</strong>① 连接池配置过大或未释放；② 长连接泄漏（忘记 close）；③ <code>max_connections</code> 设置过低；④ 突发流量打满连接池。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL / SHELL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看当前连接数和上限
+SHOW VARIABLES LIKE 'max_connections';      -- 默认 151
+SHOW STATUS LIKE 'Threads_connected';       -- 当前活跃连接
+
+-- 查看各客户端连接数
+SELECT host, COUNT(*) AS cnt
+FROM information_schema.processlist
+GROUP BY host ORDER BY cnt DESC;
+
+-- 临时调大（重启失效）
+SET GLOBAL max_connections = 500;
+
+-- 永久生效：my.cnf
+-- [mysqld]
+-- max_connections = 500
+-- max_user_connections = 200   -- 单用户上限，防止单应用占满
+
+-- 找到并 KILL 长时间睡眠的连接
+SELECT id, user, host, time, command
+FROM information_schema.processlist
+WHERE command = 'Sleep' AND time > 300;</pre>
+</div>
+        <div class="tip tip-warn">
+          <strong>&#9888; 根因排查</strong>
+          调大 <code>max_connections</code> 只是治标。需检查应用连接池配置（如 HikariCP <code>maximumPoolSize</code>）、是否有连接泄漏、是否需要引入 ProxySQL 连接池复用。
+        </div>
+
+        <!-- FAQ: Access denied -->
+        <div class="card" style="border-left:4px solid var(--amber)">
+          <h4>Q2: Access denied —— 权限拒绝</h4>
+          <p><strong>现象：</strong>报错 <code>ERROR 1045 (28000): Access denied for user 'xxx'@'host'</code>。</p>
+          <p><strong>原因：</strong>① 密码错误；② 用户没有从该 IP 连接的权限；③ <code>host</code> 字段限制（如只允许 localhost）；④ 密码过期（MySQL 5.7+ 默认 360 天过期）。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看用户和允许的 host
+SELECT user, host, authentication_string
+FROM mysql.user WHERE user = 'myuser';
+
+-- 授权特定 IP 访问
+CREATE USER 'myuser'@'192.168.1.%' IDENTIFIED BY 'password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON mydb.* TO 'myuser'@'192.168.1.%';
+FLUSH PRIVILEGES;
+
+-- 密码过期问题：设置永不过期
+ALTER USER 'myuser'@'192.168.1.%' PASSWORD EXPIRE NEVER;
+
+-- 忘记 root 密码的恢复流程（需重启 MySQL）
+-- 1. my.cnf 添加 skip-grant-tables
+-- 2. 重启 MySQL
+-- 3. mysql -u root 直接进入
+-- 4. ALTER USER 'root'@'localhost' IDENTIFIED BY 'newpass';
+-- 5. 移除 skip-grant-tables 并重启</pre>
+</div>
+
+        <!-- FAQ: 中文乱码 -->
+        <div class="card" style="border-left:4px solid var(--purple)">
+          <h4>Q3: 中文乱码 —— 字符集问题</h4>
+          <p><strong>现象：</strong>写入中文后查询显示 <code>???</code> 或乱码。</p>
+          <p><strong>原因：</strong>① 数据库/表/列字符集不是 utf8mb4；② 连接字符集与服务端不一致；③ 使用了已废弃的 <code>utf8</code>（实为 utf8mb3，不支持 4 字节 emoji）。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看字符集
+SHOW VARIABLES LIKE 'character_set%';
+SHOW CREATE TABLE mytable;   -- 看表和列的字符集
+
+-- MySQL 8.0 默认已为 utf8mb4，旧版需手动设置
+-- my.cnf
+-- [mysqld]
+-- character-set-server = utf8mb4
+-- collation-server = utf8mb4_unicode_ci
+-- [client]
+-- default-character-set = utf8mb4
+
+-- 修改已有表的字符集
+ALTER TABLE mytable CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- JDBC 连接串指定字符集
+-- jdbc:mysql://host:3306/db?useUnicode=true&characterEncoding=utf8mb4</pre>
+</div>
+      </div>
+
+      <!-- 7.2 性能优化 -->
+      <div class="subsec" id="sec7-2">
+        <div class="subsec-title">7.2 性能优化问题</div>
+
+        <!-- FAQ: Slow query -->
+        <div class="card" style="border-left:4px solid var(--red)">
+          <h4>Q4: 慢查询定位与优化</h4>
+          <p><strong>现象：</strong>接口响应慢，数据库 CPU 飙高。</p>
+          <p><strong>原因：</strong>① 未走索引（全表扫描）；② 索引设计不合理；③ 数据量过大未分表；④ 锁等待；⑤ SQL 写法低效。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL / SHELL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 开启慢查询日志
+SET GLOBAL slow_query_log = ON;
+SET GLOBAL long_query_time = 1;          -- 超过 1 秒记录
+SET GLOBAL slow_query_log_file = '/var/log/mysql/slow.log';
+
+-- 实时查看正在执行的慢 SQL
+SELECT id, user, host, db, command, time, state, info
+FROM information_schema.processlist
+WHERE time > 2 AND info IS NOT NULL;
+
+-- 用 mysqldumpslow 分析慢日志
+-- mysqldumpslow -s t -t 10 /var/log/mysql/slow.log
+--   -s t 按总时间排序  -t 10 取前10条
+
+-- 用 EXPLAIN 分析具体 SQL
+EXPLAIN SELECT * FROM orders WHERE user_id = 100;
+-- 重点看 type(避免ALL) / key(是否用索引) / rows(扫描行数) / Extra</pre>
+</div>
+        <div class="tip tip-good">
+          <strong>&#10004; 慢查询优化四步法</strong>
+          <strong>① EXPLAIN</strong> 看执行计划 → <strong>② 加/调索引</strong>（覆盖索引优先）→ <strong>③ 改 SQL 写法</strong>（避免 SELECT *、子查询改 JOIN）→ <strong>④ 考虑分表</strong>（数据量超千万）。
+        </div>
+
+        <!-- FAQ: Index not used -->
+        <div class="card" style="border-left:4px solid var(--amber)">
+          <h4>Q5: 索引为什么没生效？</h4>
+          <p><strong>现象：</strong>建了索引但 EXPLAIN 显示 <code>type=ALL</code>，全表扫描。</p>
+          <p><strong>原因：</strong>参见第 2 章索引失效 7 大场景 —— 函数运算、隐式类型转换、LIKE 前置 %、OR 混用、!= 、最左前缀缺失、IS NULL。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 检查是否真的没用索引
+EXPLAIN SELECT * FROM users WHERE phone = 13800138000;
+-- phone 是 VARCHAR，传入数字 → 隐式转换 → 索引失效
+
+-- 修复：字符串类型加引号
+EXPLAIN SELECT * FROM users WHERE phone = '13800138000';
+-- 现在 type=ref, key=idx_phone
+
+-- 强制使用指定索引（调试用，不建议生产常态）
+SELECT * FROM users FORCE INDEX(idx_phone) WHERE phone = '13800138000';
+
+-- 检查索引统计信息是否过期（可能导致优化器选错索引）
+ANALYZE TABLE users;</pre>
+</div>
+
+        <!-- FAQ: CPU high -->
+        <div class="card" style="border-left:4px solid var(--purple)">
+          <h4>Q6: MySQL CPU 100% 怎么排查？</h4>
+          <p><strong>原因：</strong>① 慢 SQL 全表扫描消耗 CPU；② 临时表/排序过大（Using filesort / Using temporary）；③ 并发 QPS 突增；④ 缺少索引导致大量回表。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SHELL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre># 1. 找到占 CPU 最高的 MySQL 线程
+top -H -p $(pgrep mysqld)
+# 记录 TID（十进制）
+
+# 2. 在 MySQL 中查看对应 SQL
+SELECT thread_id, PROCESSLIST_ID, PROCESSLIST_INFO
+FROM performance_schema.threads
+WHERE THREAD_OS_ID = <TID>;
+
+# 3. 或直接查 processlist 找耗时最长的
+mysql -e "SHOW FULL PROCESSLIST" | sort -t$'\t' -k6 -rn | head
+
+# 4. pt-tools 精准定位（Percona Toolkit）
+pt-query-digest /var/log/mysql/slow.log --order-by Query_time:sum</pre>
+</div>
+      </div>
+
+      <!-- 7.3 事务与一致性 -->
+      <div class="subsec" id="sec7-3">
+        <div class="subsec-title">7.3 数据一致性与事务问题</div>
+
+        <!-- FAQ: Deadlock -->
+        <div class="card" style="border-left:4px solid var(--red)">
+          <h4>Q7: 死锁 —— Deadlock found when trying to get lock</h4>
+          <p><strong>现象：</strong>事务报错 <code>ERROR 1213 (40001): Deadlock found</code>，其中一个事务被自动回滚。</p>
+          <p><strong>原因：</strong>两个事务互相等待对方持有的锁。典型场景：事务 A 先锁行 1 再锁行 2，事务 B 先锁行 2 再锁行 1。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看最近一次死锁详情
+SHOW ENGINE INNODB STATUS\G
+-- 找到 "LATEST DETECTED DEADLOCK" 段落
+-- 会显示两个事务各自持有和等待的锁
+
+-- MySQL 8.0 查看死锁监控
+SELECT * FROM performance_schema.data_locks;
+SELECT * FROM performance_schema.data_lock_waits;
+
+-- 查看锁等待超时设置
+SHOW VARIABLES LIKE 'innodb_lock_wait_timeout';  -- 默认 50 秒</pre>
+</div>
+        <div class="tip tip-red">
+          <strong>&#9888; 死锁预防四原则</strong>
+          ① <strong>固定加锁顺序</strong>：所有事务按主键升序加锁<br>
+          ② <strong>缩短事务</strong>：事务中不要有 RPC 调用、文件 IO 等慢操作<br>
+          ③ <strong>降低隔离级别</strong>：RR → RC 可减少间隙锁<br>
+          ④ <strong>合理索引</strong>：无索引会锁表（行锁升级为表锁）
+        </div>
+
+        <!-- FAQ: Master-slave delay -->
+        <div class="card" style="border-left:4px solid var(--amber)">
+          <h4>Q8: 主从复制延迟过大</h4>
+          <p><strong>现象：</strong>从库数据落后主库数秒甚至数分钟，读写分离后读到旧数据。</p>
+          <p><strong>原因：</strong>① 大事务（一次性写入百万行）；② 从库单线程回放（MySQL 5.6 之前）；③ 从库硬件差于主库；④ 网络延迟；⑤ 从库有慢查询阻塞了 SQL 线程。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看主从延迟
+SHOW SLAVE STATUS\G
+-- 关注：
+--   Seconds_Behind_Master: 延迟秒数
+--   Slave_IO_Running: Yes/No
+--   Slave_SQL_Running: Yes/No
+
+-- MySQL 8.0 性能_SCHEMA 更精确
+SELECT * FROM performance_schema.replication_connection_status;
+SELECT * FROM performance_schema.replication_applier_status_by_worker;
+
+-- 加速从库回放（MySQL 5.7+ 多线程复制）
+-- my.cnf
+-- slave_parallel_workers = 8
+-- slave_parallel_type = LOGICAL_CLOCK
+-- slave_preserve_commit_order = ON</pre>
+</div>
+        <div class="tip tip-info">
+          <strong>&#128161; 读写分离的一致性方案</strong>
+          关键业务（如订单创建后立即查询）可以：① 写主库后<strong>强制读主库</strong>（一定时间窗口内）；② 使用 <code>WAIT</code> / <code>semi-sync</code> 半同步复制确保从库已收到日志再返回。
+        </div>
+
+        <!-- FAQ: Phantom read -->
+        <div class="card" style="border-left:4px solid var(--purple)">
+          <h4>Q9: RR 隔离级别下还会出现幻读吗？</h4>
+          <p><strong>现象：</strong>理论上 RR 已解决幻读，但在<strong>当前读</strong>场景下可能仍有问题。</p>
+          <p><strong>原因：</strong>RR 的 MVCC 只对<strong>快照读</strong>（普通 SELECT）生效。当前读（<code>SELECT ... FOR UPDATE</code> / <code>UPDATE</code> / <code>DELETE</code>）读取最新数据，需要间隙锁来防止幻读。如果只用快照读而不加锁，在事务中途其他事务插入数据后再做当前读，可能看到新行。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 事务 A (RR)                    事务 B
+BEGIN;                            BEGIN;
+SELECT * FROM orders              -- 快照读，看到 100 行
+  WHERE amount > 100;
+                                  INSERT INTO orders(amount)
+                                  VALUES(200);  -- 插入新行
+                                  COMMIT;
+SELECT * FROM orders              -- 快照读，仍然 100 行 &#10004;
+  WHERE amount > 100;
+SELECT * FROM orders              -- 当前读，看到 101 行 &#9888; 幻读!
+  WHERE amount > 100 FOR UPDATE;
+COMMIT;
+
+-- 解决：需要防幻读时用 FOR UPDATE 加间隙锁
+BEGIN;
+SELECT * FROM orders
+  WHERE amount > 100 FOR UPDATE;  -- 加临键锁，阻止插入
+-- 此时事务 B 的 INSERT 会被阻塞
+COMMIT;</pre>
+</div>
+      </div>
+
+      <!-- 7.4 存储引擎 -->
+      <div class="subsec" id="sec7-4">
+        <div class="subsec-title">7.4 存储引擎问题</div>
+
+        <!-- FAQ: InnoDB vs MyISAM -->
+        <div class="card" style="border-left:4px solid var(--blue)">
+          <h4>Q10: InnoDB 与 MyISAM 的区别？为什么 MySQL 5.5+ 默认 InnoDB？</h4>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>维度</th><th>InnoDB</th><th>MyISAM</th></tr></thead>
+            <tbody>
+              <tr><td><strong>事务</strong></td><td style="color:var(--green)">&#10004; 支持 ACID</td><td style="color:var(--red)">&#10007; 不支持</td></tr>
+              <tr><td><strong>锁粒度</strong></td><td style="color:var(--green)">行锁 + 间隙锁</td><td style="color:var(--red)">表锁</td></tr>
+              <tr><td><strong>外键</strong></td><td style="color:var(--green)">&#10004; 支持</td><td>&#10007; 不支持</td></tr>
+              <tr><td><strong>崩溃恢复</strong></td><td style="color:var(--green)">&#10004; Redo Log 恢复</td><td style="color:var(--red)">&#10007; 需修复</td></tr>
+              <tr><td><strong>索引结构</strong></td><td>聚簇索引（数据+索引一体）</td><td>非聚簇（索引和数据分离）</td></tr>
+              <tr><td><strong>全文索引</strong></td><td>5.6+ 支持</td><td style="color:var(--green)">支持（更早）</td></tr>
+              <tr><td><strong>COUNT(*)</strong></td><td style="color:var(--red)">扫描（MVCC 下无法缓存）</td><td style="color:var(--green)">直接读存储的计数</td></tr>
+              <tr><td><strong>适用场景</strong></td><td style="color:var(--green)">OLTP（绝大多数场景）</td><td>只读 / 历史归档（已不推荐）</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tip tip-warn">
+          <strong>&#9888; MyISAM 已不推荐使用</strong>
+          MySQL 5.5 起默认 InnoDB。MySQL 8.0 中 system tables 已全部转为 InnoDB。MyISAM 不支持事务、不支持崩溃恢复，生产环境应避免使用。
+        </div>
+
+        <!-- FAQ: Table fragmentation -->
+        <div class="card" style="border-left:4px solid var(--teal)">
+          <h4>Q11: 表碎片整理 —— 空间不释放</h4>
+          <p><strong>现象：</strong>大量 DELETE 后表文件大小没减小，磁盘空间未回收。</p>
+          <p><strong>原因：</strong>InnoDB 删除数据后只是标记为可复用，物理空间不会自动归还操作系统，产生<strong>碎片</strong>。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看碎片率
+SELECT
+  table_name,
+  ROUND(data_length/1024/1024, 2) AS data_mb,
+  ROUND(index_length/1024/1024, 2) AS index_mb,
+  ROUND(data_free/1024/1024, 2) AS free_mb,
+  ROUND(data_free/(data_length+index_length)*100, 1) AS frag_pct
+FROM information_schema.tables
+WHERE table_schema = 'mydb'
+ORDER BY free_mb DESC;
+
+-- OPTIMIZE TABLE：重建表回收碎片（锁表，慎用大表）
+OPTIMIZE TABLE mytable;
+
+-- MySQL 8.0 推荐：在线 DDL 重建（不锁表）
+ALTER TABLE mytable ENGINE=InnoDB;
+
+-- pt-online-schema-change（Percona，零停机）
+-- pt-online-schema-change --alter "ENGINE=InnoDB" D=mydb,t=mytable</pre>
+</div>
+
+        <!-- FAQ: table lock -->
+        <div class="card" style="border-left:4px solid var(--amber)">
+          <h4>Q12: 为什么 InnoDB 查询也被锁住了？</h4>
+          <p><strong>现象：</strong>明明用的 InnoDB，SELECT 却被阻塞等待。</p>
+          <p><strong>原因：</strong>① 查询条件<strong>未走索引</strong>，行锁升级为表锁；② <code>LOCK IN SHARE MODE</code> / <code>FOR UPDATE</code> 加了显式锁；③ 隔离级别为 SERIALIZABLE，所有 SELECT 自动加共享锁；④ DDL 操作（ALTER TABLE）触发了 MDL 锁。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre>-- 查看当前锁等待
+SELECT
+  r.trx_id AS waiting_trx,
+  r.trx_query AS waiting_sql,
+  b.trx_id AS blocking_trx,
+  b.trx_query AS blocking_sql,
+  TIMESTAMPDIFF(SECOND, r.trx_wait_started, NOW()) AS wait_sec
+FROM information_schema.innodb_trx r
+JOIN information_schema.innodb_locks w ON r.trx_id = w.lock_trx_id
+JOIN information_schema.innodb_locks b ON w.lock_table = b.lock_table
+JOIN information_schema.innodb_trx b ON b.trx_id = b.lock_trx_id;
+
+-- KILL 阻塞源头
+KILL <blocking_trx_id>;
+
+-- 检查是否有未走索引的查询（processlist 中 time 值大的）
+SHOW FULL PROCESSLIST;</pre>
+</div>
+      </div>
+
+      <!-- 7.5 备份与恢复 -->
+      <div class="subsec" id="sec7-5">
+        <div class="subsec-title">7.5 备份与恢复问题</div>
+
+        <!-- FAQ: backup tools -->
+        <div class="card" style="border-left:4px solid var(--blue)">
+          <h4>Q13: mysqldump vs Percona XtraBackup 选哪个？</h4>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>维度</th><th>mysqldump</th><th>Percona XtraBackup</th></tr></thead>
+            <tbody>
+              <tr><td><strong>类型</strong></td><td>逻辑备份（SQL 语句）</td><td>物理备份（数据文件拷贝）</td></tr>
+              <tr><td><strong>速度</strong></td><td style="color:var(--red)">慢（需执行 SQL 重建）</td><td style="color:var(--green)">快（直接拷文件）</td></tr>
+              <tr><td><strong>体积</strong></td><td>文本文件，可压缩</td><td>与原库相当</td></tr>
+              <tr><td><strong>一致性</strong></td><td><code>--single-transaction</code> 一致性快照</td><td>基于 Redo Log 保证一致</td></tr>
+              <tr><td><strong>锁影响</strong></td><td>InnoDB 无锁，MyISAM 锁表</td><td>几乎无锁</td></tr>
+              <tr><td><strong>恢复速度</strong></td><td style="color:var(--red)">慢（逐条执行 SQL）</td><td style="color:var(--green)">快（拷回文件 + crash recovery）</td></tr>
+              <tr><td><strong>适用</strong></td><td>小库 / 跨版本迁移 / 单表导出</td><td>大库（100GB+）/ 快速恢复</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SHELL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre># mysqldump 逻辑备份（小中型库）
+mysqldump -u root -p \
+  --single-transaction \         # InnoDB 一致性快照（不锁表）
+  --routines \                   # 包含存储过程
+  --triggers \                   # 包含触发器
+  --set-gtid-purged=OFF \        # 不带 GTID 信息
+  --databases mydb > backup.sql
+
+# 恢复
+mysql -u root -p mydb < backup.sql
+
+# Percona XtraBackup 物理备份（大型库）
+xtrabackup --backup --target-dir=/backup/full \
+  --user=root --password=xxx
+
+# 准备备份（应用 Redo Log 使一致性）
+xtrabackup --prepare --target-dir=/backup/full
+
+# 恢复（需先停止 MySQL）
+xtrabackup --copy-back --target-dir=/backup/full
+chown -R mysql:mysql /var/lib/mysql
+systemctl start mysqld</pre>
+</div>
+
+        <!-- FAQ: accidental delete -->
+        <div class="card" style="border-left:4px solid var(--red)">
+          <h4>Q14: 误删数据如何恢复？</h4>
+          <p><strong>场景：</strong><code>DELETE FROM orders WHERE id &lt; 1000</code> 误操作（本意是 <code>id &gt; 1000</code>），且已提交。</p>
+          <p><strong>恢复方案（按优先级）：</strong></p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SHELL / SQL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre># 方案 1: Binlog 闪回（首选，需开启 binlog + ROW 格式）
+# 1. 找到误操作的 binlog 位置
+mysqlbinlog --start-datetime="2026-07-26 11:00:00" \
+            --stop-datetime="2026-07-26 11:05:00" \
+  /var/lib/mysql/mysql-bin.000123 | grep -A5 "DELETE FROM orders"
+
+# 2. 用 binlog2sql / my2sql 工具生成反向 SQL
+#    (将 DELETE 转为 INSERT)
+python binlog2sql.py -h127.0.0.1 -P3306 -uroot -pxxx \
+  --start-file='mysql-bin.000123' \
+  --start-datetime="2026-07-26 11:00:00" \
+  --stop-datetime="2026-07-26 11:05:00" \
+  -B  # 生成反向 SQL
+
+# 3. 执行反向 SQL 恢复
+mysql -u root -p mydb < rollback.sql
+
+# 方案 2: 从备份恢复到临时实例，导出误删数据再导入
+# 1. 恢复最近一次全量备份到临时库
+# 2. 将临时库的误删数据导出
+# 3. 导入到生产库
+
+# 方案 3: 延迟从库（如有配置）
+# 延迟从库延迟 1 小时同步，可在误删后从延迟从库导出数据</pre>
+</div>
+        <div class="tip tip-red">
+          <strong>&#9888; 预防 &gt; 恢复</strong>
+          ① 生产环境<strong>必须开启 binlog</strong> 且格式为 ROW；② 定期全量备份 + 增量 binlog 备份；③ 配置<strong>延迟从库</strong>（延迟 1~3 小时）作为最后一道防线；④ DELETE/UPDATE 必须<strong>带 WHERE</strong> 且先 SELECT 确认；⑤ 使用 <code>sql_safe_updates=ON</code> 阻止无 WHERE 的删除。
+        </div>
+
+        <!-- FAQ: Point-in-time recovery -->
+        <div class="card" style="border-left:4px solid var(--purple)">
+          <h4>Q15: 如何做基于时间点的恢复（PITR）？</h4>
+          <p><strong>场景：</strong>凌晨 2 点全量备份，上午 10 点误删表，需要恢复到 9:59 的状态。</p>
+        </div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">SHELL</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre># PITR (Point-In-Time Recovery) 三步走
+
+# 步骤 1: 恢复全量备份（到凌晨 2 点状态）
+xtrabackup --copy-back --target-dir=/backup/full_2am
+systemctl start mysqld
+
+# 步骤 2: 回放 binlog 到误操作前（2:00 ~ 9:59）
+mysqlbinlog --start-datetime="2026-07-26 02:00:00" \
+            --stop-datetime="2026-07-26 09:59:00" \
+  /var/lib/mysql/mysql-bin.000124 \
+  /var/lib/mysql/mysql-bin.000125 \
+  | mysql -u root -p
+
+# 步骤 3: 验证数据完整性后切换应用连接
+# 如需精确到某个 SQL 语句：
+#   先用 mysqlbinlog 查看 --stop-position 的具体位置
+mysqlbinlog --start-datetime="2026-07-26 09:55:00" \
+  /var/lib/mysql/mysql-bin.000125 | less
+# 找到误删语句前的 --stop-position=12345
+mysqlbinlog --start-datetime="2026-07-26 02:00:00" \
+            --stop-position=12345 \
+  /var/lib/mysql/mysql-bin.000125 | mysql -u root -p</pre>
+</div>
+
+        <div class="review">
+          <h4><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg> 常见问题 FAQ · 记忆要点</h4>
+          <ul>
+            <li><strong>连接耗尽</strong>：查 processlist + 调 max_connections + 排查连接池泄漏</li>
+            <li><strong>慢查询</strong>：slow_query_log + EXPLAIN 四步法（看计划→加索引→改SQL→分表）</li>
+            <li><strong>死锁</strong>：<code>SHOW ENGINE INNODB STATUS</code> 看详情，固定加锁顺序 + 缩短事务</li>
+            <li><strong>主从延迟</strong>：多线程复制 + 避免大事务 + 关键路径强制读主</li>
+            <li><strong>InnoDB vs MyISAM</strong>：InnoDB 支持事务+行锁+崩溃恢复，MyISAM 已不推荐</li>
+            <li><strong>误删恢复</strong>：Binlog 闪回（ROW 格式） > 全量备份恢复 > 延迟从库</li>
+            <li><strong>PITR</strong>：全量备份 + binlog 回放到指定时间点/位置</li>
+            <li><strong>预防 &gt; 恢复</strong>：开 binlog + 定期备份 + sql_safe_updates + 延迟从库</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ GLOBAL REVIEW ═══════════ -->
+    <div class="review" style="background:linear-gradient(135deg,#1a6fb5,#0d9488);color:#fff;border:none">
+      <h4 style="color:#fff">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1L2 5v5c0 3 2.5 5.5 7 7 4.5-1.5 7-4 7-7V5L9 1z"/></svg>
+        全篇核心知识链路
+      </h4>
+      <p style="font-size:14px;line-height:2;margin:12px 0;opacity:.95">
+        <strong>索引</strong>（B+Tree → 聚簇/二级 → 回表）→ <strong>优化</strong>（覆盖索引/最左前缀/ICP/EXPLAIN）
+        → <strong>事务</strong>（ACID → MVCC + ReadView → RR 默认隔离）→ <strong>锁</strong>（行锁/间隙锁/临键锁 → 防幻读）
+        → <strong>持久化</strong>（Buffer Pool 缓存 → Redo Log WAL → 两阶段提交 → Binlog 复制）
+        → <strong>分库分表</strong>（垂直/水平拆分 → Hash/一致性Hash 分片 → ShardingSphere → 雪花ID/跨分片查询）
+        → <strong>数据库选型</strong>（MySQL vs PG vs Oracle → NoSQL 六大门派 → 混合架构 NewSQL）
+        → <strong>FAQ</strong>（连接认证 → 慢查询优化 → 死锁排查 → 误删恢复 → PITR）
+      </p>
+      <p style="font-size:14px;line-height:2;opacity:.95">
+        <strong>一句话总结：</strong>用 B+Tree 高效查数据，用 MVCC 无锁并发读，用 Redo/Undo/Binlog 三大日志保证事务 ACID，
+        用两阶段提交协调 Redo 与 Binlog 一致；当单机扛不住时，用分库分表横向扩展；面对不同场景时，选择最匹配的数据库组合；
+        遇到生产问题时，按「现象 → 原因 → 方案」的系统化排查链路快速定位——这就是现代 MySQL 开发者必备的完整知识体系。
+      </p>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script>
+/* ══════ Copy Code ══════ */
+function copyCode(btn){
+  var pre = btn.parentElement.nextElementSibling;
+  var code = pre.textContent;
+  navigator.clipboard.writeText(code).then(function(){
+    btn.textContent = '已复制!';
+    btn.classList.add('copied');
+    setTimeout(function(){
+      btn.textContent = '复制';
+      btn.classList.remove('copied');
+    }, 1500);
+  }).catch(function(){
+    btn.textContent = '复制失败';
+  });
+}
+
+/* ══════ TOC Scroll Spy ══════ */
+var tocLinks = document.querySelectorAll('.toc a');
+var sections = [];
+tocLinks.forEach(function(a){
+  var href = a.getAttribute('href');
+  if(href){
+    var el = document.querySelector(href);
+    if(el) sections.push({el:el, link:a});
+  }
+});
+
+function updateToc(){
+  var scrollPos = window.scrollY + 100;
+  var active = null;
+  sections.forEach(function(s){
+    if(s.el.offsetTop <= scrollPos) active = s.link;
+  });
+  tocLinks.forEach(function(l){l.classList.remove('active')});
+  if(active) active.classList.add('active');
+}
+
+window.addEventListener('scroll', updateToc, {passive:true});
+updateToc();
+
+/* ══════ Mobile TOC ══════ */
+var tocEl = document.getElementById('toc');
+var tocOverlay = document.getElementById('tocOverlay');
+var tocToggle = document.getElementById('tocToggle');
+
+function openToc(){
+  tocEl.classList.add('show');
+  tocOverlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeToc(){
+  tocEl.classList.remove('show');
+  tocOverlay.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+tocToggle.addEventListener('click', function(){
+  if(tocEl.classList.contains('show')){closeToc()}else{openToc()}
+});
+tocOverlay.addEventListener('click', closeToc);
+tocLinks.forEach(function(a){
+  a.addEventListener('click', closeToc);
+});
+</script>
+
+</body>
+</html>
