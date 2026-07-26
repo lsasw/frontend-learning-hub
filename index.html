@@ -1,382 +1,422 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Frontend Learning Hub · 交互式技术教程合集</title>
 <style>
 /* ═══════════════════════════════════════════════════
-   CSS Variables
+   DevPortal 2.0 Design Tokens
    ═══════════════════════════════════════════════════ */
-:root {
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --border: #e2e8f0;
-  --border-light: #f1f5f9;
-  --text: #0f172a;
-  --text2: #475569;
-  --text3: #94a3b8;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #dbeafe;
-  --primary-lighter: #eff6ff;
-  --purple: #7c3aed;
-  --green: #059669;
-  --orange: #ea580c;
-  --red: #dc2626;
-  --sidebar-w: 250px;
-  --topbar-h: 54px;
-  --footer-h: 48px;
-  --radius: 10px;
-  --radius-sm: 6px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
-  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
-  --font-sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
-  --transition: .2s cubic-bezier(.4,0,.2,1);
+:root{
+  --gray-50:#fafafa;--gray-100:#f4f4f5;--gray-200:#e4e4e7;--gray-300:#d4d4d8;
+  --gray-400:#a1a1aa;--gray-500:#71717a;--gray-600:#52525b;--gray-700:#3f3f46;
+  --gray-800:#27272a;--gray-900:#18181b;--gray-950:#09090b;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;--blue-300:#93c5fd;
+  --blue-400:#60a5fa;--blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;
+  --purple-50:#faf5ff;--purple-100:#f3e8ff;--purple-400:#c084fc;--purple-500:#a855f7;--purple-600:#9333ea;--purple-700:#7c3aed;
+  --green-500:#10b981;--green-600:#059669;
+  --amber-500:#f59e0b;--amber-600:#d97706;
+  --red-500:#ef4444;--red-600:#dc2626;
+  --teal-500:#14b8a6;--cyan-500:#06b6d4;--indigo-500:#6366f1;--rose-500:#f43f5e;--orange-500:#f97316;
+
+  --bg:var(--gray-50);--bg-subtle:var(--gray-100);--surface:#ffffff;--surface-hover:var(--gray-50);
+  --border:var(--gray-200);--border-subtle:var(--gray-100);
+  --text:var(--gray-900);--text-2:var(--gray-600);--text-3:var(--gray-400);
+  --primary:var(--blue-600);--primary-hover:var(--blue-700);--primary-light:var(--blue-50);
+  --accent:var(--purple-600);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 32px rgba(0,0,0,.12);
+
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code','Fira Code','Consolas',monospace;
+  --fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:17px;--fs-xl:20px;--fs-2xl:24px;--fs-3xl:30px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;--sp-10:40px;--sp-12:48px;
+  --radius-sm:6px;--radius:8px;--radius-md:10px;--radius-lg:14px;--radius-full:9999px;
+  --topbar-h:56px;--sidebar-w:240px;--content-max:1280px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);--transition-slow:.3s cubic-bezier(.4,0,.2,1);
 }
+[data-theme="dark"]{
+  --bg:var(--gray-950);--bg-subtle:var(--gray-900);--surface:var(--gray-900);--surface-hover:var(--gray-800);
+  --border:var(--gray-800);--border-subtle:var(--gray-800);
+  --text:var(--gray-50);--text-2:var(--gray-400);--text-3:var(--gray-500);
+  --primary:var(--blue-400);--primary-hover:var(--blue-300);--primary-light:rgba(59,130,246,.12);
+  --accent:var(--purple-400);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);--shadow:0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:0 4px 12px rgba(0,0,0,.4);--shadow-lg:0 12px 32px rgba(0,0,0,.5);
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{
-  font-family:var(--font-sans);
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  flex-direction:column;
+  font-family:var(--font-sans);font-size:var(--fs-base);line-height:1.6;
+  background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;
   -webkit-font-smoothing:antialiased;
+  transition:background var(--transition),color var(--transition);
 }
+::selection{background:var(--blue-200);color:var(--blue-900)}
+[data-theme="dark"] ::selection{background:rgba(59,130,246,.3);color:var(--blue-100)}
+a{text-decoration:none;color:inherit}
 
-/* ═══════════════════════════════════════════════════
-   Top Navigation Bar
-   ═══════════════════════════════════════════════════ */
+/* ═════ Scrollbar ═════ */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--gray-400)}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:var(--gray-700)}
+
+/* ═════ TOPBAR ═════ */
 .topbar{
-  height:var(--topbar-h);
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  padding:0 20px;
-  gap:16px;
-  flex-shrink:0;
-  z-index:100;
-  box-shadow:var(--shadow-sm);
+  height:var(--topbar-h);flex-shrink:0;z-index:100;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 var(--sp-6);gap:var(--sp-4);
+  backdrop-filter:saturate(180%) blur(8px);
 }
-.topbar .logo{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  font-weight:800;
-  font-size:1.05rem;
-  color:var(--primary);
-  text-decoration:none;
-  white-space:nowrap;
+.topbar .logo{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:var(--fs-md);color:var(--text);white-space:nowrap;cursor:pointer}
+.topbar .logo-badge{
+  width:28px;height:28px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:13px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
 }
-.topbar .logo svg{width:28px;height:28px;flex-shrink:0}
-.topbar .logo span.sub{
-  font-weight:400;
-  font-size:.72rem;
-  color:var(--text3);
-  margin-left:2px;
+.topbar .logo span{color:var(--text-3);font-weight:400;font-size:var(--fs-sm)}
+.topbar .search-trigger{
+  flex:1;max-width:420px;display:flex;align-items:center;gap:var(--sp-2);
+  background:var(--bg-subtle);border:1px solid var(--border);
+  border-radius:var(--radius);padding:7px var(--sp-3);
+  color:var(--text-3);font-size:var(--fs-sm);cursor:pointer;
+  transition:all var(--transition);
+}
+.topbar .search-trigger:hover{border-color:var(--primary);background:var(--surface);box-shadow:var(--shadow-sm)}
+.topbar .search-trigger svg{width:16px;height:16px;flex-shrink:0}
+.topbar .search-trigger .kbd{
+  margin-left:auto;font-family:var(--font-mono);font-size:11px;
+  padding:2px 6px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border);color:var(--text-3);
 }
 .topbar .spacer{flex:1}
-.topbar .page-title{
-  font-size:.88rem;
-  font-weight:600;
-  color:var(--text);
-  max-width:360px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+.topbar .icon-btn{
+  width:34px;height:34px;border-radius:var(--radius);
+  border:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text-2);transition:all var(--transition);flex-shrink:0;
 }
-.topbar .hamburger{
-  display:none;
-  background:none;
-  border:none;
-  cursor:pointer;
-  padding:6px;
-  color:var(--text2);
-  font-size:1.3rem;
-  line-height:1;
-}
+.topbar .icon-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--surface-hover)}
+.topbar .icon-btn svg{width:16px;height:16px}
+.topbar .hamburger{display:none}
 
-/* ═══════════════════════════════════════════════════
-   Layout Body
-   ═══════════════════════════════════════════════════ */
-.layout{
-  display:flex;
-  flex:1;
-  overflow:hidden;
-}
+/* ═════ LAYOUT ═════ */
+.layout{display:flex;flex:1;overflow:hidden}
 
-/* ═══════════════════════════════════════════════════
-   Sidebar
-   ═══════════════════════════════════════════════════ */
+/* ═════ SIDEBAR ═════ */
 .sidebar{
-  width:var(--sidebar-w);
+  width:var(--sidebar-w);flex-shrink:0;
   background:var(--surface);
   border-right:1px solid var(--border);
-  overflow-y:auto;
-  overflow-x:hidden;
-  flex-shrink:0;
-  padding:8px 0 16px;
-  transition:transform var(--transition);
+  overflow-y:auto;overflow-x:hidden;
+  padding:var(--sp-4) var(--sp-3);
+  transition:transform var(--transition-slow);
 }
-.sidebar .cat{
-  padding:16px 20px 6px;
-  font-size:.66rem;
-  font-weight:700;
-  color:var(--text3);
-  text-transform:uppercase;
-  letter-spacing:1.2px;
+.sidebar .cat-label{
+  font-size:11px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.08em;
+  padding:var(--sp-4) var(--sp-3) var(--sp-1);
+  display:flex;align-items:center;gap:6px;cursor:pointer;
+  transition:color var(--transition);
 }
-.sidebar .cat:first-child{padding-top:10px}
+.sidebar .cat-label:hover{color:var(--primary)}
+.sidebar .cat-label:first-child{padding-top:var(--sp-1)}
 .sidebar .nav-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:9px 20px;
-  margin:1px 8px;
-  border-radius:var(--radius-sm);
-  cursor:pointer;
-  font-size:.84rem;
-  color:var(--text2);
-  transition:all var(--transition);
-  text-decoration:none;
-  border-left:3px solid transparent;
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:6px var(--sp-3);border-radius:var(--radius-sm);
+  font-size:var(--fs-sm);color:var(--text-2);
+  cursor:pointer;transition:all var(--transition);
+  border-left:2px solid transparent;margin:1px 0;line-height:1.4;
 }
-.sidebar .nav-item:hover{
-  background:var(--primary-lighter);
-  color:var(--primary);
-}
-.sidebar .nav-item.active{
-  background:var(--primary-light);
-  color:var(--primary);
-  font-weight:600;
-  border-left-color:var(--primary);
-}
-.sidebar .nav-item .icon{
-  font-size:1.05rem;
-  width:22px;
-  text-align:center;
-  flex-shrink:0;
-}
-.sidebar .nav-item .tag-new{
-  margin-left:auto;
-  font-size:.62rem;
-  background:var(--green);
-  color:#fff;
-  padding:1px 6px;
-  border-radius:10px;
-  font-weight:600;
-  letter-spacing:.3px;
+.sidebar .nav-item:hover{background:var(--bg-subtle);color:var(--text)}
+.sidebar .nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;border-left-color:var(--primary)}
+.sidebar .nav-item .ic{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.7}
+.sidebar .nav-item.active .ic{opacity:1}
+.sidebar .nav-item .ic svg{width:16px;height:16px}
+.sidebar .nav-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar .nav-item .badge-new{
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-full);
+  background:var(--green-500);color:#fff;letter-spacing:.03em;
 }
 
-/* ═══════════════════════════════════════════════════
-   Main Content Area
-   ═══════════════════════════════════════════════════ */
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  position:relative;
-}
+/* ═════ MAIN ═════ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;min-width:0}
 .main .loading{
-  display:none;
-  position:absolute;
-  top:0;left:0;right:0;
-  height:3px;
-  background:var(--primary);
-  z-index:10;
+  display:none;position:absolute;top:0;left:0;right:0;
+  height:3px;background:var(--primary);z-index:10;
   animation:loadingBar .8s ease infinite;
 }
-@keyframes loadingBar{
-  0%{width:0;left:0}
-  50%{width:60%;left:20%}
-  100%{width:0;left:100%}
-}
+@keyframes loadingBar{0%{width:0;left:0}50%{width:60%;left:20%}100%{width:0;left:100%}}
 .main.loading .loading{display:block}
-.main iframe{
-  width:100%;
-  height:100%;
-  border:none;
-  background:var(--bg);
+.main iframe{width:100%;height:100%;border:none;background:var(--bg)}
+
+/* ═════ WELCOME PAGE ═════ */
+.welcome{flex:1;overflow-y:auto}
+.content-wrap{max-width:var(--content-max);margin:0 auto;padding:var(--sp-8) var(--sp-8) var(--sp-12)}
+
+/* ═════ HERO ═════ */
+.hero{margin-bottom:var(--sp-10)}
+.hero .hero-eyebrow{
+  font-family:var(--font-mono);font-size:12px;color:var(--primary);
+  font-weight:600;letter-spacing:.03em;margin-bottom:var(--sp-2);
+  display:flex;align-items:center;gap:6px;
+}
+.hero .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green-500);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:var(--fs-3xl);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:var(--sp-3)}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+[data-theme="dark"] .hero h1 .grad{background:linear-gradient(135deg,var(--blue-400),var(--purple-400));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .hero-desc{color:var(--text-2);font-size:var(--fs-md);line-height:1.7;max-width:620px}
+.hero .hero-stats{display:flex;gap:var(--sp-6);margin-top:var(--sp-5)}
+.hero .stat{display:flex;align-items:baseline;gap:6px}
+.hero .stat .num{font-size:var(--fs-xl);font-weight:700;font-family:var(--font-mono);color:var(--text)}
+.hero .stat .lbl{font-size:var(--fs-sm);color:var(--text-3)}
+.hero .stat .sep{color:var(--gray-300);margin:0 var(--sp-1)}
+
+/* ═════ SECTION ═════ */
+.cat-section{margin-bottom:var(--sp-10);scroll-margin-top:calc(var(--topbar-h) + var(--sp-4))}
+.cat-header{
+  display:flex;align-items:center;gap:var(--sp-3);
+  margin-bottom:var(--sp-4);padding-bottom:var(--sp-3);
+  border-bottom:1px solid var(--border);
+}
+.cat-header .cat-icon-box{
+  width:32px;height:32px;border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.cat-header .cat-icon-box svg{width:18px;height:18px}
+.cat-header .cat-title{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.01em}
+.cat-header .cat-count{
+  font-size:var(--fs-xs);color:var(--text-3);font-family:var(--font-mono);
+  padding:2px 8px;background:var(--bg-subtle);border-radius:var(--radius-full);
 }
 
-/* ═══════════════════════════════════════════════════
-   Welcome / Home Page
-   ═══════════════════════════════════════════════════ */
-.welcome{
-  flex:1;
-  overflow-y:auto;
-  padding:40px 36px 60px;
+/* ═════ CARD GRID ═════ */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp-4)}
+.tut-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);padding:var(--sp-4);
+  display:flex;flex-direction:column;gap:var(--sp-2);
+  cursor:pointer;transition:all var(--transition);
+  position:relative;overflow:hidden;
 }
-.welcome-hero{
-  text-align:center;
-  padding:48px 20px 40px;
+.tut-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--card-accent,var(--blue-500));
+  opacity:0;transition:opacity var(--transition);
 }
-.welcome-hero h1{
-  font-size:2rem;
-  font-weight:800;
-  letter-spacing:-.5px;
-  color:var(--text);
+.tut-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.tut-card:hover::before{opacity:1}
+.tut-card .card-top{display:flex;align-items:flex-start;gap:var(--sp-3)}
+.tut-card .card-icon{
+  width:36px;height:36px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.welcome-hero .lead{
-  font-size:1.02rem;
-  color:var(--text2);
-  margin-top:10px;
-  max-width:600px;
-  margin-inline:auto;
-  line-height:1.7;
+.tut-card .card-icon svg{width:18px;height:18px}
+.tut-card h4{font-size:var(--fs-sm);font-weight:600;line-height:1.4;flex:1}
+.tut-card .card-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tut-card .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:var(--sp-1)}
+.tut-card .card-meta{
+  display:flex;align-items:center;gap:var(--sp-3);
+  margin-top:auto;padding-top:var(--sp-2);
+  border-top:1px solid var(--border-subtle);
+  font-size:11px;color:var(--text-3);font-family:var(--font-mono);
 }
-.welcome-hero .stats{
-  display:flex;
-  gap:32px;
-  justify-content:center;
-  margin-top:28px;
+.tut-card .card-meta span{display:flex;align-items:center;gap:3px}
+.tut-card .card-meta svg{width:12px;height:12px;opacity:.6}
+
+/* Tag colors */
+.tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:1px 7px;border-radius:var(--radius-full);line-height:1.6;white-space:nowrap}
+.t-blue{background:var(--blue-50);color:var(--blue-700)}
+.t-purple{background:var(--purple-50);color:var(--purple-700)}
+.t-green{background:#ecfdf5;color:var(--green-600)}
+.t-amber{background:#fffbeb;color:var(--amber-600)}
+.t-red{background:#fef2f2;color:var(--red-600)}
+.t-gray{background:var(--gray-100);color:var(--gray-600)}
+.t-teal{background:#f0fdfa;color:var(--teal-500)}
+.t-indigo{background:#eef2ff;color:var(--indigo-500)}
+.t-cyan{background:#ecfeff;color:var(--cyan-500)}
+.t-rose{background:#fff1f2;color:var(--rose-500)}
+.t-orange{background:#fff7ed;color:var(--orange-500)}
+[data-theme="dark"] .t-blue{background:rgba(59,130,246,.15);color:var(--blue-300)}
+[data-theme="dark"] .t-purple{background:rgba(168,85,247,.15);color:var(--purple-400)}
+[data-theme="dark"] .t-green{background:rgba(16,185,129,.15);color:var(--green-500)}
+[data-theme="dark"] .t-amber{background:rgba(245,158,11,.15);color:var(--amber-500)}
+[data-theme="dark"] .t-red{background:rgba(239,68,68,.15);color:var(--red-500)}
+[data-theme="dark"] .t-gray{background:var(--gray-800);color:var(--gray-400)}
+[data-theme="dark"] .t-teal{background:rgba(20,184,166,.15);color:var(--teal-500)}
+[data-theme="dark"] .t-indigo{background:rgba(99,102,241,.15);color:var(--indigo-500)}
+[data-theme="dark"] .t-cyan{background:rgba(6,182,212,.15);color:var(--cyan-500)}
+[data-theme="dark"] .t-rose{background:rgba(244,63,94,.15);color:var(--rose-500)}
+[data-theme="dark"] .t-orange{background:rgba(249,115,22,.15);color:var(--orange-500)}
+
+/* Icon backgrounds */
+.ic-bg-blue{background:var(--blue-50);color:var(--blue-600)}
+.ic-bg-purple{background:var(--purple-50);color:var(--purple-600)}
+.ic-bg-green{background:#ecfdf5;color:var(--green-600)}
+.ic-bg-amber{background:#fffbeb;color:var(--amber-600)}
+.ic-bg-red{background:#fef2f2;color:var(--red-600)}
+.ic-bg-teal{background:#f0fdfa;color:var(--teal-500)}
+.ic-bg-indigo{background:#eef2ff;color:var(--indigo-500)}
+.ic-bg-cyan{background:#ecfeff;color:var(--cyan-500)}
+.ic-bg-orange{background:#fff7ed;color:var(--orange-500)}
+.ic-bg-gray{background:var(--gray-100);color:var(--gray-600)}
+[data-theme="dark"] .ic-bg-blue{background:rgba(59,130,246,.12);color:var(--blue-400)}
+[data-theme="dark"] .ic-bg-purple{background:rgba(168,85,247,.12);color:var(--purple-400)}
+[data-theme="dark"] .ic-bg-green{background:rgba(16,185,129,.12);color:var(--green-500)}
+[data-theme="dark"] .ic-bg-amber{background:rgba(245,158,11,.12);color:var(--amber-500)}
+[data-theme="dark"] .ic-bg-red{background:rgba(239,68,68,.12);color:var(--red-500)}
+[data-theme="dark"] .ic-bg-teal{background:rgba(20,184,166,.12);color:var(--teal-500)}
+[data-theme="dark"] .ic-bg-indigo{background:rgba(99,102,241,.12);color:var(--indigo-500)}
+[data-theme="dark"] .ic-bg-cyan{background:rgba(6,182,212,.12);color:var(--cyan-500)}
+[data-theme="dark"] .ic-bg-orange{background:rgba(249,115,22,.12);color:var(--orange-500)}
+[data-theme="dark"] .ic-bg-gray{background:var(--gray-800);color:var(--gray-400)}
+
+/* ═════ COMMAND PALETTE ═════ */
+.cmd-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.4);backdrop-filter:blur(4px);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:15vh;
 }
-.welcome-hero .stat{
-  text-align:center;
+.cmd-overlay.show{display:flex;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.cmd-panel{
+  width:90%;max-width:560px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+  overflow:hidden;
 }
-.welcome-hero .stat .num{
-  font-size:2rem;
-  font-weight:900;
-  font-family:var(--font-mono);
-  color:var(--primary);
+.cmd-input-wrap{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-3) var(--sp-4);
+  border-bottom:1px solid var(--border);
 }
-.welcome-hero .stat .lbl{
-  font-size:.78rem;
-  color:var(--text3);
-  margin-top:2px;
+.cmd-input-wrap svg{width:18px;height:18px;color:var(--text-3);flex-shrink:0}
+.cmd-input{
+  flex:1;border:none;outline:none;background:none;
+  font-size:var(--fs-md);color:var(--text);font-family:var(--font-sans);
 }
-.cards-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:16px;
-  margin-top:8px;
+.cmd-input::placeholder{color:var(--text-3)}
+.cmd-esc{
+  font-family:var(--font-mono);font-size:11px;
+  padding:2px 6px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);color:var(--text-3);
 }
-.card-link{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:22px 24px;
-  cursor:pointer;
-  text-decoration:none;
-  color:inherit;
-  transition:all var(--transition);
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.cmd-results{max-height:400px;overflow-y:auto;padding:var(--sp-2)}
+.cmd-group-label{
+  font-size:11px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.08em;
+  padding:var(--sp-2) var(--sp-3) var(--sp-1);
 }
-.card-link:hover{
-  box-shadow:var(--shadow-md);
-  border-color:var(--primary);
-  transform:translateY(-1px);
+.cmd-item{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-2) var(--sp-3);border-radius:var(--radius);
+  cursor:pointer;transition:background var(--transition);
 }
-.card-link .card-icon{
-  width:40px;
-  height:40px;
-  border-radius:var(--radius-sm);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.2rem;
-  flex-shrink:0;
+.cmd-item.selected{background:var(--primary-light)}
+.cmd-item .ci-icon{
+  width:28px;height:28px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.card-link h3{
-  font-size:.95rem;
-  font-weight:700;
+.cmd-item .ci-icon svg{width:14px;height:14px}
+.cmd-item .ci-info{flex:1;min-width:0}
+.cmd-item .ci-title{font-size:var(--fs-sm);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmd-item .ci-cat{font-size:11px;color:var(--text-3);font-family:var(--font-mono)}
+.cmd-item .ci-enter{font-size:11px;color:var(--text-3);opacity:0;transition:opacity var(--transition)}
+.cmd-item.selected .ci-enter{opacity:1}
+.cmd-empty{padding:var(--sp-8);text-align:center;color:var(--text-3);font-size:var(--fs-sm)}
+.cmd-footer{
+  display:flex;align-items:center;gap:var(--sp-4);
+  padding:var(--sp-2) var(--sp-4);border-top:1px solid var(--border);
+  font-size:11px;color:var(--text-3);background:var(--bg-subtle);
 }
-.card-link p{
-  font-size:.8rem;
-  color:var(--text2);
-  line-height:1.55;
-}
-.card-link .tags{
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-  margin-top:4px;
-}
-.card-link .tag{
-  font-size:.68rem;
-  padding:2px 10px;
-  border-radius:12px;
-  font-weight:500;
+.cmd-footer span{display:flex;align-items:center;gap:4px}
+.cmd-footer kbd{
+  font-family:var(--font-mono);font-size:10px;
+  padding:1px 5px;border-radius:4px;
+  background:var(--surface);border:1px solid var(--border);
 }
 
-/* Tag Colors */
-.ic-ai{background:#ede9fe;color:#6d28d9}
-.ic-java{background:#fef3c7;color:#b45309}
-.ic-infra{background:#dbeafe;color:#1e40af}
-.ic-redis{background:#fee2e2;color:#b91c1c}
-.ic-mq{background:#d1fae5;color:#065f46}
-.ic-python{background:#e0f2fe;color:#0369a1}
-.ic-bigdata{background:#fed7aa;color:#c2410c}
-.ic-fe{background:#e0e7ff;color:#4338ca}
-.ic-embedded{background:#ccfbf1;color:#0f766e}
-
-/* ═══════════════════════════════════════════════════
-   Footer
-   ═══════════════════════════════════════════════════ */
-.footer{
-  height:var(--footer-h);
-  background:var(--surface);
-  border-top:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-  font-size:.72rem;
-  color:var(--text3);
-  flex-shrink:0;
-}
-.footer a{
-  color:var(--primary);
-  text-decoration:none;
-}
-.footer a:hover{text-decoration:underline}
-
-/* ═══════════════════════════════════════════════════
-   Overlay (mobile sidebar)
-   ═══════════════════════════════════════════════════ */
-.overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  z-index:90;
-}
+/* ═════ MOBILE OVERLAY ═════ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
 .overlay.show{display:block}
 
-/* ═══════════════════════════════════════════════════
-   Responsive
-   ═══════════════════════════════════════════════════ */
-@media (max-width:768px){
-  .topbar .hamburger{display:block}
-  .topbar .page-title{display:none}
+/* ═════ TOAST ═════ */
+.toast-container{
+  position:fixed;bottom:24px;right:24px;z-index:300;
+  display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;
+}
+.toast{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
+  padding:12px 16px;max-width:380px;
+  display:flex;align-items:flex-start;gap:10px;
+  pointer-events:auto;
+  animation:toastIn .25s cubic-bezier(.4,0,.2,1);
+}
+.toast.toast-out{animation:toastOut .2s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{to{transform:translateX(100%);opacity:0}}
+.toast .toast-icon{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.toast .toast-icon svg{width:16px;height:16px}
+.toast .toast-body{flex:1;min-width:0}
+.toast .toast-title{font-size:var(--fs-sm);font-weight:600;margin-bottom:2px}
+.toast .toast-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.5}
+.toast .toast-close{
+  flex-shrink:0;width:20px;height:20px;border-radius:var(--radius-sm);
+  border:none;background:none;cursor:pointer;color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+  transition:color var(--transition);
+}
+.toast .toast-close:hover{color:var(--text)}
+.toast .toast-close svg{width:14px;height:14px}
+
+/* ═════ RESPONSIVE ═════ */
+@media(max-width:1024px){
+  .content-wrap{padding:var(--sp-6) var(--sp-5) var(--sp-12)}
+  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+}
+@media(max-width:768px){
+  .topbar{padding:0 var(--sp-3);gap:var(--sp-2)}
+  .topbar .logo span{display:none}
+  .topbar .search-trigger{max-width:none}
+  .topbar .search-trigger .kbd{display:none}
+  .topbar .hamburger{display:flex;width:34px;height:34px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);align-items:center;justify-content:center;cursor:pointer;color:var(--text-2)}
+  .topbar .hamburger svg{width:18px;height:18px}
   .sidebar{
-    position:fixed;
-    top:var(--topbar-h);
-    left:0;
-    bottom:0;
-    z-index:95;
-    transform:translateX(-100%);
-    box-shadow:var(--shadow-md);
+    position:fixed;top:var(--topbar-h);left:0;bottom:0;z-index:95;
+    transform:translateX(-100%);box-shadow:var(--shadow-lg);
   }
   .sidebar.open{transform:translateX(0)}
+  .content-wrap{padding:var(--sp-4) var(--sp-3) var(--sp-10)}
   .cards-grid{grid-template-columns:1fr}
-  .welcome{padding:24px 16px 40px}
-  .welcome-hero{padding:32px 0 24px}
-  .welcome-hero h1{font-size:1.5rem}
-  .welcome-hero .stats{gap:20px}
-  .welcome-hero .stat .num{font-size:1.5rem}
-  .topbar .logo span.sub{display:none}
+  .hero h1{font-size:var(--fs-2xl)}
+  .hero .hero-stats{flex-wrap:wrap;gap:var(--sp-3)}
 }
-@media (max-width:480px){
-  .topbar{padding:0 12px}
-  .cards-grid{grid-template-columns:1fr}
+
+/* ═════ REDUCED MOTION ═════ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
 }
 </style>
 </head>
@@ -384,681 +424,607 @@ body{
 
 <!-- ═══════════ TOPBAR ═══════════ -->
 <header class="topbar">
-  <button class="hamburger" id="hamburger" title="菜单" aria-label="切换侧边栏">☰</button>
-  <a href="#" class="logo" data-nav="home" title="Frontend Learning Hub">
-    <svg viewBox="0 0 28 28" fill="none">
-      <rect x="2" y="2" width="24" height="24" rx="6" fill="#dbeafe"/>
-      <path d="M8 19V9l6 5-6 5z" fill="#2563eb"/>
-      <path d="M14 19v-4l4-2v6z" fill="#1d4ed8"/>
-    </svg>
-    Frontend Learning Hub
-    <span class="sub">教程合集</span>
+  <button class="hamburger" id="hamburger" aria-label="菜单">
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
+  </button>
+  <a class="logo" data-nav="home" title="Frontend Learning Hub">
+    <span class="logo-badge">F</span>
+    Frontend Learning Hub <span>· 教程合集</span>
   </a>
-  <span class="page-title" id="pageTitle">交互式技术教程合集</span>
+  <div class="search-trigger" id="searchTrigger">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="m11 11 3 3"/></svg>
+    <span>搜索教程…</span>
+    <span class="kbd">⌘K</span>
+  </div>
   <div class="spacer"></div>
+  <button class="icon-btn" id="themeToggle" title="切换主题 (⇧⌘L)" aria-label="切换主题">
+    <svg id="iconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
+    <svg id="iconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><circle cx="8" cy="8" r="3"/><path d="M8 1v2m0 10v2m5.7-12.7-1.4 1.4m-8.6 8.6-1.4 1.4M15 8h-2M3 8H1m12.7 5.7-1.4-1.4M3.7 3.7 2.3 2.3"/></svg>
+  </button>
+  <a class="icon-btn" href="https://github.com/lsasw/frontend-learning-hub" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.82 1.23.82.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+  </a>
 </header>
 
 <!-- ═══════════ LAYOUT ═══════════ -->
 <div class="layout">
-  <!-- SIDEBAR -->
-  <nav class="sidebar" id="sidebar">
-    <div class="cat">🧠 AI 智能体 &amp; 工作流</div>
-    <a class="nav-item" data-nav="metagpt-crewai" data-title="MetaGPT vs CrewAI · 深度技术分析报告" href="ai-agent/MetaGPT-CrewAI-分析报告.html">
-      <span class="icon">📊</span> MetaGPT vs CrewAI
-    </a>
-    <a class="nav-item" data-nav="langchain" data-title="LangChain · LangGraph · Python 实战教程" href="ai-agent/LangChain-LangGraph-Python-教程.html">
-      <span class="icon">⛓️</span> LangChain &amp; LangGraph
-    </a>
-    <a class="nav-item" data-nav="dify-n8n" data-title="Dify × n8n · AI 工作流双平台实战" href="ai-agent/Dify-n8n-实战教程.html">
-      <span class="icon">⚡</span> Dify × n8n 实战
-    </a>
-    <a class="nav-item" data-nav="rag-guide" data-title="RAG 检索增强生成 · 从原理到优化全指南" href="ai-agent/RAG-检索增强生成-学习指南.html">
-      <span class="icon">🧩</span> RAG 检索增强生成
-    </a>
-    <a class="nav-item" data-nav="rag-advanced" data-title="RAG 进阶全攻略 · 全链路深度解析与避坑指南" href="ai-agent/RAG-检索增强生成-进阶全攻略.html">
-      <span class="icon">🧠</span> RAG 进阶全攻略
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="langchain-deep" data-title="LangChain 深入学习教程 · 踩坑指南" href="ai-agent/LangChain-深入学习教程.html">
-      <span class="icon">⛓️</span> LangChain 深入教程
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="langgraph" data-title="LangGraph 状态图编排教程 · 踩坑指南" href="ai-agent/LangGraph-状态图编排教程.html">
-      <span class="icon">🕸️</span> LangGraph 编排教程
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="llamaindex" data-title="LlamaIndex 数据框架教程 · 踩坑指南" href="ai-agent/LlamaIndex-数据框架教程.html">
-      <span class="icon">🦙</span> LlamaIndex 数据框架
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="transformer" data-title="Transformer 架构解析 · 从注意力机制到完整模型" href="ai-agent/Transformer-架构解析.html">
-      <span class="icon">🤖</span> Transformer 架构解析
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="llm-ft" data-title="大模型微调技术深度解析 · 全量微调到 RLHF" href="ai-agent/大模型微调技术解析.html">
-      <span class="icon">🧬</span> LLM 微调技术解析
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="ml-dl-theory" data-title="机器学习与深度学习 · 理论基础全指南" href="ai-agent/机器学习与深度学习-理论基础全指南.html">
-      <span class="icon">📚</span> ML &amp; DL 理论基础
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="agent-dev-guide" data-title="AI Agent 开发概念全指南 · 多Agent协作与A2A协议" href="ai-agent/AI-Agent-开发概念全指南.html">
-      <span class="icon">🤖</span> Agent 开发概念全指南
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="agent-design-guide" data-title="AI Agent 设计决策全景指南 · 形态·框架·语言·从零构建" href="ai-agent/AI-Agent-设计决策全景指南.html">
-      <span class="icon">🧭</span> Agent 设计决策全景
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="agent-compare" data-title="智能体原理讲解 · OpenClaw / Hermes / Claude Code / Codex 架构对比" href="ai-agent/智能体原理讲解-OpenClaw-Hermes-ClaudeCode-Codex对比.html">
-      <span class="icon">⚖️</span> 智能体原理对比
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="agent-sandbox" data-title="AI Agent 执行沙盒机制全解析 · 隔离边界·操作分类·安全约束" href="ai-agent/AI-Agent-执行沙盒机制全解析.html">
-      <span class="icon">🛡️</span> Agent 执行沙盒机制
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="java-ai-frameworks" data-title="Java AI 框架学习指南 · Spring AI / Alibaba / LangChain4j / LangGraph4j" href="ai-agent/Java-AI框架-SpringAI-LangChain4j-学习指南.html">
-      <span class="icon">🤖</span> Java AI 框架学习指南
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="cs-rag-agent" data-title="智能客服 Agent · RAG 智能体构建全流程" href="ai-agent/智能客服Agent-RAG智能体构建全流程.html">
-      <span class="icon">🎧</span> 智能客服 RAG 全流程
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="deeptutor-arch" data-title="DeepTutor 架构深度分析 · Agent-Native 终身学习系统" href="ai-agent/DeepTutor-architecture-analysis.html">
-      <span class="icon">🏛️</span> DeepTutor 架构分析
-      <span class="tag-new">NEW</span>
-    </a>
-
-    <div class="cat">🛠️ AI 开发工具</div>
-    <a class="nav-item" data-nav="ai-token-tools" data-title="AI 编程 Token 拯救计划 · 开发者工具精选" href="ai-tools/AI编码Token节省工具.html">
-      <span class="icon">💎</span> Token 节省工具
-    </a>
-    <a class="nav-item" data-nav="ai-fe-eco" data-title="下一代 AI 前端工程化生态全景图" href="ai-tools/AI前端工程生态.html">
-      <span class="icon">🌐</span> AI 前端工程生态
-    </a>
-
-    <div class="cat">🐍 Python 后端</div>
-    <a class="nav-item" data-nav="python-backend-stack" data-title="Python 后端技术栈 · 全景架构与选型指南" href="python/Python-后端技术栈全景图.html">
-      <span class="icon">📐</span> Python 后端技术栈
-    </a>
-    <a class="nav-item" data-nav="python-syntax" data-title="Python3 语法讲解与语法糖 · 交互式学习指南" href="python/Python3-语法讲解与语法糖.html">
-      <span class="icon">🐍</span> Python3 语法与语法糖
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="pandas-guide" data-title="Pandas 数据处理全指南 · 交互式学习教程" href="python/Pandas-数据处理全指南.html">
-      <span class="icon">🐼</span> Pandas 数据处理全指南
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="numpy-guide" data-title="NumPy 科学计算全指南 · 交互式学习教程" href="python/NumPy-科学计算全指南.html">
-      <span class="icon">🔢</span> NumPy 科学计算全指南
-      <span class="tag-new">NEW</span>
-    </a>
-
-    <div class="cat">☕ Java 进阶</div>
-    <a class="nav-item" data-nav="java-juc" data-title="Java JUC 并发工具包 · 系统学习指南" href="java/Java-JUC-并发工具包教程.html">
-      <span class="icon">🔒</span> JUC 并发工具包
-    </a>
-    <a class="nav-item" data-nav="java-jvm" data-title="Java JVM 虚拟机 · 完整教学指南" href="java/Java-JVM-虚拟机教程.html">
-      <span class="icon">☕</span> JVM 虚拟机
-    </a>
-    <a class="nav-item" data-nav="spring-family" data-title="Spring 全家桶 · 核心组件与功能全景" href="java/Spring-全家桶-核心组件详解.html">
-      <span class="icon">🌿</span> Spring 全家桶详解
-    </a>
-    <a class="nav-item" data-nav="java-python-async" data-title="Java vs Python · 异步编程深度对比" href="java/Java-vs-Python-异步编程对比.html">
-      <span class="icon">⚡</span> Java vs Python 异步
-    </a>
-    <a class="nav-item" data-nav="java-core-analysis" data-title="Java 核心问题深度分析 · 原理与可视化" href="java/Java-核心问题深度分析.html">
-      <span class="icon">🔬</span> 核心问题深度分析
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="java-distributed-lock" data-title="Java 分布式锁 · Redisson 深度解析与多方案对比" href="java/Java-分布式锁-Redisson深度解析.html">
-      <span class="icon">🔐</span> 分布式锁深度解析
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="java-collection-juc-pykw" data-title="Java 集合 & JUC & Python 关键字 · 综合学习教程" href="java/Java集合-JUC-Python关键字-综合教程.html">
-      <span class="icon">📚</span> 集合 & JUC & Py关键字
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="jmm-dcl" data-title="JMM 三大特性与 DCL 双重检查锁 · 逐步推导分析" href="java/JMM-三大特性与DCL双重检查锁推导分析.html">
-      <span class="icon">🧠</span> JMM 与 DCL 推导
-      <span class="tag-new">NEW</span>
-    </a>
-
-    <div class="cat">📊 大数据处理</div>
-    <a class="nav-item" data-nav="spark-flink" data-title="Apache Spark & Flink · 大数据处理技术全指南" href="big-data/Spark-Flink-大数据处理教程.html">
-      <span class="icon">⚡</span> Spark & Flink 大数据
-      <span class="tag-new">NEW</span>
-    </a>
-
-    <div class="cat">🗄️ 基础设施</div>
-    <a class="nav-item" data-nav="distributed" data-title="分布式系统 · 交互式学习平台" href="infra/分布式系统-交互式学习平台.html">
-      <span class="icon">🕸️</span> 分布式系统学习
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="redis" data-title="Redis 从入门到精通 · 交互式学习指南" href="infra/Redis-交互式学习指南.html">
-      <span class="icon">🔴</span> Redis 学习指南
-    </a>
-    <a class="nav-item" data-nav="message-queue" data-title="消息队列系统 · 综合演示平台" href="infra/消息队列系统-综合演示平台.html">
-      <span class="icon">📨</span> 消息队列系统
-    </a>
-    <a class="nav-item" data-nav="mq-concepts" data-title="消息队列核心概念 · 从零到一" href="infra/消息队列-核心概念入门.html">
-      <span class="icon">📖</span> MQ 核心概念入门
-    </a>
-    <a class="nav-item" data-nav="mq-dedup" data-title="消息队列防重复消费详解 · 3 实例场景" href="infra/消息队列-防重复消费详解.html">
-      <span class="icon">🛡️</span> 防重复消费详解
-    </a>
-
-    <div class="cat">📐 系统架构</div>
-    <a class="nav-item" data-nav="architect-knowledge" data-title="系统架构师 · 核心知识体系全指南" href="architecture/系统架构师-知识体系全指南.html">
-      <span class="icon">🏛️</span> 架构师知识体系
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="docker-k8s" data-title="Docker & Kubernetes · 容器化与编排学习指南" href="architecture/Docker-Kubernetes-容器化与编排指南.html">
-      <span class="icon">🐳</span> Docker & K8s
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="backend-knowledge-system" data-title="后端技术栈知识体系 · 面试分析与故障排查" href="architecture/后端技术栈知识体系-面试分析与故障排查.html">
-      <span class="icon">🎯</span> 后端面试知识体系
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="distributed-service-evolution" data-title="分布式服务化拆分路线 · 从单体到服务网格" href="architecture/分布式服务化拆分路线.html">
-      <span class="icon">🗺️</span> 分布式服务化拆分路线
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="high-concurrency-design" data-title="高并发系统设计 · 实施步骤全指南" href="architecture/高并发系统设计-实施步骤全指南.html">
-      <span class="icon">⚡</span> 高并发系统设计
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="design-patterns" data-title="软件设计模式与设计原则 · 系统学习全指南" href="architecture/软件设计模式与设计原则-全指南.html">
-      <span class="icon">🎨</span> 设计模式与设计原则
-      <span class="tag-new">NEW</span>
-    </a>
-
-    <div class="cat">🎯 前端开发</div>
-    <a class="nav-item" data-nav="frontend-workflow" data-title="前端开发完整工作流 · Vue 与 React 实战全指南" href="frontend/前端开发完整工作流-Vue与React实战.html">
-      <span class="icon">🚀</span> 前端开发完整工作流
-      <span class="tag-new">NEW</span>
-    </a>
-
-    <div class="cat">🔌 嵌入式开发</div>
-    <a class="nav-item" data-nav="embedded-dev" data-title="嵌入式开发宣讲 · 从概述到行业前景" href="embedded-development.html">
-      <span class="icon">🔌</span> 嵌入式开发宣讲
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="embedded-learning" data-title="嵌入式工程学习指南 · 硬件·工具链·开源资源" href="embedded-learning-guide.html">
-      <span class="icon">📖</span> 嵌入式学习指南
-      <span class="tag-new">NEW</span>
-    </a>
-    <a class="nav-item" data-nav="electronics-guide" data-title="电子元件速查手册 · 11 种核心元件详解" href="electronics-components-guide.html">
-      <span class="icon">⚡</span> 电子元件速查手册
-      <span class="tag-new">NEW</span>
-    </a>
-  </nav>
-
-  <!-- OVERLAY (mobile) -->
+  <nav class="sidebar" id="sidebar"></nav>
   <div class="overlay" id="overlay"></div>
-
-  <!-- MAIN CONTENT -->
   <main class="main" id="mainContent">
     <div class="loading" id="loadingBar"></div>
-    <!-- Welcome Page -->
     <div class="welcome" id="welcomePage">
-      <div class="welcome-hero">
-        <h1>📚 交互式技术教程合集</h1>
-        <p class="lead">47 个精心制作的单文件 HTML 教程，覆盖 AI 智能体、AI 开发工具、Python 后端、Java 进阶、大数据处理、基础设施、系统架构、前端开发与嵌入式开发九大领域，打开即用，支持交互式学习。</p>
-        <div class="stats">
-          <div class="stat"><div class="num">47</div><div class="lbl">教程</div></div>
-          <div class="stat"><div class="num">9</div><div class="lbl">分类</div></div>
-          <div class="stat"><div class="num">~115K</div><div class="lbl">行代码</div></div>
-        </div>
-      </div>
-
-      <div class="cards-grid">
-        <a class="card-link" data-nav="metagpt-crewai" data-title="MetaGPT vs CrewAI · 深度技术分析报告" href="ai-agent/MetaGPT-CrewAI-分析报告.html">
-          <div class="card-icon ic-ai">📊</div>
-          <h3>MetaGPT vs CrewAI 分析报告</h3>
-          <p>深度对比两大 AI 多智能体框架：架构设计、角色分工、工作流引擎、适用场景全覆盖</p>
-          <div class="tags"><span class="tag ic-ai">AI 智能体</span><span class="tag ic-python">Python</span></div>
-        </a>
-        <a class="card-link" data-nav="langchain" data-title="LangChain · LangGraph · Python 实战教程" href="ai-agent/LangChain-LangGraph-Python-教程.html">
-          <div class="card-icon ic-ai">⛓️</div>
-          <h3>LangChain &amp; LangGraph 实战</h3>
-          <p>三合一教程：LangChain 链式调用 + LangGraph 状态图编排 + Python 最佳实践</p>
-          <div class="tags"><span class="tag ic-ai">AI 框架</span><span class="tag ic-python">Python</span></div>
-        </a>
-        <a class="card-link" data-nav="dify-n8n" data-title="Dify × n8n · AI 工作流双平台实战" href="ai-agent/Dify-n8n-实战教程.html">
-          <div class="card-icon ic-ai">⚡</div>
-          <h3>Dify × n8n 双平台实战</h3>
-          <p>AI 工作流自动化：Dify 应用构建 + n8n 可视化编排，双平台联动最佳实践</p>
-          <div class="tags"><span class="tag ic-ai">工作流</span><span class="tag ic-python">低代码</span></div>
-        </a>
-        <a class="card-link" data-nav="rag-guide" data-title="RAG 检索增强生成 · 从原理到优化全指南" href="ai-agent/RAG-检索增强生成-学习指南.html">
-          <div class="card-icon ic-ai">🧩</div>
-          <h3>RAG 检索增强生成全指南</h3>
-          <p>RAG 原理与架构图解 · 嵌入模型 · Chunk 分割 · 混合检索 · 重排序机制 · 8 大优化策略对比</p>
-          <div class="tags"><span class="tag ic-ai">RAG</span><span class="tag ic-ai">向量检索</span></div>
-        </a>
-        <a class="card-link" data-nav="rag-advanced" data-title="RAG 进阶全攻略 · 全链路深度解析与避坑指南" href="ai-agent/RAG-检索增强生成-进阶全攻略.html">
-          <div class="card-icon ic-ai">🧠</div>
-          <h3>RAG 进阶全攻略 · 避坑指南</h3>
-          <p>全链路深度解析：基础概念 → Multi-hop/Agentic/Graph/Self-RAG/CRAG 架构演进 → 7 大实战避坑攻略</p>
-          <div class="tags"><span class="tag ic-ai">RAG进阶</span><span class="tag ic-ai">变体架构</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="langchain-deep" data-title="LangChain 深入学习教程 · 踩坑指南" href="ai-agent/LangChain-深入学习教程.html">
-          <div class="card-icon ic-ai">⛓️</div>
-          <h3>LangChain 深入学习教程</h3>
-          <p>六大核心组件详解 · LCEL 现代写法 · RAG 全流程实战 · Agent 开发 · 10 个高频踩坑点</p>
-          <div class="tags"><span class="tag ic-ai">LangChain</span><span class="tag ic-python">Python</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="langgraph" data-title="LangGraph 状态图编排教程 · 踩坑指南" href="ai-agent/LangGraph-状态图编排教程.html">
-          <div class="card-icon ic-ai">🕸️</div>
-          <h3>LangGraph 状态图编排教程</h3>
-          <p>StateGraph 核心概念 · 条件分支与循环 · Human-in-the-Loop · 多 Agent 协作 · 8 大踩坑点</p>
-          <div class="tags"><span class="tag ic-ai">LangGraph</span><span class="tag ic-python">Agent</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="llamaindex" data-title="LlamaIndex 数据框架教程 · 踩坑指南" href="ai-agent/LlamaIndex-数据框架教程.html">
-          <div class="card-icon ic-ai">🦙</div>
-          <h3>LlamaIndex 数据框架教程</h3>
-          <p>数据接入 160+ 源 · 7 种索引策略 · Query/Chat Engine · 高级管线优化 · 10 大踩坑点</p>
-          <div class="tags"><span class="tag ic-ai">LlamaIndex</span><span class="tag ic-python">RAG</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="transformer" data-title="Transformer 架构解析 · 从注意力机制到完整模型" href="ai-agent/Transformer-架构解析.html">
-          <div class="card-icon ic-ai">🤖</div>
-          <h3>Transformer 架构深度解析</h3>
-          <p>Self-Attention 数学推导 · Multi-Head · Positional Encoding · Encoder-Decoder · BERT/GPT 演进全景</p>
-          <div class="tags"><span class="tag ic-ai">Transformer</span><span class="tag ic-ai">注意力机制</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="llm-ft" data-title="大模型微调技术深度解析 · 全量微调到 RLHF" href="ai-agent/大模型微调技术解析.html">
-          <div class="card-icon ic-ai">🧬</div>
-          <h3>LLM 微调技术深度解析</h3>
-          <p>全量微调 · LoRA/QLoRA · Adapter · Instruction Tuning · RLHF/DPO · 互动决策流程图</p>
-          <div class="tags"><span class="tag ic-ai">LLM</span><span class="tag ic-ai">微调</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="ml-dl-theory" data-title="机器学习与深度学习 · 理论基础全指南" href="ai-agent/机器学习与深度学习-理论基础全指南.html">
-          <div class="card-icon ic-ai">📚</div>
-          <h3>ML &amp; DL 理论基础全指南</h3>
-          <p>三大学习范式 · 监督/无监督/强化学习 · 神经网络与反向传播 · CNN/RNN/LSTM/Transformer · 损失函数与优化器 · 正则化技术</p>
-          <div class="tags"><span class="tag ic-ai">机器学习</span><span class="tag ic-ai">深度学习</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="agent-dev-guide" data-title="AI Agent 开发概念全指南 · 多Agent协作与A2A协议" href="ai-agent/AI-Agent-开发概念全指南.html">
-          <div class="card-icon ic-ai">🤖</div>
-          <h3>AI Agent 开发概念全指南</h3>
-          <p>Agent 核心架构 · 多 Agent 协作模式 · 兜底降级 · 重试策略 · A2A 协议 · Skills 技能体系 · 上下文管理 · 三层记忆 · 工具调用 · 插件生态</p>
-          <div class="tags"><span class="tag ic-ai">Agent</span><span class="tag ic-ai">Multi-Agent</span><span class="tag ic-ai">A2A</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="agent-design-guide" data-title="AI Agent 设计决策全景指南 · 形态·框架·语言·从零构建" href="ai-agent/AI-Agent-设计决策全景指南.html">
-          <div class="card-icon ic-ai">🧭</div>
-          <h3>AI Agent 设计决策全景指南</h3>
-          <p>从零设计功能全面的 Agent：CLI vs 桌面 vs Web 形态对比 · 框架 vs 裸写决策 · TypeScript/Python 语言选型 · 完整从零构建准备清单</p>
-          <div class="tags"><span class="tag ic-ai">Agent</span><span class="tag ic-ai">架构决策</span><span class="tag ic-ai">从零构建</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="agent-compare" data-title="智能体原理讲解 · OpenClaw / Hermes / Claude Code / Codex 架构对比" href="ai-agent/智能体原理讲解-OpenClaw-Hermes-ClaudeCode-Codex对比.html">
-          <div class="card-icon ic-ai">⚖️</div>
-          <h3>智能体原理讲解</h3>
-          <p>OpenClaw · Hermes · Claude Code · Codex CLI — 核心架构设计 · 工作原理 · 关键特性 · 差异对比 · 选型指南</p>
-          <div class="tags"><span class="tag ic-ai">Agent</span><span class="tag ic-ai">架构对比</span><span class="tag ic-ai">OpenClaw</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="agent-sandbox" data-title="AI Agent 执行沙盒机制全解析 · 隔离边界·操作分类·安全约束" href="ai-agent/AI-Agent-执行沙盒机制全解析.html">
-          <div class="card-icon ic-ai">🛡️</div>
-          <h3>Agent 执行沙盒机制全解析</h3>
-          <p>沙盒隔离边界 · 六大技术手段（Namespace/cgroups/seccomp/OverlayFS/网络隔离/权限降级）· 14 类操作矩阵 · 5 级风险体系 · 安全桥接层 · 4 大实战案例</p>
-          <div class="tags"><span class="tag ic-ai">Agent</span><span class="tag ic-ai">沙盒安全</span><span class="tag ic-ai">隔离机制</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="java-ai-frameworks" data-title="Java AI 框架学习指南 · Spring AI / Alibaba / LangChain4j / LangGraph4j" href="ai-agent/Java-AI框架-SpringAI-LangChain4j-学习指南.html">
-          <div class="card-icon ic-ai">🤖</div>
-          <h3>Java AI 框架学习指南</h3>
-          <p>Spring AI · Spring AI Alibaba (Graph Agent) · LangChain4j · LangGraph4j — 学习讲解 · 开发常见问题 · 面试题解析 · 框架选型对比</p>
-          <div class="tags"><span class="tag ic-ai">Spring AI</span><span class="tag ic-ai">LangChain4j</span><span class="tag ic-ai">Java</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="cs-rag-agent" data-title="智能客服 Agent · RAG 智能体构建全流程" href="ai-agent/智能客服Agent-RAG智能体构建全流程.html">
-          <div class="card-icon ic-ai">🎧</div>
-          <h3>智能客服 RAG 全流程</h3>
-          <p>需求调研 - 技术栈选型 - 数据清洗 - 召回优化（混合检索+重排序）- 效果评测（RAGAS）— 生产级 RAG 智能客服构建全链路</p>
-          <div class="tags"><span class="tag ic-ai">RAG</span><span class="tag ic-ai">智能客服</span><span class="tag ic-ai">混合检索</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="deeptutor-arch" data-title="DeepTutor 架构深度分析 · Agent-Native 终身学习系统" href="ai-agent/DeepTutor-architecture-analysis.html">
-          <div class="card-icon ic-ai">🏛️</div>
-          <h3>DeepTutor 架构深度分析</h3>
-          <p>HKUDS 开源项目完整拆解：Agent 循环机制 · 两层插件模型 · 多引擎 RAG · 三层记忆系统 · Python 全异步架构</p>
-          <div class="tags"><span class="tag ic-ai">架构分析</span><span class="tag ic-ai">Agent</span><span class="tag ic-ai">RAG</span><span class="tag ic-ai">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="ai-token-tools" data-title="AI 编程 Token 拯救计划 · 开发者工具精选" href="ai-tools/AI编码Token节省工具.html">
-          <div class="card-icon ic-infra">💎</div>
-          <h3>AI 编程 Token 拯救计划</h3>
-          <p>精选 AI 编程效率工具集：Token 优化、上下文压缩、Prompt 缓存 —— 让每一分 Token 花在刀刃上</p>
-          <div class="tags"><span class="tag ic-ai">AI 工具</span><span class="tag ic-infra">效率</span></div>
-        </a>
-        <a class="card-link" data-nav="ai-fe-eco" data-title="下一代 AI 前端工程化生态全景图" href="ai-tools/AI前端工程生态.html">
-          <div class="card-icon ic-ai">🌐</div>
-          <h3>AI 前端工程化生态全景图</h3>
-          <p>Vercel AI SDK · Cursor · Copilot · v0 · Bolt 等下一代 AI 前端工具链全景式梳理与架构对比</p>
-          <div class="tags"><span class="tag ic-ai">AI 工程</span><span class="tag ic-python">前端</span></div>
-        </a>
-        <a class="card-link" data-nav="java-juc" data-title="Java JUC 并发工具包 · 系统学习指南" href="java/Java-JUC-并发工具包教程.html">
-          <div class="card-icon ic-java">🔒</div>
-          <h3>JUC 并发工具包</h3>
-          <p>Lock / Atomic / 线程池 / 并发集合 / AQS 源码剖析 —— 从 API 到底层原理</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">并发</span></div>
-        </a>
-        <a class="card-link" data-nav="java-jvm" data-title="Java JVM 虚拟机 · 完整教学指南" href="java/Java-JVM-虚拟机教程.html">
-          <div class="card-icon ic-java">☕</div>
-          <h3>JVM 虚拟机</h3>
-          <p>类加载 → 内存模型 → GC 算法 → JIT 编译 → 性能调优，完整知识体系</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">JVM</span></div>
-        </a>
-        <a class="card-link" data-nav="spring-family" data-title="Spring 全家桶 · 核心组件与功能全景" href="java/Spring-全家桶-核心组件详解.html">
-          <div class="card-icon ic-java">🌿</div>
-          <h3>Spring 全家桶核心组件</h3>
-          <p>Framework Ioc/AOP/MVC · Boot 自动配置 · Cloud 微服务治理，三层联动全景讲解</p>
-          <div class="tags"><span class="tag ic-java">Spring</span><span class="tag ic-java">微服务</span><span class="tag ic-java">Boot</span></div>
-        </a>
-        <a class="card-link" data-nav="java-python-async" data-title="Java vs Python · 异步编程深度对比" href="java/Java-vs-Python-异步编程对比.html">
-          <div class="card-icon ic-java">⚡</div>
-          <h3>Java vs Python 异步对比</h3>
-          <p>多线程 vs 协程 · CompletableFuture vs asyncio · 代码实战对比 · 场景推荐矩阵</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-python">Python</span><span class="tag ic-java">异步</span></div>
-        </a>
-        <a class="card-link" data-nav="java-core-analysis" data-title="Java 核心问题深度分析 · 原理与可视化" href="java/Java-核心问题深度分析.html">
-          <div class="card-icon ic-java">🔬</div>
-          <h3>Java 核心问题深度分析</h3>
-          <p>ThreadLocal 脏数据复现 · HashMap 1.7/1.8 扩容动画 · synchronized 锁升级 · JVM OOM 模拟</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">进阶</span><span class="tag ic-java">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="java-distributed-lock" data-title="Java 分布式锁 · Redisson 深度解析与多方案对比" href="java/Java-分布式锁-Redisson深度解析.html">
-          <div class="card-icon ic-java">🔐</div>
-          <h3>Java 分布式锁 · Redisson 深度解析</h3>
-          <p>看门狗续期机制 · 可重入锁 Hash 存储 · 公平锁排队 · RedLock · ZK/MySQL 方案对比</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">分布式</span><span class="tag ic-java">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="java-collection-juc-pykw" data-title="Java 集合 & JUC & Python 关键字 · 综合学习教程" href="java/Java集合-JUC-Python关键字-综合教程.html">
-          <div class="card-icon ic-java">📚</div>
-          <h3>Java 集合 & JUC & Python 关键字</h3>
-          <p>Java 集合框架(List/Set/Map 底层原理与时间复杂度) · JUC 并发工具(CHM/COW/CountDownLatch/CyclicBarrier/Semaphore/ReentrantLock/线程池/原子类) · Python 35 个关键字逐一讲解</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">JUC</span><span class="tag ic-python">Python</span><span class="tag ic-java">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="jmm-dcl" data-title="JMM 三大特性与 DCL 双重检查锁 · 逐步推导分析" href="java/JMM-三大特性与DCL双重检查锁推导分析.html">
-          <div class="card-icon ic-java">🧠</div>
-          <h3>JMM 三大特性与 DCL 推导</h3>
-          <p>可见性 / 原子性 / 有序性定义 · DCL 单例逐步推导 · 指令重排导致半初始化对象 · volatile 内存屏障与 happens-before 解决方案</p>
-          <div class="tags"><span class="tag ic-java">Java</span><span class="tag ic-java">JMM</span><span class="tag ic-java">并发</span><span class="tag ic-java">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="python-backend-stack" data-title="Python 后端技术栈 · 全景架构与选型指南" href="python/Python-后端技术栈全景图.html">
-          <div class="card-icon ic-python">🐍</div>
-          <h3>Python 后端技术栈全景图</h3>
-          <p>Web 框架 · ORM · 异步服务器 · API 工具 · 缓存 · 任务队列 · 认证权限 —— 7 大分类主流 vs 替代方案全对比</p>
-          <div class="tags"><span class="tag ic-python">Python</span><span class="tag ic-python">后端</span><span class="tag ic-python">选型</span></div>
-        </a>
-        <a class="card-link" data-nav="python-syntax" data-title="Python3 语法讲解与语法糖 · 交互式学习指南" href="python/Python3-语法讲解与语法糖.html">
-          <div class="card-icon ic-python">🐍</div>
-          <h3>Python3 语法与语法糖</h3>
-          <p>基础语法 + 推导式/海象运算符/f-string/解包/enumerate/with —— Pyodide 浏览器内实时运行 Python 代码</p>
-          <div class="tags"><span class="tag ic-python">Python</span><span class="tag ic-python">语法糖</span><span class="tag ic-python">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="pandas-guide" data-title="Pandas 数据处理全指南 · 交互式学习教程" href="python/Pandas-数据处理全指南.html">
-          <div class="card-icon ic-python">🐼</div>
-          <h3>Pandas 数据处理全指南</h3>
-          <p>Series/DataFrame 创建与操作 · 数据筛选与条件过滤 · 分组聚合(groupby/agg/transform) · 缺失值检测/填充/删除 —— 真实业务场景代码演示</p>
-          <div class="tags"><span class="tag ic-python">Pandas</span><span class="tag ic-python">数据分析</span><span class="tag ic-python">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="numpy-guide" data-title="NumPy 科学计算全指南 · 交互式学习教程" href="python/NumPy-科学计算全指南.html">
-          <div class="card-icon ic-python">🔢</div>
-          <h3>NumPy 科学计算全指南</h3>
-          <p>数组创建 · 切片/布尔/花式索引 · 广播机制 · 通用函数(ufunc) · 线性代数(矩阵乘法/逆/SVD/特征值) —— 含金融与ML场景实战</p>
-          <div class="tags"><span class="tag ic-python">NumPy</span><span class="tag ic-python">科学计算</span><span class="tag ic-python">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="spark-flink" data-title="Apache Spark & Flink · 大数据处理技术全指南" href="big-data/Spark-Flink-大数据处理教程.html">
-          <div class="card-icon ic-bigdata">⚡</div>
-          <h3>Spark & Flink 大数据全指南</h3>
-          <p>Spark RDD/DataFrame/Spark SQL/Streaming · Flink DataStream/Table API/窗口/状态管理 · 深度对比与选型 —— 含 PySpark/PyFlink 代码实战</p>
-          <div class="tags"><span class="tag ic-bigdata">Spark</span><span class="tag ic-bigdata">Flink</span><span class="tag ic-bigdata">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="distributed" data-title="分布式系统 · 交互式学习平台" href="infra/分布式系统-交互式学习平台.html">
-          <div class="card-icon ic-infra">🕸️</div>
-          <h3>分布式系统交互式学习</h3>
-          <p>CAP 定理可视化 · Gossip/Raft 模拟 · Quorum 读写 · 负载均衡策略 —— 动手学分布式</p>
-          <div class="tags"><span class="tag ic-infra">分布式</span><span class="tag ic-infra">共识</span><span class="tag ic-infra">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="redis" data-title="Redis 从入门到精通 · 交互式学习指南" href="infra/Redis-交互式学习指南.html">
-          <div class="card-icon ic-redis">🔴</div>
-          <h3>Redis 交互式学习指南</h3>
-          <p>数据结构 / 持久化 / 缓存策略 / 分布式锁 / 集群方案，从入门到精通</p>
-          <div class="tags"><span class="tag ic-infra">NoSQL</span><span class="tag ic-redis">Redis</span></div>
-        </a>
-        <a class="card-link" data-nav="message-queue" data-title="消息队列系统 · 综合演示平台" href="infra/消息队列系统-综合演示平台.html">
-          <div class="card-icon ic-mq">📨</div>
-          <h3>消息队列综合演示平台</h3>
-          <p>Kafka / RabbitMQ / RocketMQ / Pulsar 四合一：架构对比 + 实时仪表盘 + 场景模拟</p>
-          <div class="tags"><span class="tag ic-infra">MQ</span><span class="tag ic-mq">消息队列</span></div>
-        </a>
-        <a class="card-link" data-nav="mq-concepts" data-title="消息队列核心概念 · 从零到一" href="infra/消息队列-核心概念入门.html">
-          <div class="card-icon ic-mq">📖</div>
-          <h3>消息队列核心概念入门</h3>
-          <p>从零开始理解 MQ：Producer / Consumer / Broker / ACK / DLQ，含交互式模拟器</p>
-          <div class="tags"><span class="tag ic-infra">MQ</span><span class="tag ic-mq">消息队列</span><span class="tag ic-mq">入门</span></div>
-        </a>
-        <a class="card-link" data-nav="mq-dedup" data-title="消息队列防重复消费详解 · 3 实例场景" href="infra/消息队列-防重复消费详解.html">
-          <div class="card-icon ic-mq">🛡️</div>
-          <h3>MQ 防重复消费详解</h3>
-          <p>3 实例场景下两层防护：MQ 层负载隔离 + 业务层幂等兜底，Kafka/RocketMQ/RabbitMQ 全覆盖</p>
-          <div class="tags"><span class="tag ic-infra">MQ</span><span class="tag ic-mq">幂等</span><span class="tag ic-infra">生产实战</span></div>
-        </a>
-        <a class="card-link" data-nav="architect-knowledge" data-title="系统架构师 · 核心知识体系全指南" href="architecture/系统架构师-知识体系全指南.html">
-          <div class="card-icon ic-infra">🏛️</div>
-          <h3>系统架构师知识体系</h3>
-          <p>设计原则 (SOLID/CAP) + 8 大架构模式 + 质量属性 + 技术选型矩阵 + ADR 决策流程，含可视化图表</p>
-          <div class="tags"><span class="tag ic-infra">架构</span><span class="tag ic-infra">系统设计</span><span class="tag ic-mq">ADR</span></div>
-        </a>
-        <a class="card-link" data-nav="docker-k8s" data-title="Docker & Kubernetes · 容器化与编排学习指南" href="architecture/Docker-Kubernetes-容器化与编排指南.html">
-          <div class="card-icon ic-infra">🐳</div>
-          <h3>Docker & Kubernetes</h3>
-          <p>Docker 三大核心概念 + 命令速查 + Dockerfile 多阶段构建 + K8s 集群架构 + Pod/Service/Deployment + 声明式 YAML 实战</p>
-          <div class="tags"><span class="tag ic-infra">Docker</span><span class="tag ic-infra">K8s</span><span class="tag ic-mq">容器化</span></div>
-        </a>
-        <a class="card-link" data-nav="backend-knowledge-system" data-title="后端技术栈知识体系 · 面试分析与故障排查" href="architecture/后端技术栈知识体系-面试分析与故障排查.html">
-          <div class="card-icon ic-ai">🎯</div>
-          <h3>后端面试知识体系</h3>
-          <p>Java核心开发 + 分布式架构 + AI应用开发 三大领域体系化梳理、技能树进阶、高频面试解析、线上故障排查</p>
-          <div class="tags"><span class="tag ic-ai">知识体系</span><span class="tag ic-infra">面试</span><span class="tag ic-mq">故障排查</span></div>
-        </a>
-        <a class="card-link" data-nav="distributed-service-evolution" data-title="分布式服务化拆分路线 · 从单体到服务网格" href="architecture/分布式服务化拆分路线.html">
-          <div class="card-icon ic-infra">🗺️</div>
-          <h3>分布式服务化拆分路线</h3>
-          <p>单体 → 烟囱式 → SOA → 微服务 → 服务网格五阶段全景演进 · Spring Cloud vs Dubbo 对比 · 技术选型矩阵</p>
-          <div class="tags"><span class="tag ic-infra">分布式</span><span class="tag ic-infra">架构演进</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="high-concurrency-design" data-title="高并发系统设计 · 实施步骤全指南" href="architecture/高并发系统设计-实施步骤全指南.html">
-          <div class="card-icon ic-infra">⚡</div>
-          <h3>高并发系统设计全指南</h3>
-          <p>QPS 预估 → 架构选型 → 分层设计(负载均衡/缓存/分库分表) → 限流降级熔断 → MQ削峰 → 分布式锁 → 最终一致性 → 全链路监控</p>
-          <div class="tags"><span class="tag ic-infra">高并发</span><span class="tag ic-infra">系统设计</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="design-patterns" data-title="软件设计模式与设计原则 · 系统学习全指南" href="architecture/软件设计模式与设计原则-全指南.html">
-          <div class="card-icon ic-infra">🎨</div>
-          <h3>软件设计模式与设计原则</h3>
-          <p>SOLID 五大原则 + DRY/KISS/YAGNI/迪米特法则 + GoF 22 种设计模式(创建型/结构型/行为型)，每个模式含定义、适用场景与代码示例</p>
-          <div class="tags"><span class="tag ic-infra">设计原则</span><span class="tag ic-infra">设计模式</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="frontend-workflow" data-title="前端开发完整工作流 · Vue 与 React 实战全指南" href="frontend/前端开发完整工作流-Vue与React实战.html">
-          <div class="card-icon ic-fe">🚀</div>
-          <h3>前端开发完整工作流 · Vue/React 实战</h3>
-          <p>需求分析→项目搭建→组件开发→状态管理→构建部署全流程；Vue 3 / React 18 核心知识体系；调接口最佳实践（Axios/React Query）；20+ 易踩坑点全覆盖</p>
-          <div class="tags"><span class="tag ic-fe">Vue 3</span><span class="tag ic-fe">React 18</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="embedded-dev" data-title="嵌入式开发宣讲 · 从概述到行业前景" href="embedded-development.html">
-          <div class="card-icon ic-embedded">🔌</div>
-          <h3>嵌入式开发宣讲</h3>
-          <p>嵌入式概述 · 6 大应用领域（物联网/智能家居/工业控制/汽车电子等）· 5 层技术栈架构 · 8 步开发流程 · 行业前景与薪资分析</p>
-          <div class="tags"><span class="tag ic-embedded">嵌入式</span><span class="tag ic-embedded">IoT</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="embedded-learning" data-title="嵌入式工程学习指南 · 硬件·工具链·开源资源" href="embedded-learning-guide.html">
-          <div class="card-icon ic-embedded">📖</div>
-          <h3>嵌入式工程学习指南</h3>
-          <p>5 阶段学习路径 · 硬件平台对比（STM32/ESP32/树莓派/Arduino）· 软件工具链（Keil/PlatformIO/GCC）· 开源框架（FreeRTOS/Zephyr/lwIP）</p>
-          <div class="tags"><span class="tag ic-embedded">STM32</span><span class="tag ic-embedded">ESP32</span><span class="tag ic-embedded">RTOS</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-        <a class="card-link" data-nav="electronics-guide" data-title="电子元件速查手册 · 11 种核心元件详解" href="electronics-components-guide.html">
-          <div class="card-icon ic-embedded">⚡</div>
-          <h3>电子元件速查手册</h3>
-          <p>11 种核心元件（电阻/电容/电感/二极管/BJT/MOSFET/IC 等）· SVG 电路符号 · 参数标签 · 典型应用场景 · 分类对比总览表</p>
-          <div class="tags"><span class="tag ic-embedded">电子元件</span><span class="tag ic-embedded">硬件</span><span class="tag ic-mq">NEW</span></div>
-        </a>
-      </div>
+      <div class="content-wrap" id="contentWrap"></div>
     </div>
-
-    <!-- Content Iframe -->
     <iframe id="contentFrame" name="contentFrame" style="display:none" title="内容区域"></iframe>
   </main>
 </div>
 
-<!-- ═══════════ FOOTER ═══════════ -->
-<footer class="footer">
-  <span>© 2026 Frontend Learning Hub</span>
-  <span>·</span>
-  <span>所有教程均为单文件 HTML，打开即用</span>
-  <span>·</span>
-  <a href="https://github.com/lsasw/frontend-learning-hub" target="_blank" rel="noopener">GitHub</a>
-</footer>
+<!-- ═══════════ TOAST CONTAINER ═══════════ -->
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ═══════════ COMMAND PALETTE ═══════════ -->
+<div class="cmd-overlay" id="cmdOverlay">
+  <div class="cmd-panel">
+    <div class="cmd-input-wrap">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="m13 13 3 3"/></svg>
+      <input class="cmd-input" id="cmdInput" placeholder="搜索教程标题、分类、标签…" autocomplete="off" spellcheck="false" aria-label="搜索教程" role="combobox" aria-expanded="true" aria-controls="cmdResults">
+      <span class="cmd-esc">ESC</span>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+    <div class="cmd-footer">
+      <span><kbd>↑↓</kbd> 导航</span>
+      <span><kbd>↵</kbd> 打开</span>
+      <span><kbd>ESC</kbd> 关闭</span>
+      <span style="margin-left:auto;color:var(--text-3)">Command Palette</span>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════
-   Router & Navigation System
+   SVG Icon Library (16px, stroke-1.5, Lucide-style)
    ═══════════════════════════════════════════════════ */
-(function(){
-  'use strict';
+const I = {
+  brain:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M6 5H4a2 2 0 0 0 0 4h2M10 5h2a2 2 0 0 1 0 4h-2M6 9H4a2 2 0 0 0 0 4h2M10 9h2a2 2 0 0 1 0 4h-2"/></svg>',
+  bot:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="10" height="8" rx="2"/><path d="M8 2v3"/><circle cx="6" cy="9" r=".5" fill="currentColor"/><circle cx="10" cy="9" r=".5" fill="currentColor"/><path d="M2 9H0M16 9h-2"/></svg>',
+  chain:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 9.5 6.5"/><path d="M5 4 4 5a3 3 0 0 0 0 4l1 1M11 12l1-1a3 3 0 0 0 0-4l-1-1"/></svg>',
+  bolt:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1 3 9h4l-1 6 6-8H8l1-6z"/></svg>',
+  puzzle:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2v2a1 1 0 0 1-2 0H3v3h2a1 1 0 0 1 0 2H3v3h1a1 1 0 0 1 2 0 1 1 0 0 1 2 0h1V8h-1a1 1 0 0 1 0-2h1V3h-1a1 1 0 0 1-2 0V2z"/></svg>',
+  shield:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 2 3v5c0 3.5 2.5 6 6 7 3.5-1 6-3.5 6-7V3l-6-2z"/></svg>',
+  layers:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 1 7 4-7 4-7-4 7-4z"/><path d="m1 9 7 4 7-4M1 12l7 4 7-4"/></svg>',
+  graph:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><path d="M5.5 5 7 11M10.5 5 9 11M6 4h4"/></svg>',
+  code:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5 3-4 5 4 5M11 3l4 5-4 5"/></svg>',
+  terminal:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="12" rx="1"/><path d="m4 6 2 2-2 2M8 10h4"/></svg>',
+  wrench:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2 9 7l-2 6-5 1 1-5 6-2 5-5z"/></svg>',
+  server:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="5" rx="1"/><rect x="1" y="9" width="14" height="5" rx="1"/><circle cx="4" cy="4.5" r=".5" fill="currentColor"/><circle cx="4" cy="11.5" r=".5" fill="currentColor"/></svg>',
+  database:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="3" rx="6" ry="2"/><path d="M2 3v5c0 1 2.5 2 6 2s6-1 6-2V3M2 8v5c0 1 2.5 2 6 2s6-1 6-2V8"/></svg>',
+  message:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6l-3 3v-3H4a2 2 0 0 1-2-2V4z"/></svg>',
+  grid:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>',
+  box:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 1 4.5v7L8 15l7-3.5v-7L8 1z"/><path d="M1 4.5 8 8l7-3.5M8 8v7"/></svg>',
+  cpu:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 1v2M10 1v2M6 13v2M10 13v2M1 6h2M1 10h2M13 6h2M13 10h2"/></svg>',
+  rocket:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1c3 2 4 5 4 8l-2 2H6L4 9c0-3 1-6 4-8z"/><circle cx="8" cy="6" r="1.5"/><path d="M6 11l-2 3M10 11l2 3"/></svg>',
+  flask:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1h4v4l3 8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1l3-8V1z"/><path d="M6 1h4"/></svg>',
+  book:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/><path d="M14 3a1 1 0 0 0-1-1H9a2 2 0 0 0-2 2v10a1 1 0 0 1 1-1h5a1 1 0 0 0 1-1V3z"/></svg>',
+  git:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="4" cy="12" r="2"/><path d="M4 6v4M4 10h6M9 5l3 3"/></svg>',
+  container:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 5 8 2l7 3v6l-7 3-7-3V5z"/><path d="M1 5l7 3 7-3M8 8v6"/></svg>',
+  lock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>',
+  java:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/><path d="M7 9v2"/></svg>',
+  python:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6a2 2 0 0 1 2 2v3H6a2 2 0 0 0-2 2v3H2a1 1 0 0 1-1-1V4a2 2 0 0 1 2-2z"/><circle cx="8" cy="4" r=".5" fill="currentColor"/></svg>',
+  spark:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v4M8 11v4M1 8h4M11 8h4M3.5 3.5l2.5 2.5M10 10l2.5 2.5M3.5 12.5 6 10M10 6l2.5-2.5"/></svg>',
+  compass:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="m10 6-2 5-2-5 4 0z"/></svg>',
+  plug:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1v4M10 1v4M4 5h8v2a4 4 0 0 1-8 0V5zM8 11v4"/></svg>',
+  chip:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 1v2M10 1v2M6 13v2M10 13v2M1 6h2M1 10h2M13 6h2M13 10h2"/></svg>',
+  clock:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1"/></svg>',
+  eye:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6s2-3.5 5-3.5S11 6 11 6s-2 3.5-5 3.5S1 6 1 6z"/><circle cx="6" cy="6" r="1.5"/></svg>',
+  calendar:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="9" height="8" rx="1"/><path d="M1.5 5h9M4 1.5v2M8 1.5v2"/></svg>',
+  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>',
+};
 
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
-  const hamburger = document.getElementById('hamburger');
-  const contentFrame = document.getElementById('contentFrame');
-  const welcomePage = document.getElementById('welcomePage');
-  const pageTitle = document.getElementById('pageTitle');
-  const mainContent = document.getElementById('mainContent');
-  const allNavItems = document.querySelectorAll('[data-nav]');
+/* ═══════════════════════════════════════════════════
+   Tutorial Data — 全部 48 个教程
+   ═══════════════════════════════════════════════════ */
+const categories = [
+  {
+    id:'ai-agent',label:'AI 智能体 & 工作流',icon:'brain',iconBg:'ic-bg-purple',accent:'var(--purple-500)',
+    tutorials:[
+      {nav:'metagpt-crewai',t:'MetaGPT vs CrewAI 分析报告',d:'深度对比两大 AI 多智能体框架：架构设计、角色分工、工作流引擎、适用场景全覆盖',href:'ai-agent/MetaGPT-CrewAI-分析报告.html',icon:'graph',tags:[{l:'AI 智能体',c:'t-purple'},{l:'Python',c:'t-gray'}],time:'20',views:'1.2K',date:'06.15',isNew:false},
+      {nav:'langchain',t:'LangChain & LangGraph 实战',d:'三合一教程：LangChain 链式调用 + LangGraph 状态图编排 + Python 最佳实践',href:'ai-agent/LangChain-LangGraph-Python-教程.html',icon:'chain',tags:[{l:'LangChain',c:'t-purple'},{l:'Python',c:'t-gray'}],time:'25',views:'2.1K',date:'06.20',isNew:false},
+      {nav:'dify-n8n',t:'Dify × n8n 双平台实战',d:'AI 工作流自动化：Dify 应用构建 + n8n 可视化编排，双平台联动最佳实践',href:'ai-agent/Dify-n8n-实战教程.html',icon:'bolt',tags:[{l:'工作流',c:'t-purple'},{l:'低代码',c:'t-cyan'}],time:'18',views:'1.5K',date:'06.22',isNew:false},
+      {nav:'rag-guide',t:'RAG 检索增强生成全指南',d:'RAG 原理与架构图解 · 嵌入模型 · Chunk 分割 · 混合检索 · 重排序机制 · 8 大优化策略对比',href:'ai-agent/RAG-检索增强生成-学习指南.html',icon:'puzzle',tags:[{l:'RAG',c:'t-purple'},{l:'向量检索',c:'t-indigo'}],time:'22',views:'1.8K',date:'06.25',isNew:false},
+      {nav:'rag-advanced',t:'RAG 进阶全攻略 · 避坑指南',d:'全链路深度解析：基础概念 → Multi-hop/Agentic/Graph/Self-RAG/CRAG 架构演进 → 7 大实战避坑攻略',href:'ai-agent/RAG-检索增强生成-进阶全攻略.html',icon:'puzzle',tags:[{l:'RAG进阶',c:'t-purple'},{l:'变体架构',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'35',views:'890',date:'07.10',isNew:true},
+      {nav:'langchain-deep',t:'LangChain 深入学习教程',d:'六大核心组件详解 · LCEL 现代写法 · RAG 全流程实战 · Agent 开发 · 10 个高频踩坑点',href:'ai-agent/LangChain-深入学习教程.html',icon:'chain',tags:[{l:'LangChain',c:'t-purple'},{l:'Python',c:'t-gray'},{l:'NEW',c:'t-green'}],time:'28',views:'1.1K',date:'07.08',isNew:true},
+      {nav:'langgraph',t:'LangGraph 状态图编排教程',d:'StateGraph 核心概念 · 条件分支与循环 · Human-in-the-Loop · 多 Agent 协作 · 8 大踩坑点',href:'ai-agent/LangGraph-状态图编排教程.html',icon:'graph',tags:[{l:'LangGraph',c:'t-purple'},{l:'Agent',c:'t-gray'},{l:'NEW',c:'t-green'}],time:'25',views:'760',date:'07.09',isNew:true},
+      {nav:'llamaindex',t:'LlamaIndex 数据框架教程',d:'数据接入 160+ 源 · 7 种索引策略 · Query/Chat Engine · 高级管线优化 · 10 大踩坑点',href:'ai-agent/LlamaIndex-数据框架教程.html',icon:'book',tags:[{l:'LlamaIndex',c:'t-purple'},{l:'RAG',c:'t-gray'},{l:'NEW',c:'t-green'}],time:'22',views:'540',date:'07.09',isNew:true},
+      {nav:'transformer',t:'Transformer 架构深度解析',d:'Self-Attention 数学推导 · Multi-Head · Positional Encoding · Encoder-Decoder · BERT/GPT 演进全景',href:'ai-agent/Transformer-架构解析.html',icon:'bot',tags:[{l:'Transformer',c:'t-purple'},{l:'注意力机制',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'30',views:'1.5K',date:'07.05',isNew:true},
+      {nav:'llm-ft',t:'LLM 微调技术深度解析',d:'全量微调 · LoRA/QLoRA · Adapter · Instruction Tuning · RLHF/DPO · 互动决策流程图',href:'ai-agent/大模型微调技术解析.html',icon:'flask',tags:[{l:'LLM',c:'t-purple'},{l:'微调',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'28',views:'980',date:'07.06',isNew:true},
+      {nav:'ml-dl-theory',t:'ML & DL 理论基础全指南',d:'三大学习范式 · 监督/无监督/强化学习 · 神经网络与反向传播 · CNN/RNN/LSTM/Transformer · 损失函数与优化器',href:'ai-agent/机器学习与深度学习-理论基础全指南.html',icon:'brain',tags:[{l:'机器学习',c:'t-purple'},{l:'深度学习',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'35',views:'1.3K',date:'07.04',isNew:true},
+      {nav:'agent-dev-guide',t:'AI Agent 开发概念全指南',d:'Agent 核心架构 · 多 Agent 协作模式 · 兜底降级 · 重试策略 · A2A 协议 · Skills 技能体系 · 三层记忆 · 工具调用',href:'ai-agent/AI-Agent-开发概念全指南.html',icon:'bot',tags:[{l:'Agent',c:'t-purple'},{l:'Multi-Agent',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'25',views:'670',date:'07.07',isNew:true},
+      {nav:'agent-design-guide',t:'AI Agent 设计决策全景指南',d:'从零设计功能全面的 Agent：CLI vs 桌面 vs Web 形态对比 · 框架 vs 裸写决策 · 语言选型 · 完整构建清单',href:'ai-agent/AI-Agent-设计决策全景指南.html',icon:'compass',tags:[{l:'架构决策',c:'t-purple'},{l:'从零构建',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'22',views:'540',date:'07.08',isNew:true},
+      {nav:'agent-compare',t:'智能体原理讲解',d:'OpenClaw · Hermes · Claude Code · Codex CLI — 核心架构设计 · 工作原理 · 关键特性 · 差异对比 · 选型指南',href:'ai-agent/智能体原理讲解-OpenClaw-Hermes-ClaudeCode-Codex对比.html',icon:'graph',tags:[{l:'架构对比',c:'t-purple'},{l:'Agent',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'430',date:'07.09',isNew:true},
+      {nav:'agent-sandbox',t:'Agent 执行沙盒机制全解析',d:'沙盒隔离边界 · 六大技术手段 · 14 类操作矩阵 · 5 级风险体系 · 安全桥接层 · 4 大实战案例',href:'ai-agent/AI-Agent-执行沙盒机制全解析.html',icon:'shield',tags:[{l:'沙盒安全',c:'t-red'},{l:'隔离机制',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'28',views:'670',date:'07.12',isNew:true},
+      {nav:'java-ai-frameworks',t:'Java AI 框架学习指南',d:'Spring AI · Spring AI Alibaba (Graph Agent) · LangChain4j · LangGraph4j — 学习讲解 · 常见问题 · 面试题解析',href:'ai-agent/Java-AI框架-SpringAI-LangChain4j-学习指南.html',icon:'code',tags:[{l:'Spring AI',c:'t-purple'},{l:'LangChain4j',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'25',views:'890',date:'07.11',isNew:true},
+      {nav:'cs-rag-agent',t:'智能客服 RAG 全流程',d:'需求调研 - 技术栈选型 - 数据清洗 - 召回优化（混合检索+重排序）- 效果评测（RAGAS）— 生产级 RAG 智能客服构建全链路',href:'ai-agent/智能客服Agent-RAG智能体构建全流程.html',icon:'message',tags:[{l:'RAG',c:'t-purple'},{l:'智能客服',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'22',views:'450',date:'07.13',isNew:true},
+      {nav:'deeptutor-arch',t:'DeepTutor 架构深度分析',d:'HKUDS 开源项目完整拆解：Agent 循环机制 · 两层插件模型 · 多引擎 RAG · 三层记忆系统 · Python 全异步架构',href:'ai-agent/DeepTutor-architecture-analysis.html',icon:'layers',tags:[{l:'架构分析',c:'t-purple'},{l:'Agent',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'320',date:'07.14',isNew:true},
+    ]
+  },
+  {
+    id:'ai-tools',label:'AI 开发工具',icon:'wrench',iconBg:'ic-bg-blue',accent:'var(--blue-500)',
+    tutorials:[
+      {nav:'ai-token-tools',t:'AI 编程 Token 拯救计划',d:'精选 AI 编程效率工具集：Token 优化、上下文压缩、Prompt 缓存 —— 让每一分 Token 花在刀刃上',href:'ai-tools/AI编码Token节省工具.html',icon:'bolt',tags:[{l:'AI 工具',c:'t-blue'},{l:'效率',c:'t-green'}],time:'15',views:'3.2K',date:'05.28',isNew:false},
+      {nav:'ai-fe-eco',t:'AI 前端工程化生态全景图',d:'Vercel AI SDK · Cursor · Copilot · v0 · Bolt 等下一代 AI 前端工具链全景式梳理与架构对比',href:'ai-tools/AI前端工程生态.html',icon:'layers',tags:[{l:'AI 工程',c:'t-blue'},{l:'前端',c:'t-cyan'}],time:'18',views:'1.8K',date:'06.02',isNew:false},
+    ]
+  },
+  {
+    id:'python',label:'Python 后端',icon:'python',iconBg:'ic-bg-teal',accent:'var(--teal-500)',
+    tutorials:[
+      {nav:'python-backend-stack',t:'Python 后端技术栈全景图',d:'Web 框架 · ORM · 异步服务器 · API 工具 · 缓存 · 任务队列 · 认证权限 —— 7 大分类主流 vs 替代方案全对比',href:'python/Python-后端技术栈全景图.html',icon:'grid',tags:[{l:'Python',c:'t-teal'},{l:'后端',c:'t-gray'},{l:'选型',c:'t-amber'}],time:'20',views:'2.5K',date:'05.15',isNew:false},
+      {nav:'python-syntax',t:'Python3 语法与语法糖',d:'基础语法 + 推导式/海象运算符/f-string/解包/enumerate/with —— Pyodide 浏览器内实时运行 Python 代码',href:'python/Python3-语法讲解与语法糖.html',icon:'python',tags:[{l:'Python',c:'t-teal'},{l:'语法糖',c:'t-green'},{l:'NEW',c:'t-green'}],time:'25',views:'1.1K',date:'07.03',isNew:true},
+      {nav:'pandas-guide',t:'Pandas 数据处理全指南',d:'Series/DataFrame 创建与操作 · 数据筛选与条件过滤 · 分组聚合 · 缺失值检测/填充/删除 —— 真实业务场景代码演示',href:'python/Pandas-数据处理全指南.html',icon:'server',tags:[{l:'Pandas',c:'t-teal'},{l:'数据分析',c:'t-cyan'},{l:'NEW',c:'t-green'}],time:'22',views:'780',date:'07.06',isNew:true},
+      {nav:'numpy-guide',t:'NumPy 科学计算全指南',d:'数组创建 · 切片/布尔/花式索引 · 广播机制 · 通用函数 · 线性代数 —— 含金融与 ML 场景实战',href:'python/NumPy-科学计算全指南.html',icon:'cpu',tags:[{l:'NumPy',c:'t-teal'},{l:'科学计算',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'650',date:'07.07',isNew:true},
+    ]
+  },
+  {
+    id:'java',label:'Java 进阶',icon:'java',iconBg:'ic-bg-amber',accent:'var(--amber-500)',
+    tutorials:[
+      {nav:'java-juc',t:'JUC 并发工具包',d:'Lock / Atomic / 线程池 / 并发集合 / AQS 源码剖析 —— 从 API 到底层原理',href:'java/Java-JUC-并发工具包教程.html',icon:'lock',tags:[{l:'Java',c:'t-amber'},{l:'并发',c:'t-orange'}],time:'30',views:'3.1K',date:'04.10',isNew:false},
+      {nav:'java-jvm',t:'JVM 虚拟机',d:'类加载 → 内存模型 → GC 算法 → JIT 编译 → 性能调优，完整知识体系',href:'java/Java-JVM-虚拟机教程.html',icon:'box',tags:[{l:'Java',c:'t-amber'},{l:'JVM',c:'t-orange'}],time:'28',views:'2.8K',date:'04.15',isNew:false},
+      {nav:'spring-family',t:'Spring 全家桶核心组件',d:'Framework Ioc/AOP/MVC · Boot 自动配置 · Cloud 微服务治理，三层联动全景讲解',href:'java/Spring-全家桶-核心组件详解.html',icon:'spark',tags:[{l:'Spring',c:'t-amber'},{l:'微服务',c:'t-orange'},{l:'Boot',c:'t-green'}],time:'25',views:'2.4K',date:'04.20',isNew:false},
+      {nav:'java-python-async',t:'Java vs Python 异步对比',d:'多线程 vs 协程 · CompletableFuture vs asyncio · 代码实战对比 · 场景推荐矩阵',href:'java/Java-vs-Python-异步编程对比.html',icon:'bolt',tags:[{l:'Java',c:'t-amber'},{l:'Python',c:'t-teal'},{l:'异步',c:'t-orange'}],time:'20',views:'1.6K',date:'04.25',isNew:false},
+      {nav:'java-core-analysis',t:'Java 核心问题深度分析',d:'ThreadLocal 脏数据复现 · HashMap 1.7/1.8 扩容动画 · synchronized 锁升级 · JVM OOM 模拟',href:'java/Java-核心问题深度分析.html',icon:'flask',tags:[{l:'Java',c:'t-amber'},{l:'进阶',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'25',views:'1.2K',date:'07.01',isNew:true},
+      {nav:'java-distributed-lock',t:'Java 分布式锁 · Redisson 深度解析',d:'看门狗续期机制 · 可重入锁 Hash 存储 · 公平锁排队 · RedLock · ZK/MySQL 方案对比',href:'java/Java-分布式锁-Redisson深度解析.html',icon:'lock',tags:[{l:'分布式',c:'t-amber'},{l:'Redisson',c:'t-red'},{l:'NEW',c:'t-green'}],time:'25',views:'1.3K',date:'07.02',isNew:true},
+      {nav:'java-collection-juc-pykw',t:'Java 集合 & JUC & Python 关键字',d:'Java 集合框架(List/Set/Map 底层原理) · JUC 并发工具(CHM/COW/CountDownLatch等) · Python 35 个关键字逐一讲解',href:'java/Java集合-JUC-Python关键字-综合教程.html',icon:'book',tags:[{l:'Java',c:'t-amber'},{l:'JUC',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'30',views:'1.0K',date:'07.05',isNew:true},
+      {nav:'jmm-dcl',t:'JMM 三大特性与 DCL 推导',d:'可见性/原子性/有序性定义 · DCL 单例逐步推导 · 指令重排导致半初始化对象 · volatile 内存屏障解决方案',href:'java/JMM-三大特性与DCL双重检查锁推导分析.html',icon:'cpu',tags:[{l:'JMM',c:'t-amber'},{l:'并发',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'22',views:'890',date:'07.09',isNew:true},
+    ]
+  },
+  {
+    id:'big-data',label:'大数据处理',icon:'database',iconBg:'ic-bg-orange',accent:'var(--orange-500)',
+    tutorials:[
+      {nav:'spark-flink',t:'Spark & Flink 大数据全指南',d:'Spark RDD/DataFrame/Spark SQL/Streaming · Flink DataStream/Table API/窗口/状态管理 · 深度对比与选型',href:'big-data/Spark-Flink-大数据处理教程.html',icon:'bolt',tags:[{l:'Spark',c:'t-orange'},{l:'Flink',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'35',views:'1.7K',date:'07.03',isNew:true},
+    ]
+  },
+  {
+    id:'infra',label:'基础设施',icon:'server',iconBg:'ic-bg-red',accent:'var(--red-500)',
+    tutorials:[
+      {nav:'distributed',t:'分布式系统交互式学习',d:'CAP 定理可视化 · Gossip/Raft 模拟 · Quorum 读写 · 负载均衡策略 —— 动手学分布式',href:'infra/分布式系统-交互式学习平台.html',icon:'git',tags:[{l:'分布式',c:'t-red'},{l:'共识',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'25',views:'1.6K',date:'06.28',isNew:true},
+      {nav:'redis',t:'Redis 交互式学习指南',d:'数据结构 / 持久化 / 缓存策略 / 分布式锁 / 集群方案，从入门到精通',href:'infra/Redis-交互式学习指南.html',icon:'database',tags:[{l:'NoSQL',c:'t-red'},{l:'Redis',c:'t-rose'}],time:'30',views:'4.2K',date:'03.20',isNew:false},
+      {nav:'message-queue',t:'消息队列综合演示平台',d:'Kafka / RabbitMQ / RocketMQ / Pulsar 四合一：架构对比 + 实时仪表盘 + 场景模拟',href:'infra/消息队列系统-综合演示平台.html',icon:'message',tags:[{l:'MQ',c:'t-red'},{l:'消息队列',c:'t-rose'}],time:'28',views:'2.3K',date:'04.01',isNew:false},
+      {nav:'mq-concepts',t:'消息队列核心概念入门',d:'从零开始理解 MQ：Producer / Consumer / Broker / ACK / DLQ，含交互式模拟器',href:'infra/消息队列-核心概念入门.html',icon:'book',tags:[{l:'MQ',c:'t-red'},{l:'入门',c:'t-rose'}],time:'15',views:'980',date:'04.05',isNew:false},
+      {nav:'mq-dedup',t:'MQ 防重复消费详解',d:'3 实例场景下两层防护：MQ 层负载隔离 + 业务层幂等兜底，Kafka/RocketMQ/RabbitMQ 全覆盖',href:'infra/消息队列-防重复消费详解.html',icon:'shield',tags:[{l:'幂等',c:'t-red'},{l:'生产实战',c:'t-amber'}],time:'15',views:'1.1K',date:'06.25',isNew:false},
+    ]
+  },
+  {
+    id:'architecture',label:'系统架构',icon:'box',iconBg:'ic-bg-indigo',accent:'var(--indigo-500)',
+    tutorials:[
+      {nav:'architect-knowledge',t:'系统架构师知识体系',d:'设计原则 (SOLID/CAP) + 8 大架构模式 + 质量属性 + 技术选型矩阵 + ADR 决策流程，含可视化图表',href:'architecture/系统架构师-知识体系全指南.html',icon:'compass',tags:[{l:'架构',c:'t-indigo'},{l:'系统设计',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'35',views:'2.9K',date:'06.18',isNew:true},
+      {nav:'docker-k8s',t:'Docker & Kubernetes',d:'Docker 三大核心概念 + 命令速查 + Dockerfile 多阶段构建 + K8s 集群架构 + Pod/Service/Deployment',href:'architecture/Docker-Kubernetes-容器化与编排指南.html',icon:'container',tags:[{l:'Docker',c:'t-indigo'},{l:'K8s',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'3.5K',date:'06.22',isNew:true},
+      {nav:'backend-knowledge-system',t:'后端面试知识体系',d:'Java核心开发 + 分布式架构 + AI应用开发 三大领域体系化梳理、技能树进阶、高频面试解析、线上故障排查',href:'architecture/后端技术栈知识体系-面试分析与故障排查.html',icon:'grid',tags:[{l:'知识体系',c:'t-indigo'},{l:'面试',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'32',views:'2.0K',date:'06.30',isNew:true},
+      {nav:'distributed-service-evolution',t:'分布式服务化拆分路线',d:'单体 → 烟囱式 → SOA → 微服务 → 服务网格五阶段全景演进 · Spring Cloud vs Dubbo 对比 · 技术选型矩阵',href:'architecture/分布式服务化拆分路线.html',icon:'git',tags:[{l:'分布式',c:'t-indigo'},{l:'架构演进',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'28',views:'1.4K',date:'07.01',isNew:true},
+      {nav:'high-concurrency-design',t:'高并发系统设计全指南',d:'QPS 预估 → 架构选型 → 分层设计 → 限流降级熔断 → MQ削峰 → 分布式锁 → 最终一致性 → 全链路监控',href:'architecture/高并发系统设计-实施步骤全指南.html',icon:'bolt',tags:[{l:'高并发',c:'t-indigo'},{l:'系统设计',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'32',views:'1.9K',date:'07.01',isNew:true},
+      {nav:'design-patterns',t:'软件设计模式与设计原则',d:'SOLID 五大原则 + DRY/KISS/YAGNI + GoF 22 种设计模式，每个模式含定义、适用场景与代码示例',href:'architecture/软件设计模式与设计原则-全指南.html',icon:'grid',tags:[{l:'设计原则',c:'t-indigo'},{l:'设计模式',c:'t-purple'},{l:'NEW',c:'t-green'}],time:'28',views:'1.4K',date:'07.04',isNew:true},
+    ]
+  },
+  {
+    id:'frontend',label:'前端开发',icon:'code',iconBg:'ic-bg-cyan',accent:'var(--cyan-500)',
+    tutorials:[
+      {nav:'frontend-workflow',t:'前端开发完整工作流 · Vue/React 实战',d:'需求分析→项目搭建→组件开发→状态管理→构建部署全流程；Vue 3 / React 18 核心知识体系；20+ 易踩坑点全覆盖',href:'frontend/前端开发完整工作流-Vue与React实战.html',icon:'rocket',tags:[{l:'Vue 3',c:'t-cyan'},{l:'React 18',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'2.2K',date:'07.05',isNew:true},
+    ]
+  },
+  {
+    id:'embedded',label:'嵌入式开发',icon:'plug',iconBg:'ic-bg-green',accent:'var(--green-500)',
+    tutorials:[
+      {nav:'embedded-dev',t:'嵌入式开发宣讲',d:'嵌入式概述 · 6 大应用领域 · 5 层技术栈架构 · 8 步开发流程 · 行业前景与薪资分析',href:'embedded-development.html',icon:'plug',tags:[{l:'嵌入式',c:'t-green'},{l:'IoT',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'18',views:'680',date:'07.10',isNew:true},
+      {nav:'embedded-learning',t:'嵌入式工程学习指南',d:'5 阶段学习路径 · 硬件平台对比（STM32/ESP32/树莓派/Arduino）· 软件工具链 · 开源框架',href:'embedded-learning-guide.html',icon:'book',tags:[{l:'STM32',c:'t-green'},{l:'ESP32',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'22',views:'450',date:'07.11',isNew:true},
+      {nav:'electronics-guide',t:'电子元件速查手册',d:'11 种核心元件 · SVG 电路符号 · 参数标签 · 典型应用场景 · 分类对比总览表',href:'electronics-components-guide.html',icon:'chip',tags:[{l:'电子元件',c:'t-green'},{l:'硬件',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'15',views:'380',date:'07.13',isNew:true},
+    ]
+  },
+];
 
-  let currentPage = null;
+/* ═══════════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════════ */
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
-  // ── Mobile sidebar toggle ──
-  hamburger.addEventListener('click',()=>{
-    const open = sidebar.classList.toggle('open');
-    overlay.classList.toggle('show',open);
-    hamburger.textContent = open ? '✕' : '☰';
-  });
-  overlay.addEventListener('click',()=>{
-    sidebar.classList.remove('open');
-    overlay.classList.remove('show');
-    hamburger.textContent = '☰';
-  });
-
-  // Close sidebar when clicking a nav item on mobile
-  sidebar.addEventListener('click',(e)=>{
-    const item = e.target.closest('[data-nav]');
-    if(item && window.innerWidth <= 768){
-      sidebar.classList.remove('open');
-      overlay.classList.remove('show');
-      hamburger.textContent = '☰';
-    }
-  });
-
-  // ── Navigation Handler ──
-  function navigateTo(navId, title, href){
-    if(currentPage === navId) return;
-    currentPage = navId;
-
-    // Update active states
-    allNavItems.forEach(el=>el.classList.remove('active'));
-    document.querySelectorAll(`[data-nav="${navId}"]`).forEach(el=>el.classList.add('active'));
-
-    // Update page title
-    document.title = title + ' · Frontend Learning Hub';
-    if(pageTitle) pageTitle.textContent = title;
-
-    // Update URL hash
-    try{
-      if(navId === 'home'){
-        history.replaceState(null,'',window.location.pathname);
-      }else{
-        history.replaceState(null,'','#' + navId);
-      }
-    }catch(e){/* file:// protocol may throw SecurityError */}
-
-    // Show loading
-    if(mainContent) mainContent.classList.add('loading');
-
-    if(navId === 'home'){
-      // Show welcome page
-      if(welcomePage) welcomePage.style.display = '';
-      if(contentFrame) contentFrame.style.display = 'none';
-      if(contentFrame) contentFrame.src = 'about:blank';
-      if(mainContent) mainContent.classList.remove('loading');
-    }else{
-      // Show iframe
-      if(welcomePage) welcomePage.style.display = 'none';
-      if(contentFrame){
-        contentFrame.style.display = '';
-        // Force reflow so the display change is committed before loading
-        void contentFrame.offsetHeight;
-        contentFrame.src = href;
-      }
+/* ═══════════════════════════════════════════════════
+   Render Sidebar
+   ═══════════════════════════════════════════════════ */
+function renderSidebar(){
+  const el = document.getElementById('sidebar');
+  let html = '<div class="cat-label" onclick="goHome()" style="cursor:pointer">首页总览</div>';
+  html += '<a class="nav-item active" data-nav="home" style="cursor:pointer" onclick="goHome()"><span class="ic">'+I.grid+'</span><span class="nm">回到首页</span></a>';
+  for(const cat of categories){
+    html += '<div class="cat-label" onclick="scrollToSection(\''+cat.id+'\')">'+escapeHtml(cat.label)+'</div>';
+    for(const t of cat.tutorials){
+      html += '<a class="nav-item" data-nav="'+t.nav+'" data-title="'+escapeHtml(t.t)+'" href="'+t.href+'" style="cursor:pointer">'
+        + '<span class="ic">'+(I[t.icon]||I.book)+'</span>'
+        + '<span class="nm">'+escapeHtml(t.t.length>22?t.t.slice(0,20)+'\u2026':t.t)+'</span>'
+        + (t.isNew?'<span class="badge-new">NEW</span>':'')
+        + '</a>';
     }
   }
+  el.innerHTML = html;
+}
 
-  // ── Bind click events ──
-  document.addEventListener('click',(e)=>{
-    const navEl = e.target.closest('[data-nav]');
-    if(!navEl) return;
-    const navId = navEl.dataset.nav;
-    const title = navEl.dataset.title || navEl.textContent.trim();
-    const href = navEl.getAttribute('href');
-    if(!href) return;
+/* ═══════════════════════════════════════════════════
+   Render Content (Welcome Page)
+   ═══════════════════════════════════════════════════ */
+function renderContent(){
+  const el = document.getElementById('contentWrap');
+  const totalTuts = categories.reduce((s,c)=>s+c.tutorials.length,0);
+  const totalCats = categories.length;
+
+  let html = '<section class="hero">'
+    + '<div class="hero-eyebrow"><span class="dot"></span> 持续更新 · 最近更新于 2026.07.14</div>'
+    + '<h1>交互式技术教程合集<br><span class="grad">打开即用，边学边练</span></h1>'
+    + '<p class="hero-desc">覆盖 AI 智能体、Python、Java、大数据、基础设施、系统架构、前端与嵌入式 '+totalCats+' 大领域的 '+totalTuts+' 个精心制作的单文件 HTML 教程。每个教程均为独立文件，支持交互式学习与代码实时运行。</p>'
+    + '<div class="hero-stats">'
+    + '<div class="stat"><span class="num">'+totalTuts+'</span><span class="lbl">教程</span><span class="sep">/</span></div>'
+    + '<div class="stat"><span class="num">'+totalCats+'</span><span class="lbl">分类</span><span class="sep">/</span></div>'
+    + '<div class="stat"><span class="num">~115K</span><span class="lbl">行代码</span></div>'
+    + '</div></section>';
+
+  for(const cat of categories){
+    html += '<section class="cat-section" id="cat-'+cat.id+'">'
+      + '<div class="cat-header">'
+      + '<div class="cat-icon-box '+cat.iconBg+'">'+(I[cat.icon]||I.book)+'</div>'
+      + '<span class="cat-title">'+escapeHtml(cat.label)+'</span>'
+      + '<span class="cat-count">'+cat.tutorials.length+'</span>'
+      + '</div><div class="cards-grid">';
+    for(const t of cat.tutorials){
+      html += '<a class="tut-card" data-nav="'+t.nav+'" data-title="'+escapeHtml(t.t)+'" href="'+t.href+'" style="--card-accent:'+cat.accent+'">'
+        + '<div class="card-top">'
+        + '<div class="card-icon '+cat.iconBg+'">'+(I[t.icon]||I.book)+'</div>'
+        + '<h4>'+escapeHtml(t.t)+'</h4>'
+        + '</div>'
+        + '<p class="card-desc">'+escapeHtml(t.d)+'</p>'
+        + '<div class="card-tags">';
+      for(const tag of t.tags){
+        html += '<span class="tag '+tag.c+'">'+escapeHtml(tag.l)+'</span>';
+      }
+      html += '</div>'
+        + '<div class="card-meta">'
+        + '<span>'+I.clock+escapeHtml(t.time)+'min</span>'
+        + '<span>'+I.eye+escapeHtml(t.views)+'</span>'
+        + '<span>'+I.calendar+escapeHtml(t.date)+'</span>'
+        + '</div></a>';
+    }
+    html += '</div></section>';
+  }
+
+  el.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════
+   Navigation (iframe routing)
+   ═══════════════════════════════════════════════════ */
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+const hamburger = document.getElementById('hamburger');
+const contentFrame = document.getElementById('contentFrame');
+const welcomePage = document.getElementById('welcomePage');
+const mainContent = document.getElementById('mainContent');
+let currentPage = null;
+
+function navigateTo(navId, title, href){
+  if(currentPage === navId) return;
+  currentPage = navId;
+
+  document.querySelectorAll('[data-nav]').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('[data-nav="'+navId+'"]').forEach(el=>el.classList.add('active'));
+
+  document.title = (navId==='home'?'Frontend Learning Hub':title + ' · Frontend Learning Hub');
+
+  try{
+    if(navId==='home') history.replaceState(null,'',window.location.pathname);
+    else history.replaceState(null,'','#'+navId);
+  }catch(e){}
+
+  if(mainContent) mainContent.classList.add('loading');
+
+  if(navId==='home'){
+    if(welcomePage) welcomePage.style.display = '';
+    if(contentFrame){contentFrame.style.display='none';contentFrame.src='about:blank';}
+    if(mainContent) mainContent.classList.remove('loading');
+  }else{
+    if(welcomePage) welcomePage.style.display = 'none';
+    if(contentFrame){
+      contentFrame.style.display = '';
+      void contentFrame.offsetHeight;
+      contentFrame.src = href;
+    }
+  }
+}
+
+function goHome(){
+  navigateTo('home','Frontend Learning Hub','');
+  document.getElementById('contentWrap').scrollTo({top:0,behavior:'smooth'});
+  closeSidebar();
+}
+
+function scrollToSection(id){
+  if(currentPage !== 'home'){
+    navigateTo('home','','');
+    setTimeout(()=>{
+      document.getElementById('cat-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
+    },50);
+  }else{
+    document.getElementById('cat-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  closeSidebar();
+}
+
+// Click handler for all data-nav elements
+document.addEventListener('click',(e)=>{
+  const navEl = e.target.closest('[data-nav]');
+  if(!navEl) return;
+  const navId = navEl.dataset.nav;
+  const title = navEl.dataset.title || navEl.textContent.trim();
+  const href = navEl.getAttribute('href');
+  if(navId==='home'){e.preventDefault();goHome();return;}
+  if(!href) return;
+  e.preventDefault();
+  navigateTo(navId, title, href);
+  if(window.innerWidth <= 768) closeSidebar();
+});
+
+// Iframe load
+contentFrame.addEventListener('load',()=>{
+  if(mainContent) mainContent.classList.remove('loading');
+  try{contentFrame.contentWindow?.scrollTo(0,0);}catch(e){}
+});
+
+// Hash routing
+function handleHash(){
+  const hash = window.location.hash.replace('#','');
+  if(hash){
+    const navItem = document.querySelector('[data-nav="'+hash+'"]');
+    if(navItem){
+      navigateTo(navItem.dataset.nav, navItem.dataset.title||navItem.textContent.trim(), navItem.getAttribute('href'));
+      return;
+    }
+  }
+  navigateTo('home','Frontend Learning Hub','');
+}
+
+/* ═══════════════════════════════════════════════════
+   Mobile Sidebar
+   ═══════════════════════════════════════════════════ */
+function openSidebar(){sidebar.classList.add('open');overlay.classList.add('show')}
+function closeSidebar(){sidebar.classList.remove('open');overlay.classList.remove('show')}
+
+hamburger.addEventListener('click',()=>{
+  if(sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
+});
+overlay.addEventListener('click',closeSidebar);
+
+/* ═══════════════════════════════════════════════════
+   Theme Toggle
+   ═══════════════════════════════════════════════════ */
+function toggleTheme(){
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('iconMoon').style.display = next==='dark'?'none':'block';
+  document.getElementById('iconSun').style.display = next==='dark'?'block':'none';
+  try{localStorage.setItem('flh-theme',next)}catch(e){}
+  showToast({title:next==='dark'?'暗色模式已开启':'亮色模式已开启',desc:'主题偏好已保存',icon:I.spark,iconBg:'ic-bg-blue'});
+}
+document.getElementById('themeToggle').addEventListener('click',toggleTheme);
+
+/* ═══════════════════════════════════════════════════
+   Command Palette
+   ═══════════════════════════════════════════════════ */
+let cmdItems = [];
+let cmdSelected = 0;
+
+function buildCmdIndex(){
+  cmdItems = [];
+  for(const cat of categories){
+    for(const t of cat.tutorials){
+      cmdItems.push({
+        nav:t.nav,title:t.t,desc:t.d,cat:cat.label,href:t.href,
+        icon:t.icon,iconBg:cat.iconBg,
+        tags:t.tags.map(x=>x.l).join(' '),
+        searchText:(t.t+' '+t.d+' '+cat.label+' '+t.tags.map(x=>x.l).join(' ')).toLowerCase()
+      });
+    }
+  }
+}
+
+function openCmd(){
+  document.getElementById('cmdOverlay').classList.add('show');
+  const input = document.getElementById('cmdInput');
+  input.value = '';
+  input.focus();
+  renderCmdResults('');
+}
+function closeCmd(){document.getElementById('cmdOverlay').classList.remove('show')}
+
+function renderCmdResults(query){
+  const el = document.getElementById('cmdResults');
+  let results = cmdItems;
+  if(query.trim()){
+    const q = query.toLowerCase().trim();
+    results = cmdItems.filter(item => item.searchText.includes(q));
+  }
+  cmdSelected = 0;
+  if(results.length === 0){
+    el.innerHTML = '<div class="cmd-empty">未找到匹配的教程<br>试试搜索 "RAG"、"Java"、"分布式"…</div>';
+    el._results = [];
+    return;
+  }
+  const groups = {};
+  const groupOrder = [];
+  for(const r of results){
+    if(!groups[r.cat]){groups[r.cat]=[];groupOrder.push(r.cat)}
+    groups[r.cat].push(r);
+  }
+  const flatResults = [];
+  let html = '';
+  for(const cat of groupOrder){
+    const items = groups[cat];
+    html += '<div class="cmd-group-label">'+escapeHtml(cat)+'</div>';
+    for(const item of items){
+      const idx = flatResults.length;
+      html += '<div class="cmd-item '+((idx===0)?'selected':'')+'" data-idx="'+idx+'">'
+        + '<div class="ci-icon '+item.iconBg+'">'+(I[item.icon]||I.book)+'</div>'
+        + '<div class="ci-info"><div class="ci-title">'+escapeHtml(item.title)+'</div>'
+        + '<div class="ci-cat">'+escapeHtml(item.cat)+'</div></div>'
+        + '<span class="ci-enter">↵</span></div>';
+      flatResults.push(item);
+    }
+  }
+  el.innerHTML = html;
+  el._results = flatResults;
+  // Bind click events
+  el.querySelectorAll('.cmd-item').forEach(item=>{
+    item.addEventListener('click',()=>cmdSelect(parseInt(item.dataset.idx)));
+  });
+}
+
+function cmdSelect(idx){
+  const el = document.getElementById('cmdResults');
+  const results = el._results || [];
+  if(results[idx]){
+    closeCmd();
+    navigateTo(results[idx].nav, results[idx].title, results[idx].href);
+  }
+}
+
+function cmdMove(dir){
+  const items = document.querySelectorAll('.cmd-item');
+  if(items.length === 0) return;
+  items[cmdSelected]?.classList.remove('selected');
+  cmdSelected = (cmdSelected + dir + items.length) % items.length;
+  items[cmdSelected]?.classList.add('selected');
+  items[cmdSelected]?.scrollIntoView({block:'nearest'});
+}
+
+// Search trigger
+document.getElementById('searchTrigger').addEventListener('click',openCmd);
+
+// Cmd input
+document.getElementById('cmdInput').addEventListener('input',(e)=>{
+  renderCmdResults(e.target.value);
+});
+
+// Click outside to close
+document.getElementById('cmdOverlay').addEventListener('click',(e)=>{
+  if(e.target === e.currentTarget) closeCmd();
+});
+
+/* ═══════════════════════════════════════════════════
+   Toast Notification
+   ═══════════════════════════════════════════════════ */
+function showToast({title,desc,icon,iconBg,duration=4000}){
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.setAttribute('role','alert');
+  toast.innerHTML = '<div class="toast-icon '+(iconBg||'ic-bg-blue')+'">'+(icon||I.book)+'</div>'
+    + '<div class="toast-body"><div class="toast-title">'+escapeHtml(title)+'</div>'
+    + '<div class="toast-desc">'+escapeHtml(desc)+'</div></div>'
+    + '<button class="toast-close" aria-label="关闭通知"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>';
+  const closeBtn = toast.querySelector('.toast-close');
+  let timer;
+  const dismiss = ()=>{
+    clearTimeout(timer);
+    toast.classList.add('toast-out');
+    setTimeout(()=>toast.remove(),200);
+  };
+  closeBtn.addEventListener('click',dismiss);
+  container.appendChild(toast);
+  timer = setTimeout(dismiss,duration);
+}
+
+/* ═══════════════════════════════════════════════════
+   Keyboard Shortcuts
+   ═══════════════════════════════════════════════════ */
+document.addEventListener('keydown',(e)=>{
+  // Cmd/Ctrl + K
+  if((e.metaKey || e.ctrlKey) && e.key === 'k'){
     e.preventDefault();
-    navigateTo(navId, title, href);
-  });
+    if(document.getElementById('cmdOverlay').classList.contains('show')) closeCmd();
+    else openCmd();
+    return;
+  }
+  // Shift + Cmd/Ctrl + L
+  if((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')){
+    e.preventDefault();
+    toggleTheme();
+    return;
+  }
+  // Escape
+  if(e.key === 'Escape'){
+    closeCmd();
+    closeSidebar();
+    return;
+  }
+  // Command palette navigation
+  const cmdOpen = document.getElementById('cmdOverlay').classList.contains('show');
+  if(cmdOpen){
+    if(e.key === 'ArrowDown'){e.preventDefault();cmdMove(1)}
+    else if(e.key === 'ArrowUp'){e.preventDefault();cmdMove(-1)}
+    else if(e.key === 'Enter'){e.preventDefault();cmdSelect(cmdSelected)}
+    else if(e.key === 'Tab'){e.preventDefault();cmdMove(e.shiftKey?-1:1)}
+  }
+});
 
-  // ── Iframe load handler ──
-  contentFrame.addEventListener('load',()=>{
-    if(mainContent) mainContent.classList.remove('loading');
-    try{
-      contentFrame.contentWindow?.scrollTo(0,0);
-    }catch(e){/* cross-origin */}
-  });
-  contentFrame.addEventListener('error',()=>{
-    if(mainContent) mainContent.classList.remove('loading');
-    console.warn('Iframe failed to load:', contentFrame.src);
-  });
+/* ═══════════════════════════════════════════════════
+   Scroll Spy
+   ═══════════════════════════════════════════════════ */
+function setActiveNav(catId){
+  document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
+  if(catId === 'home'){
+    document.querySelector('.sidebar .nav-item[data-nav="home"]')?.classList.add('active');
+  }
+}
 
-  // ── Handle hash on page load ──
-  function handleHash(){
-    const hash = window.location.hash.replace('#','');
-    if(hash){
-      const navItem = document.querySelector(`[data-nav="${hash}"]`);
-      if(navItem){
-        const navId = navItem.dataset.nav;
-        const title = navItem.dataset.title || navItem.textContent.trim();
-        const href = navItem.getAttribute('href');
-        navigateTo(navId, title, href);
-        return;
+/* ═══════════════════════════════════════════════════
+   Init
+   ═══════════════════════════════════════════════════ */
+(function init(){
+  // Theme
+  try{
+    const saved = localStorage.getItem('flh-theme');
+    if(saved === 'dark'){
+      document.documentElement.setAttribute('data-theme','dark');
+      document.getElementById('iconMoon').style.display = 'none';
+      document.getElementById('iconSun').style.display = 'block';
+    }
+  }catch(e){}
+
+  // Build & render
+  buildCmdIndex();
+  renderSidebar();
+  renderContent();
+
+  // Scroll spy
+  const spy = new IntersectionObserver((entries)=>{
+    for(const entry of entries){
+      if(entry.isIntersecting){
+        const catId = entry.target.id.replace('cat-','');
+        setActiveNav(catId);
       }
     }
-    // Default: show welcome
-    navigateTo('home','交互式技术教程合集');
+  },{rootMargin:'-30% 0px -60% 0px',threshold:0});
+  document.querySelectorAll('.cat-section').forEach(s=>spy.observe(s));
+
+  const heroEl = document.querySelector('.hero');
+  if(heroEl){
+    const heroSpy = new IntersectionObserver((entries)=>{
+      for(const entry of entries){
+        if(entry.isIntersecting) setActiveNav('home');
+      }
+    },{rootMargin:'0px 0px -70% 0px',threshold:0});
+    heroSpy.observe(heroEl);
   }
 
-  // ── Keyboard shortcut ──
-  document.addEventListener('keydown',(e)=>{
-    if(e.key === 'Escape'){
-      sidebar.classList.remove('open');
-      overlay.classList.remove('show');
-      hamburger.textContent = '☰';
-    }
-  });
-
-  // ── Start ──
+  // Start
   handleHash();
   window.addEventListener('hashchange',handleHash);
-
 })();
 </script>
 
