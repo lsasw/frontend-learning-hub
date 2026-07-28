@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingAgents 多智能体金融交易框架 · 深度拆解</title>
+<style>
+:root{
+  --pri:#1e40af;--pri-dark:#1e3a8a;--pri-light:#dbeafe;--pri-lighter:#eff6ff;
+  --gold:#d97706;--gold-light:#fef3c7;--gold-border:#fcd34d;
+  --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --code-bg:#0f172a;--code-text:#e2e8f0;
+  --warn:#f59e0b;--warn-bg:#fffbeb;--warn-border:#fcd34d;
+  --danger:#dc2626;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --info:#2563eb;--info-bg:#eff6ff;--info-border:#bfdbfe;
+  --good:#059669;--good-bg:#ecfdf5;--good-border:#a7f3d0;
+  --radius:12px;--radius-sm:8px;
+  --mono:'Cascadia Code','Fira Code','Consolas',monospace;
+  --sans:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+
+/* ═══ Nav ═══ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:54px;gap:16px}
+.nav a.home{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--pri);font-weight:700;font-size:.92rem}
+.nav a.home svg{width:24px;height:24px}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:4px;overflow-x:auto;font-size:.78rem}
+.nav .nav-toc a{color:var(--text2);font-weight:500;padding:4px 10px;border-radius:6px;white-space:nowrap;text-decoration:none}
+.nav .nav-toc a:hover{background:var(--pri-lighter);color:var(--pri)}
+
+/* ═══ Hero ═══ */
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#1e40af 100%);color:#fff;padding:56px 32px 48px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.03'%3E%3Cpath d='M0 30h60M30 0v60'/%3E%3C/g%3E%3C/svg%3E")}
+.hero-inner{position:relative;z-index:1}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.hero .sub{opacity:.82;max-width:680px;margin:0 auto;font-size:1rem;line-height:1.7}
+.hero .tags{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.78rem}
+.hero .meta{margin-top:20px;display:flex;gap:24px;justify-content:center;font-size:.8rem;opacity:.7;flex-wrap:wrap}
+.hero .meta span{display:flex;align-items:center;gap:5px}
+
+/* ═══ Layout ═══ */
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 60px}
+.sec{margin-bottom:48px;scroll-margin-top:70px}
+.sec-title{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.sec-title .num{width:36px;height:36px;border-radius:8px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0}
+.sec-title h2{font-size:1.4rem;font-weight:700;border-bottom:2px solid var(--pri);padding-bottom:4px}
+
+/* ═══ Cards ═══ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin:16px 0;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card h3{font-size:1.08rem;margin-bottom:12px;color:var(--pri-dark)}
+.card h4{font-size:.95rem;margin:14px 0 8px;color:var(--text)}
+.card p{margin:8px 0;color:var(--text2);font-size:.92rem}
+.card ul,.card ol{margin:8px 0;padding-left:20px;color:var(--text2);font-size:.9rem}
+.card li{margin:4px 0}
+.card strong{color:var(--text)}
+.card code{font-family:var(--mono);font-size:.84rem;background:var(--pri-lighter);padding:1px 6px;border-radius:4px;color:var(--pri-dark)}
+
+/* ═══ Grid ═══ */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0}
+
+/* ═══ Agent Cards ═══ */
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.agent-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.agent-card .agent-icon{font-size:1.8rem;margin-bottom:8px}
+.agent-card h4{font-size:1rem;margin-bottom:6px;color:var(--pri-dark)}
+.agent-card p{font-size:.84rem;color:var(--text2);margin:0}
+.agent-card .agent-tag{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:8px}
+
+/* ═══ Code ═══ */
+.code{background:var(--code-bg);border-radius:var(--radius-sm);margin:14px 0;overflow:hidden;position:relative}
+.code .lang{position:absolute;top:0;right:0;background:rgba(255,255,255,.08);color:var(--text3);font-size:.7rem;padding:3px 12px;border-radius:0 0 0 8px;font-family:var(--mono)}
+.code .copy-btn{position:absolute;top:6px;right:60px;background:rgba(255,255,255,.1);border:none;color:var(--text3);font-size:.7rem;padding:2px 10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.code .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.code pre{padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.7;color:var(--code-text);white-space:pre;tab-size:2}
+.kw{color:#f472b6}
+.str{color:#a5d6ff}
+.fn{color:#67e8f9}
+.num{color:#fbbf24}
+.cm{color:#94a3b8}
+.ty{color:#c084fc}
+
+/* ═══ Tips ═══ */
+.tip{padding:16px 20px;border-radius:var(--radius-sm);margin:16px 0;border-left:4px solid;font-size:.9rem;line-height:1.65;display:flex;gap:12px;align-items:flex-start}
+.tip .icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.tip .content{flex:1}
+.tip .content strong{display:block;margin-bottom:4px}
+.tip.info{background:var(--info-bg);border-color:var(--info)}
+.tip.warn{background:var(--warn-bg);border-color:var(--warn)}
+.tip.danger{background:var(--danger-bg);border-color:var(--danger)}
+.tip.good{background:var(--good-bg);border-color:var(--good)}
+
+/* ═══ Table ═══ */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:.86rem;min-width:600px}
+.tbl-wrap th{background:#f1f5f9;padding:10px 14px;text-align:left;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl-wrap td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl-wrap tr:last-child td{border-bottom:none}
+.tbl-wrap tr:hover td{background:#f8fafc}
+.tbl-wrap td code{font-family:var(--mono);font-size:.82rem;background:#f1f5f9;padding:1px 6px;border-radius:4px;color:var(--pri-dark)}
+
+/* ═══ Viz ═══ */
+.viz{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin:16px 0;text-align:center;overflow-x:auto}
+.viz svg{max-width:100%;height:auto}
+.viz .viz-cap{font-size:.78rem;color:var(--text3);margin-top:8px}
+
+/* ═══ Flow ═══ */
+.flow-step{display:flex;align-items:flex-start;gap:14px;margin:12px 0;position:relative}
+.flow-step::before{content:'';position:absolute;left:19px;top:42px;bottom:-12px;width:2px;background:var(--border)}
+.flow-step:last-child::before{display:none}
+.flow-step .step-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;z-index:1;box-shadow:0 0 0 4px var(--bg)}
+.flow-step .step-body{flex:1;padding-top:4px}
+.flow-step .step-body strong{display:block;margin-bottom:2px}
+.flow-step .step-body span{font-size:.86rem;color:var(--text2)}
+
+/* ═══ Badge ═══ */
+.badge{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:10px;vertical-align:middle}
+.badge-gold{background:var(--gold-light);color:var(--gold);border:1px solid var(--gold-border)}
+.badge-blue{background:var(--info-bg);color:var(--info);border:1px solid var(--info-border)}
+.badge-green{background:var(--good-bg);color:var(--good);border:1px solid var(--good-border)}
+
+/* ═══ Timeline ═══ */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:20px}
+.tl-item::before{content:'';position:absolute;left:-24px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--pri);border:2px solid var(--bg);box-shadow:0 0 0 2px var(--pri-light)}
+.tl-item .tl-ver{font-weight:700;font-size:.9rem;color:var(--pri-dark)}
+.tl-item .tl-date{font-size:.76rem;color:var(--text3);margin-left:6px}
+.tl-item .tl-desc{font-size:.84rem;color:var(--text2);margin-top:3px}
+
+/* ═══ Footer ═══ */
+.footer{text-align:center;padding:32px 24px;border-top:1px solid var(--border);color:var(--text3);font-size:.82rem}
+
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+  .hero{padding:40px 20px 32px}
+  .wrap{padding:20px 16px 40px}
+  .card{padding:18px 20px}
+  .nav .nav-toc{display:none}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .sec-title h2{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="home" href="../index.html" title="返回门户">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="#dbeafe"/><path d="M7 16V8l5 4-5 4z" fill="#1e40af"/><path d="M12 16v-3l3.5-2v5z" fill="#1e3a8a"/></svg>
+    Frontend Learning Hub
+  </a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">项目概述</a>
+    <a href="#s2">架构设计</a>
+    <a href="#s3">智能体详解</a>
+    <a href="#s4">核心特性</a>
+    <a href="#s5">安装指南</a>
+    <a href="#s6">使用指南</a>
+    <a href="#s7">配置选项</a>
+    <a href="#s8">版本历史</a>
+    <a href="#s9">项目结构</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>📈 TradingAgents 多智能体金融交易框架</h1>
+    <p class="sub">模拟真实交易公司的组织架构 —— 分析师团队 → 研究员辩论 → 交易员决策 → 风险管理审批，全链路 LLM 驱动的金融交易研究框架。</p>
+    <div class="tags">
+      <span>LangGraph</span><span>Multi-Agent</span><span>LLM 金融交易</span><span>Python 3.12</span><span>15+ LLM 提供商</span>
+    </div>
+    <div class="meta">
+      <span>🏢 Tauric Research</span>
+      <span>🏷️ v0.3.1</span>
+      <span>📄 arXiv:2412.20138</span>
+      <span>⭐ 257 commits</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 1 ══════════════════════════════ -->
+<div class="wrap">
+<section class="sec" id="s1">
+<div class="sec-title"><span class="num">1</span><h2>项目概述 —— 用 AI 复刻一个交易公司</h2></div>
+
+<div class="card">
+<h3>这是什么？</h3>
+<p><strong>TradingAgents</strong> 是 Tauric Research 团队开源的多智能体 LLM 金融交易框架。核心理念极其直观：<strong>把一个真实交易公司的组织架构和协作流程，用 LLM 智能体重新建模</strong>。</p>
+<p>在一个真实交易公司里，交易决策不是一个人拍板的 —— 基本面分析师研究财报，情绪分析师跟踪社交媒体舆论，新闻分析师解读宏观事件，技术分析师看 K 线指标；然后看多和看空的研究员展开辩论，交易员综合信息做决策，最后风控团队审批。TradingAgents 把这整条链路用 AI Agent 实现了。</p>
+</div>
+
+<div class="grid2">
+<div class="card" style="border-top:3px solid var(--pri)">
+  <h3>🎯 核心定位</h3>
+  <ul>
+    <li><strong>研究框架</strong>，非投资建议</li>
+    <li>模拟真实交易公司动态运作</li>
+    <li>多智能体协作 + 结构化辩论</li>
+    <li>基于 <strong>LangGraph</strong> 构建</li>
+  </ul>
+</div>
+<div class="card" style="border-top:3px solid var(--gold)">
+  <h3>📊 关键数据</h3>
+  <ul>
+    <li>4 大分析师 + 2 辩论研究员</li>
+    <li>交易员 + 风控 + 投资组合经理</li>
+    <li>支持 15+ LLM 提供商</li>
+    <li>覆盖全球主要股票市场</li>
+  </ul>
+</div>
+</div>
+
+<div class="tip danger">
+  <span class="icon">⚠️</span>
+  <div class="content">
+    <strong>重要声明</strong>
+    该框架仅用于<strong>研究目的</strong>，不构成任何金融、投资或交易建议。交易表现可能因 LLM 骨干模型、温度参数、交易周期、数据质量等多种因素而异。请勿用真实资金基于此框架输出进行交易。
+  </div>
+</div>
+
+<div class="card">
+<h3>学术背景</h3>
+<p>该项目有坚实的学术基础，发表于 arXiv：</p>
+<ul>
+  <li><strong>主论文</strong>：TradingAgents: Multi-Agents LLM Financial Trading Framework (arXiv:2412.20138)，作者 Yijia Xiao, Edward Sun, Di Luo, Wei Wang (2025)</li>
+  <li><strong>技术报告</strong>：Trading-R1 (arXiv:2509.11420)，探索强化学习在交易决策中的应用</li>
+</ul>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 2 ══════════════════════════════ -->
+<section class="sec" id="s2">
+<div class="sec-title"><span class="num">2</span><h2>架构设计 —— 交易公司的 AI 映射</h2></div>
+
+<div class="card">
+<h3>设计哲学</h3>
+<p>TradingAgents 的架构设计遵循一个核心原则：<strong>角色专业化 + 结构化协作</strong>。每个智能体有明确职责边界，通过 LangGraph 的状态图编排工作流，确保信息在团队间有序流转、层层递进。</p>
+<p>整个流程分为四个阶段：<strong>分析 → 辩论 → 交易 → 风控</strong>，模拟了从信息收集到最终交易执行的完整决策链。</p>
+</div>
+
+<div class="viz">
+<svg viewBox="0 0 680 520" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <path d="M0,0 L8,3 L0,6 Z" fill="#1e40af"/>
+  </marker>
+  <marker id="arr-gold" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <path d="M0,0 L8,3 L0,6 Z" fill="#d97706"/>
+  </marker>
+  <linearGradient id="g-analyst" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/>
+  </linearGradient>
+  <linearGradient id="g-research" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fde68a"/>
+  </linearGradient>
+  <linearGradient id="g-trader" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#bbf7d0"/>
+  </linearGradient>
+  <linearGradient id="g-risk" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#fee2e2"/><stop offset="100%" stop-color="#fecaca"/>
+  </linearGradient>
+</defs>
+
+<!-- Title -->
+<text x="340" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">TradingAgents 系统架构 · 四阶段决策流水线</text>
+
+<!-- Phase 1: Analyst Team -->
+<rect x="40" y="48" width="600" height="110" rx="12" fill="url(#g-analyst)" stroke="#1e40af" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.9"/>
+<text x="60" y="68" font-size="11" font-weight="700" fill="#1e40af">① 分析师团队 Analyst Team</text>
+
+<rect x="70" y="80" width="120" height="60" rx="8" fill="#fff" stroke="#1e40af" stroke-width="1.5"/>
+<text x="130" y="102" text-anchor="middle" font-size="10" font-weight="600" fill="#1e3a8a">📊 基本面分析师</text>
+<text x="130" y="118" text-anchor="middle" font-size="8" fill="#475569">财务报表</text>
+<text x="130" y="130" text-anchor="middle" font-size="8" fill="#475569">内在价值</text>
+
+<rect x="210" y="80" width="120" height="60" rx="8" fill="#fff" stroke="#1e40af" stroke-width="1.5"/>
+<text x="270" y="102" text-anchor="middle" font-size="10" font-weight="600" fill="#1e3a8a">💬 情绪分析师</text>
+<text x="270" y="118" text-anchor="middle" font-size="8" fill="#475569">Reddit/StockTwits</text>
+<text x="270" y="130" text-anchor="middle" font-size="8" fill="#475569">市场情绪</text>
+
+<rect x="350" y="80" width="120" height="60" rx="8" fill="#fff" stroke="#1e40af" stroke-width="1.5"/>
+<text x="410" y="102" text-anchor="middle" font-size="10" font-weight="600" fill="#1e3a8a">📰 新闻分析师</text>
+<text x="410" y="118" text-anchor="middle" font-size="8" fill="#475569">全球新闻</text>
+<text x="410" y="130" text-anchor="middle" font-size="8" fill="#475569">宏观事件</text>
+
+<rect x="490" y="80" width="120" height="60" rx="8" fill="#fff" stroke="#1e40af" stroke-width="1.5"/>
+<text x="550" y="102" text-anchor="middle" font-size="10" font-weight="600" fill="#1e3a8a">📈 技术分析师</text>
+<text x="550" y="118" text-anchor="middle" font-size="8" fill="#475569">MACD/RSI</text>
+<text x="550" y="130" text-anchor="middle" font-size="8" fill="#475569">价格走势</text>
+
+<!-- Arrow down -->
+<path d="M340 162 L340 182" stroke="#1e40af" stroke-width="2" marker-end="url(#arr)"/>
+
+<!-- Phase 2: Researcher Team -->
+<rect x="140" y="186" width="400" height="90" rx="12" fill="url(#g-research)" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.9"/>
+<text x="160" y="206" font-size="11" font-weight="700" fill="#d97706">② 研究员团队 Researcher Team · 结构化辩论</text>
+
+<rect x="170" y="216" width="150" height="46" rx="8" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+<text x="245" y="236" text-anchor="middle" font-size="10" font-weight="600" fill="#059669">🐂 看多研究员</text>
+<text x="245" y="252" text-anchor="middle" font-size="8" fill="#475569">论证潜在收益</text>
+
+<text x="340" y="244" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">⚔️ 辩论</text>
+
+<rect x="360" y="216" width="150" height="46" rx="8" fill="#fff" stroke="#dc2626" stroke-width="1.5"/>
+<text x="435" y="236" text-anchor="middle" font-size="10" font-weight="600" fill="#dc2626">🐻 看空研究员</text>
+<text x="435" y="252" text-anchor="middle" font-size="8" fill="#475569">揭示固有风险</text>
+
+<!-- Arrow down -->
+<path d="M340 280 L340 300" stroke="#1e40af" stroke-width="2" marker-end="url(#arr)"/>
+
+<!-- Phase 3: Trader -->
+<rect x="220" y="304" width="240" height="64" rx="12" fill="url(#g-trader)" stroke="#059669" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.9"/>
+<text x="340" y="324" text-anchor="middle" font-size="11" font-weight="700" fill="#059669">③ 交易员智能体 Trader Agent</text>
+<text x="340" y="342" text-anchor="middle" font-size="9" fill="#475569">综合所有报告 → 决定交易时机与规模</text>
+<text x="340" y="358" text-anchor="middle" font-size="9" fill="#475569">输出结构化交易提案</text>
+
+<!-- Arrow down -->
+<path d="M340 372 L340 392" stroke="#1e40af" stroke-width="2" marker-end="url(#arr)"/>
+
+<!-- Phase 4: Risk Management -->
+<rect x="100" y="396" width="480" height="72" rx="12" fill="url(#g-risk)" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.9"/>
+<text x="120" y="416" font-size="11" font-weight="700" fill="#dc2626">④ 风险管理 & 投资组合经理 Risk Management & Portfolio Manager</text>
+
+<rect x="130" y="426" width="190" height="32" rx="6" fill="#fff" stroke="#dc2626" stroke-width="1"/>
+<text x="225" y="446" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">🛡️ 风险评估 (波动/流动性)</text>
+
+<rect x="360" y="426" width="190" height="32" rx="6" fill="#fff" stroke="#dc2626" stroke-width="1"/>
+<text x="455" y="446" text-anchor="middle" font-size="9" font-weight="600" fill="#dc2626">✅/❌ 投资组合经理审批</text>
+
+<!-- Output -->
+<path d="M580 432 L630 432" stroke="#d97706" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arr-gold)"/>
+<rect x="630" y="416" width="40" height="32" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="650" y="436" text-anchor="middle" font-size="8" font-weight="700" fill="#d97706">模拟</text>
+<text x="650" y="446" text-anchor="middle" font-size="8" font-weight="700" fill="#d97706">交易所</text>
+
+<!-- Left side: Data Sources -->
+<rect x="5" y="80" width="28" height="380" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+<text x="19" y="100" text-anchor="middle" font-size="7" fill="#475569" transform="rotate(-90 19 270)">数据源: Yahoo Finance · Alpha Vantage · FRED · Reddit · StockTwits · Polymarket</text>
+</svg>
+<div class="viz-cap">图：TradingAgents 四阶段决策流水线 —— 从数据采集到交易执行</div>
+</div>
+
+<div class="card">
+<h3>为什么用 LangGraph？</h3>
+<p>TradingAgents 选择 <strong>LangGraph</strong> 作为编排引擎，而非简单的 LangChain 链式调用。原因在于交易决策本质上是一个<strong>有状态的图结构</strong>：</p>
+<ul>
+  <li><strong>条件分支</strong>：风控审批后可能批准也可能拒绝，需要条件路由</li>
+  <li><strong>循环辩论</strong>：看多/看空研究员需要多轮辩论（可配置轮数），这是循环结构</li>
+  <li><strong>状态传递</strong>：分析师的报告需要传递给研究员、交易员，State 贯穿整个图</li>
+  <li><strong>检查点恢复</strong>：LangGraph 原生支持在每个节点后保存状态，崩溃可恢复</li>
+</ul>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 3 ══════════════════════════════ -->
+<section class="sec" id="s3">
+<div class="sec-title"><span class="num">3</span><h2>智能体详解 —— 每个角色都在干什么</h2></div>
+
+<div class="card">
+<h3>① 分析师团队（Analyst Team）—— 信息收集层</h3>
+<p>四个分析师并行工作，各自从不同维度收集和分析市场信息，形成全面的市场画像。</p>
+</div>
+
+<div class="grid2">
+<div class="agent-card" style="border-left:4px solid #1e40af">
+  <div class="agent-icon">📊</div>
+  <h4>基本面分析师</h4>
+  <p>评估公司财务状况和绩效指标，识别内在价值和潜在风险信号。关注利润表、资产负债表、现金流量表等核心财务数据。</p>
+  <span class="agent-tag" style="background:var(--info-bg);color:var(--info)">财务数据驱动</span>
+</div>
+<div class="agent-card" style="border-left:4px solid #7c3aed">
+  <div class="agent-icon">💬</div>
+  <h4>情绪分析师</h4>
+  <p>汇总 StockTwits 和 Reddit 讨论内容，形成统一的市场情绪判断。衡量短期市场参与者的看多/看空倾向。</p>
+  <span class="agent-tag" style="background:#f3e8ff;color:#7c3aed">社交情绪</span>
+</div>
+<div class="agent-card" style="border-left:4px solid #0891b2">
+  <div class="agent-icon">📰</div>
+  <h4>新闻分析师</h4>
+  <p>监控全球新闻和宏观经济指标，解读事件对市场状况的影响。关注央行政策、地缘政治、行业动态等。</p>
+  <span class="agent-tag" style="background:#cffafe;color:#0891b2">宏观事件</span>
+</div>
+<div class="agent-card" style="border-left:4px solid #d97706">
+  <div class="agent-icon">📈</div>
+  <h4>技术分析师</h4>
+  <p>利用 MACD、RSI 等技术指标检测交易模式，预测短期价格走势。基于历史价格和成交量数据进行量化分析。</p>
+  <span class="agent-tag" style="background:var(--gold-light);color:var(--gold)">技术指标</span>
+</div>
+</div>
+
+<div class="card">
+<h3>② 研究员团队（Researcher Team）—— 结构化辩论层</h3>
+<p>分析师的报告汇总后，交给两个立场对立的研究员进行<strong>结构化辩论</strong>。这是整个框架最具创新性的设计 —— 通过对抗性讨论避免单一视角的偏见。</p>
+<div class="grid2">
+<div class="agent-card" style="border-left:4px solid #059669">
+  <div class="agent-icon">🐂</div>
+  <h4>看多研究员（Bullish）</h4>
+  <p>批判性地评估分析师洞察，专注论证<strong>潜在收益和上行机会</strong>。寻找被低估的信号、增长催化剂。</p>
+</div>
+<div class="agent-card" style="border-left:4px solid #dc2626">
+  <div class="agent-icon">🐻</div>
+  <h4>看空研究员（Bearish）</h4>
+  <p>同样批判性地评估分析师洞察，但专注揭示<strong>固有风险和下行危险</strong>。寻找被忽视的隐患、估值泡沫。</p>
+</div>
+</div>
+<div class="tip info">
+  <span class="icon">💡</span>
+  <div class="content">
+    <strong>辩论轮数可配置</strong>
+    默认 <code>max_debate_rounds = 2</code>，即看多和看空各发言 2 轮。增加轮数可以让辩论更充分，但也增加 Token 消耗和延迟。
+  </div>
+</div>
+</div>
+
+<div class="card">
+<h3>③ 交易员智能体（Trader Agent）—— 决策层</h3>
+<p>交易员是决策的核心节点。它综合分析师团队的报告和研究员的辩论结论，做出最终交易决策：</p>
+<ul>
+  <li><strong>方向决策</strong>：买入 / 卖出 / 持有</li>
+  <li><strong>时机判断</strong>：何时执行交易</li>
+  <li><strong>规模确定</strong>：交易多少仓位</li>
+</ul>
+<p>v0.2.4 起，交易员使用<strong>结构化输出</strong>（Structured Output），确保决策格式一致、可解析。</p>
+</div>
+
+<div class="card">
+<h3>④ 风险管理 & 投资组合经理 —— 审批层</h3>
+<div class="grid2">
+<div class="agent-card" style="border-left:4px solid #dc2626">
+  <div class="agent-icon">🛡️</div>
+  <h4>风险管理团队</h4>
+  <p>持续评估投资组合风险：市场波动性、流动性风险、集中度风险等。评估并调整交易策略。</p>
+</div>
+<div class="agent-card" style="border-left:4px solid #d97706">
+  <div class="agent-icon">⚖️</div>
+  <h4>投资组合经理</h4>
+  <p>最终审批者。<strong>批准</strong> → 订单发送到模拟交易所执行；<strong>拒绝</strong> → 交易取消。决策日志记录结果。</p>
+</div>
+</div>
+</div>
+
+<div class="tip good">
+  <span class="icon">✨</span>
+  <div class="content">
+    <strong>设计亮点</strong>
+    这个架构的精妙之处在于<strong>权力制衡</strong> —— 交易员不能直接下单，必须经过风控审批。这模拟了真实金融机构的合规流程，也避免了 LLM 单点决策的风险。
+  </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 4 ══════════════════════════════ -->
+<section class="sec" id="s4">
+<div class="sec-title"><span class="num">4</span><h2>核心特性 —— 框架的硬实力</h2></div>
+
+<div class="card">
+<h3>4.1 多 LLM 提供商支持 <span class="badge badge-green">15+</span></h3>
+<p>框架不绑定单一模型提供商，支持 15+ 个 LLM 后端，还支持本地模型和企业部署：</p>
+
+<div class="tbl-wrap">
+<table>
+<tr><th>提供商</th><th>环境变量</th><th>说明</th></tr>
+<tr><td>OpenAI (GPT)</td><td><code>OPENAI_API_KEY</code></td><td>GPT-5.x 系列模型</td></tr>
+<tr><td>Google (Gemini)</td><td><code>GOOGLE_API_KEY</code></td><td>Gemini 3.x 系列</td></tr>
+<tr><td>Anthropic (Claude)</td><td><code>ANTHROPIC_API_KEY</code></td><td>Claude 4.x / Sonnet 5 / Fable 5</td></tr>
+<tr><td>xAI (Grok)</td><td><code>XAI_API_KEY</code></td><td>Grok 4.x</td></tr>
+<tr><td>DeepSeek</td><td><code>DEEPSEEK_API_KEY</code></td><td>DeepSeek 模型</td></tr>
+<tr><td>Qwen (通义千问)</td><td><code>DASHSCOPE_API_KEY</code> / <code>DASHSCOPE_CN_API_KEY</code></td><td>国际版 / 中国版</td></tr>
+<tr><td>GLM (智谱)</td><td><code>ZHIPU_API_KEY</code> / <code>ZHIPU_CN_API_KEY</code></td><td>Z.AI(国际) / BigModel(中国)</td></tr>
+<tr><td>MiniMax</td><td><code>MINIMAX_API_KEY</code> / <code>MINIMAX_CN_API_KEY</code></td><td>全球版 / 中国版</td></tr>
+<tr><td>OpenRouter</td><td><code>OPENROUTER_API_KEY</code></td><td>多模型路由</td></tr>
+<tr><td>Ollama</td><td>—</td><td>本地模型运行</td></tr>
+<tr><td>Azure OpenAI</td><td><code>.env.enterprise</code></td><td>企业级部署</td></tr>
+<tr><td>AWS Bedrock</td><td><code>pip install ".[bedrock]"</code></td><td>AWS 云部署</td></tr>
+<tr><td>OpenAI 兼容端点</td><td><code>TRADINGAGENTS_LLM_BACKEND_URL</code></td><td>vLLM / LM Studio / llama.cpp</td></tr>
+</table>
+</div>
+
+<div class="tip info">
+  <span class="icon">🔑</span>
+  <div class="content">
+    <strong>双模型策略</strong>
+    框架区分 <code>deep_think_llm</code>（复杂推理，如辩论和分析）和 <code>quick_think_llm</code>（快速任务，如数据格式化），可以混合使用不同模型以平衡成本和质量。
+  </div>
+</div>
+</div>
+
+<div class="card">
+<h3>4.2 全球市场覆盖 <span class="badge badge-blue">Yahoo Finance</span></h3>
+<p>支持 Yahoo Finance 覆盖的所有市场，通过交易所后缀区分：</p>
+<div class="grid4">
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇺🇸</div><strong>美国</strong><br><code>AAPL</code> <code>SPY</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇭🇰</div><strong>香港</strong><br><code>0700.HK</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇯🇵</div><strong>东京</strong><br><code>7203.T</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇬🇧</div><strong>伦敦</strong><br><code>AZN.L</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇮🇳</div><strong>印度</strong><br><code>RELIANCE.NS</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇨🇦</div><strong>加拿大</strong><br><code>.TO</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇦🇺</div><strong>澳洲</strong><br><code>.AX</code></div>
+<div style="text-align:center;padding:12px;background:var(--pri-lighter);border-radius:8px"><div style="font-size:1.3rem">🇨🇳</div><strong>A 股</strong><br><code>600519.SS</code></div>
+</div>
+<p style="margin-top:12px">还支持加密货币：<code>BTC-USD</code>、<code>ETH-USD</code> 等。中国 A 股使用 <code>.SS</code>（上海）和 <code>.SZ</code>（深圳）后缀。</p>
+</div>
+
+<div class="card">
+<h3>4.3 持久化与恢复机制</h3>
+
+<h4>📋 决策日志（Decision Log）<span class="badge badge-green">始终启用</span></h4>
+<div class="flow-step">
+  <div class="step-dot" style="background:#dbeafe">📝</div>
+  <div class="step-body">
+    <strong>自动记录</strong>
+    <span>每次完成的运行，决策追加到 <code>~/.tradingagents/memory/trading_memory.md</code></span>
+  </div>
+</div>
+<div class="flow-step">
+  <div class="step-dot" style="background:#fef3c7">📈</div>
+  <div class="step-body">
+    <strong>收益追踪</strong>
+    <span>下次运行同一股票时，获取已实现收益（原始收益 + 相对 SPY 的超额收益 alpha）</span>
+  </div>
+</div>
+<div class="flow-step">
+  <div class="step-dot" style="background:#dcfce7">🧠</div>
+  <div class="step-body">
+    <strong>反思注入</strong>
+    <span>生成反思，将最近的同股票决策和跨股票经验教训注入投资组合经理的提示中</span>
+  </div>
+</div>
+
+<h4>💾 检查点恢复（Checkpoint Resume）<span class="badge badge-gold">可选</span></h4>
+<ul>
+  <li>通过 <code>--checkpoint</code> 标志启用</li>
+  <li>LangGraph 在每个节点后保存状态到 SQLite 数据库</li>
+  <li>崩溃或中断可从最后一个成功步骤恢复</li>
+  <li>路径：<code>~/.tradingagents/cache/checkpoints/&lt;TICKER&gt;.db</code></li>
+  <li>成功完成后自动清除检查点</li>
+</ul>
+
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 启用检查点恢复</span>
+tradingagents analyze --checkpoint
+
+<span class="cm"># 运行前重置检查点</span>
+tradingagents analyze --clear-checkpoints</pre>
+</div>
+</div>
+
+<div class="card">
+<h3>4.4 数据供应商生态</h3>
+<div class="grid3">
+<div style="padding:16px;border:1px solid var(--border);border-radius:8px;text-align:center"><div style="font-size:1.5rem">💹</div><strong>Alpha Vantage</strong><p style="font-size:.82rem;color:var(--text2)">金融数据 API</p></div>
+<div style="padding:16px;border:1px solid var(--border);border-radius:8px;text-align:center"><div style="font-size:1.5rem">🏛️</div><strong>FRED</strong><p style="font-size:.82rem;color:var(--text2)">联邦储备经济数据</p></div>
+<div style="padding:16px;border:1px solid var(--border);border-radius:8px;text-align:center"><div style="font-size:1.5rem">🔮</div><strong>Polymarket</strong><p style="font-size:.82rem;color:var(--text2)">预测市场数据</p></div>
+<div style="padding:16px;border:1px solid var(--border);border-radius:8px;text-align:center"><div style="font-size:1.5rem">📊</div><strong>Yahoo Finance</strong><p style="font-size:.82rem;color:var(--text2)">市场价格数据</p></div>
+<div style="padding:16px;border:1px solid var(--border);border-radius:8px;text-align:center"><div style="font-size:1.5rem">🐦</div><strong>StockTwits</strong><p style="font-size:.82rem;color:var(--text2)">社交情绪</p></div>
+<div style="padding:16px;border:1px solid var(--border);border-radius:8px;text-align:center"><div style="font-size:1.5rem">👽</div><strong>Reddit</strong><p style="font-size:.82rem;color:var(--text2)">社区讨论</p></div>
+</div>
+</div>
+
+<div class="card">
+<h3>4.5 可重现性说明</h3>
+<div class="tip warn">
+  <span class="icon">⚡</span>
+  <div class="content">
+    <strong>LLM 驱动的非确定性</strong>
+    <ul style="margin-top:4px">
+      <li><strong>模型采样非确定</strong>：即使固定温度，提供商也不保证字节相同的输出</li>
+      <li><strong>实时数据会变</strong>：新闻、社交内容随时间变化</li>
+      <li><strong>降低变异方法</strong>：降低 <code>temperature</code>，使用非推理模型</li>
+      <li><strong>已解决</strong>：公司身份从股票代码确定性解析，市场分析师在数据快照中锚定精确价格</li>
+    </ul>
+  </div>
+</div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 5 ══════════════════════════════ -->
+<section class="sec" id="s5">
+<div class="sec-title"><span class="num">5</span><h2>安装指南 —— 三种部署方式</h2></div>
+
+<div class="card">
+<h3>方式一：标准安装（推荐）</h3>
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 1. 克隆仓库</span>
+git clone https:<span class="cm">//github.com/TauricResearch/TradingAgents.git</span>
+cd TradingAgents
+
+<span class="cm"># 2. 创建虚拟环境（需要 Python 3.12）</span>
+conda create -n tradingagents python=<span class="num">3.12</span>
+conda activate tradingagents
+
+<span class="cm"># 3. 安装包及依赖</span>
+pip install .</pre>
+</div>
+</div>
+
+<div class="card">
+<h3>方式二：Docker 安装</h3>
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 基本使用</span>
+cp .env.example .env  <span class="cm"># 添加你的 API 密钥</span>
+docker compose run --rm tradingagents
+
+<span class="cm"># 使用本地 Ollama 模型</span>
+docker compose --profile ollama run --rm tradingagents-ollama</pre>
+</div>
+</div>
+
+<div class="card">
+<h3>方式三：企业级部署</h3>
+<div class="grid2">
+<div>
+  <h4>☁️ Azure OpenAI</h4>
+  <p>复制 <code>.env.enterprise.example</code> 为 <code>.env.enterprise</code>，填入 Azure 凭据。</p>
+</div>
+<div>
+  <h4>🔧 AWS Bedrock</h4>
+  <div class="code" style="margin:8px 0">
+    <span class="lang">bash</span>
+    <pre>pip install <span class="str">".[bedrock]"</span>
+<span class="cm"># 设置 llm_provider: "bedrock"</span>
+<span class="cm"># 配置 AWS 凭据和 region</span></pre>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>环境变量配置</h3>
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">export</span> OPENAI_API_KEY=...          <span class="cm"># OpenAI (GPT)</span>
+<span class="kw">export</span> GOOGLE_API_KEY=...          <span class="cm"># Google (Gemini)</span>
+<span class="kw">export</span> ANTHROPIC_API_KEY=...       <span class="cm"># Anthropic (Claude)</span>
+<span class="kw">export</span> DEEPSEEK_API_KEY=...        <span class="cm"># DeepSeek</span>
+<span class="kw">export</span> DASHSCOPE_API_KEY=...       <span class="cm"># Qwen 国际版</span>
+<span class="kw">export</span> DASHSCOPE_CN_API_KEY=...    <span class="cm"># Qwen 中国版</span>
+<span class="kw">export</span> ZHIPU_API_KEY=...           <span class="cm"># GLM via Z.AI</span>
+<span class="kw">export</span> ZHIPU_CN_API_KEY=...        <span class="cm"># GLM via BigModel</span>
+<span class="kw">export</span> OPENROUTER_API_KEY=...      <span class="cm"># OpenRouter</span>
+<span class="kw">export</span> ALPHA_VANTAGE_API_KEY=...   <span class="cm"># Alpha Vantage 数据</span></pre>
+</div>
+
+<h4>本地模型（Ollama）</h4>
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 设置 llm_provider: "ollama"</span>
+<span class="cm"># 默认端点: http://localhost:11434/v1</span>
+<span class="cm"># 远程端点: 设置 OLLAMA_BASE_URL</span>
+ollama pull &lt;model_name&gt;</pre>
+</div>
+
+<h4>其他 OpenAI 兼容服务器</h4>
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="cm"># 设置 llm_provider: "openai_compatible"</span>
+<span class="cm"># vLLM:       http://localhost:8000/v1</span>
+<span class="cm"># LM Studio:  http://localhost:1234/v1</span>
+<span class="cm"># llama.cpp:  http://localhost:8080/v1</span></pre>
+</div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 6 ══════════════════════════════ -->
+<section class="sec" id="s6">
+<div class="sec-title"><span class="num">6</span><h2>使用指南 —— CLI 与 Python API</h2></div>
+
+<div class="card">
+<h3>6.1 CLI 交互式使用</h3>
+<div class="code">
+<span class="lang">bash</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>tradingagents          <span class="cm"># 已安装命令</span>
+python -m cli.main     <span class="cm"># 替代方式：直接从源码运行</span></pre>
+</div>
+<p>启动后进入交互界面，可选择股票代码、分析日期、LLM 提供商、研究深度等。界面实时显示各智能体的运行进度。</p>
+</div>
+
+<div class="card">
+<h3>6.2 Python 代码 —— 基本用法</h3>
+<div class="code">
+<span class="lang">python</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> tradingagents.graph.trading_graph <span class="kw">import</span> TradingAgentsGraph
+<span class="kw">from</span> tradingagents.default_config <span class="kw">import</span> DEFAULT_CONFIG
+
+ta = TradingAgentsGraph(debug=<span class="kw">True</span>, config=DEFAULT_CONFIG.copy())
+
+<span class="cm"># 前向传播：分析 NVDA 在 2026-01-15 的交易信号</span>
+_, decision = ta.propagate(<span class="str">"NVDA"</span>, <span class="str">"2026-01-15"</span>)
+<span class="kw">print</span>(decision)</pre>
+</div>
+</div>
+
+<div class="card">
+<h3>6.3 Python 代码 —— 自定义配置</h3>
+<div class="code">
+<span class="lang">python</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre><span class="kw">from</span> tradingagents.graph.trading_graph <span class="kw">import</span> TradingAgentsGraph
+<span class="kw">from</span> tradingagents.default_config <span class="kw">import</span> DEFAULT_CONFIG
+
+config = DEFAULT_CONFIG.copy()
+config[<span class="str">"llm_provider"</span>] = <span class="str">"openai"</span>           <span class="cm"># 提供商选择</span>
+config[<span class="str">"deep_think_llm"</span>] = <span class="str">"gpt-5.5"</span>       <span class="cm"># 复杂推理模型</span>
+config[<span class="str">"quick_think_llm"</span>] = <span class="str">"gpt-5.4-mini"</span> <span class="cm"># 快速任务模型</span>
+config[<span class="str">"max_debate_rounds"</span>] = <span class="num">2</span>           <span class="cm"># 辩论轮数</span>
+
+ta = TradingAgentsGraph(debug=<span class="kw">True</span>, config=config)
+_, decision = ta.propagate(<span class="str">"NVDA"</span>, <span class="str">"2026-01-15"</span>)
+<span class="kw">print</span>(decision)</pre>
+</div>
+</div>
+
+<div class="card">
+<h3>6.4 启用检查点恢复</h3>
+<div class="code">
+<span class="lang">python</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>config = DEFAULT_CONFIG.copy()
+config[<span class="str">"checkpoint_enabled"</span>] = <span class="kw">True</span>
+
+ta = TradingAgentsGraph(config=config)
+_, decision = ta.propagate(<span class="str">"NVDA"</span>, <span class="str">"2026-01-15"</span>)</pre>
+</div>
+</div>
+
+<div class="card">
+<h3>6.5 可重现性配置</h3>
+<div class="code">
+<span class="lang">python</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>config = DEFAULT_CONFIG.copy()
+config[<span class="str">"llm_provider"</span>] = <span class="str">"openai"</span>
+config[<span class="str">"temperature"</span>] = <span class="num">0.0</span>
+
+<span class="cm"># 注意：推理模型会忽略温度参数。</span>
+<span class="cm"># 如需更紧密的可重现性，</span>
+<span class="cm"># 请显式设置非推理的 deep/quick 模型</span></pre>
+</div>
+</div>
+
+<div class="tip good">
+  <span class="icon">🚀</span>
+  <div class="content">
+    <strong>快速上手建议</strong>
+    初次使用建议先用 CLI 交互模式跑通一个完整流程，观察各智能体的输出，再根据需要用 Python API 自定义配置。推荐先用 <code>NVDA</code> 或 <code>AAPL</code> 这类数据充足的美股测试。
+  </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 7 ══════════════════════════════ -->
+<section class="sec" id="s7">
+<div class="sec-title"><span class="num">7</span><h2>配置选项 —— 精细控制每个参数</h2></div>
+
+<div class="card">
+<h3>主要配置参数</h3>
+<div class="tbl-wrap">
+<table>
+<tr><th>配置项</th><th>说明</th><th>示例值</th></tr>
+<tr><td><code>llm_provider</code></td><td>LLM 提供商</td><td><code>openai</code> / <code>google</code> / <code>anthropic</code> / <code>deepseek</code> / <code>ollama</code> / <code>openai_compatible</code> / <code>bedrock</code></td></tr>
+<tr><td><code>deep_think_llm</code></td><td>复杂推理使用的模型</td><td><code>gpt-5.5</code></td></tr>
+<tr><td><code>quick_think_llm</code></td><td>快速任务使用的模型</td><td><code>gpt-5.4-mini</code></td></tr>
+<tr><td><code>max_debate_rounds</code></td><td>看多/看空辩论轮数</td><td><code>2</code></td></tr>
+<tr><td><code>temperature</code></td><td>采样温度</td><td><code>0.0</code></td></tr>
+<tr><td><code>checkpoint_enabled</code></td><td>是否启用检查点恢复</td><td><code>True</code> / <code>False</code></td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>环境变量配置（<code>TRADINGAGENTS_*</code> 前缀）</h3>
+<div class="tbl-wrap">
+<table>
+<tr><th>环境变量</th><th>作用</th></tr>
+<tr><td><code>TRADINGAGENTS_MEMORY_LOG_PATH</code></td><td>决策日志路径</td></tr>
+<tr><td><code>TRADINGAGENTS_CACHE_DIR</code></td><td>缓存目录</td></tr>
+<tr><td><code>TRADINGAGENTS_TEMPERATURE</code></td><td>采样温度</td></tr>
+<tr><td><code>TRADINGAGENTS_CHECKPOINT_ENABLED</code></td><td>检查点启用状态</td></tr>
+<tr><td><code>TRADINGAGENTS_LLM_PROVIDER</code></td><td>LLM 提供商</td></tr>
+<tr><td><code>TRADINGAGENTS_LLM_BACKEND_URL</code></td><td>LLM 后端 URL</td></tr>
+<tr><td><code>OLLAMA_BASE_URL</code></td><td>Ollama 远程端点</td></tr>
+</table>
+</div>
+<div class="tip info">
+  <span class="icon">📁</span>
+  <div class="content">
+    <strong>完整配置</strong>
+    所有配置选项定义在 <code>tradingagents/default_config.py</code> 中，可以直接查看源码了解全部参数。
+  </div>
+</div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 8 ══════════════════════════════ -->
+<section class="sec" id="s8">
+<div class="sec-title"><span class="num">8</span><h2>版本历史 —— 框架演进路线</h2></div>
+
+<div class="card">
+<div class="timeline">
+<div class="tl-item">
+  <span class="tl-ver">v0.3.1</span><span class="tl-date">2026-07</span>
+  <div class="tl-desc">正确性和稳定性修复：Alpha Vantage 前瞻过滤、图路由器崩溃安全、检查点恢复、加密货币情绪源修复、可配置 LLM 重试预算、Bedrock 认证、Claude Sonnet 5 / Fable 5 支持</div>
+</div>
+<div class="tl-item">
+  <span class="tl-ver">v0.3.0</span><span class="tl-date">2026-06</span>
+  <div class="tl-desc">验证的数据访问契约、扩展提供商注册表（NVIDIA, Kimi, Groq, Mistral, Bedrock）、FRED 和 Polymarket 数据供应商、当前一代模型目录、CI 门控</div>
+</div>
+<div class="tl-item">
+  <span class="tl-ver">v0.2.5</span><span class="tl-date">2026-05</span>
+  <div class="tl-desc">基于事实的情绪分析师、GPT-5.5 模型覆盖、Qwen/GLM/MiniMax 双区域支持、<code>TRADINGAGENTS_*</code> 环境变量、远程 Ollama 支持、非美国 alpha 基准</div>
+</div>
+<div class="tl-item">
+  <span class="tl-ver">v0.2.4</span><span class="tl-date">2026-04</span>
+  <div class="tl-desc">结构化输出智能体、LangGraph 检查点恢复、持久化决策日志、DeepSeek/Qwen/GLM/Azure 提供商支持、Docker 支持、Windows UTF-8 修复</div>
+</div>
+<div class="tl-item">
+  <span class="tl-ver">v0.2.3</span><span class="tl-date">2026-03</span>
+  <div class="tl-desc">多语言支持、GPT-5.4 系列模型、统一模型目录、回测日期保真度、代理支持</div>
+</div>
+<div class="tl-item">
+  <span class="tl-ver">v0.2.0</span><span class="tl-date">2026-02</span>
+  <div class="tl-desc">多提供商 LLM 支持（GPT-5.x, Gemini 3.x, Claude 4.x, Grok 4.x）、改进的系统架构</div>
+</div>
+<div class="tl-item">
+  <span class="tl-ver">v0.1.0</span><span class="tl-date">2025-06</span>
+  <div class="tl-desc">TradingAgents 初始公开发布</div>
+</div>
+</div>
+</div>
+
+<div class="tip info">
+  <span class="icon">📅</span>
+  <div class="content">
+    <strong>迭代节奏</strong>
+    从 v0.1.0 到 v0.3.1，约一年时间迭代了 8 个版本，保持每月 1-2 次发布的节奏。v0.2.x 系列重点扩展了多模型支持和企业部署能力，v0.3.x 系列转向正确性和稳定性优化。
+  </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 9 ══════════════════════════════ -->
+<section class="sec" id="s9">
+<div class="sec-title"><span class="num">9</span><h2>项目结构 —— 代码组织一览</h2></div>
+
+<div class="card">
+<h3>仓库目录结构</h3>
+<div class="code">
+<span class="lang">text</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button>
+<pre>TradingAgents/
+├── .github/workflows/          <span class="cm"># CI 工作流</span>
+├── assets/                     <span class="cm"># 资源文件</span>
+├── cli/                        <span class="cm"># 命令行界面</span>
+├── scripts/                    <span class="cm"># 脚本</span>
+├── tests/                      <span class="cm"># 测试</span>
+├── tradingagents/              <span class="cm"># 核心框架代码 ★</span>
+├── .env.enterprise.example     <span class="cm"># 企业环境变量示例</span>
+├── .env.example                <span class="cm"># 环境变量示例</span>
+├── CHANGELOG.md                <span class="cm"># 变更日志</span>
+├── Dockerfile                  <span class="cm"># Docker 配置</span>
+├── LICENSE                     <span class="cm"># 许可证</span>
+├── README.md                   <span class="cm"># 项目文档</span>
+├── docker-compose.yml          <span class="cm"># Docker Compose</span>
+├── main.py                     <span class="cm"># 主入口文件</span>
+├── pyproject.toml              <span class="cm"># Python 项目配置</span>
+└── requirements.txt            <span class="cm"># 依赖（指向 pyproject.toml）</span></pre>
+</div>
+</div>
+
+<div class="card">
+<h3>核心代码模块（tradingagents/）</h3>
+<div class="tbl-wrap">
+<table>
+<tr><th>模块</th><th>职责</th></tr>
+<tr><td><code>graph/trading_graph.py</code></td><td>LangGraph 图定义，编排所有智能体的执行流程</td></tr>
+<tr><td><code>default_config.py</code></td><td>默认配置，定义所有可调参数</td></tr>
+<tr><td><code>agents/</code></td><td>各智能体实现（分析师、研究员、交易员、风控）</td></tr>
+<tr><td><code>dataflows/</code></td><td>数据供应商接口（Alpha Vantage, FRED, Yahoo 等）</td></tr>
+<tr><td><code>llm_adapters/</code></td><td>多 LLM 提供商适配器</td></tr>
+</table>
+</div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ Summary ══════════════════════════════ -->
+<section class="sec" id="s10">
+<div class="sec-title"><span class="num">10</span><h2>总结 —— 这个框架值不值得关注</h2></div>
+
+<div class="card">
+<h3>核心价值</h3>
+<div class="grid2">
+<div style="padding:16px;border:1px solid var(--good-border);border-radius:8px;background:var(--good-bg)">
+  <h4 style="color:var(--good)">✅ 优势</h4>
+  <ul style="font-size:.86rem">
+    <li><strong>真实交易公司模拟</strong>：分析师 → 辩论 → 交易 → 风控，完整决策链</li>
+    <li><strong>广泛的模型支持</strong>：15+ LLM 提供商，含本地模型</li>
+    <li><strong>全球市场覆盖</strong>：美股、港股、A 股、加密货币等</li>
+    <li><strong>持久化记忆</strong>：决策日志自动记录和反思</li>
+    <li><strong>容错恢复</strong>：检查点机制支持崩溃恢复</li>
+    <li><strong>灵活部署</strong>：Docker / 本地 / 企业级</li>
+  </ul>
+</div>
+<div style="padding:16px;border:1px solid var(--warn-border);border-radius:8px;background:var(--warn-bg)">
+  <h4 style="color:var(--warn)">⚠️ 注意事项</h4>
+  <ul style="font-size:.86rem">
+    <li><strong>仅限研究</strong>：非投资建议，不可用于真实交易</li>
+    <li><strong>LLM 非确定性</strong>：结果不可完全复现</li>
+    <li><strong>Token 消耗大</strong>：多智能体 + 多轮辩论 = 高成本</li>
+    <li><strong>数据依赖</strong>：需要多个数据源 API 密钥</li>
+    <li><strong>Python 3.12</strong>：版本要求较新</li>
+  </ul>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>适合谁用？</h3>
+<ul>
+  <li>🔬 <strong>多智能体系统研究者</strong>：学习如何用 LangGraph 编排复杂的多 Agent 工作流</li>
+  <li>📈 <strong>金融 AI 研究者</strong>：探索 LLM 在金融分析领域的应用边界</li>
+  <li>🤖 <strong>Agent 开发者</strong>：参考结构化辩论、权力制衡、记忆反思等设计模式</li>
+  <li>🏗️ <strong>架构师</strong>：了解如何将真实组织架构映射到 AI 系统设计</li>
+</ul>
+</div>
+
+<div class="tip info">
+  <span class="icon">🔗</span>
+  <div class="content">
+    <strong>相关链接</strong>
+    <ul style="margin-top:4px">
+      <li>GitHub 仓库：<a href="https://github.com/TauricResearch/TradingAgents" style="color:var(--pri)">github.com/TauricResearch/TradingAgents</a></li>
+      <li>学术论文：arXiv:2412.20138 (TradingAgents) / arXiv:2509.11420 (Trading-R1)</li>
+      <li>演示视频：<a href="https://www.youtube.com/watch?v=90gr5lwjIho" style="color:var(--pri)">YouTube 演示</a></li>
+      <li>免责声明：<a href="https://tauric.ai/disclaimer/" style="color:var(--pri)">tauric.ai/disclaimer</a></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+</div>
+
+<div class="footer">
+  <p>TradingAgents 多智能体金融交易框架解析 · 基于 Tauric Research 开源项目</p>
+  <p style="margin-top:4px">⚠️ 本页面内容仅供学习研究，不构成任何投资建议</p>
+</div>
+
+<script>
+function copyCode(btn){
+  const pre=btn.parentElement.querySelector('pre');
+  const text=pre.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='已复制';
+    setTimeout(()=>btn.textContent='复制',2000);
+  });
+}
+</script>
+</body>
+</html>
