@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票与基金黑话术语全指南 · Frontend Learning Hub</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   Finance Theme Tokens
+   ═══════════════════════════════════════════════════ */
+:root{
+  --navy:#0d2b4e; --navy-2:#133863; --navy-3:#1e4d8c; --navy-4:#2a5fa8;
+  --navy-50:#eef4fb; --navy-100:#dce8f5; --navy-200:#bcd3ea;
+  --gold:#c8a04b; --gold-2:#d4af37; --gold-3:#e0bd5a; --gold-light:#f5ecd0; --gold-50:#fbf6e8;
+  --bg:#f6f8fb; --bg-2:#eef2f7; --surface:#ffffff; --surface-2:#fafbfd;
+  --text:#1a2433; --text-2:#566175; --text-3:#8b94a3;
+  --border:#e4e8ee; --border-2:#d8dde6;
+  --red:#d4433a; --red-light:#fdecea; --green:#1f9d62; --green-light:#e7f6ee;
+  --amber:#e08600; --amber-light:#fdf3e3; --teal:#0e8f8a; --teal-light:#e3f5f4;
+  --radius-sm:6px; --radius:9px; --radius-md:12px; --radius-lg:16px;
+  --shadow-sm:0 1px 2px rgba(13,43,78,.05);
+  --shadow:0 1px 3px rgba(13,43,78,.08),0 1px 2px rgba(13,43,78,.04);
+  --shadow-md:0 4px 14px rgba(13,43,78,.10);
+  --shadow-lg:0 12px 32px rgba(13,43,78,.16);
+  --shadow-gold:0 4px 18px rgba(200,160,75,.22);
+  --t:.2s cubic-bezier(.4,0,.2,1);
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code','Fira Code','Consolas',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);font-size:15px;line-height:1.7;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+a{text-decoration:none;color:inherit}
+::selection{background:var(--gold-light);color:var(--navy)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
+
+/* ═══════════════════════════════════════════════════
+   Topbar
+   ═══════════════════════════════════════════════════ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 60%,var(--navy-3) 100%);
+  color:#fff;
+  box-shadow:0 2px 16px rgba(13,43,78,.18);
+}
+.topbar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold-2),var(--gold-3),var(--gold-2));
+}
+.topbar-inner{
+  max-width:1180px;margin:0 auto;
+  display:flex;align-items:center;gap:14px;
+  padding:14px 24px;flex-wrap:wrap;
+}
+.topbar .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;white-space:nowrap}
+.topbar .logo-badge{
+  width:34px;height:34px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--gold-2),var(--gold-3));
+  display:flex;align-items:center;justify-content:center;
+  color:var(--navy);font-weight:800;font-size:17px;flex-shrink:0;
+  box-shadow:0 2px 10px rgba(212,175,55,.4);
+}
+.topbar .logo .sub{color:rgba(255,255,255,.6);font-weight:400;font-size:13px;margin-left:2px}
+.topbar .search-wrap{flex:1;max-width:380px;min-width:180px;display:flex;align-items:center;gap:8px;margin-left:auto;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  border-radius:var(--radius);padding:8px 14px;transition:all var(--t);
+}
+.topbar .search-wrap:focus-within{background:rgba(255,255,255,.16);border-color:var(--gold-3);box-shadow:0 0 0 3px rgba(212,175,55,.18)}
+.topbar .search-wrap svg{width:16px;height:16px;color:rgba(255,255,255,.6);flex-shrink:0}
+.topbar .search-wrap input{
+  flex:1;border:none;outline:none;background:none;color:#fff;font-size:14px;font-family:var(--font-sans);
+}
+.topbar .search-wrap input::placeholder{color:rgba(255,255,255,.5)}
+.topbar .back-home{
+  display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,.8);
+  padding:7px 12px;border:1px solid rgba(255,255,255,.18);border-radius:var(--radius);
+  transition:all var(--t);white-space:nowrap;
+}
+.topbar .back-home:hover{background:rgba(255,255,255,.12);border-color:var(--gold-3);color:#fff}
+.topbar .back-home svg{width:15px;height:15px}
+
+/* ═══════════════════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════════════════ */
+.hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);
+  color:#fff;padding:48px 24px 56px;position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;right:-60px;top:-60px;width:340px;height:340px;
+  background:radial-gradient(circle,rgba(212,175,55,.16),transparent 70%);border-radius:50%;
+}
+.hero-inner{max-width:1180px;margin:0 auto;position:relative;z-index:1}
+.hero .eyebrow{
+  font-family:var(--font-mono);font-size:12px;color:var(--gold-3);font-weight:600;
+  letter-spacing:.05em;display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.hero .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--gold-3);box-shadow:0 0 0 4px rgba(212,175,55,.2)}
+.hero h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:16px}
+.hero h1 .grad{background:linear-gradient(120deg,var(--gold-2),var(--gold-3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .desc{color:rgba(255,255,255,.78);font-size:16px;line-height:1.8;max-width:680px;margin-bottom:24px}
+.hero .stats{display:flex;gap:28px;flex-wrap:wrap}
+.hero .stat{display:flex;align-items:baseline;gap:6px}
+.hero .stat .num{font-size:26px;font-weight:800;font-family:var(--font-mono);color:var(--gold-3)}
+.hero .stat .lbl{font-size:13px;color:rgba(255,255,255,.6)}
+.hero .stat .sep{color:rgba(255,255,255,.25);margin:0 4px}
+
+/* ═══════════════════════════════════════════════════
+   Tabs
+   ═══════════════════════════════════════════════════ */
+.tabs-wrap{
+  position:sticky;top:65px;z-index:90;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+}
+.tabs-inner{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:4px;overflow-x:auto}
+.tab-btn{
+  flex:1;min-width:120px;padding:15px 18px;background:none;border:none;cursor:pointer;
+  font-size:15px;font-weight:600;color:var(--text-2);font-family:var(--font-sans);
+  border-bottom:3px solid transparent;transition:all var(--t);white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.tab-btn .ic{width:18px;height:18px;flex-shrink:0;display:flex}
+.tab-btn .ic svg{width:18px;height:18px}
+.tab-btn:hover{color:var(--navy-3);background:var(--navy-50)}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--gold-2)}
+.tab-btn.active .ic{color:var(--gold-2)}
+
+/* ═══════════════════════════════════════════════════
+   Main Content
+   ═══════════════════════════════════════════════════ */
+.main{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+.panel{display:none;animation:fade .3s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.section-intro{
+  background:linear-gradient(135deg,var(--navy-50),var(--gold-50));
+  border:1px solid var(--navy-100);border-left:4px solid var(--gold-2);
+  border-radius:var(--radius-md);padding:18px 22px;margin-bottom:28px;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.section-intro .si-ic{
+  width:38px;height:38px;border-radius:var(--radius);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--gold-2);flex-shrink:0;
+  box-shadow:var(--shadow-sm);
+}
+.section-intro .si-ic svg{width:20px;height:20px}
+.section-intro p{color:var(--text-2);font-size:14px;line-height:1.75;margin:0}
+.section-intro p b{color:var(--navy)}
+
+/* Sub-category */
+.subcat{margin-bottom:34px}
+.subcat-head{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);
+}
+.subcat-head .sc-badge{
+  width:30px;height:30px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-size:14px;font-weight:800;color:#fff;font-family:var(--font-mono);
+}
+.sc-badge.b1{background:linear-gradient(135deg,var(--navy-3),var(--navy-4))}
+.sc-badge.b2{background:linear-gradient(135deg,var(--gold-2),var(--gold-3));color:var(--navy)}
+.sc-badge.b3{background:linear-gradient(135deg,var(--green),#2bb673)}
+.sc-badge.b4{background:linear-gradient(135deg,var(--amber),#f59e0b)}
+.sc-badge.b5{background:linear-gradient(135deg,var(--teal),#14b8a6)}
+.sc-badge.b6{background:linear-gradient(135deg,var(--red),#e57373)}
+.sc-badge.b7{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.sc-badge.b8{background:linear-gradient(135deg,#0891b2,#06b6d4)}
+.subcat-head .sc-title{font-size:18px;font-weight:700;color:var(--text)}
+.subcat-head .sc-count{font-size:12px;color:var(--text-3);font-family:var(--font-mono);padding:2px 9px;background:var(--bg-2);border-radius:99px}
+
+/* Term Cards Grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.term-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:16px 18px;cursor:pointer;transition:all var(--t);position:relative;overflow:hidden;
+}
+.term-card::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+  background:var(--card-c,var(--gold-2));opacity:0;transition:opacity var(--t);
+}
+.term-card:hover{border-color:var(--navy-200);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.term-card:hover::before{opacity:1}
+.term-card.expanded{border-color:var(--gold);box-shadow:var(--shadow-md)}
+.term-card.expanded::before{opacity:1}
+.term-card .tc-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.term-card .tc-name{font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.term-card .tc-name .alias{font-size:12px;font-weight:500;color:var(--text-3);font-family:var(--font-mono)}
+.term-card .tc-toggle{
+  width:24px;height:24px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text-3);
+  transition:all var(--t);
+}
+.term-card .tc-toggle svg{width:14px;height:14px;transition:transform var(--t)}
+.term-card.expanded .tc-toggle{background:var(--gold-2);border-color:var(--gold-2);color:#fff}
+.term-card.expanded .tc-toggle svg{transform:rotate(90deg)}
+.term-card .tc-def{font-size:14px;color:var(--text-2);line-height:1.65;margin-top:8px}
+.term-card .tc-detail{
+  max-height:0;overflow:hidden;transition:max-height var(--t);margin-top:0;
+}
+.term-card.expanded .tc-detail{max-height:500px;margin-top:12px}
+.term-card .tc-detail-inner{
+  border-top:1px dashed var(--border);padding-top:12px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.tc-row{display:flex;gap:8px;align-items:flex-start}
+.tc-row .tc-lbl{
+  flex-shrink:0;font-size:12px;font-weight:700;color:#fff;
+  padding:2px 8px;border-radius:var(--radius-sm);white-space:nowrap;
+}
+.tc-lbl.l-full{background:var(--navy-3)}
+.tc-lbl.l-scene{background:var(--green)}
+.tc-row .tc-val{font-size:13.5px;color:var(--text-2);line-height:1.7}
+
+/* empty state */
+.empty-state{
+  grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-3);
+}
+.empty-state svg{width:48px;height:48px;margin-bottom:14px;opacity:.4}
+.empty-state p{font-size:15px}
+
+/* ═══════════════════════════════════════════════════
+   Relationship Section
+   ═══════════════════════════════════════════════════ */
+.rel-block{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:24px;margin-bottom:28px;box-shadow:var(--shadow-sm);
+}
+.rel-block .rb-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.rel-block .rb-head .rb-ic{
+  width:40px;height:40px;border-radius:var(--radius);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  background:linear-gradient(135deg,var(--navy-3),var(--navy-4));
+}
+.rel-block.gold .rb-ic{background:linear-gradient(135deg,var(--gold-2),var(--gold-3));color:var(--navy)}
+.rel-block .rb-ic svg{width:20px;height:20px}
+.rel-block h3{font-size:19px;font-weight:700;color:var(--text)}
+.rel-block .rb-desc{color:var(--text-2);font-size:14px;margin-bottom:20px;line-height:1.7}
+.svg-wrap{width:100%;overflow-x:auto}
+.svg-wrap svg{display:block;width:100%;min-width:600px;height:auto}
+
+/* Comparison Table */
+.cmp-table{width:100%;border-collapse:collapse;font-size:14px;border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm)}
+.cmp-table th,.cmp-table td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--border)}
+.cmp-table thead th{
+  background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;font-weight:600;font-size:13px;
+}
+.cmp-table tbody tr:nth-child(even){background:var(--surface-2)}
+.cmp-table tbody tr:hover{background:var(--navy-50)}
+.cmp-table td:first-child{font-weight:600;color:var(--navy);background:var(--bg-2);white-space:nowrap}
+.cmp-table .ck{color:var(--green);font-weight:700}
+.cmp-table .cx{color:var(--red);font-weight:700}
+.cmp-table .cm{color:var(--amber);font-weight:700}
+
+/* Mind map legend */
+.mindmap-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.mindmap-legend .ml-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2)}
+.mindmap-legend .ml-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+
+/* Footnote */
+.footnote{
+  margin-top:40px;padding:20px 24px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);display:flex;gap:12px;align-items:flex-start;
+}
+.footnote .fn-ic{width:24px;height:24px;border-radius:var(--radius-sm);background:var(--gold-light);color:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footnote .fn-ic svg{width:14px;height:14px}
+.footnote p{font-size:13px;color:var(--text-3);line-height:1.7}
+
+/* Back to top */
+.to-top{
+  position:fixed;bottom:28px;right:28px;z-index:80;
+  width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--navy-2),var(--navy-3));color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transition:all var(--t);
+}
+.to-top.show{opacity:1;visibility:visible}
+.to-top:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(13,43,78,.24)}
+.to-top svg{width:20px;height:20px}
+
+/* ═══════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .topbar-inner{padding:10px 16px;gap:8px}
+  .topbar .logo{font-size:14px}
+  .topbar .logo .sub{display:none}
+  .topbar .search-wrap{max-width:none;order:5;flex-basis:100%}
+  .hero{padding:34px 16px 40px}
+  .hero h1{font-size:26px}
+  .hero .desc{font-size:14px}
+  .tabs-inner{padding:0 8px}
+  .tab-btn{min-width:auto;padding:13px 12px;font-size:14px}
+  .main{padding:22px 16px 60px}
+  .cards-grid{grid-template-columns:1fr}
+  .rel-block{padding:16px}
+  .cmp-table{font-size:13px}
+  .cmp-table th,.cmp-table td{padding:10px 12px}
+  .to-top{bottom:18px;right:18px;width:42px;height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ TOPBAR ═══════════ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="back-home" href="../index.html" title="返回首页">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"/><path d="M5 8h9"/></svg>
+      返回首页
+    </a>
+    <div class="logo">
+      <span class="logo-badge">¥</span>
+      <span>股票与基金黑话术语全指南</span>
+      <span class="sub">· 金融投资</span>
+    </div>
+    <label class="search-wrap">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="m11 11 3 3"/></svg>
+      <input id="searchInput" type="text" placeholder="搜索术语…如“涨停”“夏普比率”" autocomplete="off" aria-label="搜索术语">
+    </label>
+  </div>
+</header>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow"><span class="dot"></span> 金融投资 · 入门必读黑话词典</div>
+    <h1>看懂股市与基金的<span class="grad">黑话与专业术语</span></h1>
+    <p class="desc">系统整理股票与基金两大领域的高频黑话与专业术语。从“牛市”“割肉”到“夏普比率”“最大回撤”，每个术语含释义与适用场景，配合关系图解，帮你快速跨越金融语言门槛。</p>
+    <div class="stats">
+      <div class="stat"><span class="num">90+</span><span class="lbl">个术语</span><span class="sep">/</span></div>
+      <div class="stat"><span class="num">2</span><span class="lbl">大领域</span><span class="sep">/</span></div>
+      <div class="stat"><span class="num">15</span><span class="lbl">个子类</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ TABS ═══════════ -->
+<nav class="tabs-wrap">
+  <div class="tabs-inner" id="tabs">
+    <button class="tab-btn active" data-tab="stock">
+      <span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 16h2V9H3zM8 16h2V5H8zM13 16h2v-8h-2z"/><path d="M2 16h16"/></svg></span>
+      股票黑话
+    </button>
+    <button class="tab-btn" data-tab="fund">
+      <span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="14" r="3"/><circle cx="14" cy="14" r="3"/><path d="M6 11V4h8l3 4M14 11V8h-3"/></svg></span>
+      基金黑话
+    </button>
+    <button class="tab-btn" data-tab="relation">
+      <span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="5" r="2.5"/><circle cx="15" cy="5" r="2.5"/><circle cx="10" cy="15" r="2.5"/><path d="M6.8 6.8 8.5 13M13.2 6.8 11.5 13M7 5h6"/></svg></span>
+      关联关系
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+
+  <!-- ════ STOCK PANEL ════ -->
+  <section class="panel active" id="panel-stock">
+    <div class="section-intro">
+      <div class="si-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17h2v-7H3zM8 17h2V5H8zM13 17h2v-9h-2z"/></svg></div>
+      <p>股票市场黑话是股民与机构在长期实战中形成的<b>形象化、约定俗成</b>的说法。掌握这些术语，你才能看懂行情软件、研报、股吧讨论与盘后复盘。下方按<b>行情、涨跌、交易行为、盘口语、技术面、资金面、估值</b>七大场景分组，点击卡片可展开详细释义与适用场景。</p>
+    </div>
+    <div id="stockContainer"></div>
+  </section>
+
+  <!-- ════ FUND PANEL ════ -->
+  <section class="panel" id="panel-fund">
+    <div class="section-intro">
+      <div class="si-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="14" r="3"/><circle cx="14" cy="14" r="3"/><path d="M6 11V4h8l3 4M14 11V8h-3"/></svg></div>
+      <p>基金术语更偏<b>制度化与量化</b>，涉及申赎、估值、费率、风险指标等专业概念。理解“净值、回撤、夏普比率”等指标，是评估基金业绩、控制风险、做定投决策的基础。下方按<b>基础概念、交易运作、基金类型、风险指标、投资策略、持仓管理</b>六大场景分组。</p>
+    </div>
+    <div id="fundContainer"></div>
+  </section>
+
+  <!-- ════ RELATION PANEL ════ -->
+  <section class="panel" id="panel-relation">
+    <div class="section-intro">
+      <div class="si-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="5" r="2.5"/><circle cx="15" cy="5" r="2.5"/><circle cx="10" cy="15" r="2.5"/><path d="M6.8 6.8 8.5 13M13.2 6.8 11.5 13M7 5h6"/></svg></div>
+      <p>股票与基金并非两个孤立世界：<b>基金是间接投资股票的工具</b>。一只股票型基金背后是基金经理用募集来的钱买入一篮子股票。理解二者关系——资金如何流动、风险如何传导、基金经理如何选股——才能在“自己炒股”与“买基金”之间做出合适选择。</p>
+    </div>
+
+    <!-- 资金流向流程图 -->
+    <div class="rel-block">
+      <div class="rb-head">
+        <div class="rb-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h10l-3-3M17 13H7l3 3"/></svg></div>
+        <h3>资金流向：基金如何投资股票</h3>
+      </div>
+      <p class="rb-desc">投资者买基金的钱，经过基金公司归集，由基金经理在二级市场买入股票，组成投资组合。基金净值随这些股票的涨跌而波动。</p>
+      <div class="svg-wrap" id="flowChart"></div>
+    </div>
+
+    <!-- 风险对比表 -->
+    <div class="rel-block">
+      <div class="rb-head">
+        <div class="rb-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 2v6M10 18v0a4 4 0 0 0 4-4c0-3-4-6-4-6s-4 3-4 6a4 4 0 0 0 4 4z"/></svg></div>
+        <h3>股票型基金 vs 个股：风险与收益对比</h3>
+      </div>
+      <p class="rb-desc">同样押注股票，自己买个股与买股票型基金，在集中度、专业度、费率、流动性上差异显著。</p>
+      <div class="svg-wrap" style="overflow-x:auto">
+        <table class="cmp-table">
+          <thead>
+            <tr><th>对比维度</th><th>直接买个股</th><th>买股票型基金</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>投资门槛</td><td>100 股起（一手），门槛低</td><td>通常 10 元起，门槛更低</td></tr>
+            <tr><td>集中度风险</td><td><span class="cx">高</span> · 押单一公司，黑天鹅杀伤大</td><td><span class="ck">低</span> · 持有几十至上百只股票，分散</td></tr>
+            <tr><td>选股能力依赖</td><td><span class="cx">完全靠自己</span> · 门槛高</td><td><span class="ck">依赖基金经理</span> · 委托专业团队</td></tr>
+            <tr><td>潜在收益</td><td><span class="cm">上限高</span> · 押中牛股可翻倍</td><td><span class="cm">中等</span> · 被组合平均稀释</td></tr>
+            <tr><td>潜在最大亏损</td><td><span class="cx">可超 50%–90%</span> · 退市归零</td><td><span class="cx">通常 30%–60%</span> · 较难归零</td></tr>
+            <tr><td>交易费率</td><td>佣金 + 印花税，约 0.1%</td><td>申购/赎回费 + 管理费，约 1.5%/年</td></tr>
+            <tr><td>流动性</td><td>T+1 到账，即时可卖</td><td>普通开放式 T+1~3 赎回；ETF 可盘中交易</td></tr>
+            <tr><td>透明度</td><td>持仓全公开，实时知道买什么</td><td>季报才公布持仓，有滞后</td></tr>
+            <tr><td>适合人群</td><td>有时间研究、追求超额收益者</td><td>没时间、想分散、求省心者</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 基金经理选股逻辑 -->
+    <div class="rel-block gold">
+      <div class="rb-head">
+        <div class="rb-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="8" r="3"/><path d="M3 18c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M14 4l1.5 1.5L18 3"/></svg></div>
+        <h3>基金经理选股逻辑流程</h3>
+      </div>
+      <p class="rb-desc">基金经理不是凭感觉炒股，而是遵循“自上而下”或“自下而上”的体系化选股流程，把宏观、行业、基本面、估值、风控串联起来。</p>
+      <div class="svg-wrap" id="pickStockChart"></div>
+    </div>
+
+    <!-- 关联关系思维导图 -->
+    <div class="rel-block">
+      <div class="rb-head">
+        <div class="rb-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="3"/><path d="M10 1v3M10 16v3M1 10h3M16 10h3M3.5 3.5l2 2M14.5 14.5l2 2M3.5 16.5l2-2M14.5 5.5l2-2"/></svg></div>
+        <h3>股票与基金关联关系全景</h3>
+      </div>
+      <p class="rb-desc">以“股票资产”为中心，辐射出 5 条关系链路：资金来源、投资工具、风险传导、价格联动、信息来源。</p>
+      <div class="svg-wrap" id="mindMap"></div>
+      <div class="mindmap-legend">
+        <div class="ml-item"><span class="ml-dot" style="background:#1e4d8c"></span>资金来源</div>
+        <div class="ml-item"><span class="ml-dot" style="background:#c8a04b"></span>投资工具</div>
+        <div class="ml-item"><span class="ml-dot" style="background:#1f9d62"></span>风险传导</div>
+        <div class="ml-item"><span class="ml-dot" style="background:#d4433a"></span>价格联动</div>
+        <div class="ml-item"><span class="ml-dot" style="background:#0e8f8a"></span>信息来源</div>
+      </div>
+    </div>
+
+    <div class="footnote">
+      <div class="fn-ic"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 1a4 4 0 0 0-4 4c0 2 2 3 2 5h4c0-2 2-3 2-5a4 4 0 0 0-4-4zM5 12h4M6 14h2"/></svg></div>
+      <p>本页术语用于学习交流，不构成任何投资建议。市场有风险，投资需谨慎。A股涨跌停板、T+1、印花税等规则以现行交易所规定为准；基金费率、申赎规则以各基金合同与招募说明书为准。</p>
+    </div>
+  </section>
+
+</main>
+
+<button class="to-top" id="toTop" title="回到顶部" aria-label="回到顶部">
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 16V4M4 10l6-6 6 6"/></svg>
+</button>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Term Data
+   ═══════════════════════════════════════════════════ */
+const stockData = [
+  {sub:'市场行情',badge:'b1',terms:[
+    {n:'牛市',alias:'Bull Market',def:'股市长期呈上涨趋势、人气旺盛的多头行情。',full:'大盘或个股在较长周期内持续走高，投资者普遍看多、入场积极，成交量放大。常以“牛角向上顶”比喻涨势。',scene:'用于描述数月到数年的整体上行趋势，如“这是一轮结构性牛市”。'},
+    {n:'熊市',alias:'Bear Market',def:'股市长期呈下跌趋势、人气低迷的空头行情。',full:'大盘从高点下跌超过20%且持续较久，投资者恐慌抛售，成交量萎缩。常以“熊掌向下拍”比喻跌势。',scene:'用于描述数月到数年的整体下行周期，判断是否进入防御阶段。'},
+    {n:'猴市',alias:' Monkey Market',def:'股指上蹿下跳、涨跌无序的震荡行情。',full:'市场缺乏明确方向，大幅震荡、忽涨忽跌，如同猴子跳跃。多空分歧大、消息驱动明显。',scene:'用于描述方向不明的高波动阶段，提示控制仓位。'},
+    {n:'慢牛',alias:'',def:'股市缓慢但持续上涨的健康行情。',full:'涨幅不大但天天小阳，节奏稳健、回调浅，是管理层与长线资金偏好的行情。',scene:'用于判断市场健康度，慢牛比快牛更可持续。'},
+    {n:'快牛 / 疯牛',alias:'',def:'股市短期内快速、大幅上涨的行情。',full:'股指短期暴涨，市场情绪亢奋，杠杆资金涌入。涨得快往往也跌得猛，风险积聚。',scene:'用于警示过热，快牛之后常伴随剧烈回调。'},
+    {n:'震荡市',alias:'Range-bound',def:'股指在一定区间内反复波动、涨跌互现。',full:'上有压力下有支撑，指数在箱体内来回运行，适合高抛低吸的波段操作。',scene:'用于制定区间交易策略，提示不追涨杀跌。'},
+  ]},
+  {sub:'涨跌与异动',badge:'b2',terms:[
+    {n:'涨停',alias:'Limit Up',def:'股价当日涨到交易所允许的最大幅度，封死不再上涨。',full:'A股主板涨跌幅限制为±10%（ST股5%、科创板/创业板20%）。涨停时买单堆积、卖单稀少，叫“封涨停板”。',scene:'用于判断个股热度与资金抢筹意愿，连板股常是题材龙头。'},
+    {n:'跌停',alias:'Limit Down',def:'股价当日跌到交易所允许的最大幅度，封死不再下跌。',full:'与涨停对称，跌停时卖单堆积、买单稀少。连续跌停常因利空、退市风险或强平踩踏。',scene:'用于识别恐慌与流动性枯竭，跌停板无法卖出是最大风险。'},
+    {n:'涨跌幅',alias:'Change %',def:'当日收盘价相对前一交易日收盘价的变动百分比。',full:'反映当日价格波动幅度，是衡量个股与大盘强弱的最基本指标。正为涨、负为跌。',scene:'用于盘后复盘、板块强弱排序与选股筛选。'},
+    {n:'熔断',alias:'Circuit Breaker',def:'股指跌幅达阈值时交易所暂停交易的保护机制。',full:'2016年A股曾实施5%/7%两档熔断，因连续触发后于同年暂停。境外市场（如美股）仍有7%/13%/20%熔断机制。',scene:'用于理解极端下跌时的市场停摆规则与流动性风险。'},
+    {n:'天地板',alias:'',def:'开盘即涨停（一字板）或从跌停到涨停（地天板）的极端走势。',full:'“天板”指一字涨停，“地板”指一字跌停；地天板指从跌停拉到涨停的惊天反转，多为游资博弈。',scene:'用于识别极端情绪与游资主导的妖股特征。'},
+  ]},
+  {sub:'交易行为',badge:'b3',terms:[
+    {n:'割肉',alias:'Cut Loss',def:'在亏损状态下卖出股票，痛如割肉。',full:'持仓浮亏后不愿再扛，认赔出局。是止损的俗称，关键在于“割在合理位置”而非恐慌割在地板。',scene:'用于描述止损动作，强调纪律性止损优于死扛深套。'},
+    {n:'抄底',alias:'Bottom Fishing',def:'在股价低位时买入博反弹。',full:'认为股价已跌到“底部”而进场，但真正的底不可预知，抄底抄在半山腰是常见风险。',full2:'',scene:'用于左侧交易，提示分批建仓、不一把梭。'},
+    {n:'追涨',alias:'Chase the Rally',def:'股价上涨时跟进买入。',full:'看到涨了怕踏空而追高买入，强势市场可顺势而为，弱势市场追涨易被套在高位。',scene:'用于描述右侧顺势交易，提示设好止损防诱多。'},
+    {n:'杀跌',alias:'Panic Sell',def:'股价下跌时跟风恐慌卖出。',full:'看到跌了怕继续跌而割肉抛售，常出现在利空或情绪崩塌时，容易卖在最低点。',scene:'用于警示非理性行为，避免情绪化操作。'},
+    {n:'建仓',alias:'Open Position',def:'开始买入某只股票，建立仓位。',full:'从空仓到持有第一笔，是进入一只股票的开始。建仓讲究分批、择时。',scene:'用于左侧布局或突破进场，是仓位管理的第一步。'},
+    {n:'加仓',alias:'Add Position',def:'已有持仓后继续买入，增大仓位。',full:'在盈利方向上追加（顺势加仓）或在亏损时摊低（补仓），二者风险与逻辑不同。',scene:'用于趋势跟踪加码，提示盈利加仓优于亏损补仓。'},
+    {n:'补仓',alias:'Average Down',def:'持仓亏损时再买入以摊低平均成本。',full:'越跌越买拉低均价，若判断错误会越套越深，俗称“补仓补到满仓套”。',scene:'用于左侧摊低成本，需基本面支撑与资金规划。'},
+    {n:'减仓 / 清仓',alias:'Reduce / Clear',def:'减仓=卖出部分；清仓=全部卖出。',full:'减仓是部分获利了结或控制风险；清仓是彻底退出该股，多用于止损或获利了结。',scene:'用于止盈止损与仓位调控。'},
+    {n:'满仓 / 空仓',alias:'Full / All Cash',def:'满仓=资金全买股票；空仓=全部持币不持股。',full:'满仓风险最大化，空仓规避风险但踏空。仓位轻重反映对后市的信心。',scene:'用于仓位管理，强调不满仓不空仓的弹性策略。'},
+  ]},
+  {sub:'交易方式',badge:'b4',terms:[
+    {n:'打新',alias:'IPO Subscription',def:'申购首次公开发行的新股。',full:'新股上市首日通常大涨，打新被视为“免费彩票”。需持有一定市值（沪市/深市各1万元市值可申购）。',scene:'用于低风险套利，A股打新中签率低但收益稳定。'},
+    {n:'融资融券',alias:'Margin Trading',def:'融资=借钱买股；融券=借股卖出。',full:'向券商借钱放大杠杆做多，或借股票做空。放大收益也放大亏损，有强平风险。',scene:'用于杠杆交易与做空，提示风险控制与维持担保比例。'},
+    {n:'做多 / 做空',alias:'Long / Short',def:'做多=买入看涨获利；做空=借股卖出看跌获利。',full:'做多低买高卖，方向简单；做空高卖低买回，A股需通过融券，门槛与成本较高。',scene:'用于明确交易方向，做空是下跌行情的对冲工具。'},
+    {n:'T+1',alias:'T+1 Settlement',def:'当日买入的股票，下一交易日才能卖出。',full:'A股实行T+1交收制度，当天买的不能当天卖，限制了日内回转但也降低了高频投机。',scene:'用于理解A股流动性与交易节奏，区别于港股美股T+0。'},
+    {n:'限价单 / 市价单',alias:'Limit / Market Order',def:'限价单=指定价格委托；市价单=按当前最优价立即成交。',full:'限价单控制成本但可能不成交；市价单保证成交但价格可能滑点。',scene:'用于下单策略，挂单技巧影响成交价与成本。'},
+    {n:'集合竞价',alias:'Call Auction',def:'开盘前9:15-9:25、收盘14:57-15:00的撮合阶段。',full:'这段时间内集中报单，到点以最大成交量价统一撮合，形成开盘价/收盘价。',full2:'',scene:'用于捕捉开盘竞价机会与解读集合竞价异动。'},
+  ]},
+  {sub:'盘口语',badge:'b5',terms:[
+    {n:'洗盘',alias:'Wash-out',def:'主力故意打压股价，清洗不坚定筹码。',full:'拉升前把跟风散户震出局，降低后续拉升阻力。表现为缩量下跌、快速收回。',scene:'用于识别主力控盘意图，洗盘后常现主升浪。'},
+    {n:'诱多 / 诱空',alias:'Bull/Bear Trap',def:'诱多=制造上涨假象引诱买入；诱空=制造下跌假象引诱卖出。',full:'主力反向操作前的骗线，诱多后出货、诱空后拉升。识别需结合量能与位置。',scene:'用于规避陷阱，高位诱多与低位诱空最危险。'},
+    {n:'拉升',alias:'Ramp Up',def:'主力主动连续推高股价。',full:'资金集中买入，快速脱离成本区。常伴随放量、涨停，是主升浪特征。',scene:'用于判断主升行情启动，跟进需设好止损。'},
+    {n:'出货',alias:'Distribution',def:'主力在高位分批卖出兑现利润。',full:'高位反复震荡、放量滞涨，暗中派发筹码。出货完成往往开启大跌。',scene:'用于识别顶部信号，高位放量滞涨是出货嫌疑。'},
+    {n:'对倒',alias:'Wash Trade',def:'主力自买自卖制造成交量假象。',full:'用多个账户左手倒右手，放大成交量吸引跟风。属违规操纵行为。',scene:'用于识别量能造假，对倒放量不可持续。'},
+    {n:'护盘',alias:'Price Support',def:'下跌时主力或“国家队”托住股价/指数。',full:'关键位置出现大买单承接，阻止继续下跌。常见于政策底与市场底博弈。',scene:'用于判断政策底信号，护盘不等于见底。'},
+  ]},
+  {sub:'技术面',badge:'b6',terms:[
+    {n:'复盘',alias:'Review',def:'收盘后回顾当日行情，分析涨跌原因与明日策略。',full:'看大盘、板块、个股的量价表现，梳理资金流向与消息面，形成次日操作计划。',scene:'用于日常交易纪律，复盘是提升的关键。'},
+    {n:'K线',alias:'Candlestick',def:'记录开盘、收盘、最高、最低价的柱状图形。',full:'阳线（红）收盘高于开盘，阴线（绿）收盘低于开盘；上下影线代表盘中波动范围。',scene:'用于技术分析的基础语言，K线组合判断多空。'},
+    {n:'均线',alias:'MA',def:'一定周期内收盘价的平均值连成的线。',full:'常用5/10/20/60/120/250日均线，反映短期到长期成本。多头排列看涨，空头排列看跌。',scene:'用于判断趋势方向与支撑压力位。'},
+    {n:'MACD',alias:'MACD',def:'基于均线差离的趋势动量技术指标。',full:'由DIF、DEA两线与柱状图组成，金叉（DIF上穿DEA）看涨、死叉看跌，柱状缩短预示动能减弱。',scene:'用于判断趋势转折与背驰信号。'},
+    {n:'量价',alias:'Volume-Price',def:'成交量与价格变动的关系分析。',full:'“量在价先”，放量上涨健康、缩量上涨乏力、放量下跌危险、地量地价见底。',scene:'用于验证价格走势真伪，量价配合是技术分析核心。'},
+    {n:'支撑位 / 压力位',alias:'Support / Resistance',def:'支撑=下跌遇买盘托住的价格；压力=上涨遇卖盘压制的价格。',full:'前期低点、整数关口、均线、缺口常形成支撑压力。突破压力看涨、跌破支撑看跌。',scene:'用于制定买卖点与止损止盈位。'},
+    {n:'破位',alias:'Breakdown',def:'股价跌破关键支撑位，趋势转弱信号。',full:'跌破均线、前低、颈线等关键技术位，常触发止损盘加速下跌。',scene:'用于止损决策，破位是离场信号。'},
+  ]},
+  {sub:'资金面',badge:'b7',terms:[
+    {n:'主力',alias:'Main Force',def:'资金量大、能影响股价走向的机构或大户。',full:'包括公募、私募、险资、社保、游资等。主力动向决定个股趋势，散户常跟随。',scene:'用于判断个股是否有资金运作，跟庄是常见思路。'},
+    {n:'游资',alias:'Hot Money',def:'追求短期暴利、快进快出的活跃资金。',full:'擅长打板、做题材，一日游或两日游。龙虎榜上的“宁波涨停板敢死队”即典型游资。',scene:'用于识别短线题材炒作与连板股特征。'},
+    {n:'散户',alias:'Retail',def:'资金量小、信息滞后的个人投资者。',full:'A股散户占比高、贡献大量成交，但常沦为被收割对象。情绪化、追涨杀跌是痛点。',scene:'用于理解市场结构与行为偏差。'},
+    {n:'北向资金',alias:'Northbound',def:'通过沪港通/深港通从香港流入A股的境外资金。',full:'被视为“聪明钱”，其净流入流出常被当作外资对A股态度的风向标。',scene:'用于判断外资动向与大盘情绪，北向大幅流出常引担忧。'},
+    {n:'融资余额',alias:'Margin Balance',def:'融资买入尚未偿还的累计金额。',full:'融资余额上升=杠杆资金积极看多；下降=去杠杆避险。余额高位常对应市场顶部区域。',scene:'用于衡量杠杆情绪与市场热度。'},
+  ]},
+  {sub:'估值指标',badge:'b8',terms:[
+    {n:'市盈率 PE',alias:'P/E Ratio',def:'股价 ÷ 每股收益，衡量“多少年回本”。',full:'静态PE用上年利润，动态/滚动PE用近12个月。PE低不代表便宜，需结合增速（PEG）。',scene:'用于个股估值横向（同行业）纵向（历史）对比。'},
+    {n:'市净率 PB',alias:'P/B Ratio',def:'股价 ÷ 每股净资产，衡量相对账面价值贵贱。',full:'PB<1为“破净”，银行、钢铁等重资产常低PB。轻资产成长股PB天然偏高。',scene:'用于重资产行业估值与破净股筛选。'},
+    {n:'ROE',alias:'Return on Equity',def:'净资产收益率，净利润 ÷ 净资产，衡量赚钱效率。',full:'巴菲特最看重的指标，连续多年ROE>15%为优质公司。杜邦分解可拆解盈利能力来源。',scene:'用于筛选优质公司与判断护城河。'},
+    {n:'换手率',alias:'Turnover Rate',def:'当日成交量 ÷ 流通股本，反映交易活跃度。',full:'换手率高（>5%）说明交投活跃、分歧大；过低则无人关注。妖股换手常超20%。',scene:'用于判断个股热度与流动性，辅助选时。'},
+    {n:'量比',alias:'Volume Ratio',def:'当日开盘后均量 ÷ 过去5日同时段均量。',full:'量比>1为放量，<1为缩量。量比突增常是异动信号。',scene:'用于盘中捕捉放量异动与资金动向。'},
+  ]},
+];
+
+const fundData = [
+  {sub:'基础概念',badge:'b1',terms:[
+    {n:'申购',alias:'Subscription',def:'投资者向基金公司买入基金份额。',full:'开放式基金通过基金公司或代销渠道（银行/券商/平台）买入，T日申购按当日收盘净值确认。',scene:'用于买入基金，需注意15:00前后净值归属与费率档位。'},
+    {n:'赎回',alias:'Redemption',def:'投资者卖出基金份额换回现金。',full:'赎回按当日净值计算，资金T+1到数日到账（货基快、股基慢）。巨额赎回可能触发延期。',scene:'用于退出基金，注意赎回费率与到账时间。'},
+    {n:'净值',alias:'NAV',def:'基金每份的净资产价值。',full:'总资产减负债后除以总份额。净值每日收盘后公布，是基金价格的基准。',scene:'用于跟踪基金涨跌与计算收益。'},
+    {n:'单位净值',alias:'Unit NAV',def:'每份基金当日净资产价值。',full:'扣除当日管理费托管费后的每份价值，是申购赎回的计价基础。',scene:'用于按净值买卖，区别于ETF的市价。'},
+    {n:'累计净值',alias:'Cumulative NAV',def:'单位净值 + 历史累计分红。',full:'反映基金成立以来的真实总回报。若中间发生过拆分/折算需结合复权净值看。',scene:'用于评估基金长期总收益与同类排名。'},
+    {n:'复权净值',alias:'Adjusted NAV',def:'把分红再投资还原后的净值，最真实的回报指标。',full:'考虑分红再投入后的净值曲线，最能反映长期持有体验，是业绩排名的基准。',scene:'用于跨基金业绩公平比较。'},
+    {n:'估值',alias:'Estimated NAV',def:'盘中根据持仓估算的实时净值。',full:'各平台根据基金季报持仓估算盘中净值，仅供参考，与真实净值有偏差。',scene:'用于盘中择时申购赎回的参考，不作为最终成交依据。'},
+  ]},
+  {sub:'交易与运作',badge:'b2',terms:[
+    {n:'定投',alias:'SIP',def:'定期定额申购基金，分摊成本平滑风险。',full:'固定时间投入固定金额，越跌买越多、越涨买越少，长期微笑曲线。适合无法择时的普通投资者。',scene:'用于长期攒钱与定投养老教育金。'},
+    {n:'申赎费率',alias:'Fee Rate',def:'申购与赎回时收取的费用比例。',full:'申购费常0.12%-1.5%（平台打折），赎回费按持有时长递减，持有<7天有1.5%惩罚性赎回费。',scene:'用于计算交易成本与选择持有周期。'},
+    {n:'前端 / 后端收费',alias:'Front/Back-end Load',def:'前端=申购时收申购费；后端=赎回时按持有期收。',full:'后端收费持有越久费率越低甚至归零，鼓励长期持有；前端适合不确定持有期的短期投资。',scene:'用于费率优化，长期持有选后端更划算。'},
+    {n:'基金分红',alias:'Dividend',def:'基金将部分收益以现金或份额形式分配给持有人。',full:'分现金（现金分红）或增份额（红利再投资）。分红后净值会相应除权下降，并非“额外赚的钱”。',scene:'用于理解分红本质，分红≠收益，是收益的实现形式。'},
+    {n:'封闭期',alias:'Closed Period',def:'新基金成立后不能申购赎回的建仓期。',full:'新基金通常有1-3个月封闭期用于建仓；部分定期开放/持有期基金有更长的封闭与开放规则。',scene:'用于规划资金流动性，避免急需用钱时被锁。'},
+    {n:'巨额赎回',alias:'Large Redemption',def:'单日赎回超过基金一定比例（常10%）的赎回。',full:'可能触发延期支付或按比例确认，被迫卖出持仓冲击净值，引发连锁踩踏。',scene:'用于识别流动性风险，迷你基金更易受冲击。'},
+  ]},
+  {sub:'基金类型',badge:'b3',terms:[
+    {n:'股票型基金',alias:'Equity Fund',def:'股票仓位≥80%的基金，高风险高收益。',full:'契约规定股票仓位下限80%，进攻性强，牛市收益高熊市跌幅大。适合长期定投与看好股市时配置。',scene:'用于股市看多时的进攻配置。'},
+    {n:'债券型基金',alias:'Bond Fund',def:'债券仓位≥80%的基金，稳健低波动。',full:'细分纯债、一级债、二级债（可少量投股票）。收益稳定回撤小，是稳健与防御配置首选。',scene:'用于防守与避险，适合低风险偏好。'},
+    {n:'货币型基金',alias:'Money Market',def:'投资短债、存款的极低风险基金。',full:'代表如余额宝，几乎无回撤、T+0/T+1到账，收益率高于活期。是现金管理工具。',scene:'用于零钱理财与流动性备用金。'},
+    {n:'混合型基金',alias:'Hybrid Fund',def:'股债灵活配置、仓位可大幅调整的基金。',full:'股票0-95%弹性大，基金经理择时择股。进攻时加股、防守时转债，考验择时能力。',scene:'用于不确定行情下的攻守兼备配置。'},
+    {n:'指数基金',alias:'Index Fund',def:'跟踪某一指数（如沪深300）的被动基金。',full:'按指数成分股权重复制持仓，目标是跟上指数。费率低、透明度高，巴菲特力荐。',scene:'用于低成本获取市场平均收益与定投。'},
+    {n:'ETF',alias:'Exchange Traded Fund',def:'可在交易所像股票一样买卖的指数基金。',full:'兼具基金分散性与股票流动性，T+0（跨境ETF）/T+1交易，费率极低，适合波段与配置。',scene:'用于灵活交易指数与行业主题，如券商ETF、科创50ETF。'},
+    {n:'LOF',alias:'Listed Open-end',def:'既能在场内交易又能申赎的开放式基金。',full:'跨市场套利机制使场内市价贴近净值。流动性一般弱于ETF。',scene:'用于场内外套利与普通开放式基金的场内交易。'},
+    {n:'QDII',alias:'QDII',def:'投资境外资本市场的基金。',full:'可买美股、港股、黄金、原油等，分散单一市场风险。汇率与海外市场波动双重影响。',scene:'用于全球资产配置与投资海外市场。'},
+    {n:'FOF',alias:'Fund of Funds',def:'投资其他基金的“基金中的基金”。',full:'通过精选多只基金二次分散，进一步降低单基金风险，但双层收费。适合极度分散与养老目标。',scene:'用于养老投资与不擅长选基金者。'},
+  ]},
+  {sub:'风险与业绩指标',badge:'b4',terms:[
+    {n:'仓位',alias:'Position',def:'投入股票资产占总资金的比例。',full:'满仓=100%持股，半仓50%。基金股票仓位决定其风险敞口，混合基金仓位弹性最大。',scene:'用于衡量基金风险水平与进攻性。'},
+    {n:'回撤',alias:'Drawdown',def:'净值从阶段性高点回落到低点的幅度。',full:'回撤越大，持有体验越差、回本越难。是衡量下行风险的核心指标。',scene:'用于评估持有体验与最大可承受亏损。'},
+    {n:'最大回撤',alias:'Max Drawdown',def:'基金历史上从最高点到最低点的最大跌幅。',full:'历史最大回撤反映最坏情形，是风险承受力的试金石。同收益下应选回撤小的。',scene:'用于压力测试与基金筛选的硬指标。'},
+    {n:'波动率',alias:'Volatility',def:'收益率波动的剧烈程度（标准差）。',full:'波动率越高风险越大。股票型基金年化波动常20%以上，债基5%以内。',scene:'用于衡量风险大小与资产配置比例。'},
+    {n:'夏普比率',alias:'Sharpe Ratio',def:'承担单位总风险获得的超额收益。',full:'（收益率-无风险利率）÷ 波动率。>1为优秀，>2卓越。是风险调整后收益的金标准。',scene:'用于跨基金业绩公平比较，夏普越高性价比越高。'},
+    {n:'索提诺比率',alias:'Sortino Ratio',def:'只考虑下行风险的收益风险比。',full:'用下行波动替代总波动，更关注“坏波动”。对只厌恶亏损的投资者更友好。',scene:'用于评估下行风险控制能力，常与夏普配合看。'},
+    {n:'信息比率',alias:'IR',def:'主动管理超额收益 ÷ 跟踪误差。',full:'衡量基金经理相对基准的超额收益稳定性。IR>0.5即优秀主动管理。',scene:'用于评价主动型基金经理的能力。'},
+    {n:'阿尔法 α',alias:'Alpha',def:'超出市场基准的超额收益。',full:'正阿尔法说明基金经理创造了超越市场的收益，是主动管理能力的体现。',scene:'用于判断主动基金是否值得管理费。'},
+    {n:'贝塔 β',alias:'Beta',def:'基金相对市场的波动敏感度。',full:'β>1比市场涨跌更猛（进攻型）；β<1更稳（防守型）；β=1与市场同步。',scene:'用于判断基金风格与市场敏感度。'},
+  ]},
+  {sub:'投资策略',badge:'b5',terms:[
+    {n:'价值投资',alias:'Value Investing',def:'买入被低估、有安全边际的股票。',full:'以低于内在价值买入，代表人物巴菲特、格雷厄姆。看重PE/PB/ROE与护城河，长期持有。',scene:'用于低估值稳健配置，适合长线价值基金。'},
+    {n:'成长投资',alias:'Growth Investing',def:'买入高增长、高景气的成长股。',full:'看重收入利润增速与赛道空间，容忍高估值。新能源、半导体、创新药是典型成长赛道。',scene:'用于博取高弹性收益，波动与回撤较大。'},
+    {n:'量化策略',alias:'Quant',def:'用数学模型与算法自动交易。',full:'多因子选股、统计套利、高频交易。纪律性强、克服情绪，但模型可能失效（拥挤与回撤）。',scene:'用于量化基金与指数增强策略。'},
+    {n:'行业轮动',alias:'Sector Rotation',def:'根据经济周期在不同行业间切换。',full:'美林时钟是经典框架：复苏配周期、过热配商品、滞胀配现金、衰退配债券。',scene:'用于宏观驱动的行业配置与择时。'},
+    {n:'核心-卫星策略',alias:'Core-Satellite',def:'核心+卫星组合配置。',full:'核心（60-80%）买宽基指数求稳健，卫星（20-40%）买行业/主动基金博超额。攻守兼备。',scene:'用于个人资产配置的框架性策略。'},
+  ]},
+  {sub:'持仓与管理',badge:'b6',terms:[
+    {n:'重仓股',alias:'Top Holding',def:'基金持仓中占比最大的股票。',full:'前十大重仓股常占净值30-60%，决定基金风格与表现。重仓股踩雷则基金大幅回撤。',scene:'用于判断基金风格与风险集中度。'},
+    {n:'前十大持仓',alias:'Top 10',def:'持仓占比最大的十只股票。',full:'季报每季度公布，反映基金经理最新偏好。集中度高=押注少数，低=分散。',scene:'用于分析基金风格漂移与行业暴露。'},
+    {n:'基金换手率',alias:'Turnover',def:'基金买卖股票的频繁程度。',full:'高换手=频繁交易、风格灵活，但交易成本高；低换手=长期持有、像巴菲特。',scene:'用于判断基金风格与成本，高换手未必好。'},
+    {n:'调仓',alias:'Rebalance',def:'基金经理调整持仓结构与比例。',full:'根据市场与基本面变化增减个股与行业。调仓方向反映对后市的判断。',scene:'用于跟踪基金经理观点变化与风格漂移。'},
+    {n:'基金经理',alias:'Fund Manager',def:'负责基金投资决策与组合管理的人。',full:'其投资理念、能力与稳定性决定主动基金业绩。投资主动基金本质是投人。',scene:'用于选基金的核心维度，看其从业年限与历史业绩。'},
+    {n:'管理费 / 托管费',alias:'Mgmt/Custody Fee',def:'每年从基金资产中扣除的运作费用。',full:'管理费给基金公司（股基常1.5%、指数0.5%），托管费给托管银行（常0.1-0.25%）。按日计提。',scene:'用于计算长期持有成本，费率长期侵蚀收益。'},
+  ]},
+];
+
+/* ═══════════════════════════════════════════════════
+   Render Term Cards
+   ═══════════════════════════════════════════════════ */
+const toggleIcon = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 2l5 5-5 5"/></svg>';
+
+function renderTerms(containerId, data){
+  const el = document.getElementById(containerId);
+  let html = '';
+  for(const sub of data){
+    html += '<div class="subcat">'
+      + '<div class="subcat-head"><span class="sc-badge '+sub.badge+'">'+sub.sub.charAt(0)+'</span>'
+      + '<span class="sc-title">'+sub.sub+'</span>'
+      + '<span class="sc-count">'+sub.terms.length+'</span></div>'
+      + '<div class="cards-grid">';
+    for(const t of sub.terms){
+      const full = t.full || t.def;
+      html += '<div class="term-card" data-name="'+t.n+'" data-search="'+(t.n+' '+(t.alias||'')+' '+t.def+' '+(t.full||'')+' '+(t.scene||'')).toLowerCase()+'">'
+        + '<div class="tc-head">'
+        + '<div class="tc-name">'+t.n+(t.alias?'<span class="alias">'+t.alias.trim()+'</span>':'')+'</div>'
+        + '<span class="tc-toggle">'+toggleIcon+'</span>'
+        + '</div>'
+        + '<p class="tc-def">'+t.def+'</p>'
+        + '<div class="tc-detail"><div class="tc-detail-inner">'
+        + '<div class="tc-row"><span class="tc-lbl l-full">详解</span><span class="tc-val">'+full+'</span></div>'
+        + (t.scene?'<div class="tc-row"><span class="tc-lbl l-scene">场景</span><span class="tc-val">'+t.scene+'</span></div>':'')
+        + '</div></div>'
+        + '</div>';
+    }
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+  bindCardToggle(el);
+}
+
+function bindCardToggle(container){
+  container.querySelectorAll('.term-card').forEach(card=>{
+    card.addEventListener('click',()=>{
+      card.classList.toggle('expanded');
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   Tabs
+   ═══════════════════════════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+tab));
+    document.getElementById('searchInput').value='';
+    applySearch('');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   Search
+   ═══════════════════════════════════════════════════ */
+const searchInput = document.getElementById('searchInput');
+function applySearch(q){
+  q = q.toLowerCase().trim();
+  let anyPanel;
+  document.querySelectorAll('#panel-stock .term-card, #panel-fund .term-card').forEach(card=>{
+    if(!q){card.style.display='';return;}
+    const match = card.dataset.search.includes(q);
+    card.style.display = match?'':'none';
+    if(match) card.classList.add('expanded');
+  });
+  // show empty state
+  ['stockContainer','fundContainer'].forEach(id=>{
+    const c = document.getElementById(id);
+    const visible = c.querySelectorAll('.term-card').length;
+    let hasVisible = Array.from(c.querySelectorAll('.term-card')).some(x=>x.style.display!=='none');
+    let empty = c.querySelector('.empty-state');
+    if(q && !hasVisible && !empty){
+      const div=document.createElement('div');
+      div.className='empty-state';div.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><p>没有找到匹配的术语，换个关键词试试</p>';
+      c.appendChild(div);
+    }else if((!q||hasVisible) && empty){empty.remove();}
+  });
+}
+searchInput.addEventListener('input',(e)=>applySearch(e.target.value));
+
+/* ═══════════════════════════════════════════════════
+   SVG Charts
+   ═══════════════════════════════════════════════════ */
+
+// Flow Chart: 基金如何投资股票
+function renderFlowChart(){
+  const w=720,h=300;
+  const box=(x,y,fill,text,sub)=>`
+    <rect x="${x}" y="${y}" width="150" height="64" rx="10" fill="${fill}" stroke="${fill==='var(--navy-3)'?'':''}"/>
+    <text x="${x+75}" y="${y+27}" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="-apple-system,sans-serif">${text}</text>
+    <text x="${x+75}" y="${y+46}" text-anchor="middle" fill="rgba(255,255,255,.8)" font-size="11" font-family="-apple-system,sans-serif">${sub}</text>`;
+  // node coords
+  const n1={x:20,y:120}, n2={x:210,y:120}, n3={x:400,y:60}, n4={x:400,y:180}, n5={x:590,y:120};
+  document.getElementById('flowChart').innerHTML = `
+  <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ar1" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+        <path d="M0 0L10 5L0 10z" fill="#8b94a3"/>
+      </marker>
+      <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1e4d8c"/><stop offset="1" stop-color="#133863"/></linearGradient>
+      <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c8a04b"/><stop offset="1" stop-color="#b88f3a"/></linearGradient>
+      <linearGradient id="g3" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1f9d62"/><stop offset="1" stop-color="#178055"/></linearGradient>
+    </defs>
+    ${box(n1.x,n1.y,'url(#g1)','投资者','投入资金')}
+    ${box(n2.x,n2.y,'url(#g2)','基金公司','归集与管理')}
+    ${box(n3.x,n3.y,'url(#g3)','买入股票','二级市场买入')}
+    ${box(n4.x,n4.y,'url(#g3)','形成组合','一篮子股票')}
+    ${box(n5.x,n5.y,'url(#g1)','基金净值','随股价波动')}
+    <!-- arrows -->
+    <path d="M${n1.x+150} ${n1.y+32} H${n2.x}" stroke="#8b94a3" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+    <path d="M${n2.x+150} ${n2.y+20} C${n2.x+180} ${n3.y+32}, ${n3.x-10} ${n3.y+32}, ${n3.x} ${n3.y+32}" stroke="#8b94a3" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+    <path d="M${n2.x+150} ${n2.y+44} C${n2.x+180} ${n4.y+32}, ${n4.x-10} ${n4.y+32}, ${n4.x} ${n4.y+32}" stroke="#8b94a3" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+    <path d="M${n3.x+150} ${n3.y+32} C${n5.x-30} ${n3.y+32}, ${n5.x-10} ${n5.y+20}, ${n5.x} ${n5.y+20}" stroke="#8b94a3" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+    <path d="M${n4.x+150} ${n4.y+32} C${n5.x-30} ${n4.y+32}, ${n5.x-10} ${n5.y+44}, ${n5.x} ${n5.y+44}" stroke="#8b94a3" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+    <!-- labels on arrows -->
+    <text x="${(n1.x+150+n2.x)/2}" y="${n1.y+22}" text-anchor="middle" fill="#566175" font-size="11">申购</text>
+    <text x="${n2.x+185}" y="${n3.y+14}" fill="#566175" font-size="11">资金投向</text>
+    <text x="${n5.x+5}" y="${n5.y-8}" fill="#566175" font-size="11">驱动</text>
+  </svg>`;
+}
+
+// Pick Stock Chart: 基金经理选股逻辑
+function renderPickStockChart(){
+  const steps=[
+    {t:'宏观分析',d:'经济周期·流动性·政策',c:'pg1'},
+    {t:'行业筛选',d:'景气度·空间·格局',c:'pg2'},
+    {t:'个股初选',d:'财务质量·护城河',c:'pg3'},
+    {t:'估值分析',d:'PE/PB/PEG 安全边际',c:'pg4'},
+    {t:'组合构建',d:'权重·相关性·分散',c:'pg1'},
+    {t:'风控跟踪',d:'止损·调仓·复盘',c:'pg2'},
+  ];
+  const bw=104,bh=58,gap=12,total=steps.length*(bw+gap);
+  const startX=(720-total+gap)/2,y=120;
+  let boxes='',arrows='';
+  steps.forEach((s,i)=>{
+    const x=startX+i*(bw+gap);
+    boxes+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="10" fill="url(#${s.c})"/>
+      <text x="${x+bw/2}" y="${y+24}" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">${s.t}</text>
+      <text x="${x+bw/2}" y="${y+42}" text-anchor="middle" fill="rgba(255,255,255,.82)" font-size="9.5">${s.d}</text>`;
+    if(i<steps.length-1){
+      arrows+=`<path d="M${x+bw} ${y+bh/2} H${x+bw+gap}" stroke="#c8a04b" stroke-width="2" fill="none" marker-end="url(#ar2)"/>`;
+    }
+  });
+  // top-down arrows from 宏观(top)
+  document.getElementById('pickStockChart').innerHTML=`
+  <svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#c8a04b"/></marker>
+      <linearGradient id="pg1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1e4d8c"/><stop offset="1" stop-color="#133863"/></linearGradient>
+      <linearGradient id="pg2" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c8a04b"/><stop offset="1" stop-color="#b88f3a"/></linearGradient>
+      <linearGradient id="pg3" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1f9d62"/><stop offset="1" stop-color="#178055"/></linearGradient>
+      <linearGradient id="pg4" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d4433a"/><stop offset="1" stop-color="#b8362e"/></linearGradient>
+    </defs>
+    <text x="360" y="40" text-anchor="middle" fill="#0d2b4e" font-size="16" font-weight="700">自上而下选股流程</text>
+    <text x="360" y="62" text-anchor="middle" fill="#566175" font-size="12">宏观 → 行业 → 个股 → 估值 → 组合 → 风控</text>
+    <!-- 输入输出标注 -->
+    <rect x="20" y="${y}" width="6" height="${bh}" rx="3" fill="#1e4d8c"/>
+    <text x="14" y="${y+bh+16}" fill="#566175" font-size="10">输入</text>
+    <rect x="694" y="${y}" width="6" height="${bh}" rx="3" fill="#c8a04b"/>
+    <text x="688" y="${y+bh+16}" text-anchor="end" fill="#566175" font-size="10">输出</text>
+    ${boxes}
+    ${arrows}
+    <!-- 底部反馈环 -->
+    <path d="M${startX+(steps.length-1)*(bw+gap)+bw/2} ${y+bh} C${startX+(steps.length-1)*(bw+gap)+bw/2+30} ${y+bh+50}, 360 ${y+bh+50}, 360 ${y+bh+20}" stroke="#8b94a3" stroke-width="1.6" stroke-dasharray="4 4" fill="none" marker-end="url(#ar2)"/>
+    <text x="360" y="${y+bh+45}" text-anchor="middle" fill="#8b94a3" font-size="10">持续跟踪·动态调仓</text>
+  </svg>`;
+}
+
+// Mind Map: 关联关系全景
+function renderMindMap(){
+  const center={x:360,y:200};
+  const branches=[
+    {t:'资金来源',d:'投资者→基金→股票',c:'#1e4d8c',angle:-Math.PI*0.78},
+    {t:'投资工具',d:'ETF/股基/混合基',c:'#c8a04b',angle:-Math.PI*0.3},
+    {t:'风险传导',d:'个股风险→基金净值',c:'#1f9d62',angle:Math.PI*0.3},
+    {t:'价格联动',d:'股票涨跌→基金净值',c:'#d4433a',angle:Math.PI*0.78},
+    {t:'信息来源',d:'季报持仓→选股逻辑',c:'#0e8f8a',angle:Math.PI*1.0},
+  ];
+  const R=150, bw=150, bh=52;
+  let links='',nodes='';
+  branches.forEach(b=>{
+    const nx=center.x+Math.cos(b.angle)*R;
+    const ny=center.y+Math.sin(b.angle)*R;
+    links+=`<path d="M${center.x} ${center.y} Q${(center.x+nx)/2+ (b.angle<0?20:-20)} ${(center.y+ny)/2} ${nx} ${ny}" stroke="${b.c}" stroke-width="2.5" fill="none" opacity="0.55"/>`;
+    const bx=nx-bw/2, by=ny-bh/2;
+    nodes+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="11" fill="${b.c}"/>
+      <text x="${nx}" y="${ny-4}" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">${b.t}</text>
+      <text x="${nx}" y="${ny+14}" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="10.5">${b.d}</text>`;
+  });
+  // center node
+  const centerW=150,centerH=64;
+  document.getElementById('mindMap').innerHTML=`
+  <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="mc" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#133863"/><stop offset="1" stop-color="#0d2b4e"/></linearGradient>
+    </defs>
+    ${links}
+    ${nodes}
+    <rect x="${center.x-centerW/2}" y="${center.y-centerH/2}" width="${centerW}" height="${centerH}" rx="13" fill="url(#mc)" stroke="#c8a04b" stroke-width="2.5"/>
+    <text x="${center.x}" y="${center.y-6}" text-anchor="middle" fill="#fff" font-size="16" font-weight="800">股票资产</text>
+    <text x="${center.x}" y="${center.y+16}" text-anchor="middle" fill="#c8a04b" font-size="11">底层标的</text>
+  </svg>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   Back to top
+   ═══════════════════════════════════════════════════ */
+const toTop=document.getElementById('toTop');
+window.addEventListener('scroll',()=>{
+  toTop.classList.toggle('show',window.scrollY>500);
+});
+toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+/* ═══════════════════════════════════════════════════
+   Init
+   ═══════════════════════════════════════════════════ */
+renderTerms('stockContainer', stockData);
+renderTerms('fundContainer', fundData);
+renderFlowChart();
+renderPickStockChart();
+renderMindMap();
+</script>
+
+</body>
+</html>

@@ -518,6 +518,8 @@ const I = {
   eye:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6s2-3.5 5-3.5S11 6 11 6s-2 3.5-5 3.5S1 6 1 6z"/><circle cx="6" cy="6" r="1.5"/></svg>',
   calendar:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="9" height="8" rx="1"/><path d="M1.5 5h9M4 1.5v2M8 1.5v2"/></svg>',
   arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>',
+  trending:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12l4-5 3 2 5-6"/><path d="M11 3h3v3"/></svg>',
+  coins:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="10.5" r="3.5"/><path d="M9 10.5V6a3 3 0 0 1 3-3 3 3 0 0 1 3 3v.5"/></svg>',
 };
 
 /* ═══════════════════════════════════════════════════
@@ -609,6 +611,7 @@ const categories = [
     id:'frontend',label:'前端开发',icon:'code',iconBg:'ic-bg-cyan',accent:'var(--cyan-500)',
     tutorials:[
       {nav:'frontend-workflow',t:'前端开发完整工作流 · Vue/React 实战',d:'需求分析→项目搭建→组件开发→状态管理→构建部署全流程；Vue 3 / React 18 核心知识体系；20+ 易踩坑点全覆盖',href:'frontend/前端开发完整工作流-Vue与React实战.html',icon:'rocket',tags:[{l:'Vue 3',c:'t-cyan'},{l:'React 18',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'2.2K',date:'07.05',isNew:true},
+      {nav:'vue-tutorial',t:'Vue.js 从入门到实战 · 可交互教程',d:'零基础系统学 Vue 3：响应式数据/核心指令/组件化/Vue Router/Pinia/实战Todo，每个知识点配可运行演示，无需配置开发环境',href:'frontend/Vue-从入门到实战-可交互教程.html',icon:'book',tags:[{l:'Vue 3',c:'t-cyan'},{l:'可交互',c:'t-purple'},{l:'NEW',c:'t-green'}],time:'60',views:'0',date:'07.29',isNew:true},
     ]
   },
   {
@@ -617,6 +620,12 @@ const categories = [
       {nav:'embedded-dev',t:'嵌入式开发宣讲',d:'嵌入式概述 · 6 大应用领域 · 5 层技术栈架构 · 8 步开发流程 · 行业前景与薪资分析',href:'embedded-development.html',icon:'plug',tags:[{l:'嵌入式',c:'t-green'},{l:'IoT',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'18',views:'680',date:'07.10',isNew:true},
       {nav:'embedded-learning',t:'嵌入式工程学习指南',d:'5 阶段学习路径 · 硬件平台对比（STM32/ESP32/树莓派/Arduino）· 软件工具链 · 开源框架',href:'embedded-learning-guide.html',icon:'book',tags:[{l:'STM32',c:'t-green'},{l:'ESP32',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'22',views:'450',date:'07.11',isNew:true},
       {nav:'electronics-guide',t:'电子元件速查手册',d:'11 种核心元件 · SVG 电路符号 · 参数标签 · 典型应用场景 · 分类对比总览表',href:'electronics-components-guide.html',icon:'chip',tags:[{l:'电子元件',c:'t-green'},{l:'硬件',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'15',views:'380',date:'07.13',isNew:true},
+    ]
+  },
+  {
+    id:'finance',label:'金融投资',icon:'trending',iconBg:'ic-bg-amber',accent:'var(--amber-500)',
+    tutorials:[
+      {nav:'finance-jargon',t:'股票与基金黑话术语全指南',d:'90+ 术语 · 7 大场景 · 关系流程图 — 牛市/割肉/打新/抄底、申购/赎回/夏普比率/最大回撤，金融入门必读黑话词典',href:'finance/股票与基金黑话术语全指南.html',icon:'coins',tags:[{l:'股票',c:'t-red'},{l:'基金',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'20',views:'0',date:'07.29',isNew:true},
     ]
   },
 ];
@@ -657,13 +666,13 @@ function renderContent(){
   const totalCats = categories.length;
 
   let html = '<section class="hero">'
-    + '<div class="hero-eyebrow"><span class="dot"></span> 持续更新 · 最近更新于 2026.07.26</div>'
+    + '<div class="hero-eyebrow"><span class="dot"></span> 持续更新 · 最近更新于 2026.07.29</div>'
     + '<h1>交互式技术教程合集<br><span class="grad">打开即用，边学边练</span></h1>'
-    + '<p class="hero-desc">覆盖 AI 智能体、Python、Java、大数据、基础设施、系统架构、前端与嵌入式 '+totalCats+' 大领域的 '+totalTuts+' 个精心制作的单文件 HTML 教程。每个教程均为独立文件，支持交互式学习与代码实时运行。</p>'
+    + '<p class="hero-desc">覆盖 AI 智能体、Python、Java、大数据、基础设施、系统架构、前端、嵌入式与金融投资 '+totalCats+' 大领域的 '+totalTuts+' 个精心制作的单文件 HTML 教程。每个教程均为独立文件，支持交互式学习与代码实时运行。</p>'
     + '<div class="hero-stats">'
     + '<div class="stat"><span class="num">'+totalTuts+'</span><span class="lbl">教程</span><span class="sep">/</span></div>'
     + '<div class="stat"><span class="num">'+totalCats+'</span><span class="lbl">分类</span><span class="sep">/</span></div>'
-    + '<div class="stat"><span class="num">~120K</span><span class="lbl">行代码</span></div>'
+    + '<div class="stat"><span class="num">~130K</span><span class="lbl">行代码</span></div>'
     + '</div></section>';
 
   for(const cat of categories){
