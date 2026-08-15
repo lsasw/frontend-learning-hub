@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能体通信协议全指南 · WebSocket / SSE / HTTP / MQTT / CoAP</title>
+<style>
+:root{
+  --bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--border-l:#f1f5f9;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --primary:#2563eb;--primary-d:#1d4ed8;--primary-l:#dbeafe;--primary-ll:#eff6ff;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --green:#059669;--green-l:#d1fae5;
+  --orange:#ea580c;--orange-l:#fed7aa;
+  --red:#dc2626;--red-l:#fee2e2;
+  --teal:#0891b2;--teal-l:#cffafe;
+  --pink:#db2777;--pink-l:#fce7f3;
+  --cyan:#0891b2;--cyan-l:#cffafe;
+  --indigo:#4f46e5;--indigo-l:#e0e7ff;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --radius:10px;--radius-sm:6px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --font-mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* ═══ Hero ═══ */
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 40%,#1e40af 100%);color:#fff;padding:56px 32px 48px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,.25) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-40%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,.2) 0%,transparent 70%);pointer-events:none}
+.hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;position:relative;z-index:1}
+.hero .subtitle{font-size:1.05rem;color:#93c5fd;margin-top:10px;position:relative;z-index:1}
+.hero .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;position:relative;z-index:1}
+.hero .badge{font-size:.72rem;padding:4px 12px;border-radius:20px;font-weight:600;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(4px)}
+
+/* ═══ TOC ═══ */
+.toc{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 32px;position:sticky;top:0;z-index:50;display:flex;gap:6px;overflow-x:auto;white-space:nowrap;box-shadow:var(--shadow-sm)}
+.toc::-webkit-scrollbar{height:4px}.toc::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.toc a{font-size:.78rem;color:var(--text2);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all var(--transition);flex-shrink:0;font-weight:500}
+.toc a:hover{background:var(--primary-ll);color:var(--primary)}
+.toc a.active{background:var(--primary);color:#fff}
+.toc .back-home{color:var(--primary);font-weight:600;margin-right:auto;border-right:1px solid var(--border);padding-right:14px}
+
+/* ═══ Container ═══ */
+.container{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+section{margin-bottom:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:8px}
+.section-title .num{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:.9rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-desc{color:var(--text2);font-size:.92rem;margin-bottom:24px;padding-left:48px}
+
+/* ═══ Card ═══ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);transition:all var(--transition);margin-bottom:16px}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--primary)}
+.card h4{font-size:1.05rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card p{color:var(--text2);font-size:.88rem;line-height:1.7}
+.card .note{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:.82rem;display:flex;gap:8px;align-items:flex-start}
+.note.tip{background:var(--green-l);color:#065f46;border-left:3px solid var(--green)}
+.note.warn{background:var(--orange-l);color:#9a3412;border-left:3px solid var(--orange)}
+.note.danger{background:var(--red-l);color:#991b1b;border-left:3px solid var(--red)}
+.note.info{background:var(--primary-ll);color:var(--primary-d);border-left:3px solid var(--primary)}
+
+/* ═══ Grid ═══ */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* ═══ Code ═══ */
+pre{background:#1e293b;color:#e2e8f0;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;margin:12px 0;position:relative}
+pre .kw{color:#c084fc}pre .str{color:#86efac}pre .cm{color:#64748b;font-style:italic}pre .fn{color:#60a5fa}pre .num{color:#fbbf24}pre .op{color:#f472b6}pre .var{color:#fde68a}pre .cls{color:#5eead4}
+code.inline{background:var(--border-l);color:var(--primary-d);padding:2px 8px;border-radius:4px;font-family:var(--font-mono);font-size:.82rem}
+
+/* ═══ Table ═══ */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.84rem;overflow:hidden;border-radius:var(--radius)}
+th{background:var(--primary-ll);color:var(--primary-d);font-weight:700;padding:10px 14px;text-align:left;border-bottom:2px solid var(--primary-l);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border-l);color:var(--text2)}
+tr:hover td{background:var(--primary-ll)}
+tr:last-child td{border-bottom:none}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);margin:16px 0}
+
+/* ═══ Tags ═══ */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;padding:2px 10px;border-radius:12px;font-weight:600}
+.tag-blue{background:var(--primary-l);color:var(--primary-d)}
+.tag-purple{background:var(--purple-l);color:var(--purple)}
+.tag-green{background:var(--green-l);color:var(--green)}
+.tag-orange{background:var(--orange-l);color:var(--orange)}
+.tag-red{background:var(--red-l);color:var(--red)}
+.tag-teal{background:var(--teal-l);color:var(--teal)}
+.tag-pink{background:var(--pink-l);color:var(--pink)}
+.tag-indigo{background:var(--indigo-l);color:var(--indigo)}
+.tag-amber{background:var(--amber-l);color:var(--amber)}
+.tag-gray{background:var(--border-l);color:var(--text2)}
+
+/* ═══ Feature Grid ═══ */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:16px 0}
+.feat-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:all var(--transition)}
+.feat-item:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+.feat-item .feat-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.feat-item .feat-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.feat-item h5{font-size:.88rem;font-weight:700}
+.feat-item p{font-size:.8rem;color:var(--text2);line-height:1.6}
+
+/* ═══ Compare Box ═══ */
+.compare-box{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.compare-box .side{padding:20px}
+.compare-box .side.left{background:var(--red-l);border-right:1px solid var(--border)}
+.compare-box .side.right{background:var(--green-l)}
+.compare-box .side h5{font-size:.9rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.compare-box .side ul{list-style:none;padding:0}
+.compare-box .side li{font-size:.82rem;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+.compare-box .side.left li::before{content:'\2717';color:var(--red);flex-shrink:0;margin-top:1px}
+.compare-box .side.right li::before{content:'\2713';color:var(--green);flex-shrink:0;margin-top:1px}
+
+/* ═══ Steps ═══ */
+.steps{display:flex;flex-direction:column;gap:0;position:relative}
+.step{display:flex;gap:16px;padding:16px 0;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:19px;top:48px;bottom:-8px;width:2px;background:var(--border)}
+.step .step-num{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#fff;z-index:1}
+.step .step-content{flex:1}
+.step .step-content h5{font-size:.92rem;font-weight:700;margin-bottom:4px}
+.step .step-content p{font-size:.82rem;color:var(--text2)}
+
+/* ═══ Accordion ═══ */
+.accordion-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;transition:all var(--transition)}
+.accordion-item:hover{border-color:var(--primary)}
+.accordion-header{padding:14px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:600;font-size:.9rem;user-select:none;transition:background var(--transition)}
+.accordion-header:hover{background:var(--primary-ll)}
+.accordion-header .chevron{margin-left:auto;transition:transform var(--transition);color:var(--text3)}
+.accordion-item.open .chevron{transform:rotate(90deg)}
+.accordion-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.accordion-item.open .accordion-body{max-height:5000px}
+.accordion-content{padding:0 20px 20px}
+
+/* ═══ Flowchart SVG ═══ */
+.svg-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin:16px 0;overflow-x:auto}
+.svg-box svg{max-width:100%;height:auto;display:block;margin:0 auto}
+
+/* ═══ Decision Matrix ═══ */
+.decision-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid;border-radius:var(--radius);padding:20px;margin-bottom:12px;transition:all var(--transition)}
+.decision-card:hover{box-shadow:var(--shadow-md)}
+.decision-card.s-blue{border-left-color:var(--primary)}
+.decision-card.s-purple{border-left-color:var(--purple)}
+.decision-card.s-green{border-left-color:var(--green)}
+.decision-card.s-orange{border-left-color:var(--orange)}
+.decision-card.s-teal{border-left-color:var(--teal)}
+.decision-card .dc-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.decision-card .dc-header h5{font-size:.95rem;font-weight:700}
+.decision-card .dc-body{font-size:.84rem;color:var(--text2);line-height:1.7}
+.decision-card .dc-best{margin-top:10px;padding:8px 14px;background:var(--green-l);border-radius:var(--radius-sm);font-size:.8rem;color:#065f46}
+
+/* ═══ Tabs ═══ */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tab-btn{padding:8px 18px;border:none;background:none;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all var(--transition);white-space:nowrap}
+.tab-btn:hover{color:var(--primary)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ═══ Timeline ═══ */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;padding-bottom:20px}
+.timeline-item::before{content:'';position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface)}
+.timeline-item.t-blue::before{background:var(--primary)}
+.timeline-item.t-purple::before{background:var(--purple)}
+.timeline-item.t-green::before{background:var(--green)}
+.timeline-item.t-orange::before{background:var(--orange)}
+.timeline-item.t-teal::before{background:var(--teal)}
+.timeline-item h5{font-size:.88rem;font-weight:700;margin-bottom:4px}
+.timeline-item p{font-size:.82rem;color:var(--text2)}
+
+/* ═══ Footer ═══ */
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);color:var(--text3);font-size:.78rem}
+.footer a{color:var(--primary);text-decoration:none;font-weight:600}
+.footer a:hover{text-decoration:underline}
+
+/* ═══ Pill ═══ */
+.pill-list{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;background:var(--border-l);color:var(--text2);transition:all var(--transition)}
+.pill:hover{background:var(--primary-l);color:var(--primary)}
+
+/* ═══ Responsive ═══ */
+@media(max-width:768px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .hero{padding:36px 16px 32px}
+  .hero h1{font-size:1.6rem}
+  .container{padding:20px 14px 40px}
+  .toc{padding:12px 16px}
+  .section-desc{padding-left:0}
+  .compare-box{grid-template-columns:1fr}
+  .compare-box .side.left{border-right:none;border-bottom:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Hero ═══ -->
+<div class="hero">
+  <h1>智能体通信协议全指南</h1>
+  <p class="subtitle">WebSocket · SSE · Spring SseEmitter · HTTP · MQTT · CoAP — 从请求-响应到全双工实时通信的完整技术图谱</p>
+  <div class="badges">
+    <span class="badge">WebSocket</span>
+    <span class="badge">SSE</span>
+    <span class="badge">SseEmitter</span>
+    <span class="badge">HTTP</span>
+    <span class="badge">MQTT</span>
+    <span class="badge">CoAP</span>
+    <span class="badge">IoT</span>
+    <span class="badge">全双工通信</span>
+  </div>
+</div>
+
+<!-- ═══ TOC ═══ -->
+<nav class="toc" id="toc">
+  <a href="../index.html" class="back-home">← 返回首页</a>
+  <a href="#overview" class="active">总览</a>
+  <a href="#http">HTTP 通信</a>
+  <a href="#websocket">WebSocket</a>
+  <a href="#sse">SSE</a>
+  <a href="#ssemitter">Spring SseEmitter</a>
+  <a href="#iot">IoT 协议</a>
+  <a href="#comparison">协议对比</a>
+  <a href="#decision">选型决策</a>
+  <a href="#summary">总结</a>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 1. OVERVIEW                                                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="overview">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#0f172a,#1e40af)">01</span>
+    通信协议总览
+  </div>
+  <p class="section-desc">智能体系统中，通信协议决定了消息如何在 Agent、服务端、客户端之间流动。不同场景对延迟、方向性、连接持久性有着截然不同的需求，理解每种协议的本质特征是架构选型的基础。</p>
+
+  <div class="card">
+    <h4>为什么需要多种通信协议？</h4>
+    <p>智能体系统不是单一的请求-响应模型。一个完整的 Agent 系统可能同时包含：<strong>用户与 Agent 的实时对话</strong>（需要流式输出）、<strong>Agent 之间的协作通信</strong>（需要双向消息）、<strong>Agent 向监控面板推送状态</strong>（需要单向推送），以及<strong>边缘设备的遥测数据上报</strong>（需要轻量协议）。每种场景对通信协议的要求不同：</p>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--primary-l);color:var(--primary)">⚡</div>
+          <h5>实时性</h5>
+        </div>
+        <p>LLM 流式输出需要逐 Token 推送，传统 HTTP 轮询延迟过高</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">🔄</div>
+          <h5>方向性</h5>
+        </div>
+        <p>服务端推送 vs 客户端推送 vs 双向通信，方向决定协议</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--green-l);color:var(--green)">🔗</div>
+          <h5>连接管理</h5>
+        </div>
+        <p>短连接 vs 长连接 vs 持久连接，影响资源消耗与延迟</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--orange-l);color:var(--orange)">📱</div>
+          <h5>资源约束</h5>
+        </div>
+        <p>IoT 设备 CPU/内存/带宽受限，需要轻量级协议</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>📡 通信协议全景图</h4>
+    <div class="svg-box">
+      <svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <!-- Background gradient -->
+        <defs>
+          <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f8fafc"/>
+            <stop offset="100%" stop-color="#eff6ff"/>
+          </linearGradient>
+        </defs>
+        <rect width="900" height="420" fill="url(#bgGrad)" rx="10"/>
+
+        <!-- Title -->
+        <text x="450" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">智能体通信协议分层全景</text>
+
+        <!-- Layer labels -->
+        <text x="20" y="80" font-size="11" font-weight="700" fill="#94a3b8">应用层</text>
+        <text x="20" y="210" font-size="11" font-weight="700" fill="#94a3b8">传输层</text>
+        <text x="20" y="330" font-size="11" font-weight="700" fill="#94a3b8">场景层</text>
+
+        <!-- Layer dividers -->
+        <line x1="0" y1="140" x2="900" y2="140" stroke="#e2e8f0" stroke-dasharray="4 4"/>
+        <line x1="0" y1="270" x2="900" y2="270" stroke="#e2e8f0" stroke-dasharray="4 4"/>
+
+        <!-- Application layer boxes -->
+        <rect x="30" y="52" width="120" height="70" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="90" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">HTTP/HTTPS</text>
+        <text x="90" y="96" text-anchor="middle" font-size="10" fill="#475569">请求-响应</text>
+        <text x="90" y="112" text-anchor="middle" font-size="10" fill="#475569">短连接</text>
+
+        <rect x="170" y="52" width="120" height="70" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="230" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">WebSocket</text>
+        <text x="230" y="96" text-anchor="middle" font-size="10" fill="#475569">全双工</text>
+        <text x="230" y="112" text-anchor="middle" font-size="10" fill="#475569">持久连接</text>
+
+        <rect x="310" y="52" width="120" height="70" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+        <text x="370" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#059669">SSE</text>
+        <text x="370" y="96" text-anchor="middle" font-size="10" fill="#475569">服务端推送</text>
+        <text x="370" y="112" text-anchor="middle" font-size="10" fill="#475569">单向长连接</text>
+
+        <rect x="450" y="52" width="120" height="70" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5"/>
+        <text x="510" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#ea580c">MQTT</text>
+        <text x="510" y="96" text-anchor="middle" font-size="10" fill="#475569">发布-订阅</text>
+        <text x="510" y="112" text-anchor="middle" font-size="10" fill="#475569">轻量级IoT</text>
+
+        <rect x="590" y="52" width="120" height="70" rx="8" fill="#cffafe" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="650" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#0891b2">CoAP</text>
+        <text x="650" y="96" text-anchor="middle" font-size="10" fill="#475569">UDP RESTful</text>
+        <text x="650" y="112" text-anchor="middle" font-size="10" fill="#475569">超轻量IoT</text>
+
+        <rect x="730" y="52" width="140" height="70" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+        <text x="800" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">gRPC / A2A</text>
+        <text x="800" y="96" text-anchor="middle" font-size="10" fill="#475569">Agent间通信</text>
+        <text x="800" y="112" text-anchor="middle" font-size="10" fill="#475569">Protobuf序列化</text>
+
+        <!-- Transport layer -->
+        <rect x="30" y="162" width="240" height="50" rx="8" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
+        <text x="150" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#4f46e5">TCP</text>
+        <text x="150" y="202" text-anchor="middle" font-size="10" fill="#475569">HTTP / WebSocket / SSE / MQTT</text>
+
+        <rect x="290" y="162" width="160" height="50" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+        <text x="370" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">UDP</text>
+        <text x="370" y="202" text-anchor="middle" font-size="10" fill="#475569">CoAP</text>
+
+        <rect x="470" y="162" width="200" height="50" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+        <text x="570" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#db2777">HTTP/2</text>
+        <text x="570" y="202" text-anchor="middle" font-size="10" fill="#475569">gRPC / SSE multiplex</text>
+
+        <rect x="690" y="162" width="180" height="50" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+        <text x="780" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#64748b">TLS/SSL</text>
+        <text x="780" y="202" text-anchor="middle" font-size="10" fill="#475569">安全传输层</text>
+
+        <!-- Arrows from app to transport -->
+        <line x1="90" y1="122" x2="150" y2="162" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="230" y1="122" x2="150" y2="162" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="370" y1="122" x2="150" y2="162" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="510" y1="122" x2="150" y2="162" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="650" y1="122" x2="370" y2="162" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="800" y1="122" x2="570" y2="162" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+
+        <!-- Scenario layer -->
+        <rect x="30" y="290" width="160" height="70" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="110" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">API 调用</text>
+        <text x="110" y="336" text-anchor="middle" font-size="10" fill="#475569">REST / GraphQL</text>
+        <text x="110" y="350" text-anchor="middle" font-size="10" fill="#475569">工具调用 / RAG查询</text>
+
+        <rect x="210" y="290" width="160" height="70" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="290" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">实时对话</text>
+        <text x="290" y="336" text-anchor="middle" font-size="10" fill="#475569">LLM 流式输出</text>
+        <text x="290" y="350" text-anchor="middle" font-size="10" fill="#475569">多Agent协作</text>
+
+        <rect x="390" y="290" width="160" height="70" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="470" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">状态推送</text>
+        <text x="470" y="336" text-anchor="middle" font-size="10" fill="#475569">Agent执行进度</text>
+        <text x="470" y="350" text-anchor="middle" font-size="10" fill="#475569">日志/监控面板</text>
+
+        <rect x="570" y="290" width="160" height="70" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="650" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#ea580c">设备遥测</text>
+        <text x="650" y="336" text-anchor="middle" font-size="10" fill="#475569">传感器上报</text>
+        <text x="650" y="350" text-anchor="middle" font-size="10" fill="#475569">边缘Agent数据</text>
+
+        <rect x="750" y="290" width="120" height="70" rx="8" fill="#cffafe" stroke="#0891b2" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="810" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#0891b2">受限网络</text>
+        <text x="810" y="336" text-anchor="middle" font-size="10" fill="#475569">低功耗</text>
+        <text x="810" y="350" text-anchor="middle" font-size="10" fill="#475569">不可靠链路</text>
+
+        <!-- Arrows from transport to scenario -->
+        <line x1="150" y1="212" x2="110" y2="290" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="150" y1="212" x2="290" y2="290" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="150" y1="212" x2="470" y2="290" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="150" y1="212" x2="650" y2="290" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="370" y1="212" x2="810" y2="290" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+
+        <!-- Legend -->
+        <rect x="30" y="380" width="840" height="30" rx="6" fill="#fff" stroke="#e2e8f0"/>
+        <text x="50" y="400" font-size="10" fill="#475569">📌 上层=应用协议 | 中层=传输协议 | 下层=使用场景 | 虚线箭头=协议依赖关系</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🧭 协议速查导航</h4>
+    <div class="pill-list">
+      <span class="pill" style="cursor:pointer" onclick="document.getElementById('http').scrollIntoView()">📋 HTTP — 传统请求-响应，最通用</span>
+      <span class="pill" style="cursor:pointer" onclick="document.getElementById('websocket').scrollIntoView()">⚡ WebSocket — 全双工实时通信</span>
+      <span class="pill" style="cursor:pointer" onclick="document.getElementById('sse').scrollIntoView()">📡 SSE — 服务端单向推送</span>
+      <span class="pill" style="cursor:pointer" onclick="document.getElementById('ssemitter').scrollIntoView()">🍃 Spring SseEmitter — SSE 的 Spring 封装</span>
+      <span class="pill" style="cursor:pointer" onclick="document.getElementById('iot').scrollIntoView()">📱 MQTT / CoAP — 物联网轻量协议</span>
+      <span class="pill" style="cursor:pointer" onclick="document.getElementById('comparison').scrollIntoView()">📊 协议对比表</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 2. HTTP COMMUNICATION                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="http">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#2563eb,#3b82f6)">02</span>
+    普通HTTP通信
+  </div>
+  <p class="section-desc">HTTP 是互联网最基础的通信协议，采用请求-响应模式。它是所有 Web API 的基石，但在实时性和双向通信方面存在固有局限。</p>
+
+  <div class="card">
+    <h4>🔄 请求-响应模型</h4>
+    <p>HTTP（HyperText Transfer Protocol）是一种无状态的、基于请求-响应的协议。客户端发起请求，服务端返回响应，连接随后关闭（HTTP/1.1 默认 keep-alive 可复用连接，但仍是请求-驱动模式）。</p>
+    <div class="svg-box">
+      <svg viewBox="0 0 800 180" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <rect width="800" height="180" fill="#f8fafc" rx="10"/>
+        <!-- Client -->
+        <rect x="40" y="50" width="120" height="80" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="100" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">Client</text>
+        <text x="100" y="100" text-anchor="middle" font-size="11" fill="#475569">Agent / 前端</text>
+        <text x="100" y="116" text-anchor="middle" font-size="11" fill="#475569">浏览器 / App</text>
+
+        <!-- Server -->
+        <rect x="640" y="50" width="120" height="80" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="700" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#7c3aed">Server</text>
+        <text x="700" y="100" text-anchor="middle" font-size="11" fill="#475569">LLM API</text>
+        <text x="700" y="116" text-anchor="middle" font-size="11" fill="#475569">Agent后端</text>
+
+        <!-- Request arrow -->
+        <line x1="160" y1="70" x2="640" y2="70" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+        <rect x="280" y="50" width="240" height="22" rx="11" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+        <text x="400" y="65" text-anchor="middle" font-size="11" font-weight="600" fill="#1d4ed8">HTTP Request (GET/POST)</text>
+
+        <!-- Response arrow -->
+        <line x1="640" y1="110" x2="160" y2="110" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrowPurple)"/>
+        <rect x="280" y="112" width="240" height="22" rx="11" fill="#faf5ff" stroke="#7c3aed" stroke-width="1"/>
+        <text x="400" y="127" text-anchor="middle" font-size="11" font-weight="600" fill="#7c3aed">HTTP Response (JSON/HTML)</text>
+
+        <defs>
+          <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+          <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+        </defs>
+
+        <text x="400" y="155" text-anchor="middle" font-size="11" fill="#94a3b8">每次请求独立 · 无状态 · 响应完成后连接可复用或关闭</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>✅ 核心特点</h4>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num" style="background:#2563eb">1</div>
+          <div class="step-content">
+            <h5>无状态协议</h5>
+            <p>每个请求独立，服务器不保留客户端状态（通过 Cookie/Token 实现会话）</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#2563eb">2</div>
+          <div class="step-content">
+            <h5>请求-驱动模式</h5>
+            <p>永远是客户端先发起请求，服务端只能被动响应</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#2563eb">3</div>
+          <div class="step-content">
+            <h5>文本协议</h5>
+            <p>HTTP/1.x 是文本协议，Header 明文可读；HTTP/2 引入二进制分帧</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>⚠️ 在Agent场景中的局限</h4>
+      <div class="compare-box" style="margin:0">
+        <div class="side left">
+          <h5>🚫 局限</h5>
+          <ul>
+            <li>无法服务端主动推送（需轮询）</li>
+            <li>每次请求 Header 开销大</li>
+            <li>轮询导致延迟与资源浪费</li>
+            <li>不支持流式输出（HTTP/1.x）</li>
+            <li>无法维持双向实时通信</li>
+          </ul>
+        </div>
+        <div class="side right">
+          <h5>✓ 适用</h5>
+          <ul>
+            <li>RESTful API 调用</li>
+            <li>Agent 工具调用 / 函数调用</li>
+            <li>RAG 知识库查询</li>
+            <li>非实时数据获取</li>
+            <li>幂等的 CRUD 操作</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🔄 轮询（Polling）— HTTP 的实时性补偿方案</h4>
+    <p>在需要"伪实时"更新的场景中，HTTP 可以通过轮询模拟实时性。但这带来了额外的延迟和资源开销：</p>
+    <div class="grid-3">
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--primary-l);color:var(--primary)">🔄</div>
+          <h5>短轮询</h5>
+        </div>
+        <p>客户端定时发请求查结果。<strong>延迟=轮询间隔</strong>，间隔越短服务器压力越大。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">⏳</div>
+          <h5>长轮询</h5>
+        </div>
+        <p>服务端hold住请求直到有数据才返回。<strong>延迟更低</strong>，但占用服务端线程。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head">
+          <div class="feat-icon" style="background:var(--green-l);color:var(--green)">📦</div>
+          <h5>HTTP 流式</h5>
+        </div>
+        <p>利用<code class="inline">Transfer-Encoding: chunked</code>分块传输，实现伪流式输出。</p>
+      </div>
+    </div>
+    <div class="note warn">
+      <strong>注意：</strong>轮询方案在 Agent 场景下有硬伤——LLM 推理可能需要 10-30 秒，轮询间隔不好定。短轮询浪费请求，长轮询占用连接。这正是 SSE / WebSocket 存在的理由。
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>💻 HTTP 调用示例（Agent 工具调用场景）</h4>
+    <pre><span class="cm">// 前端 → Agent 后端 → LLM API 的典型 HTTP 调用链</span>
+<span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/agent/chat'</span>, {
+  method: <span class="str">'POST'</span>,
+  headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+  body: <span class="fn">JSON</span>.<span class="fn">stringify</span>({
+    message: <span class="str">"分析今天的股票行情"</span>,
+    sessionId: <span class="str">"sess_abc123"</span>
+  })
+});
+
+<span class="kw">const</span> result = <span class="kw">await</span> response.<span class="fn">json</span>();
+<span class="cm">// 等待整个响应完成才能拿到结果 — 无法流式输出</span>
+console.<span class="fn">log</span>(result.reply);
+<span class="cm">// ⏳ 如果 LLM 推理需要 20s，用户要白屏等待 20s</span></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 3. WEBSOCKET                                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="websocket">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#7c3aed,#9333ea)">03</span>
+    WebSocket 协议
+  </div>
+  <p class="section-desc">WebSocket 是唯一提供<strong>全双工</strong>通信的 Web 协议。一次握手后，客户端和服务端可以在同一连接上随时互发消息，是实时 Agent 协作通信的首选。</p>
+
+  <div class="card">
+    <h4>🔌 全双工通信机制</h4>
+    <p>WebSocket 通过 HTTP 升级握手建立连接，随后在同一 TCP 连接上切换到 WebSocket 协议（<code class="inline">ws://</code> 或 <code class="inline">wss://</code>），实现双向实时通信。</p>
+    <div class="svg-box">
+      <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <rect width="800" height="280" fill="#f8fafc" rx="10"/>
+
+        <!-- Client -->
+        <rect x="40" y="50" width="120" height="80" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="100" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">Client</text>
+        <text x="100" y="100" text-anchor="middle" font-size="11" fill="#475569">浏览器 / Agent</text>
+
+        <!-- Server -->
+        <rect x="640" y="50" width="120" height="80" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="700" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#7c3aed">Server</text>
+        <text x="700" y="100" text-anchor="middle" font-size="11" fill="#475569">Agent 后端</text>
+
+        <!-- Handshake phase -->
+        <text x="400" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">阶段1: HTTP 升级握手</text>
+        <line x1="160" y1="65" x2="640" y2="65" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB)"/>
+        <text x="400" y="60" text-anchor="middle" font-size="10" fill="#1d4ed8">GET /ws HTTP/1.1 | Upgrade: websocket | Connection: Upgrade</text>
+
+        <line x1="640" y1="75" x2="160" y2="75" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrP)"/>
+        <text x="400" y="72" text-anchor="middle" font-size="10" fill="#7c3aed">HTTP/1.1 101 Switching Protocols</text>
+
+        <line x1="0" y1="120" x2="800" y2="120" stroke="#e2e8f0" stroke-dasharray="6 4"/>
+
+        <!-- Full-duplex phase -->
+        <text x="400" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">阶段2: WebSocket 全双工通信（持久连接）</text>
+
+        <!-- Bidirectional arrows -->
+        <line x1="160" y1="170" x2="640" y2="170" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB)"/>
+        <text x="400" y="165" text-anchor="middle" font-size="10" fill="#1d4ed8">→ Client 发送消息（工具调用结果 / 用户输入）</text>
+
+        <line x1="640" y1="190" x2="160" y2="190" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrP)"/>
+        <text x="400" y="185" text-anchor="middle" font-size="10" fill="#7c3aed">← Server 推送消息（LLM 流式 Token / Agent 状态）</text>
+
+        <line x1="160" y1="210" x2="640" y2="210" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB)"/>
+        <text x="400" y="205" text-anchor="middle" font-size="10" fill="#1d4ed8">→ Client 发送消息（中断请求 / 反馈）</text>
+
+        <line x1="640" y1="230" x2="160" y2="230" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrP)"/>
+        <text x="400" y="225" text-anchor="middle" font-size="10" fill="#7c3aed">← Server 推送（任务完成通知）</text>
+
+        <text x="400" y="265" text-anchor="middle" font-size="10" fill="#94a3b8">一条 TCP 连接 · 双向随时发送 · 直到任一方主动关闭</text>
+
+        <defs>
+          <marker id="arrB" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+          <marker id="arrP" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>🔑 核心特征</h4>
+      <div class="feat-grid" style="grid-template-columns:1fr 1fr">
+        <div class="feat-item">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">🔄</div><h5>全双工</h5></div>
+          <p>双方可同时发送和接收，无需等待对方</p>
+        </div>
+        <div class="feat-item">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">🔗</div><h5>持久连接</h5></div>
+          <p>一次握手后连接持续，避免反复建立 TCP</p>
+        </div>
+        <div class="feat-item">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">📊</div><h5>低开销</h5></div>
+          <p>数据帧头仅 2-14 字节，远小于 HTTP Header</p>
+        </div>
+        <div class="feat-item">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">⚡</div><h5>低延迟</h5></div>
+          <p>消息即时推送，无需轮询等待</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>📋 适用场景</h4>
+      <div class="pill-list">
+        <span class="pill">🤖 多 Agent 实时协作</span>
+        <span class="pill">💬 聊天 / 对话系统</span>
+        <span class="pill">📊 实时数据看板</span>
+        <span class="pill">🎮 多人协同编辑</span>
+        <span class="pill">🔔 即时通知推送</span>
+        <span class="pill">📈 金融实时行情</span>
+        <span class="pill">🖥️ 远程终端</span>
+      </div>
+      <div class="note info">
+        <strong>Agent 场景：</strong>多 Agent 系统中，Agent 之间需要频繁交换中间结果、状态更新和中断信号，WebSocket 的全双工特性使其成为 Agent-to-Agent（A2A）通信的理想选择。
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🆚 WebSocket vs HTTP 的关键差异</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>对比维度</th>
+            <th>HTTP</th>
+            <th>WebSocket</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>通信方向</strong></td><td>单向（客户端→服务端→客户端）</td><td>全双工（双向同时）</td></tr>
+          <tr><td><strong>连接生命周期</strong></td><td>短连接（请求-响应-可关闭）</td><td>持久连接（握手后一直保持）</td></tr>
+          <tr><td><strong>谁可以主动发消息</strong></td><td>只有客户端能发起请求</td><td>双方都可以随时发送</td></tr>
+          <tr><td><strong>协议层</strong></td><td>HTTP/1.x 文本协议</td><td>基于 HTTP 升级，之后切到 WS 二进制帧</td></tr>
+          <tr><td><strong>数据帧头开销</strong></td><td>每次请求 ~200-800 字节 Header</td><td>2-14 字节帧头</td></tr>
+          <tr><td><strong>实时延迟</strong></td><td>高（取决于轮询间隔）</td><td>极低（毫秒级推送）</td></tr>
+          <tr><td><strong>服务端推送能力</strong></td><td>无（需轮询 / 长轮询模拟）</td><td>原生支持</td></tr>
+          <tr><td><strong>代理/防火墙兼容</strong></td><td>极好（所有网络设备都支持）</td><td>部分代理可能不支持 Upgrade</td></tr>
+          <tr><td><strong>断线重连</strong></td><td>天然支持（每次都是新请求）</td><td>需手动实现（心跳+重连逻辑）</td></tr>
+          <tr><td><strong>状态管理</strong></td><td>无状态，每次请求需带认证</td><td>有状态，握手时认证后保持会话</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>💻 WebSocket 代码示例</h4>
+    <div class="tabs" id="ws-tabs">
+      <button class="tab-btn active" onclick="switchTab('ws-tabs','ws-fe',this)">前端 (浏览器)</button>
+      <button class="tab-btn" onclick="switchTab('ws-tabs','ws-be',this)">后端 (Node.js)</button>
+    </div>
+    <div class="tab-panel active" id="ws-fe">
+      <pre><span class="cm">// 浏览器端 WebSocket — Agent 实时对话</span>
+<span class="kw">const</span> ws = <span class="kw">new</span> <span class="cls">WebSocket</span>(<span class="str">'wss://api.agent.com/ws/chat'</span>);
+
+ws.<span class="fn">onopen</span> = () =&gt; {
+  console.<span class="fn">log</span>(<span class="str">'连接已建立'</span>);
+  ws.<span class="fn">send</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>({
+    type: <span class="str">'chat'</span>,
+    message: <span class="str">'分析今日A股市场'</span>
+  }));
+};
+
+ws.<span class="fn">onmessage</span> = (event) =&gt; {
+  <span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(event.data);
+  <span class="kw">if</span> (data.type === <span class="str">'token'</span>) {
+    <span class="cm">// 逐 Token 流式渲染 LLM 输出</span>
+    appendToken(data.content);
+  } <span class="kw">else if</span> (data.type === <span class="str">'tool_call'</span>) {
+    <span class="cm">// Agent 正在调用工具（如搜索新闻）</span>
+    showToolCall(data.tool, data.args);
+  } <span class="kw">else if</span> (data.type === <span class="str">'done'</span>) {
+    console.<span class="fn">log</span>(<span class="str">'Agent 回复完成'</span>);
+  }
+};
+
+ws.<span class="fn">onclose</span> = () =&gt; console.<span class="fn">log</span>(<span class="str">'连接已关闭'</span>);
+ws.<span class="fn">onerror</span> = (err) =&gt; console.<span class="fn">error</span>(<span class="str">'连接异常'</span>, err);
+
+<span class="cm">// 用户可随时发送消息（全双工）</span>
+<span class="kw">function</span> <span class="fn">sendInterrupt</span>() {
+  ws.<span class="fn">send</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>({ type: <span class="str">'interrupt'</span> }));
+}</pre>
+    </div>
+    <div class="tab-panel" id="ws-be">
+      <pre><span class="cm">// Node.js 后端 WebSocket 服务（ws 库）</span>
+<span class="kw">const</span> { <span class="cls">WebSocketServer</span> } = <span class="fn">require</span>(<span class="str">'ws'</span>);
+<span class="kw">const</span> wss = <span class="kw">new</span> <span class="cls">WebSocketServer</span>({ port: <span class="num">8080</span> });
+
+wss.<span class="fn">on</span>(<span class="str">'connection'</span>, (ws, req) =&gt; {
+  <span class="cm">// 握手时鉴权</span>
+  <span class="kw">const</span> token = <span class="kw">new</span> <span class="cls">URL</span>(req.url, <span class="str">'ws://localhost'</span>).searchParams.<span class="fn">get</span>(<span class="str">'token'</span>);
+  <span class="kw">if</span> (!<span class="fn">verifyToken</span>(token)) <span class="kw">return</span> ws.<span class="fn">close</span>();
+
+  ws.<span class="fn">on</span>(<span class="str">'message'</span>, <span class="kw">async</span> (raw) =&gt; {
+    <span class="kw">const</span> msg = <span class="fn">JSON</span>.<span class="fn">parse</span>(raw);
+
+    <span class="kw">if</span> (msg.type === <span class="str">'chat'</span>) {
+      <span class="cm">// 调用 LLM 并流式推送每个 Token</span>
+      <span class="kw">const</span> stream = <span class="kw">await</span> llmClient.<span class="fn">streamChat</span>(msg.message);
+      <span class="kw">for await</span> (<span class="kw">const</span> chunk <span class="kw">of</span> stream) {
+        ws.<span class="fn">send</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>({
+          type: <span class="str">'token'</span>,
+          content: chunk.content
+        }));
+      }
+      ws.<span class="fn">send</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>({ type: <span class="str">'done'</span> }));
+    }
+  });
+
+  <span class="cm">// 心跳保活</span>
+  <span class="kw">const</span> heartbeat = <span class="fn">setInterval</span>(() =&gt; {
+    <span class="kw">if</span> (ws.<span class="var">readyState</span> === <span class="cls">WebSocket</span>.OPEN) ws.<span class="fn">send</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>({ type: <span class="str">'ping'</span> }));
+  }, <span class="num">30000</span>);
+
+  ws.<span class="fn">on</span>(<span class="str">'close'</span>, () =&gt; <span class="fn">clearInterval</span>(heartbeat));
+});</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>⚠️ WebSocket 的踩坑点</h4>
+    <div class="grid-2">
+      <div class="problem-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:var(--radius);padding:20px;margin-bottom:12px">
+        <div class="prob-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <h5 style="font-size:.95rem;font-weight:700">代理/防火墙不兼容</h5>
+          <span class="tag tag-red">高频</span>
+        </div>
+        <div style="font-size:.84rem;color:var(--text2);line-height:1.7">企业网络代理可能不支持 HTTP Upgrade，导致连接失败。需配合 wss:// + TLS 透传或使用 SSE 作为降级方案。</div>
+      </div>
+      <div class="problem-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:var(--radius);padding:20px;margin-bottom:12px">
+        <div class="prob-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <h5 style="font-size:.95rem;font-weight:700">连接管理复杂</h5>
+          <span class="tag tag-orange">中频</span>
+        </div>
+        <div style="font-size:.84rem;color:var(--text2);line-height:1.7">需自行实现心跳保活、断线重连、连接池管理、超时清理。没有 HTTP 那种"请求完就释放"的简单模型。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4. SSE (Server-Sent Events)                                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="sse">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#059669,#10b981)">04</span>
+    SSE (Server-Sent Events)
+  </div>
+  <p class="section-desc">SSE 是基于 HTTP 的<strong>单向推送</strong>协议。服务端可以在一条长连接上持续向客户端推送事件流。它是 LLM 流式输出和 Agent 状态推送的最常用方案。</p>
+
+  <div class="card">
+    <h4>📡 单向推送机制</h4>
+    <p>SSE 利用 HTTP 长连接实现服务端到客户端的单向推送。客户端通过 <code class="inline">EventSource</code> API 建立连接，服务端以 <code class="inline">text/event-stream</code> 格式持续推送事件。</p>
+    <div class="svg-box">
+      <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <rect width="800" height="200" fill="#f8fafc" rx="10"/>
+        <!-- Client -->
+        <rect x="40" y="40" width="120" height="70" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+        <text x="100" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#059669">Client</text>
+        <text x="100" y="86" text-anchor="middle" font-size="11" fill="#475569">EventSource</text>
+        <text x="100" y="100" text-anchor="middle" font-size="11" fill="#475569">只监听</text>
+
+        <!-- Server -->
+        <rect x="640" y="40" width="120" height="70" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="700" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">Server</text>
+        <text x="700" y="86" text-anchor="middle" font-size="11" fill="#475569">持续推送</text>
+        <text x="700" y="100" text-anchor="middle" font-size="11" fill="#475569">event-stream</text>
+
+        <!-- Initial connection -->
+        <line x1="160" y1="55" x2="640" y2="55" stroke="#059669" stroke-width="2" stroke-dasharray="6 3" marker-end="url(#arrG)"/>
+        <text x="400" y="50" text-anchor="middle" font-size="10" fill="#059669">HTTP GET (Accept: text/event-stream) — 建立连接</text>
+
+        <!-- Push events -->
+        <line x1="640" y1="75" x2="160" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB2)"/>
+        <text x="400" y="72" text-anchor="middle" font-size="10" fill="#1d4ed8">data: {"token":"分析"} ← event #1</text>
+
+        <line x1="640" y1="95" x2="160" y2="95" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB2)"/>
+        <text x="400" y="92" text-anchor="middle" font-size="10" fill="#1d4ed8">data: {"token":"今日"} ← event #2</text>
+
+        <line x1="640" y1="115" x2="160" y2="115" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB2)"/>
+        <text x="400" y="112" text-anchor="middle" font-size="10" fill="#1d4ed8">data: {"token":"A股"} ← event #3</text>
+
+        <line x1="640" y1="135" x2="160" y2="135" stroke="#2563eb" stroke-width="2" marker-end="url(#arrB2)"/>
+        <text x="400" y="132" text-anchor="middle" font-size="10" fill="#1d4ed8">event: done | data: [DONE] ← event #4 (结束)</text>
+
+        <text x="400" y="170" text-anchor="middle" font-size="10" fill="#94a3b8">单向推送 · 客户端不能通过此连接发送数据 · 断线自动重连</text>
+
+        <defs>
+          <marker id="arrG" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
+          <marker id="arrB2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>🔑 SSE 核心特征</h4>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num" style="background:#059669">1</div>
+          <div class="step-content">
+            <h5>基于 HTTP 协议</h5>
+            <p>不需要协议升级，走标准 HTTP 通道，防火墙/代理天然兼容</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#059669">2</div>
+          <div class="step-content">
+            <h5>单向推送</h5>
+            <p>服务端→客户端单向。客户端如需发送数据，走独立 HTTP 请求</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#059669">3</div>
+          <div class="step-content">
+            <h5>自动重连</h5>
+            <p>浏览器原生 <code class="inline">EventSource</code> 断线自动重连，无需手写重连逻辑</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#059669">4</div>
+          <div class="step-content">
+            <h5>文本格式</h5>
+            <p>事件流是纯文本（UTF-8），不支持二进制数据</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>🆚 SSE vs WebSocket 对比</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>维度</th><th>SSE</th><th>WebSocket</th></tr></thead>
+          <tbody>
+            <tr><td><strong>通信方向</strong></td><td>单向（S→C）</td><td>全双工</td></tr>
+            <tr><td><strong>底层协议</strong></td><td>HTTP</td><td>HTTP 升级后 WS</td></tr>
+            <tr><td><strong>断线重连</strong></td><td>浏览器自动重连</td><td>需手动实现</td></tr>
+            <tr><td><strong>代理兼容</strong></td><td>极好</td><td>可能有问题</td></tr>
+            <tr><td><strong>数据格式</strong></td><td>仅文本</td><td>文本+二进制</td></tr>
+            <tr><td><strong>浏览器 API</strong></td><td>EventSource</td><td>WebSocket</td></tr>
+            <tr><td><strong>连接数限制</strong></td><td>6 conn/域(HTTP/1)</td><td>无此限制</td></tr>
+            <tr><td><strong>最佳场景</strong></td><td>LLM 流式输出</td><td>双向实时协作</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>📋 SSE 适用场景</h4>
+    <div class="feat-grid">
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--green-l);color:var(--green)">🤖</div><h5>LLM 流式输出</h5></div>
+        <p>逐 Token 推送 LLM 回复，OpenAI API <code class="inline">stream:true</code> 就是 SSE</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--green-l);color:var(--green)">📊</div><h5>Agent 执行状态</h5></div>
+        <p>"正在搜索… 正在分析… 正在生成…"等进度推送</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--green-l);color:var(--green)">🔔</div><h5>通知/告警</h5></div>
+        <p>服务端主动推送通知，无需客户端轮询</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--green-l);color:var(--green)">📈</div><h5>实时数据流</h5></div>
+        <p>股票行情、日志流、监控指标推送</p>
+      </div>
+    </div>
+    <div class="note tip">
+      <strong>为什么 OpenAI 选 SSE 而不是 WebSocket？</strong> 因为 LLM 流式输出是典型的"服务端→客户端单向推送"场景——用户发一次请求，服务端逐 Token 回传。不需要全双工，SSE 的自动重连和 HTTP 兼容性反而是优势。
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>💻 SSE 代码示例</h4>
+    <div class="tabs" id="sse-tabs">
+      <button class="tab-btn active" onclick="switchTab('sse-tabs','sse-fe',this)">前端 (EventSource)</button>
+      <button class="tab-btn" onclick="switchTab('sse-tabs','sse-fetch',this)">前端 (Fetch + ReadableStream)</button>
+    </div>
+    <div class="tab-panel active" id="sse-fe">
+      <pre><span class="cm">// 方式1: EventSource API — 最简单</span>
+<span class="kw">const</span> evtSource = <span class="kw">new</span> <span class="cls">EventSource</span>(<span class="str">'/api/agent/stream?msg=分析A股'</span>);
+
+<span class="cm">// 监听默认 message 事件</span>
+evtSource.<span class="fn">onmessage</span> = (e) =&gt; {
+  <span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(e.data);
+  <span class="kw">if</span> (data.done) {
+    evtSource.<span class="fn">close</span>(); <span class="cm">// 主动关闭</span>
+    <span class="kw">return</span>;
+  }
+  appendToken(data.content); <span class="cm">// 渲染 Token</span>
+};
+
+<span class="cm">// 监听自定义事件</span>
+evtSource.<span class="fn">addEventListener</span>(<span class="str">'tool_call'</span>, (e) =&gt; {
+  <span class="kw">const</span> tool = <span class="fn">JSON</span>.<span class="fn">parse</span>(e.data);
+  showToolCall(tool.name, tool.args);
+});
+
+evtSource.<span class="fn">addEventListener</span>(<span class="str">'done'</span>, () =&gt; {
+  evtSource.<span class="fn">close</span>();
+});
+
+<span class="cm">// 断线自动重连 — EventSource 内置</span>
+<span class="cm">// 但注意：重连会重新发 GET 请求，需用 Last-Event-ID 处理续传</span></pre>
+    </div>
+    <div class="tab-panel" id="sse-fetch">
+      <pre><span class="cm">// 方式2: fetch + ReadableStream — 支持 POST 请求</span>
+<span class="cm">// EventSource 只支持 GET，POST 场景需用 fetch 模拟 SSE</span>
+<span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/agent/chat'</span>, {
+  method: <span class="str">'POST'</span>,
+  headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+  body: <span class="fn">JSON</span>.<span class="fn">stringify</span>({ message: <span class="str">'分析A股'</span> })
+});
+
+<span class="kw">const</span> reader = response.body.<span class="fn">getReader</span>();
+<span class="kw">const</span> decoder = <span class="kw">new</span> <span class="cls">TextDecoder</span>();
+<span class="kw">let</span> buffer = <span class="str">''</span>;
+
+<span class="kw">while</span> (<span class="kw">true</span>) {
+  <span class="kw">const</span> { done, value } = <span class="kw">await</span> reader.<span class="fn">read</span>();
+  <span class="kw">if</span> (done) <span class="kw">break</span>;
+
+  buffer += decoder.<span class="fn">decode</span>(value, { stream: <span class="kw">true</span> });
+  <span class="kw">const</span> lines = buffer.<span class="fn">split</span>(<span class="str">'\n'</span>);
+  buffer = lines.<span class="fn">pop</span>(); <span class="cm">// 保留不完整的行</span>
+
+  <span class="kw">for</span> (<span class="kw">const</span> line <span class="kw">of</span> lines) {
+    <span class="kw">if</span> (line.<span class="fn">startsWith</span>(<span class="str">'data: '</span>)) {
+      <span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(line.<span class="fn">slice</span>(<span class="num">6</span>));
+      appendToken(data.content);
+    }
+  }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 5. SPRING SSEMITTER                                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="ssemitter">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#059669,#0891b2)">05</span>
+    Spring 框架中的 SseEmitter
+  </div>
+  <p class="section-desc">SseEmitter 是 Spring MVC 对 SSE 的封装。它允许 Controller 方法返回一个可异步写入的 emitter，在独立线程中逐步推送事件，是 Java 后端实现 Agent 流式输出的标准方案。</p>
+
+  <div class="card">
+    <h4>🍃 SseEmitter 在 Spring MVC 中的角色</h4>
+    <p>SseEmitter 是 Spring 4.2+ 提供的 SSE 支持类。它将 SSE 的底层细节（HTTP 响应头、事件格式、连接管理）封装起来，开发者只需关注<strong>何时推送什么数据</strong>。</p>
+    <div class="svg-box">
+      <svg viewBox="0 0 900 240" xmlns="http://www.w3.org/200/svg" style="font-family:var(--font-sans)">
+        <rect width="900" height="240" fill="#f8fafc" rx="10"/>
+
+        <!-- Client -->
+        <rect x="20" y="40" width="120" height="60" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+        <text x="80" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#059669">Client</text>
+        <text x="80" y="82" text-anchor="middle" font-size="10" fill="#475569">EventSource</text>
+
+        <!-- Spring MVC -->
+        <rect x="200" y="20" width="200" height="100" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="300" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Spring MVC</text>
+        <text x="300" y="62" text-anchor="middle" font-size="10" fill="#475569">DispatcherServlet</text>
+        <text x="300" y="78" text-anchor="middle" font-size="10" fill="#475569">异步请求分发</text>
+        <text x="300" y="94" text-anchor="middle" font-size="10" fill="#475569">Response: text/event-stream</text>
+
+        <!-- SseEmitter -->
+        <rect x="460" y="20" width="160" height="100" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="540" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">SseEmitter</text>
+        <text x="540" y="62" text-anchor="middle" font-size="10" fill="#475569">事件写入器</text>
+        <text x="540" y="78" text-anchor="middle" font-size="10" fill="#475569">send() / complete()</text>
+        <text x="540" y="94" text-anchor="middle" font-size="10" fill="#475569">onTimeout/onError</text>
+
+        <!-- Business Logic -->
+        <rect x="680" y="20" width="200" height="100" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="780" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="#ea580c">Agent Service</text>
+        <text x="780" y="62" text-anchor="middle" font-size="10" fill="#475569">LLM 流式调用</text>
+        <text x="780" y="78" text-anchor="middle" font-size="10" fill="#475569">工具执行</text>
+        <text x="780" y="94" text-anchor="middle" font-size="10" fill="#475569">异步线程推送</text>
+
+        <!-- Arrows -->
+        <line x1="140" y1="60" x2="200" y2="60" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrA)"/>
+        <line x1="400" y1="60" x2="460" y2="60" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrA)"/>
+        <line x1="620" y1="60" x2="680" y2="60" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrA)"/>
+
+        <!-- Push back -->
+        <line x1="540" y1="100" x2="300" y2="100" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arrA)"/>
+        <text x="420" y="96" text-anchor="middle" font-size="10" fill="#7c3aed">emitter.send() → 写入响应流</text>
+
+        <line x1="200" y1="100" x2="80" y2="100" stroke="#2563eb" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arrA)"/>
+        <text x="140" y="96" text-anchor="middle" font-size="10" fill="#2563eb">HTTP chunk → Client</text>
+
+        <!-- Timeline -->
+        <text x="450" y="175" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">SseEmitter 生命周期</text>
+
+        <rect x="30" y="195" width="120" height="30" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+        <text x="90" y="214" text-anchor="middle" font-size="10" fill="#1d4ed8">①创建Emitter</text>
+
+        <rect x="170" y="195" width="120" height="30" rx="6" fill="#ede9fe" stroke="#7c3aed"/>
+        <text x="230" y="214" text-anchor="middle" font-size="10" fill="#7c3aed">②返回给Controller</text>
+
+        <rect x="310" y="195" width="120" height="30" rx="6" fill="#d1fae5" stroke="#059669"/>
+        <text x="370" y="214" text-anchor="middle" font-size="10" fill="#059669">③异步send()</text>
+
+        <rect x="450" y="195" width="120" height="30" rx="6" fill="#fed7aa" stroke="#ea580c"/>
+        <text x="510" y="214" text-anchor="middle" font-size="10" fill="#ea580c">④持续推送事件</text>
+
+        <rect x="590" y="195" width="120" height="30" rx="6" fill="#fef3c7" stroke="#d97706"/>
+        <text x="650" y="214" text-anchor="middle" font-size="10" fill="#d97706">⑤complete()</text>
+
+        <rect x="730" y="195" width="140" height="30" rx="6" fill="#f1f5f9" stroke="#64748b"/>
+        <text x="800" y="214" text-anchor="middle" font-size="10" fill="#475569">⑥连接关闭</text>
+
+        <defs><marker id="arrA" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🔄 SseEmitter 生命周期管理</h4>
+    <p>SseEmitter 的生命周期是理解它的关键：创建 → 在异步线程中写入 → 完成/超时/出错 → 清理。每个阶段都有对应的回调和配置。</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num" style="background:#2563eb">1</div>
+        <div class="step-content">
+          <h5>创建 Emitter</h5>
+          <p><code class="inline">new SseEmitter(0L)</code> — 参数为超时时间（毫秒），0L 表示永不超时。通常设为 30000-120000ms。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#7c3aed">2</div>
+        <div class="step-content">
+          <h5>注册回调</h5>
+          <p>通过 <code class="inline">onCompletion</code>、<code class="inline">onTimeout</code>、<code class="inline">onError</code> 注册生命周期回调，用于资源清理。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#059669">3</div>
+        <div class="step-content">
+          <h5>异步写入事件</h5>
+          <p>在独立线程/线程池中调用 <code class="inline">emitter.send()</code> 逐个推送事件。Spring 会自动将事件写入 HTTP 响应流。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#ea580c">4</div>
+        <div class="step-content">
+          <h5>完成与清理</h5>
+          <p>推送完毕调用 <code class="inline">emitter.complete()</code> 关闭连接。如遇异常调用 <code class="inline">completeWithError()</code>。超时则由 Spring 自动关闭。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>💻 Spring Boot + SseEmitter 完整示例</h4>
+    <pre><span class="cm">// ──────────────────────────────────────────
+// 1. Controller — 接收请求，返回 SseEmitter
+// ──────────────────────────────────────────</span>
+<span class="kw">@RestController</span>
+<span class="kw">@RequestMapping</span>(<span class="str">"/api/agent"</span>)
+<span class="kw">public class</span> <span class="cls">AgentController</span> {
+
+    <span class="kw">@Autowired</span>
+    <span class="kw">private</span> AgentService agentService;
+
+    <span class="kw">@GetMapping</span>(value = <span class="str">"/stream"</span>, produces = <span class="cls">MediaType</span>.TEXT_EVENT_STREAM_VALUE)
+    <span class="kw">public</span> <span class="cls">SseEmitter</span> <span class="fn">streamChat</span>(<span class="kw">@RequestParam</span> <span class="cls">String</span> message) {
+        <span class="cm">// 创建 Emitter，超时 120 秒（LLM 推理可能较慢）</span>
+        <span class="cls">SseEmitter</span> emitter = <span class="kw">new</span> <span class="cls">SseEmitter</span>(<span class="num">120_000L</span>);
+
+        <span class="cm">// 注册生命周期回调</span>
+        emitter.<span class="fn">onCompletion</span>(() -&gt; log.<span class="fn">info</span>(<span class="str">"SSE 连接完成"</span>));
+        emitter.<span class="fn">onTimeout</span>(() -&gt; {
+            log.<span class="fn">warn</span>(<span class="str">"SSE 连接超时"</span>);
+            emitter.<span class="fn">complete</span>();
+        });
+        emitter.<span class="fn">onError</span>(ex -&gt; log.<span class="fn">error</span>(<span class="str">"SSE 连接异常"</span>, ex));
+
+        <span class="cm">// 异步执行 Agent 逻辑（不阻塞 Tomcat 线程）</span>
+        agentService.<span class="fn">executeAsync</span>(message, emitter);
+
+        <span class="kw">return</span> emitter; <span class="cm">// 立即返回，Spring 保持连接</span>
+    }
+}
+
+<span class="cm">// ──────────────────────────────────────────
+// 2. Service — 异步推送事件
+// ──────────────────────────────────────────</span>
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="cls">AgentService</span> {
+
+    <span class="kw">@Async</span> <span class="cm">// 异步线程执行，不阻塞 Controller 线程</span>
+    <span class="kw">public void</span> <span class="fn">executeAsync</span>(<span class="cls">String</span> message, <span class="cls">SseEmitter</span> emitter) {
+        <span class="kw">try</span> {
+            <span class="cm">// 推送"开始思考"事件</span>
+            emitter.<span class="fn">send</span>(<span class="cls">SseEmitter</span>.<span class="fn">event</span>()
+                    .<span class="fn">name</span>(<span class="str">"status"</span>)
+                    .<span class="fn">data</span>(<span class="str">"thinking"</span>));
+
+            <span class="cm">// 调用 LLM 流式 API，逐 Token 推送</span>
+            <span class="cls">Flux</span>&lt;<span class="cls">String</span>&gt; tokenFlux = llmClient.<span class="fn">streamChat</span>(message);
+            tokenFlux.<span class="fn">doOnNext</span>(token -&gt; {
+                emitter.<span class="fn">send</span>(<span class="cls">SseEmitter</span>.<span class="fn">event</span>()
+                        .<span class="fn">name</span>(<span class="str">"token"</span>)
+                        .<span class="fn">data</span>(<span class="kw">new</span> <span class="cls">TokenPayload</span>(token)));
+            }).<span class="fn">doOnComplete</span>(() -&gt; {
+                <span class="cm">// 推送完成事件</span>
+                emitter.<span class="fn">send</span>(<span class="cls">SseEmitter</span>.<span class="fn">event</span>()
+                        .<span class="fn">name</span>(<span class="str">"done"</span>)
+                        .<span class="fn">data</span>(<span class="str">"[DONE]"</span>));
+                emitter.<span class="fn">complete</span>(); <span class="cm">// 关闭连接</span>
+            }).<span class="fn">doOnError</span>(e -&gt; {
+                emitter.<span class="fn">send</span>(<span class="cls">SseEmitter</span>.<span class="fn">event</span>()
+                        .<span class="fn">name</span>(<span class="str">"error"</span>)
+                        .<span class="fn">data</span>(e.<span class="fn">getMessage</span>()));
+                emitter.<span class="fn">completeWithError</span>(e);
+            }).<span class="fn">subscribe</span>();
+
+        } <span class="kw">catch</span> (<span class="cls">Exception</span> e) {
+            emitter.<span class="fn">completeWithError</span>(e);
+        }
+    }
+}</pre>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>📋 实际应用场景</h4>
+      <div class="pill-list">
+        <span class="pill">🤖 LLM 流式对话</span>
+        <span class="pill">📊 Agent 执行进度</span>
+        <span class="pill">🔍 RAG 检索过程展示</span>
+        <span class="pill">📝 长任务异步通知</span>
+        <span class="pill">🔔 实时告警推送</span>
+        <span class="pill">📈 数据变更通知</span>
+      </div>
+    </div>
+    <div class="card">
+      <h4>⚠️ SseEmitter 踩坑点</h4>
+      <div class="note warn">
+        <strong>线程池耗尽：</strong>SseEmitter 异步执行默认用 SimpleAsyncTaskExecutor，<strong>每次创建新线程</strong>。生产环境必须自定义 <code class="inline">@Bean ThreadPoolTaskExecutor</code>，否则高并发下线程爆炸。
+      </div>
+      <div class="note danger" style="margin-top:8px">
+        <strong>Tomcat 异步超时：</strong>Spring MVC 异步请求默认超时 30s。需在 <code class="inline">application.yml</code> 配置 <code class="inline">spring.mvc.async.request-timeout=-1</code> 或设为足够大的值。
+      </div>
+      <div class="note info" style="margin-top:8px">
+        <strong>连接泄漏：</strong>如果 emitter 永不 complete 也不 timeout，连接会一直占用。务必在 finally 中调用 complete()。
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🔧 Spring Boot 异步配置</h4>
+    <pre><span class="cm">// application.yml</span>
+spring:
+  mvc:
+    async:
+      request-timeout: -1  <span class="cm"># 禁用 MVC 异步超时（由 SseEmitter 自己控制）</span>
+
+<span class="cm">// 配置异步线程池 — 避免线程爆炸</span>
+<span class="kw">@Configuration</span>
+<span class="kw">@EnableAsync</span>
+<span class="kw">public class</span> <span class="cls">AsyncConfig</span> <span class="kw">implements</span> <span class="cls">AsyncConfigurer</span> {
+
+    <span class="kw">@Override</span>
+    <span class="kw">public</span> <span class="cls">Executor</span> <span class="fn">getAsyncExecutor</span>() {
+        <span class="cls">ThreadPoolTaskExecutor</span> executor = <span class="kw">new</span> <span class="cls">ThreadPoolTaskExecutor</span>();
+        executor.<span class="fn">setCorePoolSize</span>(<span class="num">5</span>);
+        executor.<span class="fn">setMaxPoolSize</span>(<span class="num">50</span>);
+        executor.<span class="fn">setQueueCapacity</span>(<span class="num">100</span>);
+        executor.<span class="fn">setThreadNamePrefix</span>(<span class="str">"agent-sse-"</span>);
+        executor.<span class="fn">initialize</span>();
+        <span class="kw">return</span> executor;
+    }
+}</pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 6. IOT PROTOCOLS                                              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="iot">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#ea580c,#d97706)">06</span>
+    物联网通信协议
+  </div>
+  <p class="section-desc">在边缘智能体（Edge Agent）和设备遥测场景中，传统 HTTP/WebSocket 协议过重。MQTT 和 CoAP 是专为受限设备和不可靠网络设计的轻量级协议。</p>
+
+  <div class="grid-2">
+    <!-- MQTT -->
+    <div class="card">
+      <h4>📡 MQTT — 消息队列遥测传输</h4>
+      <p>MQTT 是基于 TCP 的发布-订阅模式轻量消息协议，专为网络带宽有限、设备资源受限的场景设计。</p>
+      <div class="svg-box">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+          <rect width="700" height="200" fill="#fffbeb" rx="10"/>
+          <!-- Broker -->
+          <rect x="280" y="60" width="140" height="80" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+          <text x="350" y="90" text-anchor="middle" font-size="14" font-weight="700" fill="#ea580c">MQTT Broker</text>
+          <text x="350" y="108" text-anchor="middle" font-size="10" fill="#475569">主题路由</text>
+          <text x="350" y="124" text-anchor="middle" font-size="10" fill="#475569">topic: agent/sensor</text>
+
+          <!-- Publishers -->
+          <rect x="20" y="30" width="100" height="50" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+          <text x="70" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">传感器A</text>
+          <text x="70" y="65" text-anchor="middle" font-size="9" fill="#475569">Publish</text>
+
+          <rect x="20" y="120" width="100" height="50" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+          <text x="70" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">边缘Agent</text>
+          <text x="70" y="155" text-anchor="middle" font-size="9" fill="#475569">Publish</text>
+
+          <!-- Subscribers -->
+          <rect x="580" y="30" width="100" height="50" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+          <text x="630" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#059669">监控面板</text>
+          <text x="630" y="65" text-anchor="middle" font-size="9" fill="#475569">Subscribe</text>
+
+          <rect x="580" y="120" width="100" height="50" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+          <text x="630" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#059669">云端Agent</text>
+          <text x="630" y="155" text-anchor="middle" font-size="9" fill="#475569">Subscribe</text>
+
+          <!-- Arrows -->
+          <line x1="120" y1="55" x2="280" y2="75" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrM)"/>
+          <line x1="120" y1="145" x2="280" y2="125" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrM)"/>
+          <line x1="420" y1="75" x2="580" y2="55" stroke="#059669" stroke-width="1.5" marker-end="url(#arrM)"/>
+          <line x1="420" y1="125" x2="580" y2="145" stroke="#059669" stroke-width="1.5" marker-end="url(#arrM)"/>
+
+          <text x="350" y="180" text-anchor="middle" font-size="10" fill="#94a3b8">发布者 → Broker（主题路由）→ 订阅者 · 解耦通信</text>
+
+          <defs><marker id="arrM" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#94a3b8"/></marker></defs>
+        </svg>
+      </div>
+
+      <h5 style="font-size:.88rem;font-weight:700;margin:16px 0 8px">核心特性</h5>
+      <div class="grid-2" style="gap:8px">
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange);font-size:12px">📦</div><h5 style="font-size:.82rem">极小协议头</h5></div>
+          <p style="font-size:.76rem">固定头仅 2 字节，最小化带宽消耗</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange);font-size:12px">🔄</div><h5 style="font-size:.82rem">发布-订阅</h5></div>
+          <p style="font-size:.76rem">发送方与接收方完全解耦</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange);font-size:12px">📊</div><h5 style="font-size:.82rem">QoS 三级</h5></div>
+          <p style="font-size:.76rem">0=最多一次, 1=至少一次, 2=恰好一次</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange);font-size:12px">💾</div><h5 style="font-size:.82rem">遗嘱消息</h5></div>
+          <p style="font-size:.76rem">设备离线时 Broker 自动通知订阅者</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange);font-size:12px">🔌</div><h5 style="font-size:.82rem">保持连接</h5></div>
+          <p style="font-size:.76rem">心跳机制保持长连接，检测断线</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange);font-size:12px">📝</div><h5 style="font-size:.82rem">持久会话</h5></div>
+          <p style="font-size:.76rem">重连后恢复订阅，不丢消息</p>
+        </div>
+      </div>
+
+      <div class="note tip" style="margin-top:12px">
+        <strong>IoT Agent 场景：</strong>边缘设备上的轻量 Agent 通过 MQTT 上报传感器数据到 Broker，云端 Agent 订阅主题接收数据并做决策，再将控制指令通过另一个主题下发。
+      </div>
+    </div>
+
+    <!-- CoAP -->
+    <div class="card">
+      <h4>📱 CoAP — 受限应用协议</h4>
+      <p>CoAP 是基于 UDP 的 RESTful 轻量协议，专为极低功耗设备和不可靠网络设计。可以理解为"UDP 版的 HTTP"。</p>
+      <div class="svg-box">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+          <rect width="700" height="200" fill="#ecfeff" rx="10"/>
+          <!-- Device -->
+          <rect x="30" y="50" width="120" height="60" rx="10" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+          <text x="90" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#0891b2">CoAP Client</text>
+          <text x="90" y="92" text-anchor="middle" font-size="10" fill="#475569">传感器/执行器</text>
+
+          <!-- Server -->
+          <rect x="550" y="50" width="120" height="60" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <text x="610" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">CoAP Server</text>
+          <text x="610" y="92" text-anchor="middle" font-size="10" fill="#475569">资源管理</text>
+
+          <!-- UDP datagrams -->
+          <ellipse cx="250" cy="80" rx="40" ry="14" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+          <text x="250" y="84" text-anchor="middle" font-size="9" fill="#0891b2">GET /temp</text>
+
+          <ellipse cx="350" cy="80" rx="40" ry="14" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+          <text x="350" y="84" text-anchor="middle" font-size="9" fill="#0891b2">ACK</text>
+
+          <ellipse cx="450" cy="80" rx="40" ry="14" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+          <text x="450" y="84" text-anchor="middle" font-size="9" fill="#0891b2">2.05 "23.5"</text>
+
+          <line x1="150" y1="75" x2="210" y2="75" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrC)"/>
+          <line x1="290" y1="75" x2="310" y2="75" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrC)"/>
+          <line x1="390" y1="75" x2="410" y2="75" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrC)"/>
+          <line x1="490" y1="75" x2="550" y2="75" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrC)"/>
+
+          <!-- Observe -->
+          <rect x="30" y="130" width="640" height="40" rx="8" fill="#f0fdfa" stroke="#0891b2" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="350" y="155" text-anchor="middle" font-size="10" fill="#0891b2">Observe 模式: Client 订阅后，Server 持续推送资源变更（类似 SSE 的推送机制）</text>
+
+          <defs><marker id="arrC" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#0891b2"/></marker></defs>
+        </svg>
+      </div>
+
+      <h5 style="font-size:.88rem;font-weight:700;margin:16px 0 8px">核心特性</h5>
+      <div class="grid-2" style="gap:8px">
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal);font-size:12px">⚡</div><h5 style="font-size:.82rem">基于UDP</h5></div>
+          <p style="font-size:.76rem">无连接，极低开销，无需建立/断开连接</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal);font-size:12px">📋</div><h5 style="font-size:.82rem">RESTful</h5></div>
+          <p style="font-size:.76rem">GET/POST/PUT/DELETE，语义与 HTTP 一致</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal);font-size:12px">🔄</div><h5 style="font-size:.82rem">可靠传输</h5></div>
+          <p style="font-size:.76rem">Confirmable 模式提供 ACK + 重传机制</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal);font-size:12px">👁</div><h5 style="font-size:.82rem">Observe</h5></div>
+          <p style="font-size:.76rem">订阅资源变更，Server 主动推送更新</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal);font-size:12px">🔍</div><h5 style="font-size:.82rem">资源发现</h5></div>
+          <p style="font-size:.76rem">/.well-known/core 自动发现设备资源</p>
+        </div>
+        <div class="feat-item" style="padding:12px">
+          <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal);font-size:12px">📦</div><h5 style="font-size:.82rem">超紧凑</h5></div>
+          <p style="font-size:.76rem">头部仅 4 字节，比 HTTP 头小 50-100 倍</p>
+        </div>
+      </div>
+
+      <div class="note info" style="margin-top:12px">
+        <strong>CoAP vs MQTT 区别：</strong>MQTT 是发布-订阅模式（需 Broker 中转），CoAP 是请求-响应模式（端到端直连）。MQTT 适合一对多分发，CoAP 适合点对点资源操作。
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>📋 MQTT vs CoAP 对比</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>维度</th><th>MQTT</th><th>CoAP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>传输层</strong></td><td>TCP</td><td>UDP</td></tr>
+          <tr><td><strong>通信模式</strong></td><td>发布-订阅（需 Broker）</td><td>请求-响应（端到端）</td></tr>
+          <tr><td><strong>协议头大小</strong></td><td>2 字节（最小）</td><td>4 字节</td></tr>
+          <tr><td><strong>消息可靠性</strong></td><td>QoS 0/1/2 三级</td><td>CON/NON 两种模式</td></tr>
+          <tr><td><strong>语义</strong></td><td>主题（Topic）路由</td><td>RESTful（GET/POST/PUT/DELETE）</td></tr>
+          <tr><td><strong>推送能力</strong></td><td>Broker 主动推送给订阅者</td><td>Observe 扩展（订阅资源变更）</td></tr>
+          <tr><td><strong>适用场景</strong></td><td>一对多数据分发、遥测上报</td><td>设备资源操作、点对点查询</td></tr>
+          <tr><td><strong>典型部署</strong></td><td>大量传感器 → Broker → 云端</td><td>设备直连、局域网内控制</td></tr>
+          <tr><td><strong>Agent 中的应用</strong></td><td>边缘 Agent 数据汇聚 → 云端 Agent</td><td>Agent 直接控制传感器/执行器</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 7. COMPARISON                                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="comparison">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#4f46e5,#6366f1)">07</span>
+    协议全景对比
+  </div>
+  <p class="section-desc">将五大通信协议放在同一张表里横向对比，覆盖通信方向、延迟、连接方式、复杂度等关键维度，帮助快速做出技术选型。</p>
+
+  <div class="card">
+    <h4>📊 五大协议核心维度对比</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>对比维度</th>
+            <th>HTTP</th>
+            <th>WebSocket</th>
+            <th>SSE</th>
+            <th>MQTT</th>
+            <th>CoAP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>通信方向</strong></td>
+            <td>请求→响应</td>
+            <td>全双工 ⬆⬇</td>
+            <td>单向 S→C ⬇</td>
+            <td>双向(经Broker)</td>
+            <td>请求→响应</td>
+          </tr>
+          <tr>
+            <td><strong>底层传输</strong></td>
+            <td>TCP</td>
+            <td>TCP</td>
+            <td>TCP</td>
+            <td>TCP</td>
+            <td>UDP</td>
+          </tr>
+          <tr>
+            <td><strong>连接方式</strong></td>
+            <td>短连接/keep-alive</td>
+            <td>持久连接</td>
+            <td>持久连接</td>
+            <td>持久连接+心跳</td>
+            <td>无连接</td>
+          </tr>
+          <tr>
+            <td><strong>服务端推送</strong></td>
+            <td>❌ 不支持</td>
+            <td>✅ 原生</td>
+            <td>✅ 原生</td>
+            <td>✅ Broker推送</td>
+            <td>✅ Observe模式</td>
+          </tr>
+          <tr>
+            <td><strong>实时延迟</strong></td>
+            <td>高（轮询间隔）</td>
+            <td>极低（毫秒级）</td>
+            <td>低（推送即时）</td>
+            <td>低（推送即时）</td>
+            <td>低（推送即时）</td>
+          </tr>
+          <tr>
+            <td><strong>协议头开销</strong></td>
+            <td>~200-800字节</td>
+            <td>2-14字节</td>
+            <td>~200字节(首次)</td>
+            <td>2字节</td>
+            <td>4字节</td>
+          </tr>
+          <tr>
+            <td><strong>断线重连</strong></td>
+            <td>天然(新请求)</td>
+            <td>手动实现</td>
+            <td>自动(EventSource)</td>
+            <td>自动(MQTT协议)</td>
+            <td>CON模式重传</td>
+          </tr>
+          <tr>
+            <td><strong>数据格式</strong></td>
+            <td>文本+二进制</td>
+            <td>文本+二进制</td>
+            <td>仅文本(UTF-8)</td>
+            <td>文本+二进制</td>
+            <td>文本+二进制</td>
+          </tr>
+          <tr>
+            <td><strong>代理/防火墙</strong></td>
+            <td>✅ 完美兼容</td>
+            <td>⚠️ 部分不兼容</td>
+            <td>✅ 完美兼容</td>
+            <td>⚠️ 非标准端口</td>
+            <td>⚠️ UDP可能被阻</td>
+          </tr>
+          <tr>
+            <td><strong>实现复杂度</strong></td>
+            <td>低</td>
+            <td>高</td>
+            <td>低</td>
+            <td>中</td>
+            <td>中</td>
+          </tr>
+          <tr>
+            <td><strong>资源消耗</strong></td>
+            <td>中</td>
+            <td>中(需维持连接)</td>
+            <td>低</td>
+            <td>极低</td>
+            <td>极低</td>
+          </tr>
+          <tr>
+            <td><strong>浏览器支持</strong></td>
+            <td>✅ 所有</td>
+            <td>✅ 所有</td>
+            <td>✅ EventSource</td>
+            <td>❌ 需库</td>
+            <td>❌ 需库</td>
+          </tr>
+          <tr>
+            <td><strong>最佳场景</strong></td>
+            <td>API调用/CRUD</td>
+            <td>双向实时协作</td>
+            <td>LLM流式输出</td>
+            <td>IoT设备遥测</td>
+            <td>IoT设备控制</td>
+          </tr>
+          <tr>
+            <td><strong>Agent场景示例</strong></td>
+            <td>工具调用/RAG查询</td>
+            <td>多Agent协作通信</td>
+            <td>LLM对话流式输出</td>
+            <td>边缘Agent数据汇聚</td>
+            <td>Agent控制传感器</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>📈 延迟与开销对比可视化</h4>
+    <div class="svg-box">
+      <svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <rect width="900" height="300" fill="#f8fafc" rx="10"/>
+
+        <text x="450" y="28" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">通信延迟对比（首次消息送达时间）</text>
+
+        <!-- Chart area -->
+        <line x1="140" y1="60" x2="140" y2="260" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="140" y1="260" x2="860" y2="260" stroke="#94a3b8" stroke-width="2"/>
+
+        <!-- Y axis labels -->
+        <text x="130" y="70" text-anchor="end" font-size="10" fill="#475569">800ms</text>
+        <text x="130" y="120" text-anchor="end" font-size="10" fill="#475569">600ms</text>
+        <text x="130" y="170" text-anchor="end" font-size="10" fill="#475569">400ms</text>
+        <text x="130" y="220" text-anchor="end" font-size="10" fill="#475569">200ms</text>
+        <text x="130" y="263" text-anchor="end" font-size="10" fill="#475569">0ms</text>
+
+        <!-- Grid lines -->
+        <line x1="140" y1="65" x2="860" y2="65" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+        <line x1="140" y1="115" x2="860" y2="115" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+        <line x1="140" y1="165" x2="860" y2="165" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+        <line x1="140" y1="215" x2="860" y2="215" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+
+        <!-- HTTP bar (high) -->
+        <rect x="180" y="75" width="100" height="185" rx="4" fill="#2563eb" opacity="0.85"/>
+        <text x="230" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">~740ms</text>
+        <text x="230" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">HTTP 轮询</text>
+        <text x="230" y="289" text-anchor="middle" font-size="9" fill="#94a3b8">(5s间隔)</text>
+
+        <!-- HTTP Long Poll -->
+        <rect x="310" y="105" width="100" height="155" rx="4" fill="#3b82f6" opacity="0.7"/>
+        <text x="360" y="98" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">~620ms</text>
+        <text x="360" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">HTTP 长轮询</text>
+
+        <!-- SSE -->
+        <rect x="440" y="215" width="100" height="45" rx="4" fill="#059669" opacity="0.85"/>
+        <text x="490" y="208" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">~180ms</text>
+        <text x="490" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">SSE</text>
+        <text x="490" y="289" text-anchor="middle" font-size="9" fill="#94a3b8">(已建连)</text>
+
+        <!-- WebSocket -->
+        <rect x="570" y="228" width="100" height="32" rx="4" fill="#7c3aed" opacity="0.85"/>
+        <text x="620" y="221" text-anchor="middle" font-size="10" font-weight="700" fill="#7c3aed">~128ms</text>
+        <text x="620" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">WebSocket</text>
+        <text x="620" y="289" text-anchor="middle" font-size="9" fill="#94a3b8">(已建连)</text>
+
+        <!-- MQTT -->
+        <rect x="700" y="238" width="100" height="22" rx="4" fill="#ea580c" opacity="0.85"/>
+        <text x="750" y="231" text-anchor="middle" font-size="10" font-weight="700" fill="#ea580c">~88ms</text>
+        <text x="750" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">MQTT</text>
+        <text x="750" y="289" text-anchor="middle" font-size="9" fill="#94a3b8">(已建连)</text>
+
+        <!-- Annotation -->
+        <text x="450" y="298" text-anchor="middle" font-size="10" fill="#94a3b8">* 首次建连包含 TCP 握手+TLS+协议握手；已建连指连接保持后的消息送达延迟</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 8. DECISION                                                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="decision">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#0891b2,#06b6d4)">08</span>
+    选型决策指南
+  </div>
+  <p class="section-desc">面对具体场景，如何从五大协议中做出正确选择？下面从场景需求出发，给出决策路径和推荐方案。</p>
+
+  <div class="card">
+    <h4>🧭 决策流程图</h4>
+    <div class="svg-box">
+      <svg viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <rect width="900" height="480" fill="#f8fafc" rx="10"/>
+
+        <!-- Start -->
+        <rect x="350" y="15" width="200" height="40" rx="20" fill="#1e40af" stroke="none"/>
+        <text x="450" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">需要通信协议</text>
+
+        <line x1="450" y1="55" x2="450" y2="75" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+
+        <!-- Q1: Need real-time? -->
+        <polygon points="450,75 600,115 450,155 300,115" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="450" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">需要实时通信？</text>
+        <text x="450" y="128" text-anchor="middle" font-size="10" fill="#475569">（推送/流式/双向）</text>
+
+        <!-- No → HTTP -->
+        <line x1="300" y1="115" x2="180" y2="115" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="240" y="108" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">否</text>
+        <rect x="50" y="95" width="120" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="110" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">HTTP</text>
+
+        <!-- Yes → Q2 -->
+        <line x1="450" y1="155" x2="450" y2="175" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="465" y="168" font-size="10" font-weight="600" fill="#475569">是</text>
+
+        <!-- Q2: Bidirectional? -->
+        <polygon points="450,175 600,215 450,255 300,215" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="450" y="210" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">需要双向通信？</text>
+        <text x="450" y="228" text-anchor="middle" font-size="10" fill="#475569">（双方都要发消息）</text>
+
+        <!-- Yes → WebSocket -->
+        <line x1="600" y1="215" x2="720" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="660" y="208" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">是</text>
+        <rect x="730" y="195" width="140" height="40" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="800" y="220" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">WebSocket</text>
+
+        <!-- No → Q3 -->
+        <line x1="450" y1="255" x2="450" y2="275" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="465" y="268" font-size="10" font-weight="600" fill="#475569">否</text>
+
+        <!-- Q3: IoT device? -->
+        <polygon points="450,275 600,315 450,355 300,315" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="450" y="310" text-anchor="middle" font-size="12" font-weight="700" fill="#ea580c">IoT 设备/受限网络？</text>
+        <text x="450" y="328" text-anchor="middle" font-size="10" fill="#475569">（低功耗/窄带宽）</text>
+
+        <!-- Yes → Q4 -->
+        <line x1="450" y1="355" x2="450" y2="375" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="465" y="368" font-size="10" font-weight="600" fill="#475569">是</text>
+
+        <!-- Q4: One-to-many? -->
+        <polygon points="450,375 600,415 450,455 300,415" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+        <text x="450" y="410" text-anchor="middle" font-size="12" font-weight="700" fill="#0891b2">一对多分发？</text>
+        <text x="450" y="428" text-anchor="middle" font-size="10" fill="#475569">（需 Broker 中转）</text>
+
+        <!-- Yes → MQTT -->
+        <line x1="300" y1="415" x2="180" y2="415" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="240" y="408" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">是</text>
+        <rect x="50" y="395" width="120" height="40" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="110" y="420" text-anchor="middle" font-size="12" font-weight="700" fill="#ea580c">MQTT</text>
+
+        <!-- No → CoAP -->
+        <line x1="600" y1="415" x2="720" y2="415" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="660" y="408" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">否</text>
+        <rect x="730" y="395" width="140" height="40" rx="8" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+        <text x="800" y="420" text-anchor="middle" font-size="12" font-weight="700" fill="#0891b2">CoAP</text>
+
+        <!-- No → SSE -->
+        <line x1="300" y1="315" x2="180" y2="315" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrD)"/>
+        <text x="240" y="308" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">否</text>
+        <rect x="50" y="295" width="120" height="40" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+        <text x="110" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">SSE</text>
+
+        <defs><marker id="arrD" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>📋 场景-协议推荐矩阵</h4>
+    <div class="grid-2">
+      <div class="decision-card s-blue">
+        <div class="dc-header">
+          <span class="tag tag-blue">Web前端</span>
+          <h5>LLM 对话流式输出</h5>
+        </div>
+        <div class="dc-body">用户发一条消息，LLM 逐 Token 回复。单向推送，需断线重连。</div>
+        <div class="dc-best"><strong>推荐：</strong>SSE / Spring SseEmitter — 自动重连、HTTP 兼容、实现简单</div>
+      </div>
+
+      <div class="decision-card s-purple">
+        <div class="dc-header">
+          <span class="tag tag-purple">多Agent</span>
+          <h5>Agent 间实时协作</h5>
+        </div>
+        <div class="dc-body">多个 Agent 互相交换中间结果、状态和中断信号，需要双向实时通信。</div>
+        <div class="dc-best"><strong>推荐：</strong>WebSocket — 全双工、低延迟、持久连接</div>
+      </div>
+
+      <div class="decision-card s-green">
+        <div class="dc-header">
+          <span class="tag tag-green">API</span>
+          <h5>工具调用 / RAG 查询</h5>
+        </div>
+        <div class="dc-body">Agent 调用外部工具（搜索、数据库、API），请求-响应模式即可。</div>
+        <div class="dc-best"><strong>推荐：</strong>HTTP — 简单、通用、无状态、RESTful</div>
+      </div>
+
+      <div class="decision-card s-orange">
+        <div class="dc-header">
+          <span class="tag tag-orange">IoT</span>
+          <h5>边缘设备遥测上报</h5>
+        </div>
+        <div class="dc-body">大量传感器持续上报数据到云端 Agent，网络不稳定，设备资源受限。</div>
+        <div class="dc-best"><strong>推荐：</strong>MQTT — 发布-订阅、QoS、遗嘱消息、极低开销</div>
+      </div>
+
+      <div class="decision-card s-teal">
+        <div class="dc-header">
+          <span class="tag tag-teal">IoT</span>
+          <h5>设备资源直接操作</h5>
+        </div>
+        <div class="dc-body">Agent 直接控制传感器/执行器，读温度、开关灯，RESTful 语义。</div>
+        <div class="dc-best"><strong>推荐：</strong>CoAP — UDP 轻量、RESTful、Observe 推送</div>
+      </div>
+
+      <div class="decision-card s-blue">
+        <div class="dc-header">
+          <span class="tag tag-indigo">混合</span>
+          <h5>Agent 全栈通信</h5>
+        </div>
+        <div class="dc-body">前端←SSE→后端←HTTP→LLM, 后端←WebSocket→其他Agent, 后端←MQTT→边缘设备。</div>
+        <div class="dc-best"><strong>推荐：</strong>多协议组合 — 每层用最合适的协议</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>💡 混合架构示例：完整 Agent 通信栈</h4>
+    <div class="svg-box">
+      <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-sans)">
+        <rect width="900" height="320" fill="#f8fafc" rx="10"/>
+
+        <!-- Layer 1: User -->
+        <rect x="350" y="20" width="200" height="50" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="450" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">用户浏览器</text>
+        <text x="450" y="58" text-anchor="middle" font-size="10" fill="#475569">EventSource / Fetch</text>
+
+        <!-- SSE arrow -->
+        <line x1="450" y1="70" x2="450" y2="95" stroke="#059669" stroke-width="2" marker-end="url(#arrE)"/>
+        <rect x="380" y="75" width="140" height="16" rx="8" fill="#d1fae5" stroke="#059669"/>
+        <text x="450" y="86" text-anchor="middle" font-size="9" font-weight="600" fill="#059669">SSE 流式输出</text>
+
+        <!-- Layer 2: Agent Backend -->
+        <rect x="280" y="100" width="340" height="60" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="450" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">Agent 后端 (Spring Boot)</text>
+        <text x="450" y="143" text-anchor="middle" font-size="10" fill="#475569">SseEmitter · WebSocket Server · MQTT Client · HTTP Client</text>
+
+        <!-- Left: LLM API -->
+        <rect x="40" y="110" width="160" height="40" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+        <text x="120" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#d97706">LLM API</text>
+
+        <line x1="200" y1="130" x2="280" y2="130" stroke="#d97706" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arrE)"/>
+        <text x="240" y="123" text-anchor="middle" font-size="9" fill="#d97706">HTTP(SSE)</text>
+
+        <!-- Right: Other Agents -->
+        <rect x="700" y="110" width="160" height="40" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+        <text x="780" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">其他 Agent</text>
+
+        <line x1="620" y1="130" x2="700" y2="130" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrE)"/>
+        <text x="660" y="123" text-anchor="middle" font-size="9" fill="#7c3aed">WebSocket</text>
+
+        <!-- Down: IoT -->
+        <line x1="450" y1="160" x2="450" y2="185" stroke="#ea580c" stroke-width="2" marker-end="url(#arrE)"/>
+        <rect x="380" y="167" width="140" height="16" rx="8" fill="#fed7aa" stroke="#ea580c"/>
+        <text x="450" y="178" text-anchor="middle" font-size="9" font-weight="600" fill="#ea580c">MQTT 发布/订阅</text>
+
+        <!-- Layer 3: IoT -->
+        <rect x="80" y="195" width="140" height="50" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+        <text x="150" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#ea580c">MQTT Broker</text>
+        <text x="150" y="233" text-anchor="middle" font-size="10" fill="#475569">主题路由</text>
+
+        <rect x="680" y="195" width="140" height="50" rx="10" fill="#cffafe" stroke="#0891b2" stroke-width="2"/>
+        <text x="750" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#0891b2">CoAP 设备</text>
+        <text x="750" y="233" text-anchor="middle" font-size="10" fill="#475569">传感器/执行器</text>
+
+        <!-- Layer 4: Edge devices -->
+        <rect x="40" y="270" width="220" height="40" rx="10" fill="#fffbeb" stroke="#ea580c" stroke-width="1.5"/>
+        <text x="150" y="295" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">温度传感器 · 摄像头 · GPS</text>
+
+        <line x1="150" y1="245" x2="150" y2="270" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrE)"/>
+
+        <rect x="640" y="270" width="220" height="40" rx="10" fill="#f0fdfa" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="750" y="295" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">智能开关 · LED · 电机</text>
+
+        <line x1="750" y1="245" x2="750" y2="270" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrE)"/>
+
+        <defs><marker id="arrE" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div class="note info">
+      <strong>架构说明：</strong>这是一个完整的 Agent 通信栈。用户通过 SSE 接收流式回复；Agent 后端通过 HTTP/SSE 调用 LLM API；Agent 之间通过 WebSocket 协作；Agent 通过 MQTT Broker 接收边缘设备遥测数据；Agent 通过 CoAP 直接控制传感器/执行器。每一层使用最合适的协议，发挥各自优势。
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 9. SUMMARY                                                    -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="summary">
+  <div class="section-title">
+    <span class="num" style="background:linear-gradient(135deg,#64748b,#475569)">09</span>
+    总结与速查
+  </div>
+  <p class="section-desc">五大协议各有所长，没有"银弹"。理解每种协议的本质特征，才能在正确的场景做出正确的选择。</p>
+
+  <div class="card">
+    <h4>📌 一句话总结</h4>
+    <div class="grid-3">
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--primary-l);color:var(--primary)">📋</div><h5>HTTP</h5></div>
+        <p><strong>请求-响应的基石。</strong>无状态、通用、简单。适合工具调用和 API 交互，不适合实时推送。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--purple-l);color:var(--purple)">⚡</div><h5>WebSocket</h5></div>
+        <p><strong>全双工实时通信。</strong>一次握手，双向随时发送。适合多 Agent 协作，但连接管理复杂。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--green-l);color:var(--green)">📡</div><h5>SSE</h5></div>
+        <p><strong>服务端单向推送。</strong>基于 HTTP，自动重连，实现简单。LLM 流式输出的首选。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--orange-l);color:var(--orange)">📱</div><h5>MQTT</h5></div>
+        <p><strong>IoT 消息总线。</strong>发布-订阅、QoS、遗嘱消息。适合大规模设备遥测数据汇聚。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--teal-l);color:var(--teal)">💡</div><h5>CoAP</h5></div>
+        <p><strong>IoT RESTful 协议。</strong>基于 UDP，超轻量。适合 Agent 直接操作设备资源。</p>
+      </div>
+      <div class="feat-item">
+        <div class="feat-head"><div class="feat-icon" style="background:var(--amber-l);color:var(--amber)">🍃</div><h5>SseEmitter</h5></div>
+        <p><strong>Spring 的 SSE 封装。</strong>异步推送、生命周期管理。Java 后端流式输出标准方案。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>⚡ 速查决策表</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>如果你的场景是…</th><th>推荐协议</th><th>理由</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LLM 逐 Token 流式回复</td><td><span class="tag tag-green">SSE</span></td><td>单向推送、自动重连、HTTP 兼容</td></tr>
+          <tr><td>多个 Agent 实时协作</td><td><span class="tag tag-purple">WebSocket</span></td><td>全双工、低延迟、持久连接</td></tr>
+          <tr><td>Agent 调用外部工具/API</td><td><span class="tag tag-blue">HTTP</span></td><td>请求-响应、无状态、通用</td></tr>
+          <tr><td>Java 后端流式输出</td><td><span class="tag tag-green">SseEmitter</span></td><td>Spring 原生集成、异步推送</td></tr>
+          <tr><td>大量传感器数据上报</td><td><span class="tag tag-orange">MQTT</span></td><td>发布-订阅、QoS、极低开销</td></tr>
+          <tr><td>Agent 直接控制传感器</td><td><span class="tag tag-teal">CoAP</span></td><td>UDP 轻量、RESTful、Observe</td></tr>
+          <tr><td>用户实时聊天</td><td><span class="tag tag-purple">WebSocket</span></td><td>双向通信、即时送达</td></tr>
+          <tr><td>服务端通知/告警推送</td><td><span class="tag tag-green">SSE</span></td><td>单向推送、自动重连</td></tr>
+          <tr><td>不可靠网络下的设备通信</td><td><span class="tag tag-orange">MQTT</span></td><td>QoS 保障、遗嘱消息、持久会话</td></tr>
+          <tr><td>极低功耗设备资源操作</td><td><span class="tag tag-teal">CoAP</span></td><td>UDP 无连接、4 字节头</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🧩 技术生态关联</h4>
+    <div class="pill-list">
+      <span class="pill">OpenAI Streaming API → SSE</span>
+      <span class="pill">LangChain Streaming → SSE / WebSocket</span>
+      <span class="pill">Spring AI → SseEmitter</span>
+      <span class="pill">A2A Protocol → WebSocket / gRPC</span>
+      <span class="pill">MQTT 5.0 → IoT Agent 通信</span>
+      <span class="pill">EMQX → MQTT Broker</span>
+      <span class="pill">Eclipse Paho → MQTT 客户端</span>
+      <span class="pill">Californium → CoAP 框架</span>
+      <span class="pill">SockJS → WebSocket 降级方案</span>
+      <span class="pill">STOMP → WebSocket 子协议</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>📚 延伸阅读</h4>
+    <div class="grid-2">
+      <div class="problem-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:var(--radius);padding:16px">
+        <h5 style="font-size:.88rem;font-weight:700;margin-bottom:6px">RFC 6455 — WebSocket Protocol</h5>
+        <p style="font-size:.8rem;color:var(--text2)">WebSocket 协议规范，定义了握手、帧格式、关闭流程等核心机制。</p>
+      </div>
+      <div class="problem-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:var(--radius);padding:16px">
+        <h5 style="font-size:.88rem;font-weight:700;margin-bottom:6px">HTML Spec — Server-Sent Events</h5>
+        <p style="font-size:.8rem;color:var(--text2)">W3C EventSource 规范，定义了 SSE 的事件流格式和重连机制。</p>
+      </div>
+      <div class="problem-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:var(--radius);padding:16px">
+        <h5 style="font-size:.88rem;font-weight:700;margin-bottom:6px">MQTT 5.0 Specification</h5>
+        <p style="font-size:.8rem;color:var(--text2)">OASIS MQTT 5.0 标准，包含 QoS、遗嘱、共享订阅等特性。</p>
+      </div>
+      <div class="problem-card" style="background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--teal);border-radius:var(--radius);padding:16px">
+        <h5 style="font-size:.88rem;font-weight:700;margin-bottom:6px">RFC 7252 — CoAP</h5>
+        <p style="font-size:.8rem;color:var(--text2)">受限应用协议规范，定义了 UDP 上的 RESTful 通信模型。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.container -->
+
+<!-- ═══ Footer ═══ -->
+<div class="footer">
+  <p>智能体通信协议全指南 · WebSocket / SSE / Spring SseEmitter / HTTP / MQTT / CoAP</p>
+  <p style="margin-top:6px"><a href="../index.html">← 返回首页</a> · Frontend Learning Hub</p>
+</div>
+
+<script>
+// ═══ TOC scroll spy ═══
+document.addEventListener('DOMContentLoaded', function() {
+  const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+  const sections = document.querySelectorAll('section[id]');
+  const toc = document.getElementById('toc');
+
+  // Smooth scroll
+  tocLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href === '#') return;
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Scroll spy
+  function updateActive() {
+    let current = '';
+    const scrollPos = window.scrollY + 80;
+    sections.forEach(section => {
+      if (scrollPos >= section.offsetTop) {
+        current = section.id;
+      }
+    });
+    tocLinks.forEach(link => {
+      link.classList.remove('active');
+      const href = link.getAttribute('href');
+      if (href === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActive);
+  updateActive();
+});
+
+// ═══ Tab switching ═══
+function switchTab(tabsId, panelId, btn) {
+  const tabsContainer = document.getElementById(tabsId);
+  if (!tabsContainer) return;
+  const parent = tabsContainer.parentElement;
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    tabsContainer.querySelectorAll('.tab-btn').forEach(b => {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf(panelId) !== -1) b.classList.add('active');
+    });
+  }
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+}
+
+// ═══ Accordion ═══
+document.querySelectorAll('.accordion-header').forEach(header => {
+  header.addEventListener('click', function() {
+    const item = this.closest('.accordion-item');
+    item.classList.toggle('open');
+  });
+});
+</script>
+
+</body>
+</html>
