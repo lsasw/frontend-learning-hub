@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>被讨厌的勇气 · 阿德勒心理学五夜对谈全解</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   Design Tokens —— 东方书卷质感
+   墨青 · 纸白 · 朱色（对话体哲学读本）
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --ink:#1b2431;            /* 墨青主色 */
+  --ink-deep:#10161f;       /* 深墨 */
+  --ink-soft:#46536a;       /* 柔和墨青（正文） */
+  --ink-mute:#77829a;       /* 静默灰蓝 */
+  --verm:#b3432b;           /* 朱色（哲人 / 强调） */
+  --verm-light:#d4644c;
+  --verm-soft:rgba(179,67,43,.10);
+  --gold:#a8823c;           /* 秋香金（辅助强调） */
+  --gold-soft:rgba(168,130,60,.13);
+  --paper:#faf8f4;          /* 纸白主背景 */
+  --paper-2:#f3f0e9;        /* 纸白二 */
+  --paper-3:#eae5da;        /* 纸白三 */
+  --rule:rgba(27,36,49,.13);
+  --rule-soft:rgba(27,36,49,.07);
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","HarmonyOS Sans SC","Source Han Sans SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Songti SC","Source Han Serif SC","Noto Serif CJK SC","STSong",serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --radius:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;font-size:15.5px}
+::selection{background:rgba(179,67,43,.18)}
+
+/* ═══ 顶栏 ═══ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(250,248,244,.88);backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);border-bottom:1px solid var(--rule-soft);display:flex;align-items:center;padding:0 22px;height:58px;gap:14px}
+.nav a.home{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.9rem;letter-spacing:.02em;white-space:nowrap}
+.nav a.home .logo-mark{width:26px;height:26px;border-radius:5px;background:var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-serif);font-weight:700;font-size:.82rem}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:2px;overflow-x:auto;font-size:.76rem;letter-spacing:.04em;scrollbar-width:none}
+.nav .nav-toc::-webkit-scrollbar{display:none}
+.nav .nav-toc a{color:var(--ink-soft);font-weight:500;padding:4px 10px;border-radius:4px;white-space:nowrap;text-decoration:none}
+.nav .nav-toc a:hover{background:var(--verm-soft);color:var(--verm)}
+.nav .nav-toc a.active{color:var(--verm);background:var(--verm-soft)}
+
+/* ═══ Hero ═══ */
+.hero{background:linear-gradient(158deg,var(--ink-deep) 0%,var(--ink) 58%,#2a3a52 100%);color:#fff;padding:68px 30px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 18% 0%,rgba(212,100,76,.20) 0%,transparent 45%),radial-gradient(ellipse at 85% 100%,rgba(168,130,60,.14) 0%,transparent 42%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:840px;margin:0 auto}
+.hero .brand-line{font-family:var(--font-serif);font-size:.98rem;letter-spacing:.4em;color:var(--verm-light);margin-bottom:16px}
+.hero h1{font-family:var(--font-serif);font-size:2.7rem;font-weight:700;letter-spacing:.06em;margin-bottom:6px;line-height:1.3}
+.hero .origin{font-size:.86rem;opacity:.62;letter-spacing:.12em;margin-bottom:18px;font-family:var(--font-serif)}
+.hero .quote{font-family:var(--font-serif);font-size:1.22rem;color:rgba(255,255,255,.92);margin:18px auto 0;max-width:560px;line-height:1.9;position:relative;padding:0 26px}
+.hero .quote::before{content:'「';position:absolute;left:0;top:-2px;color:var(--verm-light);font-size:1.4rem}
+.hero .quote::after{content:'」';position:absolute;right:0;bottom:-4px;color:var(--verm-light);font-size:1.4rem}
+.hero .sub{opacity:.78;max-width:620px;margin:22px auto 0;font-size:.96rem;line-height:1.85}
+.hero .tags{margin-top:24px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);padding:4px 14px;border-radius:3px;font-size:.74rem;letter-spacing:.05em}
+.hero .meta{margin-top:26px;display:flex;gap:26px;justify-content:center;font-size:.8rem;opacity:.72;flex-wrap:wrap;letter-spacing:.03em}
+.hero .meta b{color:var(--verm-light);font-weight:700}
+
+/* ═══ 布局 ═══ */
+.wrap{max-width:980px;margin:0 auto;padding:48px 28px 76px}
+.sec{margin-bottom:60px;scroll-margin-top:76px}
+.sec-title{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;border-bottom:1px solid var(--rule)}
+.sec-title .num{font-family:var(--font-serif);font-size:1.1rem;color:var(--verm);font-weight:700;letter-spacing:.1em;white-space:nowrap}
+.sec-title h2{font-family:var(--font-serif);font-size:1.62rem;font-weight:700;letter-spacing:-.005em;padding-bottom:10px;position:relative}
+.sec-title h2::after{content:'';position:absolute;left:0;bottom:-1px;width:56px;height:2px;background:var(--verm)}
+.sec-sub{color:var(--ink-mute);font-size:.92rem;margin:-12px 0 24px;max-width:740px}
+
+/* ═══ 卡片 ═══ */
+.card{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:26px 30px;margin:18px 0;box-shadow:0 1px 3px rgba(27,36,49,.04)}
+.card h3{font-family:var(--font-serif);font-size:1.15rem;margin-bottom:12px;color:var(--ink)}
+.card p{margin:8px 0;color:var(--ink-soft);font-size:.94rem}
+.card strong{color:var(--ink)}
+.card em{color:var(--verm);font-style:normal;font-weight:600}
+
+/* ═══ 夜话卡片（五夜） ═══ */
+.night{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);margin:22px 0;overflow:hidden;box-shadow:0 2px 8px rgba(27,36,49,.05);transition:box-shadow .25s ease,transform .25s ease}
+.night:hover{box-shadow:0 8px 24px rgba(27,36,49,.09);transform:translateY(-2px)}
+.night-head{display:flex;align-items:center;gap:16px;padding:20px 26px;background:linear-gradient(120deg,var(--paper-2) 0%,#fff 100%);border-bottom:1px solid var(--rule-soft)}
+.night-head .night-num{flex:none;width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-serif);line-height:1.1}
+.night-head .night-num .zh{font-size:.62rem;letter-spacing:.2em;opacity:.65;margin-bottom:2px}
+.night-head .night-num .n{font-size:1.32rem;font-weight:700}
+.night-head .night-title h3{font-family:var(--font-serif);font-size:1.18rem;font-weight:700;color:var(--ink)}
+.night-head .night-title .night-key{font-size:.8rem;color:var(--verm);letter-spacing:.06em;margin-top:3px;font-weight:600}
+.night-body{padding:20px 26px 24px}
+.night-body p{margin:8px 0;color:var(--ink-soft);font-size:.93rem}
+.night-body .verdict{margin-top:14px;padding:12px 16px;background:var(--verm-soft);border-left:3px solid var(--verm);border-radius:0 4px 4px 0;font-size:.9rem;color:var(--ink)}
+.night-body .verdict b{color:var(--verm)}
+
+/* ═══ 对话气泡（哲人 × 青年） ═══ */
+.dialogue{margin:16px 0;display:flex;flex-direction:column;gap:12px}
+.line{display:flex;gap:12px;align-items:flex-start}
+.line .who{flex:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:.86rem;font-weight:700;color:#fff;margin-top:2px}
+.line.phil .who{background:var(--verm)}
+.line.youth .who{background:var(--ink-soft)}
+.line .bubble{background:var(--paper-2);border:1px solid var(--rule-soft);border-radius:2px 10px 10px 10px;padding:12px 16px;font-size:.92rem;color:var(--ink);max-width:640px}
+.line.youth .bubble{border-radius:10px 2px 10px 10px;background:#fff}
+.line.phil .bubble b{color:var(--verm)}
+.line.youth .bubble b{color:var(--ink)}
+.line .role{display:block;font-size:.68rem;letter-spacing:.15em;color:var(--ink-mute);margin-bottom:4px;font-family:var(--font-serif)}
+
+/* ═══ 对比表 ═══ */
+.vs-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:14px 0;background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 3px rgba(27,36,49,.05)}
+.vs-table th{background:var(--ink);color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:.84rem;letter-spacing:.05em}
+.vs-table th:first-child{background:var(--ink-deep)}
+.vs-table td{padding:10px 14px;border-bottom:1px solid var(--rule-soft);color:var(--ink-soft);vertical-align:top}
+.vs-table tr:last-child td{border-bottom:none}
+.vs-table td:first-child{font-weight:600;color:var(--ink);white-space:nowrap;background:var(--paper-2)}
+.vs-table td b{color:var(--verm)}
+
+/* ═══ 三支柱 ═══ */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.pillar{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:20px 18px;text-align:center;position:relative;transition:transform .25s ease,box-shadow .25s ease}
+.pillar:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(27,36,49,.09)}
+.pillar .glyph{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:1.1rem;font-weight:700;color:#fff}
+.pillar:nth-child(1) .glyph{background:var(--verm)}
+.pillar:nth-child(2) .glyph{background:var(--gold)}
+.pillar:nth-child(3) .glyph{background:var(--ink-soft)}
+.pillar h4{font-family:var(--font-serif);font-size:1rem;color:var(--ink);margin-bottom:8px}
+.pillar p{font-size:.82rem;color:var(--ink-mute);line-height:1.75}
+.pillar .en{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--ink-mute);margin-bottom:6px;font-family:var(--font-mono)}
+
+/* ═══ 概念图 ═══ */
+.map-card{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:24px 20px;margin:18px 0;overflow-x:auto}
+.map-card svg{display:block;margin:0 auto;min-width:640px;max-width:100%}
+
+/* ═══ 语录墙 ═══ */
+.quotes{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
+.qcard{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:20px 22px;position:relative;transition:transform .25s ease,box-shadow .25s ease}
+.qcard:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(27,36,49,.08)}
+.qcard::before{content:'「';font-family:var(--font-serif);position:absolute;top:10px;left:12px;color:var(--verm);opacity:.3;font-size:1.5rem;line-height:1}
+.qcard p{font-family:var(--font-serif);font-size:.95rem;color:var(--ink);line-height:1.85;padding-left:10px}
+.qcard .src{margin-top:10px;padding-left:10px;font-size:.72rem;color:var(--ink-mute);letter-spacing:.08em}
+
+/* ═══ 挑战与回应 ═══ */
+.challenge{display:flex;gap:14px;margin:12px 0;background:var(--paper-2);border-radius:var(--radius);padding:16px 18px;border:1px solid var(--rule-soft)}
+.challenge .mark{flex:none;font-family:var(--font-serif);font-size:1.05rem;font-weight:700;width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.challenge.q .mark{background:var(--ink);color:#fff}
+.challenge.a .mark{background:var(--verm);color:#fff}
+.challenge .body{flex:1}
+.challenge .body h5{font-size:.86rem;color:var(--ink);margin-bottom:4px;letter-spacing:.04em}
+.challenge .body p{font-size:.88rem;color:var(--ink-soft)}
+
+/* ═══ 读法建议 ═══ */
+.read-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
+.read-item{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:18px 20px;display:flex;gap:14px;align-items:flex-start}
+.read-item .no{flex:none;font-family:var(--font-serif);font-size:1.5rem;color:var(--verm);opacity:.35;font-weight:700;line-height:1}
+.read-item h4{font-size:.94rem;color:var(--ink);margin-bottom:5px}
+.read-item p{font-size:.84rem;color:var(--ink-mute);line-height:1.75}
+
+/* ═══ 页脚 ═══ */
+.footer{background:var(--ink-deep);color:rgba(255,255,255,.65);text-align:center;padding:36px 24px;font-size:.8rem;letter-spacing:.05em;line-height:2}
+.footer .f-title{font-family:var(--font-serif);color:#fff;font-size:1rem;margin-bottom:6px;letter-spacing:.2em}
+.footer b{color:var(--verm-light)}
+
+/* ═══ 响应式 ═══ */
+@media(max-width:860px){
+  .pillars{grid-template-columns:1fr}
+  .quotes{grid-template-columns:1fr}
+  .read-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .hero h1{font-size:2rem}
+  .hero .quote{font-size:1.05rem;padding:0 18px}
+  .nav{padding:0 14px}
+  .nav a.home span.home-txt{display:none}
+  .wrap{padding:36px 16px 60px}
+  .night-head{padding:16px 18px;gap:12px}
+  .night-head .night-num{width:44px;height:44px}
+  .night-head .night-num .n{font-size:1.1rem}
+  .night-body{padding:16px 18px 20px}
+  .card{padding:20px 18px}
+  .vs-table{font-size:.8rem}
+  .vs-table th,.vs-table td{padding:8px 10px}
+  .vs-table td:first-child{white-space:normal}
+  .map-card svg{min-width:560px}
+  .dialogue .line .bubble{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 顶栏 ═══════════ -->
+<nav class="nav">
+  <a class="home" href="index.html"><span class="logo-mark">勇</span><span class="home-txt">书架 · 悦读</span></a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">导读</a>
+    <a href="#s2">五夜对谈</a>
+    <a href="#s3">概念地图</a>
+    <a href="#s4">语录墙</a>
+    <a href="#s5">常见质疑</a>
+    <a href="#s6">读法建议</a>
+  </div>
+</nav>
+
+<!-- ═══════════ Hero ═══════════ -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="brand-line">岸见一郎 · 古贺史健 著</div>
+    <h1>被讨厌的勇气</h1>
+    <div class="origin">嫌われる勇気 —— 自由を手に入れる、哲学者との対話</div>
+    <p class="quote">自由，就是被别人讨厌。</p>
+    <p class="sub">这不是一本讲"如何讨人喜欢"的书，恰恰相反——它要告诉你：人的一切烦恼都来自人际关系，而通往自由的唯一道路，是拥有"被讨厌的勇气"。</p>
+    <div class="tags">
+      <span>阿德勒心理学</span>
+      <span>对话体</span>
+      <span>个体心理学</span>
+      <span>哲学 · 心理自助</span>
+    </div>
+    <div class="meta">
+      <span>形式 <b>哲人 × 青年 五夜对谈</b></span>
+      <span>思想源流 <b>阿尔弗雷德 · 阿德勒</b></span>
+      <span>亚洲销量 <b>数百万册</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ═══════════ 01 导读 ═══════════ -->
+<section class="sec" id="s1">
+  <div class="sec-title"><span class="num">01</span><h2>导读：这不是故事，是五场辩论</h2></div>
+  <p class="sec-sub">全书没有情节主线，只有一位"哲人"与一位"青年"的连续对谈——青年代表每一个不甘心的读者，替你愤怒、质疑、反驳。</p>
+
+  <div class="card">
+    <h3>书的形式：一个愤世嫉俗的年轻人，登门挑战一位哲人</h3>
+    <p>青年听说这位哲人主张<strong>"世界很简单，人随时可以改变"</strong>，无法认同，专程登门辩驳。两人约定进行五夜长谈——每一夜推翻一个流行观念，每一夜青年都被逼到墙角，又带着新的困惑与不服离开。</p>
+    <p>对话<em>结束在开放状态</em>：青年没有获得顿悟，而是带着"试试看"的心情走了。这本身就是阿德勒的精神——<strong>不给你确定的答案，而是给你重新选择的勇气。</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>思想内核：与弗洛伊德分道扬镳的"个体心理学"</h3>
+    <p>阿德勒与弗洛伊德、荣格并称心理学三巨头，却是其中最反主流的一位。他与弗洛伊德的决裂点在于：</p>
+    <table class="vs-table">
+      <tr><th>维度</th><th>弗洛伊德 · 原因论</th><th>阿德勒 · 目的论</th></tr>
+      <tr><td>人的现状</td><td>由过去（童年创伤）<b>决定</b></td><td>由当下的目的<b>选择</b>而来</td></tr>
+      <tr><td>改变的可能</td><td>需追溯并疗愈创伤</td><td>随时可以重新选择</td></tr>
+      <tr><td>对不幸的解释</td><td>不幸是经历的结果</td><td>不幸是自己<b>选择</b>的手段</td></tr>
+      <tr><td>世界的样子</td><td>复杂，由因果缠绕</td><td>简单，取决于你赋予的意义</td></tr>
+    </table>
+    <p style="margin-top:10px">阿德勒不否认创伤存在，但他认为：<em>决定人生的不是经历本身，而是你赋予经历的意义。</em></p>
+  </div>
+</section>
+
+<!-- ═══════════ 02 五夜对谈 ═══════════ -->
+<section class="sec" id="s2">
+  <div class="sec-title"><span class="num">02</span><h2>五夜对谈：层层递进的思想拆解</h2></div>
+  <p class="sec-sub">五夜对话是一条严密的思想递进链：否定过去 → 定位烦恼 → 划清边界 → 走向他者 → 回到当下。</p>
+
+  <!-- 第一夜 -->
+  <article class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第一夜</span><span class="n">壹</span></div>
+      <div class="night-title">
+        <h3>我们的不幸是谁的错？</h3>
+        <div class="night-key">核心命题 · 目的论取代原因论</div>
+      </div>
+    </div>
+    <div class="night-body">
+      <p>青年自陈苦恼：从小被父母否定，性格阴暗孤僻，不敢出门社交——他认为这是过去造成的，无法改变。哲人却给出了颠覆性的回应：</p>
+      <div class="dialogue">
+        <div class="line phil">
+          <div class="who">哲</div>
+          <div class="bubble"><span class="role">哲人</span>你不是"因为不安所以无法出门"，而是<b>"为了不出门而制造出不安"</b>。不出门，就可以避免在社交中受挫——不安和恐惧，是你为了这个目的而调动出来的情绪。</div>
+        </div>
+        <div class="line youth">
+          <div class="who">青</div>
+          <div class="bubble"><span class="role">青年</span>荒谬！难道我闭门不出的痛苦是装出来的吗？难道那些童年遭受虐待的人，痛苦也是自己"选择"的？</div>
+        </div>
+        <div class="line phil">
+          <div class="who">哲</div>
+          <div class="bubble"><span class="role">哲人</span>痛苦是真的，但决定你人生的不是经历本身，而是<b>你赋予经历的意义</b>。同一段过去，可以解释成"所以我注定不幸"，也可以解释成"这段经历教会了我什么"——选择权在你。</div>
+        </div>
+      </div>
+      <div class="verdict"><b>本夜结论：</b>人不是被过去驱动的机器。你此刻的状态，服务于你此刻的目的——而目的，随时可以更换。所谓"改变不了"，往往只是"还没下决心"。</div>
+    </div>
+  </article>
+
+  <!-- 第二夜 -->
+  <article class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第二夜</span><span class="n">贰</span></div>
+      <div class="night-title">
+        <h3>一切烦恼都来自人际关系</h3>
+        <div class="night-key">核心命题 · 自卑感的双面性</div>
+      </div>
+    </div>
+    <div class="night-body">
+      <p>哲人抛出全书最著名的论断：如果这个世界只剩你一个人，一切烦恼都会消失——烦恼的根源不在自己内部，而在"人与人的比较"之中。由此引出一对关键区分：</p>
+      <table class="vs-table">
+        <tr><th>概念</th><th>自卑感</th><th>自卑情结</th></tr>
+        <tr><td>性质</td><td>健康的、普遍的</td><td>不健康的、病态的</td></tr>
+        <tr><td>表现</td><td>"我还不够好，所以要努力"</td><td>"因为我××所以做不到"</td></tr>
+        <tr><td>作用</td><td>成长的<b>驱动力</b></td><td>逃避行动的<b>借口</b></td></tr>
+      </table>
+      <p>"因为我学历低所以不行""因为童年不幸所以不幸福"——这些看似因果关系的话，本质是把自卑感倒转为<b>优越情结的借口</b>：只要把原因推给过去，就不用面对"其实我可以去尝试"的恐惧。</p>
+      <p>哲人随后点破了青年本人——他一直宣称要改变，却总在寻找不改变的理由。<strong>因为保持现状更轻松、更安全；改变意味着面对不确定。</strong>"缺乏的不是能力，是勇气。"</p>
+      <div class="verdict"><b>本夜结论：</b>烦恼来自比较，比较制造自卑；自卑感催人奋进，自卑情结让人原地不动——分清二者，就看清了自己停滞的真正原因。</div>
+    </div>
+  </article>
+
+  <!-- 第三夜 -->
+  <article class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第三夜</span><span class="n">叁</span></div>
+      <div class="night-title">
+        <h3>让干涉你生活的人见鬼去</h3>
+        <div class="night-key">核心命题 · 课题分离</div>
+      </div>
+    </div>
+    <div class="night-body">
+      <p>全书最核心、也最常被引用的一夜。哲人指出：一切人际冲突，都源于<strong>干涉别人的课题</strong>，或<strong>让别人干涉自己的课题</strong>。而判断"这是谁的课题"，只需一个标准：</p>
+      <div class="card" style="background:var(--gold-soft);border-color:transparent">
+        <p style="text-align:center;font-family:var(--font-serif);font-size:1.02rem;color:var(--ink)"><strong>"某种选择带来的结果，最终由谁来承担？"</strong><br><span style="font-size:.84rem;color:var(--ink-mute)">——谁的课题，就归谁处理。</span></p>
+      </div>
+      <p>孩子学不学习，结果由孩子承担，所以是孩子的课题——父母能做的是守护与协助，而不是强行干涉，否则只会换来反叛。同样：</p>
+      <ul style="margin:10px 0 10px 22px;color:var(--ink-soft);font-size:.92rem">
+        <li style="margin:5px 0">你渴望把事情做好"以获得认可"——就把"别人的评价"错当成了自己的课题；</li>
+        <li style="margin:5px 0">别人喜不喜欢你——是别人的课题，你无论如何都控制不了。</li>
+      </ul>
+      <div class="dialogue">
+        <div class="line youth">
+          <div class="who">青</div>
+          <div class="bubble"><span class="role">青年</span>这不就是教人自私冷漠、众叛亲离吗？如果人人只管自己的课题，社会还怎么维系？</div>
+        </div>
+        <div class="line phil">
+          <div class="who">哲</div>
+          <div class="bubble"><span class="role">哲人</span>"自由就是被别人讨厌。"这不是让你故意招人讨厌，而是<b>有勇气接受"可能被讨厌"这个结果</b>。为了不被任何人讨厌而活的人，最终会活成所有人的期待，唯独不是自己。</div>
+        </div>
+      </div>
+      <div class="verdict"><b>本夜结论：</b>自由是有代价的，代价就是"不再用别人的认可来购买安全感"。课题分离不是人际关系的终点，而是健康关系的起点。</div>
+    </div>
+  </article>
+
+  <!-- 第四夜 -->
+  <article class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第四夜</span><span class="n">肆</span></div>
+      <div class="night-title">
+        <h3>要有被讨厌的勇气</h3>
+        <div class="night-key">核心命题 · 共同体感觉的三大支柱</div>
+      </div>
+    </div>
+    <div class="night-body">
+      <p>课题分离并非教人孤岛式生存——它是通往"共同体感觉"的必经之路：把他人视为伙伴而非敌人，在共同体中找到"自己的位置"与"贡献感"。支撑这一目标的是三大支柱：</p>
+      <div class="pillars">
+        <div class="pillar">
+          <div class="glyph">受</div>
+          <span class="en">SELF-ACCEPTANCE</span>
+          <h4>自我接纳</h4>
+          <p>不是自我肯定的"我明明不行却暗示自己行"，而是诚实地接受"做不到"，然后聚焦"能做到什么"。</p>
+        </div>
+        <div class="pillar">
+          <div class="glyph">信</div>
+          <span class="en">TRUST IN OTHERS</span>
+          <h4>他者信赖</h4>
+          <p>无条件地信任他人，哪怕可能被背叛——因为带着怀疑，就永远建立不了深层关系。</p>
+        </div>
+        <div class="pillar">
+          <div class="glyph">献</div>
+          <span class="en">CONTRIBUTION</span>
+          <h4>他者贡献</h4>
+          <p>通过对共同体做贡献确认自身价值——注意，是为了"感到自己有用"，而非为了换取感谢。</p>
+        </div>
+      </div>
+      <p>三者的关系环环相扣：<strong>因为接纳了真实的自己，才敢于信赖他人；因为敢于信赖，才能建立真实的关系；在关系中做出贡献，又反过来加固自我接纳</strong>——一个正向循环，替代了"寻求认可"的旧循环。</p>
+      <div class="verdict"><b>本夜结论：</b>幸福不是被给予的，是"贡献感"的副产品——当你感到"我对他人有用"，就不再需要通过别人的认可来证明自己。</div>
+    </div>
+  </article>
+
+  <!-- 第五夜 -->
+  <article class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第五夜</span><span class="n">伍</span></div>
+      <div class="night-title">
+        <h3>认真的人生活在"此时此刻"</h3>
+        <div class="night-key">核心命题 · 人生是点的连续</div>
+      </div>
+    </div>
+    <div class="night-body">
+      <p>最后一夜，哲人收回所有铺垫，给出关于"人生整体"的回答。我们习惯把人生想象成一条线——从起点奔向某个远大的终点，仿佛"真正的人生"在未来某刻才开始。哲人对此断然否定：</p>
+      <div class="card" style="background:var(--verm-soft);border-color:transparent">
+        <p style="text-align:center;font-family:var(--font-serif);font-size:1.02rem;color:var(--ink)"><strong>人生不是一条线，而是点的连续。</strong><br><span style="font-size:.84rem;color:var(--ink-mute)">每个瞬间都是完结的，每个"此时此刻"都在起舞。</span></p>
+      </div>
+      <p>人生如同跳舞：跳舞的人不会说"跳到那个位置才算到达"——<strong>跳舞本身，就是意义</strong>。把人生当作"在路上"的人，永远活在准备与忍耐之中；把人生当作"舞蹈"的人，每一刻都已经在完成它。</p>
+      <p>这同时也是对前四夜的收束：目的论让你从过去松绑，课题分离让你从他人松绑，共同体感觉让你找到位置——而"活在当下"，让你从对未来的焦虑中松绑。<strong>没有等待中的人生，只有正在跳着的人生。</strong></p>
+      <div class="verdict"><b>全书结论：</b>你此刻的不幸，不是因为过去，而是你"选择了"不幸——而你，随时可以重新选择。</div>
+    </div>
+  </article>
+</section>
+
+<!-- ═══════════ 03 概念地图 ═══════════ -->
+<section class="sec" id="s3">
+  <div class="sec-title"><span class="num">03</span><h2>概念地图：五夜思想的递进逻辑</h2></div>
+  <p class="sec-sub">从"挣脱过去"到"活在当下"，五夜对话构成一条完整的自我解放路径。</p>
+  <div class="map-card">
+    <svg viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="五夜概念递进图">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#b3432b"/>
+        </marker>
+        <marker id="arrowMute" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#77829a"/>
+        </marker>
+      </defs>
+
+      <!-- 阶段标题带 -->
+      <text x="430" y="26" text-anchor="middle" font-size="13" fill="#77829a" letter-spacing="4">挣脱过去 → 定位烦恼 → 划清边界 → 走向他者 → 回到当下</text>
+
+      <!-- 第一夜 -->
+      <g>
+        <rect x="20" y="50" width="148" height="108" rx="6" fill="#1b2431"/>
+        <text x="94" y="78" text-anchor="middle" font-size="12" fill="#d4644c" letter-spacing="2">第一夜</text>
+        <text x="94" y="100" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">目的论</text>
+        <text x="94" y="122" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.72)">否定原因论</text>
+        <text x="94" y="140" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.72)">不幸是选择</text>
+      </g>
+      <path d="M 172 104 L 206 104" stroke="#b3432b" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- 第二夜 -->
+      <g>
+        <rect x="212" y="50" width="148" height="108" rx="6" fill="#fff" stroke="rgba(27,36,49,.14)"/>
+        <text x="286" y="78" text-anchor="middle" font-size="12" fill="#b3432b" letter-spacing="2">第二夜</text>
+        <text x="286" y="100" text-anchor="middle" font-size="15" fill="#1b2431" font-weight="700">烦恼的根源</text>
+        <text x="286" y="122" text-anchor="middle" font-size="11" fill="#77829a">一切烦恼来自</text>
+        <text x="286" y="140" text-anchor="middle" font-size="11" fill="#77829a">人际比较</text>
+      </g>
+      <path d="M 364 104 L 398 104" stroke="#b3432b" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- 第三夜 -->
+      <g>
+        <rect x="404" y="50" width="148" height="108" rx="6" fill="#b3432b"/>
+        <text x="478" y="78" text-anchor="middle" font-size="12" fill="rgba(255,255,255,.85)" letter-spacing="2">第三夜</text>
+        <text x="478" y="100" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">课题分离</text>
+        <text x="478" y="122" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.8)">自由的本质</text>
+        <text x="478" y="140" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.8)">不寻求认可</text>
+      </g>
+      <path d="M 556 104 L 590 104" stroke="#b3432b" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- 第四夜 -->
+      <g>
+        <rect x="596" y="50" width="148" height="108" rx="6" fill="#fff" stroke="rgba(27,36,49,.14)"/>
+        <text x="670" y="78" text-anchor="middle" font-size="12" fill="#b3432b" letter-spacing="2">第四夜</text>
+        <text x="670" y="100" text-anchor="middle" font-size="15" fill="#1b2431" font-weight="700">共同体感觉</text>
+        <text x="670" y="122" text-anchor="middle" font-size="11" fill="#77829a">接纳 · 信赖 · 贡献</text>
+        <text x="670" y="140" text-anchor="middle" font-size="11" fill="#77829a">伙伴而非敌人</text>
+      </g>
+      <path d="M 748 104 L 782 104" stroke="#b3432b" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- 第五夜（终点） -->
+      <g>
+        <rect x="788" y="50" width="58" height="108" rx="6" fill="#a8823c"/>
+        <text x="817" y="86" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.85)" letter-spacing="1">第五夜</text>
+        <text x="817" y="108" text-anchor="middle" font-size="14" fill="#fff" font-weight="700">活在</text>
+        <text x="817" y="128" text-anchor="middle" font-size="14" fill="#fff" font-weight="700">当下</text>
+      </g>
+
+      <!-- 三层解脱标注 -->
+      <g font-size="11.5" fill="#46536a">
+        <rect x="20" y="200" width="248" height="46" rx="4" fill="#f3f0e9" stroke="rgba(27,36,49,.08)"/>
+        <text x="144" y="219" text-anchor="middle" fill="#1b2431" font-weight="700">从过去中松绑</text>
+        <text x="144" y="236" text-anchor="middle" fill="#77829a">不再让经历决定此刻</text>
+
+        <rect x="306" y="200" width="248" height="46" rx="4" fill="#f3f0e9" stroke="rgba(27,36,49,.08)"/>
+        <text x="430" y="219" text-anchor="middle" fill="#1b2431" font-weight="700">从他人中松绑</text>
+        <text x="430" y="236" text-anchor="middle" fill="#77829a">不再用认可购买安全感</text>
+
+        <rect x="592" y="200" width="248" height="46" rx="4" fill="#f3f0e9" stroke="rgba(27,36,49,.08)"/>
+        <text x="716" y="219" text-anchor="middle" fill="#1b2431" font-weight="700">从未来焦虑中松绑</text>
+        <text x="716" y="236" text-anchor="middle" fill="#77829a">不再等待"真正的人生"</text>
+      </g>
+      <path d="M 144 158 L 144 196" stroke="#77829a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowMute)"/>
+      <path d="M 430 158 L 430 196" stroke="#77829a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowMute)"/>
+      <path d="M 716 158 L 716 196" stroke="#77829a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowMute)"/>
+
+      <!-- 底部结论 -->
+      <rect x="20" y="274" width="820" height="60" rx="6" fill="#1b2431"/>
+      <text x="430" y="300" text-anchor="middle" font-size="13.5" fill="#fff" font-weight="700">你此刻的不幸，不是因为过去，而是你"选择了"不幸——而你，随时可以重新选择。</text>
+      <text x="430" y="321" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.6)" letter-spacing="3">THE COURAGE TO BE DISLIKED</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════ 04 语录墙 ═══════════ -->
+<section class="sec" id="s4">
+  <div class="sec-title"><span class="num">04</span><h2>语录墙：十句值得抄进笔记本的话</h2></div>
+  <p class="sec-sub">按主题分组，覆盖全书五个核心概念。</p>
+
+  <div class="quotes">
+    <div class="qcard"><p>自由就是被别人讨厌。</p><div class="src">第三夜 · 课题分离</div></div>
+    <div class="qcard"><p>决定我们自身的不是过去的经历，而是我们自己赋予经历的意义。</p><div class="src">第一夜 · 目的论</div></div>
+    <div class="qcard"><p>人生不是与他人的比赛，只要自己不断前进即可。</p><div class="src">第二夜 · 烦恼的根源</div></div>
+    <div class="qcard"><p>重要的不是被给予了什么，而是如何去利用被给予的东西。</p><div class="src">第一夜 · 目的论</div></div>
+    <div class="qcard"><p>你之所以无法改变，是因为自己下了"不改变"的决心。</p><div class="src">第一夜 · 目的论</div></div>
+    <div class="qcard"><p>孩子的人生是孩子自己的人生，父母擅自介入孩子的课题，只会招致反叛。</p><div class="src">第三夜 · 课题分离</div></div>
+    <div class="qcard"><p>健全的自卑感，来自与"理想的自己"的比较，而不是与别人的比较。</p><div class="src">第二夜 · 自卑感</div></div>
+    <div class="qcard"><p>对人而言，最大的不幸就是不喜欢自己。</p><div class="src">第四夜 · 共同体感觉</div></div>
+    <div class="qcard"><p>人生是连续的刹那，我们只能活在"此时此刻"。</p><div class="src">第五夜 · 活在当下</div></div>
+    <div class="qcard"><p>如果把强烈的聚光灯对准"此时此刻"，就会既看不到过去，也看不到未来。</p><div class="src">第五夜 · 活在当下</div></div>
+  </div>
+</section>
+
+<!-- ═══════════ 05 常见质疑 ═══════════ -->
+<section class="sec" id="s5">
+  <div class="sec-title"><span class="num">05</span><h2>常见质疑：书中的青年替你反驳过</h2></div>
+  <p class="sec-sub">这本书的高明之处在于：几乎所有读者的第一反应，青年都先替你喊了出来。</p>
+
+  <div class="challenge q">
+    <div class="mark">问</div>
+    <div class="body">
+      <h5>"目的论是不是在怪罪受害者？"</h5>
+      <p>童年遭受虐待的人，痛苦也是自己"选择"的吗？这听起来冷酷甚至残忍。</p>
+    </div>
+  </div>
+  <div class="challenge a">
+    <div class="mark">答</div>
+    <div class="body">
+      <h5>阿德勒学派始终区分"事实"与"意义"</h5>
+      <p>伤害是事实，不容否认；但"这段经历决定了我的一生"是一种解释，而非必然。目的论不是否认痛苦，而是把"接下来怎么办"的决定权，从过去手里拿回来——这恰恰是对当事人最大的尊重。</p>
+    </div>
+  </div>
+
+  <div class="challenge q">
+    <div class="mark">问</div>
+    <div class="body">
+      <h5>"课题分离是不是精致的利己主义？"</h5>
+      <p>各扫门前雪，人际关系岂不更冷漠？</p>
+    </div>
+  </div>
+  <div class="challenge a">
+    <div class="mark">答</div>
+    <div class="body">
+      <h5>课题分离是"入口"而非"终点"</h5>
+      <p>分离的目的，是把强行干涉换成平等协助——在孩子求助时伸手，而不是在其未求助时替他走路。它是通往第四夜"共同体感觉"的必经之路：先成为独立的人，再谈健康的联结。</p>
+    </div>
+  </div>
+
+  <div class="challenge q">
+    <div class="mark">问</div>
+    <div class="body">
+      <h5>"他者信赖无条件，被骗了怎么办？"</h5>
+      <p>无条件信任一个骗子，不是愚蠢吗？</p>
+    </div>
+  </div>
+  <div class="challenge a">
+    <div class="mark">答</div>
+    <div class="body">
+      <h5>信赖是"选择"，不是"义务"</h5>
+      <p>被背叛时的痛苦真实存在，你可以随时切断关系——但决定要不要开始一段深度关系的，依然是你自己。带着怀疑开始的浅关系，才是真正"不可能被骗也一无所有"的选项。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 06 读法建议 ═══════════ -->
+<section class="sec" id="s6">
+  <div class="sec-title"><span class="num">06</span><h2>读法建议：怎么读收获最大</h2></div>
+  <p class="sec-sub">对话体的读法与论著不同——立场很重要。</p>
+
+  <div class="read-grid">
+    <div class="read-item"><span class="no">一</span><div><h4>站在"青年"一边读</h4><p>不要急着认同哲人。青年的每次反驳都是读者的真实反应，先跟它共鸣、再被说服，思想才真正过脑。</p></div></div>
+    <div class="read-item"><span class="no">二</span><div><h4>挑一个正在困扰你的课题</h4><p>带着具体的人际烦恼去读第三、四夜——课题分离的判断标准（"结果由谁承担"）只有落在实例上才会显出锋利。</p></div></div>
+    <div class="read-item"><span class="no">三</span><div><h4>允许"不完全同意"</h4><p>阿德勒心理学本身有理想化色彩，学界亦有争议。吸收它作为"一副眼镜"而非"唯一真理"，反而用得更久。</p></div></div>
+    <div class="read-item"><span class="no">四</span><div><h4>一个月后重读第一夜</h4><p>目的论是全书最反直觉的部分。第一次读会觉得武断，等你用课题分离处理过一次真实冲突后，再回头读，感受完全不同。</p></div></div>
+  </div>
+
+  <div class="card" style="border-left:3px solid var(--verm)">
+    <h3>延伸阅读</h3>
+    <p><strong>《幸福的勇气》</strong>（同作者续作）——回答"课题分离之后呢"，把理论推进到爱与教育；<strong>《自卑与超越》</strong>（阿德勒本人著作）——原汁原味的个体心理学；<strong>《非暴力沟通》</strong>（马歇尔·卢森堡）——课题分离之后，如何开口表达。</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════ 页脚 ═══════════ -->
+<footer class="footer">
+  <div class="f-title">被 讨 厌 的 勇 气</div>
+  <div>岸见一郎 / 古贺史健 著 · 渠海霞 译 · 机械工业出版社</div>
+  <div>本页为读书笔记与内容讲解，仅供学习交流<br>"人生是点的连续 —— 此时此刻，你已经在起舞。"</div>
+</footer>
+
+<script>
+// ═══ 目录高亮（滚动监听） ═══
+(function(){
+  var links=document.querySelectorAll('.nav-toc a');
+  var secs=[].map.call(links,function(a){return document.querySelector(a.getAttribute('href'))});
+  function onScroll(){
+    var pos=window.scrollY+120,idx=-1;
+    secs.forEach(function(s,i){if(s&&s.offsetTop<=pos)idx=i});
+    links.forEach(function(a,i){a.classList.toggle('active',i===idx)});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>

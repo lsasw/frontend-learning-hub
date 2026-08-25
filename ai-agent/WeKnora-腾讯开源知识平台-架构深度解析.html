@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeKnora（维娜拉）· 腾讯开源知识平台架构深度解析</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   WeKnora Design Tokens（取自官网 theme/style.css）
+   墨蓝 · 纸白 · 鎏金 —— 学术出版物质感
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --wk-ink:#101f38;          /* 墨蓝主色（logo / 标题） */
+  --wk-ink-deep:#0a1526;     /* 深墨蓝 */
+  --wk-ink-soft:#40536f;     /* 柔和墨蓝（正文） */
+  --wk-ink-mute:#6d7d94;     /* 静默墨蓝（次要文字） */
+  --wk-gold:#b8863b;         /* 鎏金（强调） */
+  --wk-gold-light:#d9a94f;   /* 浅鎏金 */
+  --wk-gold-soft:rgba(184,134,59,.14);
+  --wk-paper:#fdfcfa;        /* 纸白主背景 */
+  --wk-paper-2:#f5f3ee;      /* 纸白二 */
+  --wk-paper-3:#edeae2;      /* 纸白三 */
+  --wk-rule:rgba(16,31,56,.12);
+  --wk-rule-soft:rgba(16,31,56,.07);
+  --wk-code-bg:#fbf9f5;
+  --wk-code-dark:#0d1626;
+  --wk-font-sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","HarmonyOS Sans SC","Source Han Sans SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --wk-font-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Songti SC","Source Han Serif SC","Noto Serif CJK SC","STSong",serif;
+  --wk-font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --radius:4px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--wk-font-sans);background:var(--wk-paper);color:var(--wk-ink);line-height:1.82;-webkit-font-smoothing:antialiased;font-size:15.5px}
+::selection{background:rgba(184,134,59,.22)}
+
+/* ═══ 顶栏 ═══ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(253,252,250,.85);backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);border-bottom:1px solid var(--wk-rule-soft);display:flex;align-items:center;padding:0 24px;height:60px;gap:16px}
+.nav a.home{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--wk-ink);font-weight:700;font-size:.92rem;letter-spacing:.02em}
+.nav a.home .logo-mark{width:26px;height:26px;border-radius:4px;background:var(--wk-ink);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--wk-font-serif);font-weight:700;font-size:.95rem}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:2px;overflow-x:auto;font-size:.78rem;letter-spacing:.06em}
+.nav .nav-toc a{color:var(--wk-ink-soft);font-weight:500;padding:4px 11px;border-radius:3px;white-space:nowrap;text-decoration:none}
+.nav .nav-toc a:hover{background:var(--wk-gold-soft);color:var(--wk-gold)}
+.nav .nav-toc a.active{color:var(--wk-gold)}
+
+/* ═══ Hero ═══ */
+.hero{background:linear-gradient(160deg,var(--wk-ink-deep) 0%,var(--wk-ink) 60%,#1e3a5c 100%);color:#fff;padding:64px 32px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(217,169,79,.18) 0%,transparent 45%),radial-gradient(ellipse at 85% 100%,rgba(217,169,79,.10) 0%,transparent 40%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:820px;margin:0 auto}
+.hero .brand-line{font-family:var(--wk-font-serif);font-size:1.05rem;letter-spacing:.35em;color:var(--wk-gold-light);margin-bottom:14px;text-transform:uppercase}
+.hero h1{font-family:var(--wk-font-serif);font-size:2.6rem;font-weight:700;letter-spacing:-.02em;margin-bottom:16px;line-height:1.25}
+.hero .sub{opacity:.85;max-width:640px;margin:0 auto;font-size:1.02rem;line-height:1.8}
+.hero .tags{margin-top:22px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:4px 14px;border-radius:3px;font-size:.76rem;letter-spacing:.05em;font-family:var(--wk-font-mono)}
+.hero .meta{margin-top:24px;display:flex;gap:28px;justify-content:center;font-size:.8rem;opacity:.75;flex-wrap:wrap;letter-spacing:.03em}
+.hero .meta span{display:flex;align-items:center;gap:6px}
+.hero .meta b{color:var(--wk-gold-light);font-weight:700}
+
+/* ═══ 布局 ═══ */
+.wrap{max-width:1000px;margin:0 auto;padding:44px 28px 70px}
+.sec{margin-bottom:56px;scroll-margin-top:76px}
+.sec-title{display:flex;align-items:baseline;gap:14px;margin-bottom:26px;border-bottom:1px solid var(--wk-rule)}
+.sec-title .num{font-family:var(--wk-font-serif);font-size:1.15rem;color:var(--wk-gold);font-weight:700;letter-spacing:.08em}
+.sec-title h2{font-family:var(--wk-font-serif);font-size:1.65rem;font-weight:700;letter-spacing:-.01em;padding-bottom:10px;position:relative}
+.sec-title h2::after{content:'';position:absolute;left:0;bottom:-1px;width:56px;height:2px;background:var(--wk-gold)}
+.sec-sub{color:var(--wk-ink-mute);font-size:.92rem;margin:-14px 0 22px;max-width:720px}
+
+/* ═══ 卡片 ═══ */
+.card{background:#fff;border:1px solid var(--wk-rule-soft);border-radius:var(--radius);padding:26px 30px;margin:18px 0}
+.card h3{font-family:var(--wk-font-serif);font-size:1.14rem;margin-bottom:12px;color:var(--wk-ink);letter-spacing:-.01em}
+.card h4{font-size:.95rem;margin:16px 0 8px;color:var(--wk-ink)}
+.card p{margin:8px 0;color:var(--wk-ink-soft);font-size:.93rem}
+.card ul,.card ol{margin:8px 0;padding-left:22px;color:var(--wk-ink-soft);font-size:.9rem}
+.card li{margin:5px 0}
+.card strong{color:var(--wk-ink)}
+.card code{font-family:var(--wk-font-mono);font-size:.82rem;background:var(--wk-paper-2);padding:1px 7px;border-radius:3px;color:var(--wk-ink-deep)}
+.card em{color:var(--wk-gold);font-style:normal;font-weight:600}
+
+/* ═══ 网格 ═══ */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin:18px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:18px 0}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+.grid-card{background:#fff;border:1px solid var(--wk-rule-soft);border-radius:var(--radius);padding:22px 24px;position:relative;transition:box-shadow .2s,border-color .2s}
+.grid-card:hover{border-color:rgba(184,134,59,.45);box-shadow:0 2px 16px rgba(16,31,56,.07)}
+.grid-card .gc-icon{font-size:1.5rem;margin-bottom:10px;display:inline-block}
+.grid-card h4{font-size:.98rem;margin-bottom:8px;color:var(--wk-ink);display:flex;align-items:center;gap:8px}
+.grid-card h4 .tag{font-size:.62rem;font-family:var(--wk-font-mono);color:var(--wk-gold);border:1px solid rgba(184,134,59,.4);padding:0 6px;border-radius:3px;letter-spacing:.06em}
+.grid-card p{font-size:.84rem;color:var(--wk-ink-soft);margin:0;line-height:1.65}
+.grid-card .gc-foot{margin-top:12px;font-size:.74rem;color:var(--wk-ink-mute);font-family:var(--wk-font-mono)}
+.grid-card.gc-gold{border-top:2px solid var(--wk-gold)}
+.grid-card.gc-ink{border-top:2px solid var(--wk-ink)}
+
+/* ═══ 提示框 ═══ */
+.tip{padding:16px 20px;border-radius:var(--radius);margin:18px 0;border-left:3px solid;font-size:.9rem;line-height:1.7;display:flex;gap:13px;align-items:flex-start;background:#fff}
+.tip .icon{font-size:1.05rem;flex-shrink:0;margin-top:2px}
+.tip .content{flex:1}
+.tip .content strong{display:block;margin-bottom:3px}
+.tip.info{border-color:#2f6fb3;background:#f4f8fd}
+.tip.info strong{color:#1e4e8c}
+.tip.warn{border-color:var(--wk-gold);background:#fbf7ef}
+.tip.warn strong{color:var(--wk-gold)}
+.tip.danger{border-color:#c0392b;background:#fcf4f2}
+.tip.danger strong{color:#a93226}
+.tip.good{border-color:#2e7d5b;background:#f1f8f4}
+.tip.good strong{color:#1f5e43}
+
+/* ═══ 表格 ═══ */
+.tbl-wrap{overflow-x:auto;margin:18px 0;border:1px solid var(--wk-rule);border-radius:var(--radius);background:#fff}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:640px}
+.tbl-wrap th{background:var(--wk-paper-2);padding:11px 16px;text-align:left;font-weight:700;color:var(--wk-ink);border-bottom:1px solid var(--wk-rule);white-space:nowrap;font-size:.8rem;letter-spacing:.04em}
+.tbl-wrap td{padding:11px 16px;border-bottom:1px solid var(--wk-rule-soft);color:var(--wk-ink-soft);vertical-align:top}
+.tbl-wrap tr:last-child td{border-bottom:none}
+.tbl-wrap tr:hover td{background:var(--wk-paper)}
+.tbl-wrap td code{font-family:var(--wk-font-mono);font-size:.8rem;background:var(--wk-paper-2);padding:1px 6px;border-radius:3px;color:var(--wk-ink-deep)}
+.tbl-wrap td b{color:var(--wk-ink)}
+
+/* ═══ SVG 图解 ═══ */
+.viz{background:#fff;border:1px solid var(--wk-rule);border-radius:var(--radius);padding:26px 18px 18px;margin:20px 0;text-align:center;overflow-x:auto}
+.viz svg{max-width:100%;height:auto}
+.viz .viz-cap{font-size:.78rem;color:var(--wk-ink-mute);margin-top:12px;letter-spacing:.03em;border-top:1px dashed var(--wk-rule-soft);padding-top:10px}
+.viz .viz-title{font-family:var(--wk-font-serif);font-size:.98rem;color:var(--wk-ink);margin-bottom:14px;letter-spacing:.02em}
+
+/* ═══ 代码块 ═══ */
+.code{background:var(--wk-code-dark);border-radius:var(--radius);margin:18px 0;overflow:hidden;position:relative}
+.code .lang{position:absolute;top:0;right:0;background:rgba(255,255,255,.08);color:#a9b6c9;font-size:.68rem;padding:3px 12px;border-radius:0 0 0 4px;font-family:var(--wk-font-mono);letter-spacing:.08em}
+.code pre{padding:20px 22px;overflow-x:auto;font-family:var(--wk-font-mono);font-size:.8rem;line-height:1.75;color:#e6ecf5;white-space:pre;tab-size:2}
+.kw{color:#e8c176}
+.str{color:#a5d6ff}
+.fn{color:#7fd4d8}
+.num{color:#f2b8c6}
+.cm{color:#7d8ca2;font-style:italic}
+.ty{color:#c3a6e8}
+
+/* ═══ 徽章 ═══ */
+.badge{display:inline-block;font-size:.66rem;font-weight:600;padding:2px 9px;border-radius:3px;vertical-align:middle;letter-spacing:.06em;font-family:var(--wk-font-mono)}
+.badge-gold{background:var(--wk-gold-soft);color:var(--wk-gold);border:1px solid rgba(184,134,59,.4)}
+.badge-ink{background:rgba(16,31,56,.08);color:var(--wk-ink);border:1px solid rgba(16,31,56,.2)}
+.badge-green{background:rgba(46,125,91,.12);color:#1f5e43;border:1px solid rgba(46,125,91,.35)}
+
+/* ═══ 流程步骤 ═══ */
+.flow-step{display:flex;align-items:flex-start;gap:16px;margin:14px 0;position:relative}
+.flow-step::before{content:'';position:absolute;left:19px;top:44px;bottom:-14px;width:2px;background:var(--wk-rule)}
+.flow-step:last-child::before{display:none}
+.flow-step .step-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;z-index:1;background:#fff;border:1px solid var(--wk-rule);box-shadow:0 0 0 4px var(--wk-paper)}
+.flow-step .step-body{flex:1;padding-top:3px}
+.flow-step .step-body strong{display:block;margin-bottom:2px;color:var(--wk-ink);font-size:.95rem}
+.flow-step .step-body span{font-size:.86rem;color:var(--wk-ink-soft);line-height:1.65}
+
+/* ═══ 页脚 ═══ */
+.footer{text-align:center;padding:34px 24px;border-top:1px solid var(--wk-rule-soft);color:var(--wk-ink-mute);font-size:.8rem;background:var(--wk-paper-2)}
+.footer .brand{font-family:var(--wk-font-serif);color:var(--wk-ink);letter-spacing:.12em;font-size:.85rem;margin-bottom:6px}
+.footer a{color:var(--wk-gold);text-decoration:none}
+
+/* ═══ 响应式 ═══ */
+@media(max-width:768px){
+  body{font-size:14.5px}
+  .hero{padding:44px 20px 38px}
+  .hero h1{font-size:1.7rem}
+  .hero .brand-line{font-size:.85rem;letter-spacing:.25em}
+  .hero .sub{font-size:.92rem}
+  .nav .nav-toc{display:none}
+  .wrap{padding:28px 16px 50px}
+  .card{padding:20px 20px}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .sec-title h2{font-size:1.3rem}
+  .sec-title .num{font-size:1rem}
+  .hero .meta{gap:14px;font-size:.74rem}
+}
+@media(max-width:420px){
+  .hero h1{font-size:1.45rem}
+  .grid-card{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="home" href="../index.html" title="返回门户">
+    <span class="logo-mark">W</span>
+    Frontend Learning Hub
+  </a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">项目概述</a>
+    <a href="#s2">核心架构图解</a>
+    <a href="#s3">功能模块</a>
+    <a href="#s4">技术要点</a>
+    <a href="#s5">代码风格</a>
+    <a href="#s6">快速上手</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="brand-line">Tencent · Open Source</div>
+    <h1>WeKnora（维娜拉）<br>腾讯开源知识平台架构深度解析</h1>
+    <p class="sub">把散落文档变成会思考的知识资产 —— RAG 快速问答 · ReAct Agent 自主推理 · AI 自动 Wiki 三大模式一体化，构建可查询、可推理、可持续演进的企业知识引擎。</p>
+    <div class="tags">
+      <span>Go + Vue 3</span><span>Rust/anydoc</span><span>RAG</span><span>Agent</span><span>Wiki/Graph</span><span>MIT</span>
+    </div>
+    <div class="meta">
+      <span>📦 <b>v0.7.2</b></span>
+      <span>⭐ <b>20.3K+</b> Stars</span>
+      <span>🔄 <b>2,767</b> commits</span>
+      <span>🏗️ 多模块 Go + 前端 monorepo</span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ══════════════════════════════ 1 项目概述 ══════════════════════════════ -->
+<section class="sec" id="s1">
+<div class="sec-title"><span class="num">01</span><h2>项目概述</h2></div>
+<p class="sec-sub">WeKnora 是腾讯开源的 LLM 知识管理框架，面向企业级文档理解、语义检索与智能推理场景，2025 年 8 月立项、持续活跃迭代至今。</p>
+
+<div class="card">
+<h3>一句话定位</h3>
+<p><strong>WeKnora</strong> 将原始文档沉淀为三类可消费的知识资产：<strong>RAG 问答库</strong>（可查询）、<strong>自主推理智能体</strong>（可推理）、<strong>自维护 Wiki</strong>（可自动演进）。它不是单点工具，而是覆盖「文档解析 → 知识组织 → 检索问答 → 智能体编排 → 图谱演化」全链路的<a style="color:var(--wk-gold);text-decoration:none;font-weight:600" href="https://github.com/Tencent/WeKnora" target="_blank">开源知识平台</a>。</p>
+</div>
+
+<div class="grid3">
+<div class="grid-card gc-ink">
+  <div class="gc-icon">⚡</div>
+  <h4>RAG 快速问答 <span class="tag">CORE</span></h4>
+  <p>语义 + BM25 混合检索，答案自动标注来源，规避 AI 幻觉；支持父子分块、GraphRAG 图谱增强、重排序与引用浮层。</p>
+</div>
+<div class="grid-card gc-gold">
+  <div class="gc-icon">🧠</div>
+  <h4>ReAct Agent 推理 <span class="tag">CORE</span></h4>
+  <p>渐进式多步推理，自主编排知识检索、MCP 工具调用与网络搜索；支持人机审批节点与自定义智能体配置。</p>
+</div>
+<div class="grid-card gc-ink">
+  <div class="gc-icon">🗂️</div>
+  <h4>AI 自动 Wiki <span class="tag">v0.5+</span></h4>
+  <p>Agent 从原始文档自动蒸馏为结构化、互链的 Markdown Wiki 页面与可视化知识图谱，支持万级文档规模持续更新。</p>
+</div>
+</div>
+
+<div class="grid4">
+  <div class="grid-card"><h4>📄 全格式解析</h4><p>PDF / Word / PPT / Excel / Markdown / HTML / EPUB / 图片 / XMind 等</p><div class="gc-foot">anydoc 引擎 · OCR 回退</div></div>
+  <div class="grid-card"><h4>🔌 多源接入</h4><p>飞书 / Lark / Notion / 语雀 / RSS / GitLab / 网页剪藏</p><div class="gc-foot">Streaming Connector</div></div>
+  <div class="grid-card"><h4>🧩 生态集成</h4><p>MCP Server · Chrome 插件 · Embed Widget · 微信小程序 · IM 渠道</p><div class="gc-foot">29 个 MCP 工具</div></div>
+  <div class="grid-card"><h4>🔐 企业级安全</h4><p>空间 RBAC 四级角色 · AES-256-GCM · gRPC TLS · 防 SSRF</p><div class="gc-foot">完全私有化部署</div></div>
+</div>
+
+<div class="tip info">
+  <span class="icon">ℹ️</span>
+  <div class="content">
+    <strong>项目气质</strong>
+    从官网设计系统可见其「学术出版」气质：墨蓝（#101f38）+ 纸白（#fdfcfa）+ 鎏金（#b8863b）三色体系，衬线标题 + 无衬线正文 + 等宽代码三字体体系，本页视觉即复刻该设计 token。代码层面则体现腾讯工程文化：<em>gofumpt 严格格式、golangci-lint 增量门禁、三层测试（单元/契约/E2E）</em>。
+  </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 2 核心架构图解 ══════════════════════════════ -->
+<section class="sec" id="s2">
+<div class="sec-title"><span class="num">02</span><h2>核心架构图解</h2></div>
+<p class="sec-sub">WeKnora 采用「前端多端接入 + Go 模块化后端 + 可插拔存储/模型层」的分层架构。以下从整体分层、RAG 流水线、Agent 推理循环三个视角拆解。</p>
+
+<!-- ─── 图1：整体分层架构 ─── -->
+<div class="viz">
+<div class="viz-title">图 1 · 系统整体分层架构</div>
+<svg viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WeKnora 整体分层架构图">
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <path d="M0,0 L8,3 L0,6 Z" fill="#b8863b"/>
+  </marker>
+  <linearGradient id="g-ink" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#101f38"/>
+    <stop offset="1" stop-color="#1e3a5c"/>
+  </linearGradient>
+</defs>
+
+<!-- 第 1 层：接入层 -->
+<rect x="20" y="18" width="640" height="86" rx="4" fill="#101f38"/>
+<text x="36" y="40" fill="#e8c176" font-size="11" font-family="JetBrains Mono, monospace" letter-spacing="2">L1 · 接入层（多端触达）</text>
+<g font-size="10.5" fill="#e6ecf5" font-family="Inter, sans-serif">
+  <rect x="36" y="50" width="88" height="34" rx="3" fill="rgba(255,255,255,.12)"/><text x="80" y="71" text-anchor="middle">Web UI</text>
+  <rect x="134" y="50" width="88" height="34" rx="3" fill="rgba(255,255,255,.12)"/><text x="178" y="71" text-anchor="middle">小程序</text>
+  <rect x="232" y="50" width="88" height="34" rx="3" fill="rgba(255,255,255,.12)"/><text x="276" y="71" text-anchor="middle">Chrome 插件</text>
+  <rect x="330" y="50" width="88" height="34" rx="3" fill="rgba(255,255,255,.12)"/><text x="374" y="71" text-anchor="middle">Embed Widget</text>
+  <rect x="428" y="50" width="88" height="34" rx="3" fill="rgba(255,255,255,.12)"/><text x="472" y="71" text-anchor="middle">IM 渠道</text>
+  <rect x="526" y="50" width="118" height="34" rx="3" fill="rgba(255,255,255,.12)"/><text x="585" y="71" text-anchor="middle">CLI / API 客户端</text>
+</g>
+<line x1="340" y1="104" x2="340" y2="128" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- 第 2 层：API 层 -->
+<rect x="20" y="130" width="640" height="62" rx="4" fill="#f5f3ee" stroke="#e0dcd2"/>
+<text x="36" y="152" fill="#40536f" font-size="11" font-family="JetBrains Mono, monospace" letter-spacing="2">L2 · API 层</text>
+<g font-size="10.5" fill="#101f38" font-family="Inter, sans-serif" font-weight="600">
+  <rect x="36" y="160" width="140" height="24" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="106" y="176" text-anchor="middle">RESTful API (Go)</text>
+  <rect x="190" y="160" width="140" height="24" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="260" y="176" text-anchor="middle">gRPC (TLS)</text>
+  <rect x="344" y="160" width="140" height="24" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="414" y="176" text-anchor="middle">MCP Server</text>
+  <rect x="498" y="160" width="146" height="24" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="571" y="176" text-anchor="middle">OAuth2 / API Key</text>
+</g>
+<line x1="340" y1="192" x2="340" y2="216" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- 第 3 层：核心引擎 -->
+<rect x="20" y="218" width="640" height="176" rx="4" fill="#fff" stroke="#e0dcd2"/>
+<text x="36" y="240" fill="#40536f" font-size="11" font-family="JetBrains Mono, monospace" letter-spacing="2">L3 · 核心引擎层（Go 模块化后端 internal/）</text>
+
+<g font-size="10" fill="#e6ecf5" font-family="Inter, sans-serif">
+  <rect x="36" y="250" width="184" height="58" rx="3" fill="url(#g-ink)"/>
+  <text x="128" y="272" text-anchor="middle" font-weight="700" font-size="10.5">📄 文档解析引擎</text>
+  <text x="128" y="290" text-anchor="middle" fill="#a9b6c9" font-size="8.5">anydoc (Rust/cgo) · OCR · VLM/ASR</text>
+
+  <rect x="234" y="250" width="184" height="58" rx="3" fill="url(#g-ink)"/>
+  <text x="326" y="272" text-anchor="middle" font-weight="700" font-size="10.5">📚 知识库管理</text>
+  <text x="326" y="290" text-anchor="middle" fill="#a9b6c9" font-size="8.5">分块编辑 · 版本历史 · 标签 · 文件夹树</text>
+
+  <rect x="432" y="250" width="212" height="58" rx="3" fill="url(#g-ink)"/>
+  <text x="538" y="272" text-anchor="middle" font-weight="700" font-size="10.5">🔍 混合检索 RAG</text>
+  <text x="538" y="290" text-anchor="middle" fill="#a9b6c9" font-size="8.5">BM25 + Dense + GraphRAG · 重排序</text>
+
+  <rect x="36" y="320" width="184" height="58" rx="3" fill="url(#g-ink)"/>
+  <text x="128" y="342" text-anchor="middle" font-weight="700" font-size="10.5">🤖 ReAct Agent</text>
+  <text x="128" y="360" text-anchor="middle" fill="#a9b6c9" font-size="8.5">渐进推理 · 工具编排 · 人机审批</text>
+
+  <rect x="234" y="320" width="184" height="58" rx="3" fill="url(#g-ink)"/>
+  <text x="326" y="342" text-anchor="middle" font-weight="700" font-size="10.5">🔌 数据源连接器</text>
+  <text x="326" y="360" text-anchor="middle" fill="#a9b6c9" font-size="8.5">StreamingConnector · NodeOps 泛型</text>
+
+  <rect x="432" y="320" width="212" height="58" rx="3" fill="url(#g-ink)"/>
+  <text x="538" y="342" text-anchor="middle" font-weight="700" font-size="10.5">🧩 MCP / 沙箱 / 记忆</text>
+  <text x="538" y="360" text-anchor="middle" fill="#a9b6c9" font-size="8.5">MCP 工具 · E2B/Cube 沙箱 · 长期记忆</text>
+</g>
+<line x1="340" y1="394" x2="340" y2="418" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- 第 4 层：存储与基础设施 -->
+<rect x="20" y="420" width="640" height="86" rx="4" fill="#f5f3ee" stroke="#e0dcd2"/>
+<text x="36" y="442" fill="#40536f" font-size="11" font-family="JetBrains Mono, monospace" letter-spacing="2">L4 · 存储与基础设施</text>
+<g font-size="9.5" fill="#40536f" font-family="Inter, sans-serif">
+  <rect x="36" y="450" width="120" height="42" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="96" y="466" text-anchor="middle" font-weight="700" fill="#101f38">业务元数据</text><text x="96" y="481" text-anchor="middle">DuckDB · SQLite</text>
+  <rect x="166" y="450" width="130" height="42" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="231" y="466" text-anchor="middle" font-weight="700" fill="#101f38">向量存储</text><text x="231" y="481" text-anchor="middle">pgvector · Milvus · ES</text>
+  <rect x="306" y="450" width="120" height="42" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="366" y="466" text-anchor="middle" font-weight="700" fill="#101f38">知识图谱</text><text x="366" y="481" text-anchor="middle">Neo4j（可选）</text>
+  <rect x="436" y="450" width="110" height="42" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="491" y="466" text-anchor="middle" font-weight="700" fill="#101f38">对象存储</text><text x="491" y="481" text-anchor="middle">S3 · COS · MinIO</text>
+  <rect x="556" y="450" width="88" height="42" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="600" y="466" text-anchor="middle" font-weight="700" fill="#101f38">任务队列</text><text x="600" y="481" text-anchor="middle">Redis / MQ</text>
+</g>
+<line x1="340" y1="506" x2="340" y2="524" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr)"/>
+
+<!-- 第 5 层：模型层 -->
+<rect x="20" y="528" width="640" height="28" rx="4" fill="#101f38"/>
+<text x="340" y="546" text-anchor="middle" fill="#e8c176" font-size="10.5" font-family="JetBrains Mono, monospace" letter-spacing="2">L5 · 模型层：20+ LLM（OpenAI/DeepSeek/Qwen/混元/Claude…）· Embedding · Rerank · OCR/VLM/ASR</text>
+</svg>
+<div class="viz-cap">WeKnora 五层架构：接入层多端触达，API 层统一暴露，核心引擎层 Go 模块化实现，存储与模型层均可插拔替换 —— 本地 / 私有云部署，数据完全自主可控。</div>
+</div>
+
+<!-- ─── 图2：RAG 流水线 ─── -->
+<div class="viz">
+<div class="viz-title">图 2 · RAG 全链路数据流水线</div>
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RAG 全链路流水线图">
+<defs>
+  <marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <path d="M0,0 L8,3 L0,6 Z" fill="#b8863b"/>
+  </marker>
+</defs>
+<text x="36" y="26" fill="#40536f" font-size="10.5" font-family="JetBrains Mono, monospace" letter-spacing="2">① 入库流水线（离线 / 异步任务）</text>
+<g font-size="9.5" font-family="Inter, sans-serif" text-anchor="middle">
+  <rect x="36" y="40" width="90" height="46" rx="3" fill="#101f38"/><text x="81" y="59" fill="#e6ecf5" font-weight="700">上传文档</text><text x="81" y="74" fill="#a9b6c9" font-size="8">多格式/多源</text>
+  <line x1="126" y1="63" x2="140" y2="63" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="140" y="40" width="90" height="46" rx="3" fill="#101f38"/><text x="185" y="59" fill="#e6ecf5" font-weight="700">anydoc 解析</text><text x="185" y="74" fill="#a9b6c9" font-size="8">Rust/cgo · OCR</text>
+  <line x1="230" y1="63" x2="244" y2="63" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="244" y="40" width="90" height="46" rx="3" fill="#101f38"/><text x="289" y="59" fill="#e6ecf5" font-weight="700">自适应分块</text><text x="289" y="74" fill="#a9b6c9" font-size="8">三层 chunk 策略</text>
+  <line x1="334" y1="63" x2="348" y2="63" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="348" y="40" width="90" height="46" rx="3" fill="#101f38"/><text x="393" y="59" fill="#e6ecf5" font-weight="700">Embedding</text><text x="393" y="74" fill="#a9b6c9" font-size="8">BGE/GTE/Ollama</text>
+  <line x1="438" y1="63" x2="452" y2="63" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="452" y="40" width="90" height="46" rx="3" fill="#101f38"/><text x="497" y="59" fill="#e6ecf5" font-weight="700">索引入库</text><text x="497" y="74" fill="#a9b6c9" font-size="8">向量 + 倒排 + 图谱</text>
+  <line x1="542" y1="63" x2="556" y2="63" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="556" y="40" width="90" height="46" rx="3" fill="#1e3a5c"/><text x="601" y="59" fill="#e6ecf5" font-weight="700">知识资产</text><text x="601" y="74" fill="#a9b6c9" font-size="8">RAG / Agent / Wiki</text>
+</g>
+
+<line x1="340" y1="100" x2="340" y2="132" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+<text x="36" y="158" fill="#40536f" font-size="10.5" font-family="JetBrains Mono, monospace" letter-spacing="2">② 查询流水线（在线 / 实时）</text>
+<g font-size="9.5" font-family="Inter, sans-serif" text-anchor="middle">
+  <rect x="36" y="172" width="90" height="46" rx="3" fill="#b8863b"/><text x="81" y="191" fill="#fff" font-weight="700">用户提问</text><text x="81" y="206" fill="#f5e9d2" font-size="8">对话 / API / Widget</text>
+  <line x1="126" y1="195" x2="140" y2="195" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="140" y="172" width="90" height="46" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="185" y="191" fill="#101f38" font-weight="700">Query 改写</text><text x="185" y="206" fill="#40536f" font-size="8">多轮上下文感知</text>
+  <line x1="230" y1="195" x2="244" y2="195" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="244" y="172" width="90" height="46" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="289" y="191" fill="#101f38" font-weight="700">混合检索</text><text x="289" y="206" fill="#40536f" font-size="8">BM25+Dense+Graph</text>
+  <line x1="334" y1="195" x2="348" y2="195" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="348" y="172" width="90" height="46" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="393" y="191" fill="#101f38" font-weight="700">重排序</text><text x="393" y="206" fill="#40536f" font-size="8">Rerank · MMR 去重</text>
+  <line x1="438" y1="195" x2="452" y2="195" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="452" y="172" width="90" height="46" rx="3" fill="#fff" stroke="#d8d2c4"/><text x="497" y="191" fill="#101f38" font-weight="700">LLM 生成</text><text x="497" y="206" fill="#40536f" font-size="8">引用注入 · 流式</text>
+  <line x1="542" y1="195" x2="556" y2="195" stroke="#b8863b" marker-end="url(#arr2)"/>
+  <rect x="556" y="172" width="90" height="46" rx="3" fill="#101f38"/><text x="601" y="191" fill="#e6ecf5" font-weight="700">带引用答案</text><text x="601" y="206" fill="#a9b6c9" font-size="8">溯源防幻觉</text>
+</g>
+
+<g font-size="9" fill="#6d7d94" font-family="JetBrains Mono, monospace">
+  <text x="36" y="256" fill="#101f38" font-weight="700">默认 TopK = 50</text>
+  <text x="36" y="272">分块编辑/版本历史可追溯 · 批处理 process_config 可覆盖解析与分块参数</text>
+  <text x="36" y="288">Langfuse 全链路追踪（ReAct 循环 / Token / 工具调用）</text>
+</g>
+</svg>
+<div class="viz-cap">文档经「解析 → 分块 → 向量化 → 索引」离线入库；查询时经「改写 → 混合检索 → 重排 → 生成」在线取用，两条流水线通过知识资产层解耦。</div>
+</div>
+
+<!-- ─── 图3：Agent 推理循环 ─── -->
+<div class="viz">
+<div class="viz-title">图 3 · ReAct Agent 渐进式推理循环</div>
+<svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ReAct Agent 推理循环图">
+<defs>
+  <marker id="arr3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <path d="M0,0 L8,3 L0,6 Z" fill="#b8863b"/>
+  </marker>
+</defs>
+<!-- 主循环 -->
+<rect x="36" y="90" width="120" height="52" rx="3" fill="#101f38"/>
+<text x="96" y="112" text-anchor="middle" fill="#e6ecf5" font-size="10.5" font-weight="700">🧠 Thought</text>
+<text x="96" y="129" text-anchor="middle" fill="#a9b6c9" font-size="8.5">分析意图 · 规划步骤</text>
+
+<line x1="156" y1="116" x2="196" y2="116" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+<rect x="200" y="90" width="140" height="52" rx="3" fill="#b8863b"/>
+<text x="270" y="112" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700">⚡ Action</text>
+<text x="270" y="129" text-anchor="middle" fill="#f5e9d2" font-size="8.5">检索 / 工具 / 网络搜索</text>
+
+<line x1="340" y1="116" x2="380" y2="116" stroke="#b8863b" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+<rect x="384" y="90" width="120" height="52" rx="3" fill="#1e3a5c"/>
+<text x="444" y="112" text-anchor="middle" fill="#e6ecf5" font-size="10.5" font-weight="700">👀 Observation</text>
+<text x="444" y="129" text-anchor="middle" fill="#a9b6c9" font-size="8.5">观察结果 · 吸收信息</text>
+
+<rect x="524" y="90" width="122" height="52" rx="3" fill="#101f38"/>
+<text x="585" y="112" text-anchor="middle" fill="#e6ecf5" font-size="10.5" font-weight="700">✅ Answer</text>
+<text x="585" y="129" text-anchor="middle" fill="#a9b6c9" font-size="8.5">结构化带引用输出</text>
+
+<!-- 回环箭头 -->
+<path d="M385 148 C 385 205, 200 205, 200 148" fill="none" stroke="#b8863b" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arr3)"/>
+<text x="293" y="200" text-anchor="middle" fill="#6d7d94" font-size="9" font-family="JetBrains Mono, monospace">未达目标 → 继续循环（最多 N 轮）</text>
+
+<!-- 工具面板 -->
+<text x="36" y="40" fill="#40536f" font-size="10.5" font-family="JetBrains Mono, monospace" letter-spacing="2">Action 可调用的工具集（@Skill / @MCP 范围化）</text>
+<g font-size="9" font-family="Inter, sans-serif" text-anchor="middle">
+  <rect x="36" y="50" width="120" height="26" rx="3" fill="#f5f3ee" stroke="#e0dcd2"/><text x="96" y="67" fill="#40536f">🔍 knowledge_search</text>
+  <rect x="164" y="50" width="120" height="26" rx="3" fill="#f5f3ee" stroke="#e0dcd2"/><text x="224" y="67" fill="#40536f">🌐 web_search</text>
+  <rect x="292" y="50" width="120" height="26" rx="3" fill="#f5f3ee" stroke="#e0dcd2"/><text x="352" y="67" fill="#40536f">🧰 MCP 工具</text>
+  <rect x="420" y="50" width="120" height="26" rx="3" fill="#f5f3ee" stroke="#e0dcd2"/><text x="480" y="67" fill="#40536f">🖥️ sandbox_exec</text>
+  <rect x="548" y="50" width="98" height="26" rx="3" fill="#f5f3ee" stroke="#e0dcd2"/><text x="597" y="67" fill="#40536f">📄 read_doc</text>
+</g>
+<text x="36" y="230" fill="#6d7d94" font-size="9" font-family="JetBrains Mono, monospace">Wiki 模式 = 同样的循环驱动「文档 → 结构化 Wiki 页面 + 知识图谱」的自治蒸馏，支持人工编辑与一键回滚</text>
+</svg>
+<div class="viz-cap">ReAct 循环将「推理-行动-观察」迭代直至目标达成；Wiki 模式复用该机制完成文档的图谱化自治整理，万级文档规模下持续自动演进。</div>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 3 主要功能模块 ══════════════════════════════ -->
+<section class="sec" id="s3">
+<div class="sec-title"><span class="num">03</span><h2>主要功能模块说明</h2></div>
+<p class="sec-sub">从仓库 internal/、frontend/src/、docreader/、mcp-server/ 等目录反推出的六大核心功能模块。</p>
+
+<div class="card">
+<h3>📄 模块 A · 文档解析引擎（docreader + anydoc）</h3>
+<p>WeKnora 最具技术含量的一层。<strong>anydoc</strong> 是 Rust 编写的文档解析库，通过 <strong>cgo</strong> 以静态库方式链接进 Go 进程，无需独立解析服务即可在进程内把 Office 文档转换为带原位图片的 Markdown。</p>
+<div class="tbl-wrap">
+<table>
+<tr><th>格式</th><th>解析方式</th><th>要点</th></tr>
+<tr><td><b>DOCX / PPTX / XLSX</b></td><td>anydoc（Rust）</td><td>保留原位图片，转换为结构化 Markdown</td></tr>
+<tr><td><b>PDF</b></td><td>anydoc + OCR 回退</td><td>恶意 PDF 解析开销设上限防 CPU 耗尽；扫描版回退 DocReader OCR</td></tr>
+<tr><td><b>XMind</b></td><td>XMind 大纲解析</td><td>同时支持现代与经典 XMind 档案格式</td></tr>
+<tr><td><b>Markdown / HTML / EPUB / MHTML / 图片 / CSV / JSON</b></td><td>内置解析器</td><td>网页剪藏、RSS、GitLab 等多源文档统一入口</td></tr>
+<tr><td><b>飞书文档</b></td><td>blocks API / export API</td><td><code>FEISHU_DOCX_PARSE_MODE</code> 控制双路径</td></tr>
+</table>
+</div>
+<div class="tip good">
+  <span class="icon">✅</span>
+  <div class="content"><strong>设计亮点</strong>：Rust 静态库通过 cgo 链入 Go 进程（third_party/anydoc-go/），<em>避免独立解析服务带来的部署与运维成本</em>，同时获得 Rust 的内存安全解析能力 —— 这是项目「模块化但不微服务化」哲学的代表作。</div>
+</div>
+</div>
+
+<div class="card">
+<h3>📚 模块 B · 知识库管理（internal/models + frontend）</h3>
+<div class="grid2">
+<div>
+<h4>核心能力</h4>
+<ul>
+  <li><strong>三种知识库类型</strong>：FAQ / 文档 / Wiki，支持文件夹导入、URL 导入、多标签管理</li>
+  <li><strong>文件夹树</strong>：上传保留原始目录结构，树形浏览、重命名与重新归档</li>
+  <li><strong>分块编辑与版本历史</strong>：可视化编辑检索分块，逐版本 diff 与回滚，自动重建索引</li>
+  <li><strong>文档摘要</strong>：支持手动编辑与 LLM 自动生成（PR #2752）</li>
+  <li><strong>批量操作</strong>：框选多选、批量重新解析、批量打标签</li>
+</ul>
+</div>
+<div>
+<h4>对应前端组件（Vue 3）</h4>
+<ul>
+  <li><code>KnowledgeBase.vue</code> —— 知识库主视图</li>
+  <li><code>DataSourceEditorDialog.vue</code> —— 数据源配置编辑器</li>
+  <li>分块分页状态管理组件（chunk pagination 专项加固）</li>
+  <li>Markdown 预览渲染器隔离（防 XSS 渲染隔离）</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>🔍 模块 C · 混合检索系统（RAG）</h3>
+<p>检索层采用<b>多路召回 + 统一规范化 + 重排序</b>的现代 RAG 架构：</p>
+<ul>
+  <li><strong>BM25 稀疏召回</strong> —— 精确关键词匹配，处理专有名词与代码片段</li>
+  <li><strong>Dense 稠密召回</strong> —— Embedding 语义相似度，pgvector HNSW 加速（1024 维）</li>
+  <li><strong>GraphRAG 图谱增强</strong> —— 知识图谱实体关联补充召回（chunk + 实体并行）</li>
+  <li><strong>父子分块</strong> —— 小块检索 + 大块上下文补全</li>
+  <li><strong>MMR 增量去重</strong> —— agent 检索中的多样化选择（perf 专项优化）</li>
+  <li><strong>MatchCount 规范化</strong> —— 修复 match_count 遗漏导致的空集与负值 500 问题</li>
+</ul>
+<div class="tbl-wrap">
+<table>
+<tr><th>检索维度</th><th>机制</th><th>用途</th></tr>
+<tr><td><b>chunk 检索</b></td><td>向量 + 倒排混合</td><td>常规语义问答</td></tr>
+<tr><td><b>实体检索</b></td><td>知识图谱实体遍历</td><td>关系型问题、多跳推理</td></tr>
+<tr><td><b>FAQ 检索</b></td><td>FAQ 专用索引</td><td>高频标准化问题</td></tr>
+<tr><td><b>父块补全</b></td><td>父子分块映射</td><td>长上下文完整性</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>🤖 模块 D · ReAct Agent 与工具生态（internal/agent + sandbox + mcp）</h3>
+<div class="grid3">
+<div class="grid-card"><h4>渐进式推理</h4><p>Thought → Action → Observation 循环，自主规划多步任务，最多 N 轮迭代，RAG 进度分阶段可视化展示。</p></div>
+<div class="grid-card"><h4>工具调用</h4><p>内置工具（知识检索/读文档）+ MCP 工具（含 OAuth2 远程服务）+ 网络搜索，支持 <code>@Skill / @MCP</code> 提及范围化运行时。</p></div>
+<div class="grid-card"><h4>沙箱执行</h4><p>按空间配置 E2B / Cube 远程沙箱，提供 shell_exec、文件管理、Artifacts 收集；模板状态/凭据/超时可解释诊断。</p></div>
+<div class="grid-card"><h4>人机审批</h4><p>工具调用可设审批节点，关键操作人工确认，适配企业合规场景。</p></div>
+<div class="grid-card"><h4>跨会话记忆</h4><p>长期记忆（memory）模块，跨会话沉淀用户偏好与上下文，事件驱动（internal/event）。</p></div>
+<div class="grid-card"><h4>临时附件</h4><p>会话级上传图片/文档，后台异步解析，一次性问答，可配置 TTL 过期清理，不入库。</p></div>
+</div>
+</div>
+
+<div class="card">
+<h3>🔌 模块 E · 数据源连接器体系（internal/datasource）</h3>
+<p>以<b>泛型流式同步引擎</b>（engine.go）为统一底座，不同连接器差异通过 <strong>NodeOps</strong> 适配器隔离，实现增量同步、失败不推进游标、断点快照（toSyncCursor）等一致语义。</p>
+<div class="tbl-wrap">
+<table>
+<tr><th>连接器</th><th>同步能力</th><th>备注</th></tr>
+<tr><td><b>飞书云盘 / 飞书 Wiki</b></td><td>文件夹同步 · 增量检测 · 快捷方式展开</td><td>PR #2466</td></tr>
+<tr><td><b>Notion / 语雀</b></td><td>空间 / 文档同步</td><td>官方支持</td></tr>
+<tr><td><b>RSS</b></td><td>订阅源定时同步</td><td>v0.6.3+</td></tr>
+<tr><td><b>GitLab</b></td><td>仓库文档同步 · 文件类型过滤</td><td>PR #2656</td></tr>
+<tr><td><b>网页剪藏</b></td><td>Chrome 插件一键采集</td><td>选中即存，与 RAG 联动</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>🏢 模块 F · 平台治理与安全（system-admin + ratelimit + tracing）</h3>
+<ul>
+  <li><strong>空间 RBAC 四级角色矩阵</strong>：Owner / Admin / Contributor / Viewer，按知识库资源归属管理；跨空间超级管理员；每空间审计日志</li>
+  <li><strong>平台级 API Key</strong>：capability-based 访问控制，权限范围可裁剪（Principal 模型）；凭据 <strong>AES-256-GCM</strong> 静态加密</li>
+  <li><strong>多租户术语</strong>：用户可见 tenant 统一重构为 workspace，简化心智模型</li>
+  <li><strong>安全防线</strong>：gRPC TLS、SSRF 出站白名单加固（MCP 专项）、密码策略 8–32 位、随机密码幂等创建</li>
+  <li><strong>可观测性</strong>：Langfuse 追踪（ReAct 循环 / Token / 工具调用）、运行时任务队列面板、系统管理员创建审计事件</li>
+</ul>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 4 技术实现要点 ══════════════════════════════ -->
+<section class="sec" id="s4">
+<div class="sec-title"><span class="num">04</span><h2>技术实现要点解析</h2></div>
+<p class="sec-sub">深入代码风格与工程实践层面，提炼 6 个值得学习的实现要点。</p>
+
+<div class="flow-step">
+  <div class="step-dot">🦀</div>
+  <div class="step-body">
+    <strong>Rust + cgo：进程内高性能文档解析</strong>
+    <span>anydoc 以 Rust 静态库形式通过 cgo 链入 Go 进程（<code>third_party/anydoc-go/</code>），替代独立的解析微服务。收益：零网络开销、部署极简；代价：交叉编译与发布需处理 cgo 工具链 —— 项目在 CI 中维护了对应矩阵。这是「<em>性能敏感件用 Rust，业务件用 Go</em>」的经典混合范式。</span>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="step-dot">⚙️</div>
+  <div class="step-body">
+    <strong>泛型流式连接器：StreamingConnector + NodeOps</strong>
+    <span>数据源同步统一为流式引擎：<code>resume fast-path</code>（续传加速）、<code>failure-does-not-advance-cursor</code>（失败不推进游标）、<code>toSyncCursor</code> 快照语义。新增数据源只需实现 NodeOps 适配器，同步语义零成本复用 —— 连接器从「各自为政」收敛为「单一引擎 + 适配器」。</span>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="step-dot">📐</div>
+  <div class="step-body">
+    <strong>多模块 Go 工程：每模块独立 go.mod</strong>
+    <span>主仓库含多个 Go module（核心服务 / client / cli / mcp-server 等），CI 矩阵逐模块执行 lint 与测试。配合 <code>.air.toml</code> 热重载实现快速开发模式，前端 Vite HMR 与后端 Air 并行 —— 仓库级 monorepo 同时服务「单一代码库」与「独立发布」两个诉求。</span>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="step-dot">🧪</div>
+  <div class="step-body">
+    <strong>三层测试体系 + 契约测试</strong>
+    <span>单元测试（函数级）、API 契约测试（前后端接口固定，如 dsh-weknora 插件的 Go 契约测试）、端到端测试（tests/）。契约测试是前后端并行开发的粘合剂，保证接口演进不破坏既有消费方。</span>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="step-dot">🛡️</div>
+  <div class="step-body">
+    <strong>安全纵深：从密钥到出站请求</strong>
+    <span>三层防御：静态层（AES-256-GCM 加密 API Key 与第三方凭据）、传输层（gRPC TLS）、行为层（SSRF 出站白名单 + 恶意 PDF 解析开销上限 + 沙箱隔离）。尤其值得学习的是<em>「资源开销设上限」</em>的思路 —— 不信任输入，对解析复杂度做显式 bound。</span>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="step-dot">🌐</div>
+  <div class="step-body">
+    <strong>前端工程：Vue 3 + TDesign + Vite + i18n</strong>
+    <span>TypeScript monorepo（pnpm workspaces），TDesign 组件库 + 自定义 theme.css 覆盖 token（生产构建保留自定义主题）；i18n 支持中/英/日/韩/俄五语言，<code>DEFAULT_LOCALE</code> 运行时配置 + locale 白名单防注入；TDesign 图标本地打包保障离线/内网部署；nginx 镜像固定 digest 兼容 CentOS 7 等旧内核主机 —— <em>每一条 fix 都是真实生产踩坑的沉淀</em>。</span>
+  </div>
+</div>
+
+<div class="code">
+<div class="lang">GO · 混合检索核心语义（简化还原）</div>
+<pre><span class="cm">// internal/agent 中检索深度统一为常量</span>
+<span class="kw">const</span> DefaultRetrievalTopK = <span class="num">50</span>
+
+<span class="cm">// 混合检索：chunk 与实体并行召回后统一规范化</span>
+<span class="kw">func</span> <span class="fn">HybridSearch</span>(ctx context.Context, q <span class="ty">string</span>) ([]<span class="ty">Chunk</span>, <span class="ty">error</span>) {
+    ch, err := <span class="fn">searchChunks</span>(ctx, q)    <span class="cm">// BM25 + Dense + Graph</span>
+    ent, err := <span class="fn">searchEntities</span>(ctx, q)  <span class="cm">// 图谱实体召回</span>
+    <span class="kw">return</span> <span class="fn">normalizeMatchCount</span>(<span class="fn">merge</span>(ch, ent)), <span class="kw">nil</span> <span class="cm">// MatchCount 规范化</span>
+}
+
+<span class="cm">// Agent 侧：MMR 增量选择，去重且保持多样性</span>
+<span class="kw">func</span> <span class="fn">SelectWithMMR</span>(cands []<span class="ty">Chunk</span>, k <span class="ty">int</span>) []<span class="ty">Chunk</span> {
+    <span class="kw">return</span> <span class="fn">incrementalMMR</span>(cands, k) <span class="cm">// perf(agent): 增量而非全量重算</span>
+}</pre>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 5 代码风格 ══════════════════════════════ -->
+<section class="sec" id="s5">
+<div class="sec-title"><span class="num">05</span><h2>代码风格与工程实践</h2></div>
+<p class="sec-sub">从 .golangci.yml、提交历史与目录组织观察到的工程质量特征。</p>
+
+<div class="grid2">
+<div class="card" style="border-top:2px solid var(--wk-ink)">
+<h3>代码规范</h3>
+<ul>
+  <li><strong>gofumpt / gofmt</strong> 预提交钩子强制统一格式</li>
+  <li><strong>golangci-lint</strong> 使用 <code>only-new-issues</code>：只拦截新增代码问题（存量 5.4k 历史问题不阻塞迭代，务实渐进）</li>
+  <li><strong>lll</strong> 行长检查（tab-width 4），控制单行复杂度</li>
+  <li><strong>语义化提交</strong>：feat / fix / perf / refactor / chore / docs 前缀，PR 编号跟踪（如 #2722）</li>
+</ul>
+</div>
+<div class="card" style="border-top:2px solid var(--wk-gold)">
+<h3>目录组织</h3>
+<ul>
+  <li>后端：<code>cmd/</code> 入口 + <code>internal/</code> 业务 + <code>third_party/</code> 三方绑定 + <code>migrations/</code> 版本化迁移</li>
+  <li>前端：<code>frontend/src/{api,config,router}</code> + packages monorepo</li>
+  <li>解析：<code>docreader/</code> 独立目录承载文档读取与 OCR</li>
+  <li>生态：<code>mcp-server/</code>、<code>packages/</code>（dsh-weknora 插件）、<code>miniprogram/</code>、<code>helm/</code>、<code>Formula/</code></li>
+  <li>文档：<code>website-docs/</code>（VitePress 官网，六板块 ~50 篇文档）</li>
+</ul>
+</div>
+</div>
+
+<div class="tbl-wrap">
+<table>
+<tr><th>维度</th><th>具体实践</th><th>工程启示</th></tr>
+<tr><td><b>提交节奏</b></td><td>2026-08 仍日均多提交，迭代活跃</td><td>小步快跑 + PR 评审流</td></tr>
+<tr><td><b>兼容性</b></td><td>Docker 镜像固定 digest；旧内核主机专项修复</td><td>面向真实部署环境，而非理想环境</td></tr>
+<tr><td><b>术语演进</b></td><td>tenant → workspace 用户可见重构（#2674 等）</td><td>以用户心智驱动命名，非以数据库模型</td></tr>
+<tr><td><b>安全修复</b></td><td>SSRF 加固、恶意 PDF 上限、locale 白名单</td><td>安全修复持续下沉到每个新功能</td></tr>
+<tr><td><b>多语言</b></td><td>README 中/英/日/韩 + 前端五语言 i18n</td><td>开源国际化的一等公民待遇</td></tr>
+<tr><td><b>发布工程</b></td><td>Docker / Helm / Homebrew（weknora-lite）/ CLI</td><td>多渠道分发降低采用门槛</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ══════════════════════════════ 6 快速上手 ══════════════════════════════ -->
+<section class="sec" id="s6">
+<div class="sec-title"><span class="num">06</span><h2>快速上手与部署形态</h2></div>
+
+<div class="grid2">
+<div class="card">
+<h3>🚀 Docker Compose 一键启动</h3>
+<div class="code">
+<div class="lang">BASH</div>
+<pre><span class="cm"># 1. 克隆仓库</span>
+git clone https:<span class="cm">//github.com/Tencent/WeKnora.git</span>
+<span class="fn">cd</span> WeKnora
+
+<span class="cm"># 2. 配置环境变量</span>
+cp .env.example .env
+
+<span class="cm"># 3. 启动（默认核心服务 / 可选 profile）</span>
+docker compose pull
+docker compose up -d
+<span class="cm"># 可选：docker compose --profile full up -d</span>
+<span class="cm">#      docker compose --profile neo4j up -d  （知识图谱）</span></pre>
+</div>
+<ul>
+  <li>Web UI → <code>http://localhost</code></li>
+  <li>后端 API → <code>http://localhost:8080</code></li>
+  <li>Langfuse → <code>http://localhost:3000</code></li>
+</ul>
+</div>
+<div class="card">
+<h3>🏭 部署形态矩阵</h3>
+<div class="tbl-wrap" style="margin-top:0">
+<table>
+<tr><th>形态</th><th>场景</th></tr>
+<tr><td><b>本地 Docker</b></td><td>个人 / 团队快速验证</td></tr>
+<tr><td><b>Kubernetes (Helm)</b></td><td>企业规模化部署</td></tr>
+<tr><td><b>weknora-lite</b></td><td>轻量资源环境（Homebrew 可装）</td></tr>
+<tr><td><b>私有化离线</b></td><td>数据不出域，完全自主可控</td></tr>
+<tr><td><b>微信对话开放平台</b></td><td>免部署 SaaS 体验（知识助理 / 智能客服）</td></tr>
+</table>
+</div>
+</div>
+</div>
+
+<div class="tip warn">
+  <span class="icon">⚠️</span>
+  <div class="content">
+    <strong>安全建议（来自官方 README）</strong>
+    建议将服务部署在内网 / 私有网络环境，避免直接暴露公网；配置防火墙规则和访问控制；定期更新到最新版本。开源自托管系统对外暴露前务必完成安全评估。
+  </div>
+</div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer class="footer">
+  <div class="brand">WeKnora · 维娜拉</div>
+  <p>本页为 WeKnora 开源项目的架构讲解，基于 GitHub 仓库与官网公开信息整理 · 视觉复刻自官网主题（墨蓝 / 纸白 / 鎏金）</p>
+  <p><a href="https://github.com/Tencent/WeKnora" target="_blank">github.com/Tencent/WeKnora</a> · MIT License</p>
+</footer>
+
+</body>
+</html>
