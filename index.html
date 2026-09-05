@@ -2026,14 +2026,15 @@ const VIEW_KEY='garden.view';
 let state=loadState();
 function loadState(){
   try{
-    return Object.assign({
-      favourites:new Set(),
-      recent:[],
-      notes:{},
-      streak:0,
-      lastVisit:null
-    },JSON.parse(localStorage.getItem(STORE_KEY)||'{}'));
-  }catch{return {favourites:[],recent:[],notes:{},streak:0,lastVisit:null}}
+    const raw=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+    return {
+      favourites:new Set(raw.favourites||[]),
+      recent:raw.recent||[],
+      notes:raw.notes||{},
+      streak:raw.streak||0,
+      lastVisit:raw.lastVisit||null
+    };
+  }catch{return {favourites:new Set(),recent:[],notes:{},streak:0,lastVisit:null}}
 }
 function saveState(){
   const s={
@@ -2045,7 +2046,6 @@ function saveState(){
   };
   localStorage.setItem(STORE_KEY,JSON.stringify(s));
 }
-if(typeof state.favourites==='array')state.favourites=new Set(state.favourites);
 state.recent=state.recent||[];
 
 // visit streak
@@ -2480,62 +2480,67 @@ function relatedItemHTML(n,direction){
 // ─── Render orchestrator ───
 const mainEl=document.getElementById('main');
 function render(){
-  renderSidebar();
-  if(currentNote){
-    mainEl.innerHTML=viewDetail();
-    bindDetail();
-    toggleViewSwitcher(false);
-  }else{
-    let html='';
-    let baseView=currentView;
-    let mode='cards';
-    if(baseView.includes(':')){
-      [baseView,mode]=baseView.split(':');
-    }
-    if(baseView==='garden-home'||baseView==='home'){
-      html=viewGardenHome();mode='cards';
-    }else if(baseView==='cat'){
-      html=viewCat();mode='cards';
-    }else if(baseView==='all'){
-      html=viewAll();mode='cards';
-    }else if(baseView==='tended'){
-      html=viewTended();mode='cards';
-    }else if(baseView==='seedlings'){
-      html=viewSeedlings();mode='cards';
-    }else if(baseView==='favs'){
-      html=viewFavs();mode='cards';
-    }else if(baseView==='recent'){
-      html=viewRecent();mode='cards';
-    }else if(baseView==='my-notes'){
-      html=viewMyNotes();mode='cards';
+  try{
+    renderSidebar();
+    if(currentNote){
+      mainEl.innerHTML=viewDetail();
+      bindDetail();
+      toggleViewSwitcher(false);
     }else{
-      html=viewGardenHome();baseView='garden-home';mode='cards';
+      let html='';
+      let baseView=currentView;
+      let mode='cards';
+      if(baseView.includes(':')){
+        [baseView,mode]=baseView.split(':');
+      }
+      if(baseView==='garden-home'||baseView==='home'){
+        html=viewGardenHome();mode='cards';
+      }else if(baseView==='cat'){
+        html=viewCat();mode='cards';
+      }else if(baseView==='all'){
+        html=viewAll();mode='cards';
+      }else if(baseView==='tended'){
+        html=viewTended();mode='cards';
+      }else if(baseView==='seedlings'){
+        html=viewSeedlings();mode='cards';
+      }else if(baseView==='favs'){
+        html=viewFavs();mode='cards';
+      }else if(baseView==='recent'){
+        html=viewRecent();mode='cards';
+      }else if(baseView==='my-notes'){
+        html=viewMyNotes();mode='cards';
+      }else{
+        html=viewGardenHome();baseView='garden-home';mode='cards';
+      }
+      if(mode==='graph')html=viewGraph();
+      else if(mode==='timeline')html=viewTimeline();
+      mainEl.innerHTML=html;
+      toggleViewSwitcher(true,mode);
+      bindList();
+      if(mode==='graph')renderGraph();
     }
-    if(mode==='graph')html=viewGraph();
-    else if(mode==='timeline')html=viewTimeline();
-    mainEl.innerHTML=html;
-    toggleViewSwitcher(true,mode);
-    bindList();
-    if(mode==='graph')renderGraph();
+    // active sidebar
+    document.querySelectorAll('#sidebar .nav-item').forEach(el=>{
+      el.classList.remove('active');
+      if(currentNote)return;
+      if(el.dataset.view===currentView)el.classList.add('active');
+      if(el.dataset.cat===currentCat&&currentView==='cat')el.classList.add('active');
+    });
+  }catch(err){
+    console.error('render error',err);
+    mainEl.innerHTML=`<div class="empty"><div class="icon">⚠️</div><h3>页面渲染出错</h3><p>${escapeHtml(err.message)}</p><button class="btn" onclick="localStorage.removeItem('${STORE_KEY}');location.reload()" style="margin-top:12px">清除本地状态并重载</button></div>`;
   }
-  // active sidebar
-  document.querySelectorAll('#sidebar .nav-item').forEach(el=>{
-    el.classList.remove('active');
-    if(currentNote)return;
-    if(el.dataset.view===currentView)el.classList.add('active');
-    if(el.dataset.cat===currentCat&&currentView==='cat')el.classList.add('active');
-  });
 }
 
 // ─── Bindings ───
 function bindList(){
-  document.querySelectorAll('.card').forEach(el=>{
+  document.querySelectorAll('.card[data-id]').forEach(el=>{
     el.onclick=()=>openNote(el.dataset.id);
   });
-  document.querySelectorAll('.timeline-item').forEach(el=>{
+  document.querySelectorAll('.timeline-item[data-id]').forEach(el=>{
     el.onclick=()=>openNote(el.dataset.id);
   });
-  document.querySelectorAll('.filter-pills .pill').forEach(el=>{
+  document.querySelectorAll('.filter-pills .pill[data-tag]').forEach(el=>{
     el.onclick=()=>{
       const t=el.dataset.tag;
       if(activeTags.has(t))activeTags.delete(t);else activeTags.add(t);
@@ -2544,24 +2549,11 @@ function bindList(){
   });
   const clear=document.getElementById('clear-tags');
   if(clear)clear.onclick=()=>{activeTags.clear();render()};
-  document.querySelectorAll('#main .related-item,#main [data-id]').forEach(el=>{
-    if(el.classList.contains('related-item')||el.classList.contains('detail-section')){
-      el.onclick=(e)=>{
-        if(e.target.closest('a'))return;
-        const id=el.dataset.id;
-        if(id)openNote(id);
-      };
-    }
-  });
-  document.querySelectorAll('.crumb,[data-tag]').forEach(el=>{
-    if(el.dataset.tag){
-      el.onclick=()=>{
-        activeTags=new Set([el.dataset.tag]);
-        currentView='all';
-        localStorage.setItem(VIEW_KEY,currentView);
-        render();
-      };
-    }
+  document.querySelectorAll('#main .related-item[data-id]').forEach(el=>{
+    el.onclick=(e)=>{
+      if(e.target.closest('a'))return;
+      openNote(el.dataset.id);
+    };
   });
 }
 
@@ -2612,6 +2604,15 @@ function bindDetail(){
   }
   document.querySelectorAll('.related-item').forEach(el=>{
     el.onclick=()=>openNote(el.dataset.id);
+  });
+  document.querySelectorAll('#main .chip[data-tag]').forEach(el=>{
+    el.onclick=()=>{
+      activeTags=new Set([el.dataset.tag]);
+      currentView='all';
+      localStorage.setItem(VIEW_KEY,currentView);
+      currentNote=null;
+      render();
+    };
   });
 }
 
