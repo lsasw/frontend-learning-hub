@@ -1,80 +1,85 @@
-# Frontend Learning Hub
+# Mycelium · 菌丝
 
-交互式技术学习教程合集 —— 统一门户入口 + 独立教程页面，打开即用。
+> 个人知识花园 —— 60+ 张互联互通、持续打理的常青笔记库。
+
+根在地下，看不见，互联万物。
+**菌丝** 把零散的技术笔记结成网络：用反向链接找回来、用图谱看见整体、用私人笔记留住顿悟。
 
 ## 🏠 入口
 
 | 入口 | 说明 |
 |------|------|
-| **[index.html](./index.html)** | 🌟 **统一门户** — 导航栏 + 侧边栏 + 一键切换所有教程 |
-| 各独立页面 | 下方教程均可单独在浏览器中打开 |
+| **[index.html](./index.html)** | 🍄 **花园主入口** — 三视图（卡片/图谱/时间线）+ 反向链接 + 私人笔记 |
 
-## 📚 教程索引
+> 单文件 SPA（≈92 KB），离线可全部启动（仅 D3.js 图谱视图需联网）。所有状态写入 `localStorage`。
 
-### 🧠 AI 智能体 & 工作流
+## 🧬 数据模型
 
-| 文件 | 说明 | 主题 |
-|------|------|------|
-| [MetaGPT-CrewAI-分析报告.html](./MetaGPT-CrewAI-分析报告.html) | MetaGPT vs CrewAI 深度技术对比 | AI 多智能体框架 |
-| [LangChain-LangGraph-Python-教程.html](./LangChain-LangGraph-Python-教程.html) | LangChain/LangGraph/Python 三合一教学 | AI 开发框架 |
-| [Dify-n8n-实战教程.html](./Dify-n8n-实战教程.html) | Dify × n8n 双平台实战教程 | AI 工作流自动化 |
+笔记元数据统一在 [`garden-manifest.json`](./garden-manifest.json)：
 
-### ☕ Java 进阶
-
-| 文件 | 说明 | 主题 |
-|------|------|------|
-| [Java-JUC-并发工具包教程.html](./Java-JUC-并发工具包教程.html) | Java JUC 并发工具包系统学习 | Java 并发编程 |
-| [Java-JVM-虚拟机教程.html](./Java-JVM-虚拟机教程.html) | JVM 虚拟机架构 + GC + 调优 | Java 虚拟机 |
-
-### 🗄️ 基础设施
-
-| 文件 | 说明 | 主题 |
-|------|------|------|
-| [Redis-交互式学习指南.html](./Redis-交互式学习指南.html) | Redis 数据类型 / 持久化 / 缓存策略 / 分布式 | 缓存 & NoSQL |
-| [消息队列系统-综合演示平台.html](./消息队列系统-综合演示平台.html) | Kafka / RabbitMQ / RocketMQ / Pulsar 综合对比 | 消息队列 |
-
-## 🚀 使用方式
-
-```bash
-# 克隆仓库
-git clone https://github.com/lsasw/frontend-learning-hub.git
-
-# 方式一：打开统一门户（推荐）
-open index.html
-
-# 方式二：直接打开任意教程
-open Java-JUC-并发工具包教程.html
+```jsonc
+{
+  "id": "rag-fundamental",
+  "title": "RAG 检索增强生成 · 学习指南",
+  "cat": "AI · RAG",
+  "level": "入门",
+  "status": "已完结",
+  "maturity": 4,            // 0 待开荒 1-2 种子 3 抽芽 4-5 常青
+  "evergreen": true,
+  "created": "2026-07-10",
+  "updated": "2026-08-12",
+  "tended": "2026-08-12",    // 上次打理
+  "url": "ai-agent/RAG-检索增强生成-学习指南.html",
+  "desc": "RAG 原理与架构图解，嵌入模型…",
+  "tags": ["RAG", "Embedding"],
+  "related": ["transformer", "rag-advanced", "langchain-deep"]
+}
 ```
 
-## 🎨 特点
+`related[]` 是双向链接的核心字段。所有反向链接由 `index.html` 启动时一次性构建。
 
-- 🏠 统一门户 —— 导航栏 + 侧边栏，流畅切换，无需刷新框架
-- 📄 单文件 HTML，无外部依赖
-- 📱 响应式布局，支持桌面端 + 移动端
-- 🔽 折叠展开式交互设计
-- 🎨 内置 SVG 架构图 / 流程图 / 思维导图
-- 📋 代码块支持一键复制
-- 🎯 面向实战场景（金融估值等）
+## 🌐 三视图
 
-## 🧱 架构说明
+| 视图 | 怎么开 | 适合什么场景 |
+|---|---|---|
+| 📇 **卡片** | 顶栏 / 默认 | 浏览 / 找一篇笔记 |
+| 🌐 **图谱** (D3.js) | 顶栏切换 | 看到整体结构、发现意外关联 |
+| ⏳ **时间线** | 顶栏切换 | 看近期打理过什么、按月回顾 |
+
+## ⌨️ 快捷键
+
+| 键 | 触发 |
+|---|---|
+| ⌘ / Ctrl + K | 打开命令面板（支持 `tag:` `cat:` 前缀） |
+| ↑ ↓ | 命令面板内导航 |
+| Enter | 打开当前高亮笔记 |
+| Esc | 关命令面板 / 返回 |
+| 🎲 | 随机漫步到一张已打理笔记 |
+
+## 🧱 架构
 
 ```
-index.html          ← 统一门户入口（SPA 框架）
-├── 顶部导航栏       ← Logo + 当前页面标题
-├── 左侧分类侧边栏   ← AI / Java / 基础设施 分类导航
-├── 内容区 (iframe)  ← 加载各教程页面
-├── 首页欢迎页       ← 默认首页，教程卡片概览
-└── 页脚             ← 版权信息
-
-各教程页面           ← 保持独立，可单独打开
+index.html               ← 单文件 SPA（约 92 KB）
+├── <header> 顶栏        ← 品牌 + ⌘K 搜索 + 🎲 探索 + 视图切换 + 主题
+├── <aside>  侧边栏      ← 分类（按成熟度上色）+ 收藏 + 最近浏览 + 我的笔记
+├── <main>   主区        ← 卡片 / 图谱 (D3.js) / 时间线 / 详情页
+├── <.cmd-overlay>       ← ⌘K 命令面板（tag: / cat: 前缀）
+└── <script type="application/json"> 内嵌 manifest，避免 file:// fetch 受限
 ```
 
-**新增页面只需两步：**
-1. 创建教程 HTML 文件
-2. 在 `index.html` 的侧边栏和首页卡片中添加对应的 `<a>` 标签（带 `data-nav` 属性）
+**无构建**、**无后端**、**单文件优先**。
+
+### 新增一张笔记流程
+
+1. 创建 HTML 笔记文件
+2. 在 `garden-manifest.json` 的 `notes[]` 增加一项，含 `url`、`desc`、`tags`
+3. 已打理笔记请填 `maturity > 0` + `related[]`，并保持关联双向（在另一张的 `related` 也加上你自己）
 
 ## 📝 更新日志
 
-- 2026-07-09: 新增统一门户入口 `index.html`，支持侧边栏导航 + iframe 内容切换
-- 2026-07-08: 新增 MetaGPT-CrewAI 分析报告、LangChain/LangGraph/Python 教程、Dify/n8n 实战教程
-- 2026-07-09: 新增 Java JUC 并发工具包教程、Java JVM 虚拟机教程、Redis 交互式学习指南、消息队列系统综合演示平台
+- **2026-09-05**：项目升级为 **Mycelium · 菌丝** 个人知识花园。
+  - 数据模型抽到 `garden-manifest.json`（55 张笔记）。
+  - `index.html` 重写为单文件 SPA：三视图（卡片 / D3 力导向图谱 / 时间线）、反向链接、个人笔记（localStorage）、连续访问 streak、⌘K 命令面板、🎲 随机漫步。
+- 2026-07-09：旧版统一门户入口 `index.html`，支持侧边栏导航 + iframe 内容切换（已废弃）。
+- 2026-07-08：新增 MetaGPT-CrewAI 分析报告、LangChain/LangGraph/Python 教程、Dify/n8n 实战教程。
+- 2026-07-09：新增 Java JUC 并发工具包教程、Java JVM 虚拟机教程、Redis 交互式学习指南、消息队列系统综合演示平台。

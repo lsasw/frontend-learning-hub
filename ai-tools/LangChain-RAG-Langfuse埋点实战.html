@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain × RAG × Langfuse 埋点实战 · 完整可运行示例</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   Design Tokens (DevPortal 2.0 · light)
+   ═══════════════════════════════════════════════════ */
+:root{
+  --gray-50:#fafafa;--gray-100:#f4f4f5;--gray-200:#e4e4e7;--gray-300:#d4d4d8;
+  --gray-400:#a1a1aa;--gray-500:#71717a;--gray-600:#52525b;--gray-700:#3f3f46;
+  --gray-800:#27272a;--gray-900:#18181b;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;--blue-300:#93c5fd;
+  --blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;--blue-900:#1e3a8a;
+  --purple-50:#faf5ff;--purple-100:#f3e8ff;--purple-500:#a855f7;--purple-600:#9333ea;--purple-700:#7c3aed;
+  --green-50:#ecfdf5;--green-500:#10b981;--green-600:#059669;--green-700:#047857;
+  --amber-50:#fffbeb;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;
+  --red-50:#fef2f2;--red-500:#ef4444;--red-600:#dc2626;
+  --teal-50:#f0fdfa;--teal-500:#14b8a6;--teal-600:#0d9488;
+  --indigo-50:#eef2ff;--indigo-500:#6366f1;
+  --cyan-50:#ecfeff;--cyan-500:#06b6d4;
+
+  --bg:var(--gray-50);--surface:#ffffff;--surface-hover:var(--gray-50);
+  --border:var(--gray-200);--border-subtle:var(--gray-100);
+  --text:var(--gray-900);--text-2:var(--gray-600);--text-3:var(--gray-400);
+  --primary:var(--blue-600);--primary-light:var(--blue-50);
+  --accent:var(--purple-600);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 32px rgba(0,0,0,.12);
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code','Fira Code','Consolas',monospace;
+  --radius-sm:6px;--radius:8px;--radius-md:10px;--radius-lg:14px;--radius-full:9999px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;--sp-10:40px;
+  --transition:.18s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);font-size:15px;line-height:1.7;color:var(--text);
+  background:var(--bg);-webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--blue-200);color:var(--blue-900)}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--gray-400)}
+
+/* ═══════════ TOPBAR ═══════════ */
+.topbar{
+  position:sticky;top:0;z-index:100;height:56px;
+  background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(10px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:var(--sp-4);
+  padding:0 var(--sp-6);
+}
+.topbar .logo{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:14px;color:var(--text);white-space:nowrap}
+.topbar .logo-badge{
+  width:28px;height:28px;border-radius:var(--radius-sm);flex-shrink:0;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.topbar .back{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text-2);padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);transition:all var(--transition)}
+.topbar .back:hover{color:var(--primary);border-color:var(--primary);text-decoration:none}
+.topbar .back svg{width:14px;height:14px}
+
+/* ═══════════ HERO ═══════════ */
+.hero{
+  background:linear-gradient(180deg,#fff,var(--bg));
+  border-bottom:1px solid var(--border);
+  padding:var(--sp-10) var(--sp-6) var(--sp-8);
+}
+.hero-inner{max-width:1080px;margin:0 auto}
+.hero-eyebrow{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--primary);margin-bottom:var(--sp-3)}
+.hero-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--green-500);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero h1{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-bottom:var(--sp-3)}
+.hero h1 .grad{background:linear-gradient(135deg,#2563eb,#9333ea);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p.desc{color:var(--text-2);font-size:15px;max-width:760px;margin-bottom:var(--sp-5)}
+.hero-stats{display:flex;flex-wrap:wrap;gap:var(--sp-4)}
+.hero-stats .stat{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-full);
+  font-size:13px;color:var(--text-2);box-shadow:var(--shadow-sm);
+}
+.hero-stats .stat b{font-family:var(--font-mono);font-size:14px;color:var(--text)}
+.hero-stats .stat svg{width:14px;height:14px;color:var(--primary)}
+
+/* ═══════════ MINI NAV ═══════════ */
+.mini-nav{
+  position:sticky;top:56px;z-index:90;
+  background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:8px var(--sp-6);
+}
+.mini-nav-inner{max-width:1080px;margin:0 auto;display:flex;gap:6px;flex-wrap:wrap}
+.mini-nav a{
+  font-size:12.5px;font-weight:600;color:var(--text-2);
+  padding:5px 12px;border-radius:var(--radius-full);
+  border:1px solid transparent;transition:all var(--transition);
+}
+.mini-nav a:hover{color:var(--primary);background:var(--blue-50);text-decoration:none;border-color:var(--blue-100)}
+
+/* ═══════════ MAIN ═══════════ */
+.main{max-width:1080px;margin:0 auto;padding:var(--sp-8) var(--sp-6) var(--sp-12)}
+.section{margin-bottom:var(--sp-10);scroll-margin-top:120px}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:var(--sp-4)}
+.sec-num{
+  width:28px;height:28px;border-radius:var(--radius-sm);flex-shrink:0;
+  background:linear-gradient(135deg,#2563eb,#9333ea);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:13px;font-weight:700;
+}
+.sec-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em}
+.sec-head .sub{font-size:13px;color:var(--text-3);margin-left:2px}
+.sec-desc{color:var(--text-2);font-size:14px;margin-bottom:var(--sp-5);max-width:860px}
+
+/* ═══════════ PIPELINE ═══════════ */
+.pipeline{
+  display:flex;align-items:stretch;gap:0;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:var(--sp-6);box-shadow:var(--shadow-sm);
+}
+.p-node{
+  flex:1;min-width:118px;max-width:170px;
+  background:var(--gray-50);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;position:relative;
+}
+.p-node .p-tag{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);font-family:var(--font-mono);margin-bottom:3px}
+.p-node .p-name{font-size:13px;font-weight:600;color:var(--text)}
+.p-node .p-detail{font-size:11px;color:var(--text-3);margin-top:2px;font-family:var(--font-mono)}
+.p-node.trace{border-color:var(--blue-300);background:var(--blue-50)}
+.p-node.trace .p-tag{color:var(--blue-600)}
+.p-node.span{border-color:var(--purple-200);background:var(--purple-50)}
+.p-node.span .p-tag{color:var(--purple-600)}
+.p-node.retriever{border-color:var(--teal-200);background:var(--teal-50)}
+.p-node.retriever .p-tag{color:var(--teal-600)}
+.p-node.gen{border-color:var(--amber-200);background:var(--amber-50)}
+.p-node.gen .p-tag{color:var(--amber-600)}
+.p-arrow{display:flex;align-items:center;color:var(--gray-400);padding:0 6px;flex-shrink:0}
+.p-arrow svg{width:16px;height:16px}
+.p-legend{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-4)}
+.legend-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-full);padding:4px 10px}
+.legend-chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.lc-trace i{background:var(--blue-500)}.lc-span i{background:var(--purple-500)}
+.lc-retriever i{background:var(--teal-500)}.lc-gen i{background:var(--amber-500)}
+
+/* ═══════════ TRACE TREE ═══════════ */
+.tree-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.tree-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:12px 16px;background:var(--gray-50);border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:12.5px;color:var(--text-2);
+}
+.tree-head .url{color:var(--text-3)}
+.tree-head .pill{font-size:11px;padding:2px 8px;border-radius:var(--radius-full);background:var(--blue-50);color:var(--blue-700);font-weight:600}
+.tree-body{padding:var(--sp-5) var(--sp-6)}
+.node{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:7px 12px;border-radius:var(--radius);margin-bottom:6px;
+  font-size:13px;font-family:var(--font-mono);border:1px solid transparent;
+}
+.node .badge{font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:4px;flex-shrink:0}
+.node .meta{color:var(--text-3);font-size:12px}
+.node .meta b{color:var(--text-2);font-weight:600}
+.node .chip{font-size:11px;color:var(--text-3);background:var(--gray-100);padding:1px 7px;border-radius:var(--radius-full)}
+.node.ntrace{background:var(--blue-50);border-color:var(--blue-200)}
+.node.ntrace .badge{background:var(--blue-600);color:#fff}
+.node.nspan{background:var(--purple-50);border-color:var(--purple-100)}
+.node.nspan .badge{background:var(--purple-600);color:#fff}
+.node.nspan.root{background:var(--purple-100);border-color:var(--purple-200)}
+.node.nretriever{background:var(--teal-50);border-color:var(--teal-100)}
+.node.nretriever .badge{background:var(--teal-600);color:#fff}
+.node.ngeneration{background:var(--amber-50);border-color:var(--amber-100)}
+.node.ngeneration .badge{background:var(--amber-600);color:#fff}
+.branch{margin:0 0 6px 22px;padding-left:22px;border-left:2px dashed var(--gray-300);position:relative}
+.branch::before{content:'';position:absolute;left:-1px;top:14px;width:22px;border-top:2px dashed var(--gray-300)}
+.tree-note{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--text-2);background:var(--gray-50);border:1px dashed var(--border);border-radius:var(--radius);padding:10px 14px;margin-top:var(--sp-4)}
+.tree-note svg{width:14px;height:14px;color:var(--primary);flex-shrink:0;margin-top:2px}
+
+/* ═══════════ FILE TREE ═══════════ */
+.filetree{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-sm);font-family:var(--font-mono);font-size:13.5px}
+.ft-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed var(--border-subtle)}
+.ft-row:last-child{border-bottom:none}
+.ft-row .ft-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ft-row .ft-icon svg{width:15px;height:15px}
+.ft-row .ft-name{font-weight:600;color:var(--text);white-space:nowrap}
+.ft-row .ft-desc{color:var(--text-3);font-family:var(--font-sans);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ft-row .ft-tag{flex-shrink:0;font-size:10px;font-weight:700;padding:1px 8px;border-radius:var(--radius-full);letter-spacing:.03em}
+.ft-row .ft-tag.run{background:var(--green-50);color:var(--green-700)}
+.ft-row .ft-tag.cfg{background:var(--gray-100);color:var(--gray-600)}
+.ft-row .ft-tag.core{background:var(--blue-50);color:var(--blue-700)}
+.ft-row .ft-tag.opt{background:var(--amber-50);color:var(--amber-700)}
+.ft-row .ft-tag.data{background:var(--teal-50);color:var(--teal-600)}
+.ft-indent{padding-left:26px}
+
+/* ═══════════ STEPS ═══════════ */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--sp-4)}
+.step{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:var(--sp-5);box-shadow:var(--shadow-sm);position:relative;
+}
+.step-num{
+  position:absolute;top:-12px;left:16px;width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,#2563eb,#9333ea);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:13px;font-weight:800;
+  box-shadow:0 2px 8px rgba(37,99,235,.35);
+}
+.step h4{font-size:14.5px;font-weight:700;margin:6px 0 4px}
+.step p{font-size:12.5px;color:var(--text-2);margin-bottom:10px}
+.step .cmd{
+  background:#0f172a;color:#e2e8f0;border-radius:var(--radius-sm);
+  font-family:var(--font-mono);font-size:12px;line-height:1.9;
+  padding:10px 14px;overflow-x:auto;
+}
+.step .cmd .c1{color:#93c5fd}
+.step .cmd .c2{color:#e2e8f0}
+.step .cmd .c3{color:#64748b}
+.step .cmd .cmt{color:#64748b;font-style:italic}
+
+/* ═══════════ CODE BOX ═══════════ */
+.codebox{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.cb-tabs{display:flex;flex-wrap:wrap;gap:2px;background:var(--gray-50);border-bottom:1px solid var(--border);padding:6px 8px}
+.cb-tab{
+  font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text-2);
+  padding:6px 12px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;
+  transition:all var(--transition);white-space:nowrap;
+}
+.cb-tab:hover{color:var(--primary);background:var(--surface)}
+.cb-tab.active{background:var(--surface);color:var(--primary);border-color:var(--border);box-shadow:var(--shadow-sm)}
+.cb-pane{display:none}
+.cb-pane.active{display:block}
+.cb-bar{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:8px 14px;background:#0b1120;border-bottom:1px solid #1e293b;
+}
+.cb-bar .cb-fname{font-family:var(--font-mono);font-size:12.5px;font-weight:600;color:#e2e8f0}
+.cb-bar .cb-lang{font-size:10px;font-weight:700;letter-spacing:.05em;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:1px 7px}
+.cb-bar .cb-spacer{flex:1}
+.cb-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;font-weight:600;color:#cbd5e1;
+  background:#1e293b;border:1px solid #334155;border-radius:var(--radius-sm);
+  padding:4px 10px;cursor:pointer;transition:all var(--transition);
+}
+.cb-btn:hover{color:#fff;background:#334155}
+.cb-btn svg{width:12px;height:12px}
+.cb-btn.download{color:#a5b4fc}
+.cb-btn.download:hover{color:#c7d2fe;background:#312e81}
+.cb-code{background:#0b1120;overflow-x:auto;padding:var(--sp-4) 0}
+.cb-code pre{min-width:max-content;padding:0 var(--sp-5);font-family:var(--font-mono);font-size:12.8px;line-height:1.75}
+.cb-code .line{display:block;padding:0 var(--sp-4);border-left:2px solid transparent;transition:background .12s}
+.cb-code .line:hover{background:rgba(255,255,255,.04)}
+.cb-code .ln-no{
+  display:inline-block;width:34px;text-align:right;margin-right:18px;
+  color:#475569;user-select:none;font-size:11.5px;
+}
+/* code colors */
+.cb-code .tk-k{color:#f472b6;font-weight:600}
+.cb-code .tk-s{color:#86efac}
+.cb-code .tk-c{color:#64748b;font-style:italic}
+.cb-code .tk-d{color:#93c5fd;font-weight:600}
+.cb-code .tk-n{color:#fbbf24}
+.cb-code .tk-f{color:#fca5a5}
+.cb-code .tk-p{color:#7dd3fc}
+.cb-code .plain{color:#e2e8f0}
+
+/* ═══════════ PRINCIPLE CARDS ═══════════ */
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--sp-4)}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--sp-5);box-shadow:var(--shadow-sm);border-top:3px solid var(--pc,var(--primary))}
+.pcard .pc-ic{width:34px;height:34px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.pcard .pc-ic svg{width:17px;height:17px}
+.pcard h4{font-size:14.5px;font-weight:700;margin-bottom:6px}
+.pcard p{font-size:12.8px;color:var(--text-2);margin-bottom:10px}
+.pcard .pc-code{background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-family:var(--font-mono);font-size:11.5px;color:var(--text);line-height:1.7;overflow-x:auto}
+
+/* ═══════════ TABLE ═══════════ */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+th{
+  background:var(--gray-50);text-align:left;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--text-3);font-weight:700;padding:11px 16px;border-bottom:1px solid var(--border);
+}
+td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);color:var(--text-2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td b{color:var(--text)}
+td code{font-family:var(--font-mono);font-size:12px;background:var(--gray-100);border-radius:4px;padding:1px 6px;color:var(--purple-700)}
+td .cell-tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:var(--radius-full);margin-bottom:4px}
+.cell-tag.blue{background:var(--blue-50);color:var(--blue-700)}
+.cell-tag.purple{background:var(--purple-50);color:var(--purple-700)}
+.cell-tag.green{background:var(--green-50);color:var(--green-700)}
+.cell-tag.amber{background:var(--amber-50);color:var(--amber-700)}
+
+/* ═══════════ TIPS ═══════════ */
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--sp-4)}
+.tip{display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--sp-4) var(--sp-5);box-shadow:var(--shadow-sm)}
+.tip .tip-ic{width:32px;height:32px;border-radius:var(--radius);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tip .tip-ic svg{width:16px;height:16px}
+.tip h5{font-size:13.5px;font-weight:700;margin-bottom:3px}
+.tip p{font-size:12.5px;color:var(--text-2)}
+.tip code{font-family:var(--font-mono);font-size:11.5px;background:var(--gray-100);border-radius:4px;padding:1px 5px;color:var(--purple-700)}
+
+/* ═══════════ FAQ ═══════════ */
+.faq{display:flex;flex-direction:column;gap:10px}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm)}
+.faq-q{
+  display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;
+  font-size:14px;font-weight:600;color:var(--text);user-select:none;
+}
+.faq-q .fq-ic{width:22px;height:22px;border-radius:6px;background:var(--blue-50);color:var(--blue-600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.faq-q .fq-ic svg{width:12px;height:12px}
+.faq-q .fq-arrow{margin-left:auto;color:var(--text-3);transition:transform var(--transition)}
+.faq-q .fq-arrow svg{width:15px;height:15px}
+.faq-item.open .fq-arrow{transform:rotate(180deg)}
+.faq-a{display:none;padding:0 18px 16px 50px;font-size:13.5px;color:var(--text-2)}
+.faq-item.open .faq-a{display:block}
+.faq-a code{font-family:var(--font-mono);font-size:12px;background:var(--gray-100);border-radius:4px;padding:1px 6px;color:var(--purple-700)}
+.faq-a p{margin-bottom:8px}
+.faq-a p:last-child{margin-bottom:0}
+
+/* ═══════════ CALLOUT ═══════════ */
+.callout{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--amber-50);border:1px solid #fde68a;border-radius:var(--radius-md);
+  padding:14px 18px;margin:var(--sp-5) 0;font-size:13.5px;color:#92400e;
+}
+.callout .co-ic{flex-shrink:0;color:var(--amber-600);margin-top:2px}
+.callout .co-ic svg{width:16px;height:16px}
+.callout code{font-family:var(--font-mono);font-size:12px;background:rgba(255,255,255,.7);border-radius:4px;padding:1px 6px}
+.callout.blue{background:var(--blue-50);border-color:var(--blue-200);color:#1e40af}
+.callout.blue .co-ic{color:var(--blue-600)}
+.callout.green{background:var(--green-50);border-color:#a7f3d0;color:#065f46}
+.callout.green .co-ic{color:var(--green-600)}
+
+/* ═══════════ FOOTER ═══════════ */
+.footer{
+  border-top:1px solid var(--border);background:var(--surface);
+  padding:var(--sp-6);text-align:center;font-size:12.5px;color:var(--text-3);
+}
+.footer b{color:var(--text-2)}
+
+@media(max-width:768px){
+  .hero h1{font-size:25px}
+  .topbar{padding:0 var(--sp-3)}
+  .mini-nav{padding:8px var(--sp-3)}
+  .main{padding:var(--sp-6) var(--sp-3) var(--sp-10)}
+  .ft-row .ft-desc{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ TOPBAR ═══════════ -->
+<header class="topbar">
+  <div class="logo"><span class="logo-badge">F</span> Mycelium · 菌丝</div>
+  <a class="back" href="Langfuse-LLM可观测性使用指南.html">
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 7h-7M6.5 4.5 4 7l2.5 2.5"/></svg>
+    返回 Langfuse 使用指南
+  </a>
+</header>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow"><span class="dot"></span> Langfuse 实战系列 · 第 2 篇 · 完整可运行示例</div>
+    <h1>LangChain × RAG × Langfuse<br><span class="grad">埋点实战：让每一步都可观测</span></h1>
+    <p class="desc">一份可以直接照抄跑通的 RAG 问答项目：文档灌库 → 向量检索 → LLM 生成，全程接入 Langfuse 埋点。跑完一条问答，在 Langfuse 里就能看到完整的 Trace 树——检索耗时、召回文档、Token 消耗、成本、延迟一目了然。</p>
+    <div class="hero-stats">
+      <span class="stat"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/><path d="M14 3a1 1 0 0 0-1-1H9a2 2 0 0 0-2 2v10a1 1 0 0 1 1-1h5a1 1 0 0 0 1-1V3z"/></svg>7 个文件 · 全量代码</span>
+      <span class="stat"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/></svg>30 分钟跑通</span>
+      <span class="stat"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6s2-3.5 5-3.5S11 6 11 6s-2 3.5-5 3.5S1 6 1 6z"/><circle cx="6" cy="6" r="1.5"/></svg>一个 Trace 树看全链路</span>
+      <span class="stat"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 3 3v5c0 3.5 2.5 6 5 7 2.5-1 5-3.5 5-7V3L8 1z"/></svg>Langfuse SDK v3</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ MINI NAV ═══════════ -->
+<nav class="mini-nav">
+  <div class="mini-nav-inner">
+    <a href="#overview">① 埋点全景</a>
+    <a href="#preview">② 效果预览</a>
+    <a href="#structure">③ 项目结构</a>
+    <a href="#quickstart">④ 快速开始</a>
+    <a href="#code">⑤ 全部代码</a>
+    <a href="#principle">⑥ 埋点原理</a>
+    <a href="#tips">⑦ 进阶技巧</a>
+    <a href="#faq">⑧ FAQ</a>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- ═══════ ① 埋点全景 ═══════ -->
+  <section class="section" id="overview">
+    <div class="sec-head"><span class="sec-num">1</span><h2>埋点全景</h2><span class="sub">一次问答 = 一条 Trace，每一环节都是节点</span></div>
+    <p class="sec-desc">RAG 链路天然适合埋点：它由多个可独立测量的阶段组成。下面这张图是这份示例完整运行后的观测结构——橙色标注的就是 Langfuse 会自动采集的观测点。</p>
+
+    <div class="pipeline">
+      <div class="p-node trace"><div class="p-tag">Trace</div><div class="p-name">rag.ask</div><div class="p-detail">user / session</div></div>
+      <div class="p-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+      <div class="p-node span"><div class="p-tag">Span</div><div class="p-name">rag.retrieve</div><div class="p-detail">语义埋点 @observe</div></div>
+      <div class="p-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+      <div class="p-node retriever"><div class="p-tag">Retriever</div><div class="p-name">向量检索</div><div class="p-detail">自动埋点 · k=4</div></div>
+      <div class="p-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+      <div class="p-node retriever"><div class="p-tag">Embedding</div><div class="p-name">查询向量化</div><div class="p-detail">自动埋点</div></div>
+      <div class="p-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+      <div class="p-node span"><div class="p-tag">Span</div><div class="p-name">rag.generate</div><div class="p-detail">语义埋点 @observe</div></div>
+      <div class="p-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+      <div class="p-node gen"><div class="p-tag">Generation</div><div class="p-name">LLM 生成</div><div class="p-detail">token / 成本 / 延迟</div></div>
+      <div class="p-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+      <div class="p-node trace"><div class="p-tag">输出</div><div class="p-name">回答 + trace_url</div><div class="p-detail">直接跳转 UI</div></div>
+    </div>
+
+    <div class="p-legend">
+      <span class="legend-chip lc-trace"><i></i>自动创建：一次问答一条 Trace</span>
+      <span class="legend-chip lc-span"><i></i>语义埋点：@observe 装饰器圈出业务函数</span>
+      <span class="legend-chip lc-retriever"><i></i>自动埋点：CallbackHandler 采集检索 / 向量化</span>
+      <span class="legend-chip lc-gen"><i></i>自动埋点：LLM 调用 → Generation（含 token 与成本）</span>
+    </div>
+  </section>
+
+  <!-- ═══════ ② 效果预览 ═══════ -->
+  <section class="section" id="preview">
+    <div class="sec-head"><span class="sec-num">2</span><h2>效果预览</h2><span class="sub">跑完 `python main.py "你的问题"` 后，Langfuse UI 里的 Trace 树长这样</span></div>
+
+    <div class="tree-wrap">
+      <div class="tree-head">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2.5" width="12" height="9" rx="1.5"/><path d="M1 5h12"/></svg>
+        Trace 详情页 <span class="url">/trace/4f2a9c7e-…</span>
+        <span class="pill">v3 自动创建</span>
+      </div>
+      <div class="tree-body">
+        <div class="node ntrace">
+          <span class="badge">TRACE</span> #4f2a9c7e · <b>rag.ask</b>
+          <span class="meta">2.31s</span>
+          <span class="chip">user_id=alice</span><span class="chip">session_id=s-001</span>
+          <span class="chip">embedding_model=text-embedding-3-small</span>
+        </div>
+        <div class="branch">
+          <div class="node nspan root"><span class="badge">SPAN</span> <b>rag.ask</b> <span class="meta">root span · 2.31s</span></div>
+          <div class="branch">
+            <div class="node nspan"><span class="badge">SPAN</span> <b>rag.retrieve</b> <span class="meta">412ms</span></div>
+            <div class="branch">
+              <div class="node nretriever"><span class="badge">RETRIEVER</span> <b>vectorstore.search</b> <span class="meta">292ms · k=4 → 4 docs · top score 0.87</span></div>
+              <div class="branch">
+                <div class="node nretriever"><span class="badge">EMBEDDING</span> <b>text-embedding-3-small</b> <span class="meta">120ms · 48 tokens</span></div>
+              </div>
+            </div>
+            <div class="node nspan"><span class="badge">SPAN</span> <b>rag.generate</b> <span class="meta">1.86s</span></div>
+            <div class="branch">
+              <div class="node ngeneration"><span class="badge">GENERATION</span> <b>ChatOpenAI · gpt-4o-mini</b> <span class="meta">1.71s · 输入 512 / 输出 168 tokens</span> <span class="chip">cost ≈ $0.00031</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="tree-note">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 3 3v5c0 3.5 2.5 6 5 7 2.5-1 5-3.5 5-7V3L8 1z"/></svg>
+          <span>每个节点都能点进去看 <b>输入 / 输出 / 延迟 / Token 统计</b>；Retriever 节点还能看到召回文档列表与相似度分数。示例代码里 <code>ask()</code> 会返回这条 Trace 的直链，方便你从终端直接跳转。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ ③ 项目结构 ═══════ -->
+  <section class="section" id="structure">
+    <div class="sec-head"><span class="sec-num">3</span><h2>项目结构</h2><span class="sub">7 个文件，职责清晰</span></div>
+    <p class="sec-desc">这是一个最小但完整的 RAG 工程：灌库与问答分离，核心链路独立成模块，CLI 与 Web API 共用同一份埋点代码。</p>
+    <div class="filetree">
+      <div class="ft-row"><span class="ft-icon" style="color:var(--amber-600)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/></svg></span><span class="ft-name">langfuse-rag-demo/</span><span class="ft-desc">项目根目录（可任意命名）</span><span class="ft-tag cfg">ROOT</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--purple-600)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/></svg></span><span class="ft-name">ingest.py</span><span class="ft-desc">灌库脚本：docs/ 文档 → 切块 → 向量化 → 存入本地 Chroma</span><span class="ft-tag run">先跑</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--purple-600)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/></svg></span><span class="ft-name">rag.py</span><span class="ft-desc">核心模块：RAG 链 + Langfuse 埋点（retrieve / generate / ask）</span><span class="ft-tag core">核心</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--purple-600)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/></svg></span><span class="ft-name">main.py</span><span class="ft-desc">CLI 入口：python main.py "问题"（推荐先验证这个）</span><span class="ft-tag run">推荐</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--purple-600)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/></svg></span><span class="ft-name">app.py</span><span class="ft-desc">FastAPI 服务：POST /ask（可选，需要 Web API 时用）</span><span class="ft-tag opt">可选</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--gray-500)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/><path d="M14 3a1 1 0 0 0-1-1H9a2 2 0 0 0-2 2v10a1 1 0 0 1 1-1h5a1 1 0 0 0 1-1V3z"/></svg></span><span class="ft-name">requirements.txt</span><span class="ft-desc">依赖清单（Langfuse v3 + LangChain + Chroma）</span><span class="ft-tag cfg">配置</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--gray-500)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg></span><span class="ft-name">.env.example</span><span class="ft-desc">密钥模板：复制为 .env 后填入 OpenAI / Langfuse 密钥</span><span class="ft-tag cfg">配置</span></div>
+      <div class="ft-row ft-indent"><span class="ft-icon" style="color:var(--teal-600)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/><path d="M14 3a1 1 0 0 0-1-1H9a2 2 0 0 0-2 2v10a1 1 0 0 1 1-1h5a1 1 0 0 0 1-1V3z"/></svg></span><span class="ft-name">docs/sample.md</span><span class="ft-desc">示例知识文档（换成你自己的文档即可）</span><span class="ft-tag data">数据</span></div>
+    </div>
+  </section>
+
+  <!-- ═══════ ④ 快速开始 ═══════ -->
+  <section class="section" id="quickstart">
+    <div class="sec-head"><span class="sec-num">4</span><h2>快速开始</h2><span class="sub">4 步，30 分钟跑通</span></div>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <h4>创建项目 &amp; 放代码</h4>
+        <p>建目录，把「全部代码」章节的 7 个文件按结构放好；把知识文档丢进 docs/。</p>
+        <div class="cmd"><span class="c1">mkdir</span> <span class="c2">langfuse-rag-demo</span> <span class="c3">&amp;&amp;</span> <span class="c1">cd</span> <span class="c2">langfuse-rag-demo</span></div>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <h4>安装依赖</h4>
+        <p>Python 3.10+。建议先建虚拟环境再装，避免污染全局环境。</p>
+        <div class="cmd"><span class="c2">pip install -r requirements.txt</span></div>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <h4>配置密钥</h4>
+        <p>复制 .env.example 为 .env，填入 OpenAI Key 与 Langfuse 的 Public/Secret Key（自托管或 Cloud 均可）。</p>
+        <div class="cmd"><span class="c2">cp .env.example .env</span></div>
+      </div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <h4>灌库 &amp; 提问</h4>
+        <p>先灌库，再跑 CLI 问答；终端会直接打印回答和 Trace 直链。</p>
+        <div class="cmd"><span class="c2">python ingest.py</span><br><span class="c2">python main.py <span class="c1">"RAG 系统设计有哪些关键优化点？"</span></span></div>
+      </div>
+    </div>
+
+    <div class="callout green">
+      <span class="co-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 3 3v5c0 3.5 2.5 6 5 7 2.5-1 5-3.5 5-7V3L8 1z"/><path d="m5.5 8 1.8 1.8L11 6"/></svg></span>
+      <span>需要 Web API？把第 4 步换成 <code>uvicorn app:app --reload --port 8000</code>，然后 <code>curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{"question":"RAG 系统设计有哪些关键优化点？","user_id":"alice","session_id":"s-001"}'</code></span>
+    </div>
+  </section>
+
+  <!-- ═══════ ⑤ 全部代码 ═══════ -->
+  <section class="section" id="code">
+    <div class="sec-head"><span class="sec-num">5</span><h2>全部代码</h2><span class="sub">每个文件都可一键复制 / 直接下载</span></div>
+    <p class="sec-desc">按运行顺序排列：先看灌库，再看核心埋点。代码注释已标注每一处埋点的作用。</p>
+
+    <div class="codebox" id="codebox">
+      <div class="cb-tabs" id="cbTabs"></div>
+      <div id="cbPanes"></div>
+    </div>
+
+    <div class="callout blue">
+      <span class="co-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3M8 11h.01"/></svg></span>
+      <span><b>版本说明</b>：本示例基于 <b>Langfuse Python SDK v3</b>。最关键的差异是 CallbackHandler 的导入路径——v3 是 <code>from langfuse.langchain import CallbackHandler</code>，网上大量旧教程里的 <code>from langfuse.callback import CallbackHandler</code> 是 v2 写法，在 v3 下会报 <code>ModuleNotFoundError</code>。如果你在用 v2，见 FAQ 第 5 条。</span>
+    </div>
+  </section>
+
+  <!-- ═══════ ⑥ 埋点原理 ═══════ -->
+  <section class="section" id="principle">
+    <div class="sec-head"><span class="sec-num">6</span><h2>埋点原理</h2><span class="sub">三层埋点，各司其职</span></div>
+    <p class="sec-desc">这份示例同时演示了 Langfuse 的三层埋点方式。从下到上，从「自动」到「语义」再到「上下文」，组合起来就是一条信息完整的 Trace。</p>
+
+    <div class="cards3">
+      <div class="pcard" style="--pc:var(--green-600)">
+        <div class="pc-ic" style="background:var(--green-50);color:var(--green-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m2 8 4 4L14 4"/></svg>
+        </div>
+        <h4>① 自动埋点 · CallbackHandler</h4>
+        <p>把 handler 注入 LangChain 调用的 config，框架内部的 Retriever / Embedding / LLM 事件会自动映射成 Span 与 Generation，零侵入。这是最省事的埋点方式。</p>
+        <div class="pc-code">chain.invoke(..., config={"callbacks": [handler]})</div>
+      </div>
+      <div class="pcard" style="--pc:var(--purple-600)">
+        <div class="pc-ic" style="background:var(--purple-50);color:var(--purple-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 9.5 6.5"/><path d="M5 4 4 5a3 3 0 0 0 0 4l1 1M11 12l1-1a3 3 0 0 0 0-4l-1-1"/></svg>
+        </div>
+        <h4>② 语义埋点 · @observe</h4>
+        <p>用装饰器把业务函数圈成有名字的 Span，Trace 的层级结构就由你的代码结构自然生成：ask → retrieve → generate。</p>
+        <div class="pc-code">@observe(name="rag.retrieve")<br>def retrieve(question): ...</div>
+      </div>
+      <div class="pcard" style="--pc:var(--blue-600)">
+        <div class="pc-ic" style="background:var(--blue-50);color:var(--blue-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 5 9M5 9H2l2-3 1-3v3h1l-1 3v1H3M10 7l3-3"/><path d="M8 13h6M8 15h4"/></svg>
+        </div>
+        <h4>③ 上下文增强 · get_client()</h4>
+        <p>挂 user_id / session_id / metadata，并拿到 Trace 直链返回给调用方，方便从应用端直接跳转排查。</p>
+        <div class="pc-code">langfuse = get_client()<br>langfuse.update_current_trace(user_id=..., session_id=...)<br>url = langfuse.get_trace_url()</div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:var(--sp-5)">
+      <table>
+        <thead>
+          <tr><th>埋点层</th><th>写法</th><th>你在 UI 里看到什么</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cell-tag green">自动</span><br><b>CallbackHandler</b></td>
+            <td><code>from langfuse.langchain import CallbackHandler</code>，再在 <code>invoke(..., config={"callbacks": [...]})</code> 注入</td>
+            <td>Retriever / Embedding / Generation 节点，含召回文档、Token 用量、估算成本、延迟</td>
+          </tr>
+          <tr>
+            <td><span class="cell-tag purple">语义</span><br><b>@observe</b></td>
+            <td><code>@observe(name="rag.retrieve")</code> 装饰业务函数，嵌套结构即 Trace 树</td>
+            <td>业务命名的 Span：rag.ask → rag.retrieve → rag.generate</td>
+          </tr>
+          <tr>
+            <td><span class="cell-tag blue">上下文</span><br><b>get_client()</b></td>
+            <td><code>langfuse.update_current_trace(user_id=, session_id=, metadata=)</code></td>
+            <td>Trace 头部展示 user / session / 自定义 metadata，可按用户、会话筛选检索</td>
+          </tr>
+          <tr>
+            <td><span class="cell-tag amber">快捷</span><br><b>metadata 注入</b></td>
+            <td><code>config={"metadata": {"langfuse_user_id": ..., "langfuse_session_id": ...}}</code></td>
+            <td>不写装饰器也能在链调用处直接设置 Trace 级属性（v3 支持）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════ ⑦ 进阶技巧 ═══════ -->
+  <section class="section" id="tips">
+    <div class="sec-head"><span class="sec-num">7</span><h2>进阶技巧</h2><span class="sub">从「能跑」到「生产可用」</span></div>
+    <div class="tips">
+      <div class="tip">
+        <div class="tip-ic" style="background:var(--amber-50);color:var(--amber-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.5 3.5l2 2M10.5 10.5l2 2M3.5 12.5l2-2M10.5 5.5l2-2"/></svg>
+        </div>
+        <div><h5>FastAPI 用同步 def</h5><p>被 <code>@observe</code> 装饰的端点建议用同步 <code>def</code> 而非 <code>async def</code>，避免上下文传播与事件循环冲突的坑（示例 app.py 已这样做）。</p></div>
+      </div>
+      <div class="tip">
+        <div class="tip-ic" style="background:var(--green-50);color:var(--green-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h8M4 8h8M4 12h5"/></svg>
+        </div>
+        <div><h5>CLI / 批处理记得 flush()</h5><p>Trace 是异步上报的，短生命周期脚本会在数据发出前退出。示例 <code>main.py</code> 末尾调了 <code>get_client().flush()</code>，别删。</p></div>
+      </div>
+      <div class="tip">
+        <div class="tip-ic" style="background:var(--red-50);color:var(--red-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+        </div>
+        <div><h5>自托管平台版本要够新</h5><p>Python SDK v3 要求自托管平台 <code>≥ 3.125.0</code>，否则静默失败或报错。升级镜像后记得重新拉取。</p></div>
+      </div>
+      <div class="tip">
+        <div class="tip-ic" style="background:var(--indigo-50);color:var(--indigo-500)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h8a1 1 0 0 1 1 1v11l-2.5-2H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M6 7h4M6 10h4"/></svg>
+        </div>
+        <div><h5>数据脱敏</h5><p>metadata 别放明文密钥 / 手机号等敏感字段；生产环境建议在 SDK 侧配置 masking 规则，或在上报前统一脱敏。</p></div>
+      </div>
+      <div class="tip">
+        <div class="tip-ic" style="background:var(--teal-50);color:var(--teal-600)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m2 8 4 4L14 4"/></svg>
+        </div>
+        <div><h5>采样控制成本</h5><p>高流量场景可只采样部分请求（如 10%），或只对失败 / 慢请求全量上报，避免观测成本反超模型成本。</p></div>
+      </div>
+      <div class="tip">
+        <div class="tip-ic" style="background:var(--cyan-50);color:var(--cyan-500)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 9.5 6.5"/><path d="M5 4 4 5a3 3 0 0 0 0 4l1 1M11 12l1-1a3 3 0 0 0 0-4l-1-1"/></svg>
+        </div>
+        <div><h5>与 Prompt 管理联动</h5><p>把 RAG 的 system prompt 放进 Langfuse Prompt 管理（带版本与 Label），LLM 调用时通过 <code>metadata</code> 关联，Trace 里直接看到用的是哪个 Prompt 版本。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ ⑧ FAQ ═══════ -->
+  <section class="section" id="faq">
+    <div class="sec-head"><span class="sec-num">8</span><h2>常见问题</h2><span class="sub">排错优先看这里</span></div>
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q"><span class="fq-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3M8 11h.01"/></svg></span>跑完了但 Langfuse 里看不到 Trace？<span class="fq-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg></span></div>
+        <div class="faq-a">
+          <p>按顺序排查：① <code>.env</code> 是否已加载（打印 <code>os.getenv("LANGFUSE_PUBLIC_KEY")</code> 确认）；② <code>LANGFUSE_BASE_URL</code> 是否指向正确的云区域或自托管地址；③ 自托管平台版本是否 <code>≥ 3.125.0</code>；④ CLI 脚本是否调用了 <code>flush()</code>；⑤ 看终端是否打印 langfuse 相关错误日志。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="fq-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 9.5 6.5"/><path d="M5 4 4 5a3 3 0 0 0 0 4l1 1M11 12l1-1a3 3 0 0 0 0-4l-1-1"/></svg></span>同一个请求出现两条 Trace（重复）？<span class="fq-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg></span></div>
+        <div class="faq-a">
+          <p>通常是因为 handler 被重复注入：同一请求在 <code>with_config</code> 和 <code>invoke</code> 的 <code>config</code> 里各放了一次 handler。handler 全局只初始化一个，只在一个层级注入即可。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="fq-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg></span>ModuleNotFoundError: No module named 'langfuse.langchain'？<span class="fq-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg></span></div>
+        <div class="faq-a">
+          <p>版本不对。确认安装的是 v3：<code>pip install "langfuse&gt;=3.0.0"</code>，然后使用 <code>from langfuse.langchain import CallbackHandler</code>。若项目还在用 v2，改为 <code>from langfuse.callback import CallbackHandler</code>，并注意 v2 的 <code>Langfuse()</code> 初始化方式与 <code>LANGFUSE_HOST</code> 变量。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="fq-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6l-3 3v-3H4a2 2 0 0 1-2-2V4z"/></svg></span>LANGFUSE_HOST 和 LANGFUSE_BASE_URL 用哪个？<span class="fq-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg></span></div>
+        <div class="faq-a">
+          <p>v3 首选 <code>LANGFUSE_BASE_URL</code>；<code>LANGFUSE_HOST</code> 是旧名，仍兼容但会告警（两者都设置时以 BASE_URL 为准）。云版 EU 用 <code>https://cloud.langfuse.com</code>，US 用 <code>https://us.cloud.langfuse.com</code>，自托管用你自己的实例地址。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="fq-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 3 3v5c0 3.5 2.5 6 5 7 2.5-1 5-3.5 5-7V3L8 1z"/></svg></span>为什么示例里 retrieve 也要传 callbacks？<span class="fq-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg></span></div>
+        <div class="faq-a">
+          <p>自动埋点只对「注入了 handler 的调用」生效。直接调 <code>retriever.invoke(q)</code> 而不传 config，LangChain 不会产生观测事件；传了之后，Retriever Span 和内部的 Embedding Span 才会被采集并嵌套到当前 <code>@observe</code> 上下文里。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="fq-ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/></svg></span>@observe 的 Span 名和函数名不一致？<span class="fq-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg></span></div>
+        <div class="faq-a">
+          <p>用 <code>@observe(name="rag.retrieve")</code> 显式命名即可；不传 name 时默认用函数名。建议按「模块.动作」命名（如 rag.retrieve / rag.generate），在 Trace 列表里更易检索。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <b>Mycelium · 菌丝</b> · LangChain × RAG × Langfuse 埋点实战 · 单文件教程 · 无外部依赖 · 离线可用
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   文件内容（单一数据源：渲染 / 复制 / 下载共用）
+   ═══════════════════════════════════════════ */
+const FILES = [
+  { name:'ingest.py', lang:'Python', order:0, content:
+`"""
+① 灌库脚本
+把 docs/ 目录下的 .md / .txt 文档 → 切块 → 向量化 → 存入本地 Chroma
+
+用法:
+    python ingest.py
+"""
+import os
+from dotenv import load_dotenv
+
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+
+load_dotenv()
+
+PERSIST_DIR = "./chroma_db"
+
+
+def main():
+    # 1. 加载 docs/ 下的全部文档
+    loader = DirectoryLoader(
+        "./docs",
+        glob=["**/*.md", "**/*.txt"],
+        loader_cls=TextLoader,
+        loader_kwargs={"encoding": "utf-8"},
+    )
+    docs = loader.load()
+    print(f"📄 加载文档: {len(docs)} 篇")
+
+    # 2. 递归切块：先按段落 → 再按句子 → 最后按字符兜底
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=50,
+        separators=["\\n\\n", "\\n", "。", "！", "？", " ", ""],
+    )
+    chunks = splitter.split_documents(docs)
+    print(f"✂️  切分为 {len(chunks)} 个 chunk")
+
+    # 3. 向量化并持久化到本地（无需额外数据库服务）
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    db = Chroma.from_documents(chunks, embeddings, persist_directory=PERSIST_DIR)
+    print(f"✅ 入库完成，向量库目录: {PERSIST_DIR}")
+
+
+if __name__ == "__main__":
+    main()
+`},
+  { name:'rag.py', lang:'Python', order:1, content:
+`"""
+② RAG 核心模块：带 Langfuse 全链路埋点的检索增强生成链
+"""
+import os
+from dotenv import load_dotenv
+
+from langfuse import observe, get_client
+from langfuse.langchain import CallbackHandler  # 注意：v3 导入路径
+
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_core.prompts import ChatPromptTemplate
+
+load_dotenv()
+
+# ── Langfuse 初始化 ─────────────────────────────
+# 自动读取环境变量: LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY / LANGFUSE_BASE_URL
+langfuse = get_client()        # 全局单例客户端
+handler = CallbackHandler()    # LangChain 自动埋点：检索 / 向量化 / LLM 调用
+
+# ── 全局组件 ────────────────────────────────────
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+retriever = vectorstore.as_retriever(search_kwargs={"k": 4})  # Top-K 召回
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+
+PROMPT = ChatPromptTemplate.from_messages([
+    ("system", "你是严谨的知识库助手。只依据下面的上下文回答，禁止编造；"
+               "若上下文不足以回答，请如实说明。\\n\\n上下文:\\n{context}"),
+    ("human", "{question}"),
+])
+
+
+@observe(name="rag.retrieve")
+def retrieve(question: str) -> list:
+    """检索阶段：向量召回。自动生成 Retriever + Embedding 类型的 Span"""
+    docs = retriever.invoke(question, config={"callbacks": [handler]})
+    return [d.page_content for d in docs]
+
+
+@observe(name="rag.generate")
+def generate(question: str, context: list) -> str:
+    """生成阶段：LLM 调用。自动生成 Generation（含 token 用量与成本）"""
+    chain = PROMPT | llm
+    resp = chain.invoke(
+        {"question": question, "context": "\\n\\n".join(context)},
+        config={"callbacks": [handler]},
+    )
+    return resp.content
+
+
+@observe(name="rag.ask")
+def ask(question: str, user_id: str = "anonymous", session_id: str = "default") -> dict:
+    """顶层入口：一次问答 = 一条 Trace，附带 user / session / metadata"""
+    langfuse.update_current_trace(
+        user_id=user_id,
+        session_id=session_id,
+        metadata={"k": 4, "embedding_model": "text-embedding-3-small"},
+    )
+    context = retrieve(question)
+    answer = generate(question, context)
+    return {
+        "answer": answer,
+        "sources": context,
+        "trace_url": langfuse.get_trace_url(),  # 直接拿到这条 Trace 的直链
+    }
+`},
+  { name:'main.py', lang:'Python', order:2, content:
+`"""
+③ CLI 问答入口（推荐先跑这个，30 秒验证整条链路）
+
+用法:
+    python main.py "RAG 系统设计有哪些关键优化点？"
+"""
+import sys
+from langfuse import get_client
+
+from rag import ask
+
+if __name__ == "__main__":
+    question = sys.argv[1] if len(sys.argv) > 1 else "RAG 系统设计有哪些关键优化点？"
+    result = ask(question, user_id="cli-user", session_id="cli-demo")
+
+    print()
+    print("── 回答 ────────────────────────")
+    print(result["answer"])
+    print("── Trace 直链 ──────────────────")
+    print(result["trace_url"])
+
+    get_client().flush()  # CLI 短生命周期：确保异步上报完成再退出
+`},
+  { name:'app.py', lang:'Python', order:3, content:
+`"""
+④ FastAPI 服务入口（可选）
+
+用法:
+    uvicorn app:app --reload --port 8000
+
+测试:
+    curl -X POST http://localhost:8000/ask \\
+         -H "Content-Type: application/json" \\
+         -d '{"question":"RAG 系统设计有哪些关键优化点？","user_id":"alice","session_id":"s-001"}'
+"""
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from rag import ask
+
+app = FastAPI(title="RAG QA Service (Langfuse Traced)")
+
+
+class Query(BaseModel):
+    question: str
+    user_id: str = "anonymous"
+    session_id: str = "default"
+
+
+@app.post("/ask")
+def ask_api(q: Query):
+    # 注意：用同步 def，避免 async 与 @observe 上下文传播的坑
+    return ask(q.question, user_id=q.user_id, session_id=q.session_id)
+`},
+  { name:'requirements.txt', lang:'txt', order:4, content:
+`# Langfuse 埋点核心（v3）
+langfuse>=3.0.0
+
+# LangChain 生态
+langchain>=0.3.0
+langchain-openai>=0.3.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+
+# 向量库（本地持久化，无需额外服务）
+chromadb>=0.5.0
+
+# Web 服务（只用 CLI 可去掉）
+fastapi>=0.115.0
+uvicorn>=0.30.0
+
+# 环境变量加载
+python-dotenv>=1.0.0
+`},
+  { name:'.env.example', lang:'env', order:5, content:
+`# ── OpenAI ──────────────────────────────
+OPENAI_API_KEY=sk-xxxx
+
+# ── Langfuse 连接 ───────────────────────
+# 在 Langfuse 项目设置里创建 API Keys
+LANGFUSE_PUBLIC_KEY=pk-lf-xxxx
+LANGFUSE_SECRET_KEY=sk-lf-xxxx
+
+# v3 首选变量名（LANGFUSE_HOST 为旧名，仍兼容但会告警）
+# 云版 EU:  https://cloud.langfuse.com
+# 云版 US:  https://us.cloud.langfuse.com
+# 自托管:   http://localhost:3000
+LANGFUSE_BASE_URL=http://localhost:3000
+`},
+  { name:'docs/sample.md', lang:'markdown', order:6, content:
+`# RAG 系统设计要点
+
+## 1. 分块策略
+分块大小通常取 300-800 token，块与块之间保留 10%-20% 的重叠，
+避免语义被截断。对于结构化长文档，优先按标题层级切分
+（Markdown 标题 → 段落），保证每个块语义完整。
+
+## 2. 检索优化
+纯向量检索在小语料上表现尚可，生产环境建议使用混合检索：
+向量召回 + BM25 关键词召回，再用重排序模型（如 BGE-reranker）
+融合排序，Top-K 一般取 3-8。
+
+## 3. 生成约束
+Prompt 中明确要求模型"只依据给定上下文回答，禁止编造"。
+上下文超长时做摘要压缩或过滤无关块。
+
+## 4. 可观测性
+RAG 链路必须逐环节埋点：检索耗时、召回文档数、各文档相似度、
+生成 token 数与延迟、整条链路成本，用于持续调优。
+`},
+];
+
+/* ═══════════════════════════════════════════
+   轻量语法高亮（注释 / 字符串 / 关键字 / 装饰器 / 数字）
+   ═══════════════════════════════════════════ */
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function hl(line){
+  const src = esc(line);
+  const re = /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#.*$)|(@\w+)|(\b(?:import|from|def|class|return|if|elif|else|for|while|try|except|finally|with|as|in|not|and|or|None|True|False|async|await|lambda|yield|raise|pass|break|continue|global|nonlocal|del|is|assert|print)\b)|(\b\d+(?:\.\d+)?\b)/gm;
+  return src.replace(re, (m, str, cmt, dec, kw, num) => {
+    if(str) return '<span class="tk-s">'+str+'</span>';
+    if(cmt) return '<span class="tk-c">'+cmt+'</span>';
+    if(dec) return '<span class="tk-d">'+dec+'</span>';
+    if(kw) return '<span class="tk-k">'+kw+'</span>';
+    if(num) return '<span class="tk-n">'+num+'</span>';
+    return m;
+  });
+}
+function renderCode(content, highlight){
+  return content.split('\n').map((l,i)=>{
+    const body = highlight ? hl(l) : '<span class="plain">'+esc(l)+'</span>';
+    return '<span class="line"><span class="ln-no">'+(i+1)+'</span>'+body+'</span>';
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   渲染代码区（Tab + 行号 + 复制 + 下载）
+   ═══════════════════════════════════════════ */
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function buildCodeBox(){
+  const tabs = document.getElementById('cbTabs');
+  const panes = document.getElementById('cbPanes');
+  const sorted = FILES.slice().sort((a,b)=>a.order-b.order);
+
+  tabs.innerHTML = sorted.map(f =>
+    '<div class="cb-tab'+(f.order===0?' active':'')+'" data-file="'+escapeHtml(f.name)+'">'+escapeHtml(f.name)+'</div>'
+  ).join('');
+
+  panes.innerHTML = sorted.map(f =>
+    '<div class="cb-pane'+(f.order===0?' active':'')+'" data-pane="'+escapeHtml(f.name)+'">'
+    + '<div class="cb-bar">'
+    + '<span class="cb-fname">'+escapeHtml(f.name)+'</span>'
+    + '<span class="cb-lang">'+escapeHtml(f.lang)+'</span>'
+    + '<span class="cb-spacer"></span>'
+    + '<button class="cb-btn download" data-download="'+escapeHtml(f.name)+'">'
+    + '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v8M4 6.5 7 9.5 10 6.5M2 12h10"/></svg>下载</button>'
+    + '<button class="cb-btn" data-copy="'+escapeHtml(f.name)+'">'
+    + '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.5" y="4.5" width="8" height="8" rx="1"/><path d="M9.5 4.5V3a1 1 0 0 0-1-1h-5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h1.5"/></svg>复制</button>'
+    + '</div>'
+    + '<div class="cb-code"><pre>'+renderCode(f.content, f.lang==='Python')+'</pre></div>'
+    + '</div>'
+  ).join('');
+}
+
+/* Tab 切换 */
+document.getElementById('cbTabs').addEventListener('click', e=>{
+  const tab = e.target.closest('.cb-tab');
+  if(!tab) return;
+  const file = tab.dataset.file;
+  document.querySelectorAll('.cb-tab').forEach(t=>t.classList.toggle('active', t===tab));
+  document.querySelectorAll('.cb-pane').forEach(p=>p.classList.toggle('active', p.dataset.pane===file));
+});
+
+function getFile(name){ return FILES.find(f=>f.name===name); }
+
+/* 复制（file:// 下自动回退 execCommand） */
+function copyText(text, btn){
+  const done = ()=>{ const old=btn.innerHTML; btn.textContent='✓ 已复制'; setTimeout(()=>btn.innerHTML=old, 1600); };
+  const fallback = ()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(err){}
+    document.body.removeChild(ta);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  }else{ fallback(); }
+}
+
+/* 下载 */
+function downloadFile(name){
+  const f = getFile(name); if(!f) return;
+  const blob = new Blob([f.content], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = f.name.replace('docs/','sample-') === f.name ? f.name : f.name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 500);
+}
+
+document.getElementById('cbPanes').addEventListener('click', e=>{
+  const btn = e.target.closest('.cb-btn'); if(!btn) return;
+  const f = getFile(btn.dataset.copy || btn.dataset.download);
+  if(!f) return;
+  if(btn.dataset.copy){ copyText(f.content, btn); }
+  else if(btn.dataset.download){ downloadFile(f.name); }
+});
+
+/* ═══════════════════════════════════════════
+   FAQ 折叠
+   ═══════════════════════════════════════════ */
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.addEventListener('click', ()=>q.parentElement.classList.toggle('open'));
+});
+
+/* ═══════════════════════════════════════════
+   初始化
+   ═══════════════════════════════════════════ */
+buildCodeBox();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幸福的勇气 · 阿德勒心理学实践篇全解</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   Design Tokens —— 东方书卷质感（《被讨厌的勇气》系列续篇）
+   墨青 · 纸白 · 朱色 · 鎏金（对话体哲学读本 · 爱与实践篇）
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --ink:#1b2431;            /* 墨青主色 */
+  --ink-deep:#10161f;       /* 深墨 */
+  --ink-soft:#46536a;       /* 柔和墨青（正文） */
+  --ink-mute:#77829a;       /* 静默灰蓝 */
+  --verm:#b3432b;           /* 朱色（哲人 / 强调） */
+  --verm-light:#d4644c;
+  --verm-soft:rgba(179,67,43,.10);
+  --gold:#a8823c;           /* 鎏金（爱 / 升华） */
+  --gold-soft:rgba(168,130,60,.13);
+  --paper:#faf8f4;          /* 纸白主背景 */
+  --paper-2:#f3f0e9;        /* 纸白二 */
+  --paper-3:#eae5da;        /* 纸白三 */
+  --rule:rgba(27,36,49,.13);
+  --rule-soft:rgba(27,36,49,.07);
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","HarmonyOS Sans SC","Source Han Sans SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Songti SC","Source Han Serif SC","Noto Serif CJK SC","STSong",serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --radius:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);line-height:1.85;-webkit-font-smoothing:antialiased;font-size:15.5px}
+::selection{background:rgba(168,130,60,.20)}
+
+/* ═══ 顶栏 ═══ */
+.nav{position:sticky;top:0;z-index:100;background:rgba(250,248,244,.88);backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);border-bottom:1px solid var(--rule-soft);display:flex;align-items:center;padding:0 22px;height:58px;gap:14px}
+.nav a.home{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.9rem;letter-spacing:.02em;white-space:nowrap}
+.nav a.home .logo-mark{width:26px;height:26px;border-radius:5px;background:var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-serif);font-weight:700;font-size:.82rem}
+.nav a.home .logo-mark.gold{background:var(--gold)}
+.nav .spacer{flex:1}
+.nav .nav-toc{display:flex;gap:2px;overflow-x:auto;font-size:.76rem;letter-spacing:.04em;scrollbar-width:none}
+.nav .nav-toc::-webkit-scrollbar{display:none}
+.nav .nav-toc a{color:var(--ink-soft);font-weight:500;padding:4px 10px;border-radius:4px;white-space:nowrap;text-decoration:none}
+.nav .nav-toc a:hover{background:var(--gold-soft);color:var(--gold)}
+.nav .nav-toc a.active{color:var(--verm);background:var(--verm-soft)}
+
+/* ═══ Hero ═══ */
+.hero{background:linear-gradient(158deg,var(--ink-deep) 0%,var(--ink) 52%,#33291a 100%);color:#fff;padding:68px 30px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(212,100,76,.18) 0%,transparent 45%),radial-gradient(ellipse at 82% 100%,rgba(168,130,60,.20) 0%,transparent 46%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:840px;margin:0 auto}
+.hero .brand-line{font-family:var(--font-serif);font-size:.98rem;letter-spacing:.4em;color:#d8b26a;margin-bottom:16px}
+.hero h1{font-family:var(--font-serif);font-size:2.7rem;font-weight:700;letter-spacing:.06em;margin-bottom:6px;line-height:1.3}
+.hero .origin{font-size:.86rem;opacity:.62;letter-spacing:.12em;margin-bottom:18px;font-family:var(--font-serif)}
+.hero .quote{font-family:var(--font-serif);font-size:1.22rem;color:rgba(255,255,255,.92);margin:18px auto 0;max-width:600px;line-height:1.9;position:relative;padding:0 26px}
+.hero .quote::before{content:'「';position:absolute;left:0;top:-2px;color:#d8b26a;font-size:1.4rem}
+.hero .quote::after{content:'」';position:absolute;right:0;bottom:-4px;color:#d8b26a;font-size:1.4rem}
+.hero .sub{opacity:.78;max-width:640px;margin:22px auto 0;font-size:.96rem;line-height:1.85}
+.hero .tags{margin-top:24px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);padding:4px 14px;border-radius:3px;font-size:.74rem;letter-spacing:.05em}
+.hero .meta{margin-top:26px;display:flex;gap:26px;justify-content:center;font-size:.8rem;opacity:.72;flex-wrap:wrap;letter-spacing:.03em}
+.hero .meta b{color:#d8b26a;font-weight:700}
+
+/* ═══ 布局 ═══ */
+.wrap{max-width:980px;margin:0 auto;padding:48px 28px 76px}
+.sec{margin-bottom:60px;scroll-margin-top:76px}
+.sec-title{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;border-bottom:1px solid var(--rule)}
+.sec-title .num{font-family:var(--font-serif);font-size:1.1rem;color:var(--gold);font-weight:700;letter-spacing:.1em;white-space:nowrap}
+.sec-title h2{font-family:var(--font-serif);font-size:1.62rem;font-weight:700;letter-spacing:-.005em;padding-bottom:10px;position:relative}
+.sec-title h2::after{content:'';position:absolute;left:0;bottom:-1px;width:56px;height:2px;background:var(--gold)}
+.sec-sub{color:var(--ink-mute);font-size:.92rem;margin:-12px 0 24px;max-width:740px}
+
+/* ═══ 卡片 ═══ */
+.card{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:26px 30px;margin:18px 0;box-shadow:0 1px 3px rgba(27,36,49,.04)}
+.card h3{font-family:var(--font-serif);font-size:1.15rem;margin-bottom:12px;color:var(--ink)}
+.card p{margin:8px 0;color:var(--ink-soft);font-size:.94rem}
+.card strong{color:var(--ink)}
+.card em{color:var(--verm);font-style:normal;font-weight:600}
+
+/* ═══ 双书对照带 ═══ */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.pair .side{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:22px 24px;position:relative;overflow:hidden}
+.pair .side.v1{border-top:3px solid var(--verm)}
+.pair .side.v2{border-top:3px solid var(--gold)}
+.pair .side .vol{font-family:var(--font-serif);font-size:.7rem;letter-spacing:.24em;color:var(--ink-mute);margin-bottom:6px}
+.pair .side h4{font-family:var(--font-serif);font-size:1.12rem;margin-bottom:10px;color:var(--ink)}
+.pair .side.v1 h4{color:var(--verm)}
+.pair .side.v2 h4{color:var(--gold)}
+.pair .side p{font-size:.86rem;color:var(--ink-soft);margin:6px 0}
+.pair .side .q{font-family:var(--font-serif);font-size:.9rem;color:var(--ink);background:var(--paper-2);border-radius:4px;padding:10px 14px;margin-top:10px;border-left:3px solid var(--verm)}
+.pair .side.v2 .q{border-left-color:var(--gold)}
+
+/* ═══ 夜话卡片（五夜） ═══ */
+.night{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);margin:22px 0;overflow:hidden;box-shadow:0 2px 8px rgba(27,36,49,.05);transition:box-shadow .25s ease,transform .25s ease}
+.night:hover{box-shadow:0 8px 24px rgba(27,36,49,.09);transform:translateY(-2px)}
+.night-head{display:flex;align-items:center;gap:16px;padding:20px 26px;background:linear-gradient(120deg,var(--paper-2) 0%,#fff 100%);border-bottom:1px solid var(--rule-soft)}
+.night-head .night-num{flex:none;width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-serif);line-height:1.1}
+.night-head .night-num .zh{font-size:.62rem;letter-spacing:.2em;opacity:.65;margin-bottom:2px}
+.night-head .night-num .n{font-size:1.32rem;font-weight:700}
+.night-head .night-title h3{font-family:var(--font-serif);font-size:1.18rem;font-weight:700;color:var(--ink)}
+.night-head .night-title .night-key{font-size:.8rem;color:var(--gold);letter-spacing:.06em;margin-top:3px;font-weight:600}
+.night-body{padding:20px 26px 24px}
+.night-body p{margin:8px 0;color:var(--ink-soft);font-size:.93rem}
+.night-body .verdict{margin-top:14px;padding:12px 16px;background:var(--gold-soft);border-left:3px solid var(--gold);border-radius:0 4px 4px 0;font-size:.9rem;color:var(--ink)}
+.night-body .verdict b{color:var(--gold)}
+
+/* ═══ 对话气泡（哲人 × 青年） ═══ */
+.dialogue{margin:16px 0;display:flex;flex-direction:column;gap:12px}
+.line{display:flex;gap:12px;align-items:flex-start}
+.line .who{flex:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:.86rem;font-weight:700;color:#fff;margin-top:2px}
+.line.phil .who{background:var(--verm)}
+.line.youth .who{background:var(--ink-soft)}
+.line .bubble{background:var(--paper-2);border:1px solid var(--rule-soft);border-radius:2px 10px 10px 10px;padding:12px 16px;font-size:.92rem;color:var(--ink);max-width:640px}
+.line.youth .bubble{border-radius:10px 2px 10px 10px;background:#fff}
+.line.phil .bubble b{color:var(--verm)}
+.line.youth .bubble b{color:var(--ink)}
+.line .role{display:block;font-size:.68rem;letter-spacing:.15em;color:var(--ink-mute);margin-bottom:4px;font-family:var(--font-serif)}
+
+/* ═══ 对比表 ═══ */
+.vs-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:14px 0;background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 3px rgba(27,36,49,.05)}
+.vs-table th{background:var(--ink);color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:.84rem;letter-spacing:.05em}
+.vs-table th:first-child{background:var(--ink-deep)}
+.vs-table td{padding:10px 14px;border-bottom:1px solid var(--rule-soft);color:var(--ink-soft);vertical-align:top}
+.vs-table tr:last-child td{border-bottom:none}
+.vs-table td:first-child{font-weight:600;color:var(--ink);white-space:nowrap;background:var(--paper-2)}
+.vs-table td b{color:var(--gold)}
+
+/* ═══ 三课题 ═══ */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.pillar{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:20px 18px;text-align:center;position:relative;transition:transform .25s ease,box-shadow .25s ease}
+.pillar:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(27,36,49,.09)}
+.pillar .glyph{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:1.1rem;font-weight:700;color:#fff}
+.pillar:nth-child(1) .glyph{background:var(--verm)}
+.pillar:nth-child(2) .glyph{background:var(--gold)}
+.pillar:nth-child(3) .glyph{background:var(--ink-soft)}
+.pillar h4{font-family:var(--font-serif);font-size:1rem;color:var(--ink);margin-bottom:8px}
+.pillar p{font-size:.82rem;color:var(--ink-mute);line-height:1.75}
+.pillar .en{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--ink-mute);margin-bottom:6px;font-family:var(--font-mono)}
+
+/* ═══ 概念图 ═══ */
+.map-card{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:24px 20px;margin:18px 0;overflow-x:auto}
+.map-card svg{display:block;margin:0 auto;min-width:640px;max-width:100%}
+
+/* ═══ 语录墙 ═══ */
+.quotes{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
+.qcard{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:20px 22px;position:relative;transition:transform .25s ease,box-shadow .25s ease}
+.qcard:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(27,36,49,.08)}
+.qcard::before{content:'「';font-family:var(--font-serif);position:absolute;top:10px;left:12px;color:var(--gold);opacity:.32;font-size:1.5rem;line-height:1}
+.qcard p{font-family:var(--font-serif);font-size:.95rem;color:var(--ink);line-height:1.85;padding-left:10px}
+.qcard .src{margin-top:10px;padding-left:10px;font-size:.72rem;color:var(--ink-mute);letter-spacing:.08em}
+
+/* ═══ 挑战与回应 ═══ */
+.challenge{display:flex;gap:14px;margin:12px 0;background:var(--paper-2);border-radius:var(--radius);padding:16px 18px;border:1px solid var(--rule-soft)}
+.challenge .mark{flex:none;font-family:var(--font-serif);font-size:1.05rem;font-weight:700;width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.challenge.q .mark{background:var(--ink);color:#fff}
+.challenge.a .mark{background:var(--gold);color:#fff}
+.challenge .body{flex:1}
+.challenge .body h5{font-size:.86rem;color:var(--ink);margin-bottom:4px;letter-spacing:.04em}
+.challenge .body p{font-size:.88rem;color:var(--ink-soft)}
+
+/* ═══ 读法建议 ═══ */
+.read-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
+.read-item{background:#fff;border:1px solid var(--rule-soft);border-radius:var(--radius);padding:18px 20px;display:flex;gap:14px;align-items:flex-start}
+.read-item .no{flex:none;font-family:var(--font-serif);font-size:1.5rem;color:var(--gold);opacity:.35;font-weight:700;line-height:1}
+.read-item h4{font-size:.94rem;color:var(--ink);margin-bottom:5px}
+.read-item p{font-size:.84rem;color:var(--ink-mute);line-height:1.75}
+
+/* ═══ 页脚 ═══ */
+.footer{background:var(--ink-deep);color:rgba(255,255,255,.65);text-align:center;padding:36px 24px;font-size:.8rem;letter-spacing:.05em;line-height:2}
+.footer .f-title{font-family:var(--font-serif);color:#fff;font-size:1rem;margin-bottom:6px;letter-spacing:.2em}
+.footer b{color:#d8b26a}
+
+/* ═══ 响应式 ═══ */
+@media(max-width:860px){
+  .pillars{grid-template-columns:1fr}
+  .quotes{grid-template-columns:1fr}
+  .read-grid{grid-template-columns:1fr}
+  .pair{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .hero h1{font-size:2rem}
+  .hero .quote{font-size:1.05rem;padding:0 18px}
+  .nav{padding:0 14px}
+  .nav a.home span.home-txt{display:none}
+  .wrap{padding:36px 16px 60px}
+  .night-head{padding:16px 18px;gap:12px}
+  .night-head .night-num{width:44px;height:44px}
+  .night-head .night-num .n{font-size:1.1rem}
+  .night-body{padding:16px 18px 20px}
+  .card{padding:20px 18px}
+  .vs-table{font-size:.8rem}
+  .vs-table th,.vs-table td{padding:8px 10px}
+  .vs-table td:first-child{white-space:normal}
+  .map-card svg{min-width:560px}
+  .dialogue .line .bubble{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 顶栏 ═══════════ -->
+<nav class="nav">
+  <a class="home" href="index.html"><span class="logo-mark gold">幸</span><span class="home-txt">书架 · 悦读 Ⅱ</span></a>
+  <div class="spacer"></div>
+  <div class="nav-toc">
+    <a href="#s1">导读</a>
+    <a href="#s2">五夜对谈</a>
+    <a href="#s3">概念地图</a>
+    <a href="#s4">语录墙</a>
+    <a href="#s5">常见质疑</a>
+    <a href="#s6">读法建议</a>
+  </div>
+</nav>
+
+<!-- ═══════════ Hero ═══════════ -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="brand-line">岸见一郎 · 古贺史健 著</div>
+    <h1>幸福的勇气</h1>
+    <div class="origin">幸せになる勇気 —— 愛と教育の、哲学者との対話</div>
+    <p class="quote">爱，是主动去爱，而不是被爱。</p>
+    <p class="sub">若《被讨厌的勇气》教你获得自由，这本书回答自由之后的事——如何与另一个人建立联结、如何教育、如何去爱。三年后，青年成了教师，再次敲响哲人的门。</p>
+    <div class="tags">
+      <span>阿德勒心理学</span>
+      <span>续作 · 实践篇</span>
+      <span>对话体</span>
+      <span>教育 · 爱 · 自立</span>
+    </div>
+    <div class="meta">
+      <span>形式 <b>哲人 × 青年 · 三年后的重逢</b></span>
+      <span>主题 <b>教育与爱</b></span>
+      <span>与第一部的关系 <b>续作（自由 → 幸福）</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ═══════════ 01 导读 ═══════════ -->
+<section class="sec" id="s1">
+  <div class="sec-title"><span class="num">01</span><h2>导读：自由之后，如何幸福</h2></div>
+  <p class="sec-sub">《被讨厌的勇气》解决了"如何获得自由"（课题分离），这本续作回答的是"自由之后如何与人联结"——从孤立的自由，走向有归属感的幸福。</p>
+
+  <div class="card">
+    <h3>故事设定：三年后的重逢</h3>
+    <p>还是哲人和青年，但角色变了——<strong>青年成了一名中学教师</strong>，带着教育现场的挫败感再次登门：学生不守纪律、不听讲、不上进。他想"教"却教不动，想表扬又怕惯坏，想批评又怕伤害，于是又来质问哲人："你的理论在现实里根本行不通！"</p>
+    <p>五夜对谈，从"怎么当老师"出发，一层层通向更大的问题：<em>尊重是什么？表扬为什么是错的？爱是什么？人如何获得幸福？</em></p>
+  </div>
+
+  <div class="pair">
+    <div class="side v1">
+      <div class="vol">前作 · 自由篇</div>
+      <h4>被讨厌的勇气</h4>
+      <p>问题：<strong>如何获得自由？</strong></p>
+      <p>方法：课题分离——把别人的课题还回去，不活在别人的期待里。</p>
+      <p>姿态：<em>不怕被讨厌。</em></p>
+      <p class="q">自由，就是被别人讨厌。</p>
+    </div>
+    <div class="side v2">
+      <div class="vol">续作 · 实践篇</div>
+      <h4>幸福的勇气</h4>
+      <p>问题：<strong>自由之后如何幸福？</strong></p>
+      <p>方法：以横向关系与人联结——尊重、感谢、信任，主动去爱。</p>
+      <p>姿态：<em>敢于去爱。</em></p>
+      <p class="q">幸福，不是被爱，而是去爱。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>两本书的递进：一张地图</h3>
+    <p>第一本教你<strong>把别人的课题还回去</strong>——但还回去之后，人是孤独的。第二本教你<strong>如何把自己的课题与他人联结起来</strong>——不是重新纠缠，而是以横向关系、以尊重和感谢、以主动去爱的方式联结。</p>
+    <p>用书中的话说：课题分离不是"与人断绝"，而是<em>"学会与人正确相处"的前提</em>。自由是起点，幸福是通过爱获得归属感与贡献感。</p>
+  </div>
+</section>
+
+<!-- ═══════════ 02 五夜对谈 ═══════════ -->
+<section class="sec" id="s2">
+  <div class="sec-title"><span class="num">02</span><h2>五夜对谈：教育、尊重与爱</h2></div>
+  <p class="sec-sub">每一夜从一个具体的困境出发，推倒一个常识，重建一个概念。哲人（朱）与青年（青）的对话，还原原书形式。</p>
+
+  <!-- 第一夜 -->
+  <div class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第 一 夜</span><span class="n">壹</span></div>
+      <div class="night-title"><h3>教育的目的是"自立"</h3><div class="night-key">教育 = 培育，不是干涉</div></div>
+    </div>
+    <div class="night-body">
+      <div class="dialogue">
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年 · 中学教师</span>我尽心尽力备课、管纪律、找学生谈话，他们却无动于衷。难道不是他们的问题吗？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>教育的目的一开始就错了。教育不是"把学生变成你期待的样子"，而是<strong>引导他自立</strong>——让他学会自己承担自己的课题。你越"为你好"地干涉，他越不可能自立。</div></div>
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年</span>那不管他们吗？放任自流就是教育？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>恰恰相反。教育的形态只有两种：<strong>干涉</strong>——"我替你负责"；<strong>帮助（培育）</strong>——"你自己负责，我在旁边守望"。阿德勒说的教育，是后者。站在旁边守望，比冲上去代劳，需要更大的克制和勇气。</div></div>
+      </div>
+      <div class="verdict"><b>结论：</b>教育的目的不是"教知识"，是<strong>帮助学生自立</strong>。干涉式教育看似负责，实则在剥夺对方的成长机会。</div>
+    </div>
+  </div>
+
+  <!-- 第二夜 -->
+  <div class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第 二 夜</span><span class="n">贰</span></div>
+      <div class="night-title"><h3>不可以表扬，也不可以批评</h3><div class="night-key">否定赏罚 · 横向关系</div></div>
+    </div>
+    <div class="night-body">
+      <div class="dialogue">
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年 · 中学教师</span>表扬总比批评好吧？学生做得好，我说"你真棒"，这有什么错？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>表扬和批评，表面相反，本质相同——<strong>都是"评价"，都是从上往下的操纵</strong>。表扬是"你符合了我的期待"，批评是"你违背了我的期待"，二者都把对方放在"被评判的对象"的位置上。</div></div>
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年</span>那该用什么？不表扬不批评，我还能说什么？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>用<strong>感谢</strong>。"谢谢你帮我打扫""你这次作业很认真，帮了我大忙"——感谢里没有评价，只有<strong>平等伙伴之间的看见与联结</strong>。评价把关系变成上下级，感谢把关系保持在横向。</div></div>
+      </div>
+      <div class="verdict"><b>结论：</b>人与人的关系只有两种——<strong>纵向</strong>（上下、优劣、评价）与<strong>横向</strong>（平等、伙伴、协作）。表扬和批评都是纵向的操纵；真正需要的是横向的<strong>感谢</strong>。</div>
+    </div>
+  </div>
+
+  <!-- 第三夜 -->
+  <div class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第 三 夜</span><span class="n">叁</span></div>
+      <div class="night-title"><h3>尊重，是如实看待对方</h3><div class="night-key">教育的入口是尊重</div></div>
+    </div>
+    <div class="night-body">
+      <div class="dialogue">
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年 · 中学教师</span>我尊重他们啊！我认真备课、尊重每个学生的个性——可他们还是不服我。</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>你确定吗？尊重（respicere）的意思是<strong>"如其本然地看待对方"</strong>——不是期待他变成你想要的样子，而是关注他此刻真实的存在。你"认真备课"，期待的是他们学好；一旦他们没学好，你就不安、愤怒——这说明你看待的是"成绩"，不是"人"。</div></div>
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年</span>那尊重到底是什么样的行为？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>尊重的起点是<strong>不加评价的关注</strong>：认真地听，不评判，不打断，不想着怎么反驳。教育的入口不是方法，是尊重。没有尊重，一切教育技巧都是操纵的变体。</div></div>
+      </div>
+      <div class="verdict"><b>结论：</b>尊重 = 如实看待对方，接纳他本来的样子。<strong>"教育的入口，是尊重。"</strong>——没有尊重，一切方法都失效。</div>
+    </div>
+  </div>
+
+  <!-- 第四夜 -->
+  <div class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第 四 夜</span><span class="n">肆</span></div>
+      <div class="night-title"><h3>爱，是主动去爱</h3><div class="night-key">人生三大课题 · 从被爱到去爱</div></div>
+    </div>
+    <div class="night-body">
+      <div class="dialogue">
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年</span>你说的都是教育。可我心里真正想问的是——人活着，到底想要什么？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>阿德勒把人生课题分为三件：<strong>工作、交友、爱</strong>。前两个你已熟悉，今天说"爱"。绝大多数人追求的是"被爱"——因为被爱不需要努力，等着别人来满足自己就行。但那是依赖，不是爱。</div></div>
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年</span>那爱是什么？</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>爱是<strong>主动的选择</strong>：不是"我爱你，因为我需要你"，而是"我爱你，所以你自由"；不是爱"理想中的条件"，而是<strong>选择去爱眼前这个具体的人</strong>。爱把"我"和"你"变成"我们"——这是两个人共同完成的课题。所以书名才叫《幸福的勇气》：去爱，比被爱需要更大的勇气。</div></div>
+      </div>
+      <div class="verdict"><b>结论：</b>幸福不是"被爱"的状态，而是<strong>"爱着"的状态</strong>。爱不是感觉，是主动选择去爱一个具体的人，并与他共同完成"我们"这个课题。</div>
+    </div>
+  </div>
+
+  <!-- 第五夜 -->
+  <div class="night">
+    <div class="night-head">
+      <div class="night-num"><span class="zh">第 五 夜</span><span class="n">伍</span></div>
+      <div class="night-title"><h3>教育的终点：自立与协作</h3><div class="night-key">共同体感觉 · 课题分离的实践</div></div>
+    </div>
+    <div class="night-body">
+      <div class="dialogue">
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>教育的最终目的，是培养<strong>能自立（自己承担课题）且能协作（有共同体感觉）</strong>的人。教师对学生的爱，不是"我为你负责"，而是尊重、信任、关注、守望——帮他长出自己的翅膀。</div></div>
+        <div class="line youth"><div class="who">青</div><div class="bubble"><span class="role">青年</span>（沉默良久）……我承认。我一直需要学生变好，来证明自己是个好老师。我在寻求他们的认可。</div></div>
+        <div class="line phil"><div class="who">哲</div><div class="bubble"><span class="role">哲人</span>这就是课题分离在爱里的样子：<strong>学生好不好，是学生的课题；你尽责之后能不能被认可，是别人的课题。</strong>你终于看见了——问题不在学生，在你一直躲着的那个课题上。</div></div>
+      </div>
+      <div class="verdict"><b>结论：</b>与第一部一样，结局是开放的——青年承认问题在自己身上，带着"试试看"的勇气离开。但这次他要面对的，不再是"自由"，而是<strong>"爱"</strong>。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 03 概念地图 ═══════════ -->
+<section class="sec" id="s3">
+  <div class="sec-title"><span class="num">03</span><h2>概念地图：从自由到幸福</h2></div>
+  <p class="sec-sub">一条递进路径贯穿两部曲——每一站都是在上一站基础上的"扩容"：不是否定前者，而是让前者走向完整。</p>
+
+  <div class="map-card">
+    <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="从自由到幸福的五级递进路径图">
+      <!-- 路径虚线 -->
+      <line x1="70" y1="150" x2="590" y2="150" stroke="#1b2431" stroke-width="2" stroke-dasharray="6 6" opacity=".18"/>
+      <!-- 箭头 -->
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#a8823c"/>
+        </marker>
+      </defs>
+      <line x1="132" y1="128" x2="252" y2="128" stroke="#a8823c" stroke-width="2" marker-end="url(#arr)" opacity=".7"/>
+      <line x1="316" y1="128" x2="436" y2="128" stroke="#a8823c" stroke-width="2" marker-end="url(#arr)" opacity=".7"/>
+      <!-- 节点1 自由 -->
+      <g>
+        <circle cx="70" cy="150" r="30" fill="#b3432b"/>
+        <text x="70" y="156" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="serif">自由</text>
+      </g>
+      <text x="70" y="210" text-anchor="middle" font-size="12" fill="#46536a">课题分离</text>
+      <text x="70" y="228" text-anchor="middle" font-size="10.5" fill="#77829a">《被讨厌的勇气》</text>
+
+      <!-- 节点2 尊重 -->
+      <g>
+        <circle cx="192" cy="150" r="30" fill="#1b2431"/>
+        <text x="192" y="156" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="serif">尊重</text>
+      </g>
+      <text x="192" y="210" text-anchor="middle" font-size="12" fill="#46536a">如实看待</text>
+      <text x="192" y="228" text-anchor="middle" font-size="10.5" fill="#77829a">教育的入口</text>
+
+      <!-- 节点3 感谢 -->
+      <g>
+        <circle cx="314" cy="150" r="30" fill="#1b2431"/>
+        <text x="314" y="156" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="serif">感谢</text>
+      </g>
+      <text x="314" y="210" text-anchor="middle" font-size="12" fill="#46536a">横向关系</text>
+      <text x="314" y="228" text-anchor="middle" font-size="10.5" fill="#77829a">代替评价与操纵</text>
+
+      <!-- 节点4 去爱 -->
+      <g>
+        <circle cx="436" cy="150" r="30" fill="#1b2431"/>
+        <text x="436" y="156" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="serif">去爱</text>
+      </g>
+      <text x="436" y="210" text-anchor="middle" font-size="12" fill="#46536a">主动选择</text>
+      <text x="436" y="228" text-anchor="middle" font-size="10.5" fill="#77829a">"我"与"你"成为"我们"</text>
+
+      <!-- 节点5 幸福 -->
+      <g>
+        <circle cx="558" cy="150" r="34" fill="#a8823c"/>
+        <text x="558" y="156" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="serif">幸福</text>
+      </g>
+      <text x="558" y="214" text-anchor="middle" font-size="12" fill="#46536a">共同体感觉</text>
+      <text x="558" y="232" text-anchor="middle" font-size="10.5" fill="#77829a">《幸福的勇气》</text>
+
+      <!-- 分界标注 -->
+      <text x="252" y="80" text-anchor="middle" font-size="11" fill="#b3432b" letter-spacing="2">── 自由（课题分离） ──</text>
+      <text x="436" y="80" text-anchor="middle" font-size="11" fill="#a8823c" letter-spacing="2">── 幸福（联结） ──</text>
+      <text x="70" y="270" text-anchor="middle" font-size="10.5" fill="#77829a">孤立 · 独立 · 不依赖</text>
+      <text x="558" y="270" text-anchor="middle" font-size="10.5" fill="#77829a">归属 · 贡献 · 去爱</text>
+    </svg>
+  </div>
+
+  <div class="card">
+    <h3>爱的三支柱（书中的实践框架）</h3>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="glyph">尊</div>
+        <span class="en">RESPECT</span>
+        <h4>尊重</h4>
+        <p>如实看待对方，不加评价地关注。看见他真实的样子，而不是期待中的样子。</p>
+      </div>
+      <div class="pillar">
+        <div class="glyph">信</div>
+        <span class="en">TRUST</span>
+        <h4>信赖</h4>
+        <p>无条件地信任，哪怕可能被辜负。不信赖，就建立不了深层的关系。</p>
+      </div>
+      <div class="pillar">
+        <div class="glyph">爱</div>
+        <span class="en">LOVE</span>
+        <h4>去爱</h4>
+        <p>主动选择去爱眼前这个人，与他共同完成"我们"这个课题，而不求被爱。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>从"被爱"到"去爱"：人生课题的完整图景</h3>
+    <table class="vs-table">
+      <tr><th>课题</th><th>被爱的姿态（依赖）</th><th>去爱的姿态（自立）</th></tr>
+      <tr><td>工作</td><td>为报酬而做，被雇佣、被认可</td><td>为社会做贡献，体验自己的价值</td></tr>
+      <tr><td>交友</td><td>怕被讨厌，讨好与试探</td><td>如实展现自己，感谢与尊重</td></tr>
+      <tr><td>爱</td><td>"谁让我幸福？"——等待被爱</td><td>"我选择去爱谁？"——主动去爱</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════ 04 语录墙 ═══════════ -->
+<section class="sec" id="s4">
+  <div class="sec-title"><span class="num">04</span><h2>语录墙：书中的光</h2></div>
+  <p class="sec-sub">十句核心语录，按主题排列——每一句都可以单独拿出来反复咀嚼。</p>
+
+  <div class="quotes">
+    <div class="qcard"><p>幸福，不是被爱，而是去爱。</p><div class="src">第四夜 · 爱的课题</div></div>
+    <div class="qcard"><p>不可以表扬，也不可以批评。</p><div class="src">第二夜 · 否定赏罚</div></div>
+    <div class="qcard"><p>教育的入口，是尊重。</p><div class="src">第三夜 · 尊重</div></div>
+    <div class="qcard"><p>尊重，就是如实看待对方。</p><div class="src">第三夜 · RESPICERE</div></div>
+    <div class="qcard"><p>"我爱你"不是因为"我需要你"，而是因为"你是你"。</p><div class="src">第四夜 · 主动去爱</div></div>
+    <div class="qcard"><p>人生的课题只有三个：工作、交友、爱。</p><div class="src">第四夜 · 人生课题</div></div>
+    <div class="qcard"><p>教育的终极目的，是自立与协作。</p><div class="src">第五夜 · 教育的终点</div></div>
+    <div class="qcard"><p>干涉是"我替你负责"；帮助是"你自己负责，我在旁守望"。</p><div class="src">第一夜 · 教育即培育</div></div>
+    <div class="qcard"><p>自由是起点，幸福是通过爱获得的归属感与贡献感。</p><div class="src">导读 · 两部曲递进</div></div>
+    <div class="qcard"><p>去爱，比被爱需要更大的勇气。</p><div class="src">书名题解 · 勇气系列</div></div>
+  </div>
+</section>
+
+<!-- ═══════════ 05 常见质疑 ═══════════ -->
+<section class="sec" id="s5">
+  <div class="sec-title"><span class="num">05</span><h2>常见质疑：青年的三次反驳</h2></div>
+  <p class="sec-sub">书中的青年和我们一样，会反驳、会不服。这三组问答是读者最常提出的疑问——也是读这本书最容易卡住的地方。</p>
+
+  <div class="challenge q">
+    <div class="mark">问</div>
+    <div class="body"><h5>表扬总比批评好吧？为什么要连表扬一起否定？</h5><p>表扬让人开心，批评让人难受，怎么能混为一谈？</p></div>
+  </div>
+  <div class="challenge a">
+    <div class="mark">答</div>
+    <div class="body"><h5>因为表扬和批评是同一种操纵</h5><p>表扬是"你符合我的期待，所以我奖赏你"——它和批评一样，把对方放在"被评判"的位置，只是用的胡萝卜不同。真正的横向关系里没有评价，只有感谢："谢谢你做了这件事"——感谢的对象是<strong>这个人本身</strong>，而不是他<strong>符合标准的程度</strong>。</p></div>
+  </div>
+
+  <div class="challenge q">
+    <div class="mark">问</div>
+    <div class="body"><h5>主动去爱，万一对方不回应、伤害我怎么办？</h5><p>把心交出去，最怕的就是被辜负。</p></div>
+  </div>
+  <div class="challenge a">
+    <div class="mark">答</div>
+    <div class="body"><h5>去爱的课题，是"爱着"这个行为本身</h5><p>你选择去爱，这个选择本身就是课题的完成——它让你完整，与对方是否回应无关。对方如何回应，是对方的课题。怕被辜负所以不敢去爱，是用"结果"绑架了"行动"；而阿德勒的全部精神，是<strong>不让未来的结果，剥夺你此刻行动的自由</strong>。</p></div>
+  </div>
+
+  <div class="challenge q">
+    <div class="mark">问</div>
+    <div class="body"><h5>尊重学生/孩子，他们会不会得寸进尺、无法无天？</h5><p>尊重听起来像放任。</p></div>
+  </div>
+  <div class="challenge a">
+    <div class="mark">答</div>
+    <div class="body"><h5>尊重的反面不是放任，是"不加评价的关注"</h5><p>尊重是如实看待对方，但不等于放弃立场。在横向关系里，你依然可以坚定地表达："我理解你的想法，但我的看法是……"——只是不再用"评价"和"操纵"的姿态。被尊重的孩子不需要用叛逆来证明自己存在，反而更容易合作。</p></div>
+  </div>
+</section>
+
+<!-- ═══════════ 06 读法建议 ═══════════ -->
+<section class="sec" id="s6">
+  <div class="sec-title"><span class="num">06</span><h2>读法建议</h2></div>
+  <p class="sec-sub">这本书不是"道理合集"，而是一套需要练习的实践。以下四条，配合使用效果最好。</p>
+
+  <div class="read-grid">
+    <div class="read-item">
+      <div class="no">1</div>
+      <div><h4>先读《被讨厌的勇气》，再读这本</h4><p>顺序不能反——课题分离是地基，"去爱"是上面的建筑。没学会分离就去爱，容易把爱变成纠缠和依赖。</p></div>
+    </div>
+    <div class="read-item">
+      <div class="no">2</div>
+      <div><h4>带着一个具体的人去读</h4><p>学生、孩子、伴侣、父母——选一个人，把书中每一夜的结论套在他身上问一遍："如果我现在用感谢代替表扬，会怎样？"</p></div>
+    </div>
+    <div class="read-item">
+      <div class="no">3</div>
+      <div><h4>重点读第四夜：爱的课题</h4><p>这一夜是全书的升华，也最难懂。建议读两遍：第一遍读完放下，隔几天带着"我究竟在等被爱，还是敢去爱"的问题再读。</p></div>
+    </div>
+    <div class="read-item">
+      <div class="no">4</div>
+      <div><h4>做一个星期的"感谢实验"</h4><p>把对身边人的表扬全换成感谢，观察对方的反应和自己的感受。一周后你会发现：关系的温度，比评价的频率更能说明问题。</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>延伸阅读</h3>
+    <p><strong>《被讨厌的勇气》</strong>——前作，自由篇，必须先读；<strong>阿德勒《自卑与超越》</strong>——阿德勒亲笔原著，没有对话体的易读，但更原汁原味；<strong>弗洛姆《爱的艺术》</strong>——"爱是一种需要学习的技能"与本书第四夜互为注脚；<strong>岸见一郎《阿德勒心理学讲义》</strong>——更系统的理论梳理。</p>
+  </div>
+</section>
+
+</div>
+
+<!-- ═══════════ 页脚 ═══════════ -->
+<footer class="footer">
+  <div class="f-title">幸福的勇气</div>
+  <div>岸见一郎 × 古贺史健 · 阿德勒心理学"勇气"系列第二部</div>
+  <div>自由，是起点；<b>幸福，是去爱</b>——愿你拥有被讨厌的勇气，也拥有去爱的勇气。</div>
+</footer>
+
+</body>
+</html>

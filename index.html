@@ -3,1043 +3,2782 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Frontend Learning Hub · 交互式技术教程合集</title>
+<meta name="description" content="Mycelium · 菌丝 · 个人跨领域常青笔记库。地下互联的反向链接网络。">
+<meta name="theme-color" content="#2f7a4f">
+<title>Mycelium · 菌丝 · 个人知识花园</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🍄</text></svg>">
 <style>
-/* ═══════════════════════════════════════════════════
-   DevPortal 2.0 Design Tokens
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   Garden Design Tokens
+   ═══════════════════════════════════════════════════════════ */
 :root{
-  --gray-50:#fafafa;--gray-100:#f4f4f5;--gray-200:#e4e4e7;--gray-300:#d4d4d8;
-  --gray-400:#a1a1aa;--gray-500:#71717a;--gray-600:#52525b;--gray-700:#3f3f46;
-  --gray-800:#27272a;--gray-900:#18181b;--gray-950:#09090b;
-  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;--blue-300:#93c5fd;
-  --blue-400:#60a5fa;--blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;
-  --purple-50:#faf5ff;--purple-100:#f3e8ff;--purple-400:#c084fc;--purple-500:#a855f7;--purple-600:#9333ea;--purple-700:#7c3aed;
-  --green-500:#10b981;--green-600:#059669;
-  --amber-500:#f59e0b;--amber-600:#d97706;
-  --red-500:#ef4444;--red-600:#dc2626;
-  --teal-500:#14b8a6;--cyan-500:#06b6d4;--indigo-500:#6366f1;--rose-500:#f43f5e;--orange-500:#f97316;
+  /* Forest palette */
+  --forest-50:#f3f8f3;
+  --forest-100:#e3efe5;
+  --forest-200:#c8dfcc;
+  --forest-300:#a0c8a8;
+  --forest-400:#6fac7c;
+  --forest-500:#3f8d54;
+  --forest-600:#2f7a4f;
+  --forest-700:#265d3e;
+  --forest-800:#1d4430;
+  --forest-900:#0f2a1d;
 
-  --bg:var(--gray-50);--bg-subtle:var(--gray-100);--surface:#ffffff;--surface-hover:var(--gray-50);
-  --border:var(--gray-200);--border-subtle:var(--gray-100);
-  --text:var(--gray-900);--text-2:var(--gray-600);--text-3:var(--gray-400);
-  --primary:var(--blue-600);--primary-hover:var(--blue-700);--primary-light:var(--blue-50);
-  --accent:var(--purple-600);
-  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
-  --shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 32px rgba(0,0,0,.12);
+  /* Sand / paper */
+  --sand-50:#fbfaf6;
+  --sand-100:#f5f1e8;
+  --sand-200:#ede7d6;
 
-  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
-  --font-mono:'JetBrains Mono','Cascadia Code','Fira Code','Consolas',monospace;
-  --fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:15px;--fs-lg:17px;--fs-xl:20px;--fs-2xl:24px;--fs-3xl:30px;
-  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;--sp-10:40px;--sp-12:48px;
-  --radius-sm:6px;--radius:8px;--radius-md:10px;--radius-lg:14px;--radius-full:9999px;
-  --topbar-h:56px;--sidebar-w:240px;--content-max:1280px;
-  --transition:.18s cubic-bezier(.4,0,.2,1);--transition-slow:.3s cubic-bezier(.4,0,.2,1);
+  /* Ink (text) */
+  --ink-900:#1f2421;
+  --ink-700:#3d4842;
+  --ink-500:#6b756f;
+  --ink-300:#9aa49d;
+  --ink-100:#d8ddd9;
+
+  /* Accent */
+  --amber-500:#d97706;
+  --amber-100:#fef3c7;
+  --rose-500:#c43d57;
+
+  /* Mapped */
+  --bg:var(--sand-50);
+  --bg-subtle:var(--sand-100);
+  --surface:#ffffff;
+  --surface-hover:var(--sand-50);
+  --border:rgba(31,36,33,.08);
+  --border-strong:rgba(31,36,33,.16);
+  --text:var(--ink-900);
+  --text-2:var(--ink-700);
+  --text-3:var(--ink-500);
+  --primary:var(--forest-600);
+  --primary-hover:var(--forest-700);
+  --primary-soft:var(--forest-100);
+
+  --shadow-sm:0 1px 2px rgba(31,36,33,.04);
+  --shadow:0 2px 8px rgba(31,36,33,.06);
+  --shadow-md:0 8px 24px rgba(31,36,33,.10);
+  --shadow-lg:0 24px 48px rgba(31,36,33,.12);
+
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-serif:'Source Serif Pro','Songti SC',Georgia,serif;
+  --font-mono:'JetBrains Mono','Cascadia Code',Consolas,monospace;
+
+  --topbar-h:64px;
+  --sidebar-w:260px;
+
+  --r-sm:6px;
+  --r:10px;
+  --r-md:14px;
+  --r-lg:20px;
 }
+
 [data-theme="dark"]{
-  --bg:var(--gray-950);--bg-subtle:var(--gray-900);--surface:var(--gray-900);--surface-hover:var(--gray-800);
-  --border:var(--gray-800);--border-subtle:var(--gray-800);
-  --text:var(--gray-50);--text-2:var(--gray-400);--text-3:var(--gray-500);
-  --primary:var(--blue-400);--primary-hover:var(--blue-300);--primary-light:rgba(59,130,246,.12);
-  --accent:var(--purple-400);
-  --shadow-sm:0 1px 2px rgba(0,0,0,.2);--shadow:0 1px 3px rgba(0,0,0,.3);
-  --shadow-md:0 4px 12px rgba(0,0,0,.4);--shadow-lg:0 12px 32px rgba(0,0,0,.5);
+  --bg:#0f1a14;
+  --bg-subtle:#16221a;
+  --surface:#1c2a22;
+  --surface-hover:#243429;
+  --border:rgba(255,255,255,.06);
+  --border-strong:rgba(255,255,255,.12);
+  --text:#e8ede9;
+  --text-2:#b9c1bb;
+  --text-3:#7c857f;
+  --primary:var(--forest-400);
+  --primary-hover:var(--forest-300);
+  --primary-soft:rgba(111,172,124,.16);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 2px 8px rgba(0,0,0,.35);
+  --shadow-md:0 8px 24px rgba(0,0,0,.4);
+  --shadow-lg:0 24px 48px rgba(0,0,0,.5);
 }
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
 body{
-  font-family:var(--font-sans);font-size:var(--fs-base);line-height:1.6;
-  background:var(--bg);color:var(--text);
-  display:flex;flex-direction:column;
+  font-family:var(--font-sans);
+  font-size:14px;
+  line-height:1.6;
+  background:var(--bg);
+  color:var(--text);
   -webkit-font-smoothing:antialiased;
-  transition:background var(--transition),color var(--transition);
+  text-rendering:optimizeLegibility;
 }
-::selection{background:var(--blue-200);color:var(--blue-900)}
-[data-theme="dark"] ::selection{background:rgba(59,130,246,.3);color:var(--blue-100)}
-a{text-decoration:none;color:inherit}
-
-/* ═════ Scrollbar ═════ */
+button,input,textarea{font:inherit;color:inherit;background:none;border:none;outline:none}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
 ::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:var(--gray-400)}
-[data-theme="dark"] ::-webkit-scrollbar-thumb{background:var(--gray-700)}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
 
-/* ═════ TOPBAR ═════ */
+/* ═══════════════════════════════════════════════════
+   Layout
+   ═══════════════════════════════════════════════════ */
+body{display:grid;grid-template-rows:var(--topbar-h) 1fr;height:100vh;overflow:hidden}
+
 .topbar{
-  height:var(--topbar-h);flex-shrink:0;z-index:100;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 var(--sp-6);gap:var(--sp-4);
-  backdrop-filter:saturate(180%) blur(8px);
+  display:flex;align-items:center;gap:16px;
+  padding:0 20px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  z-index:10;
 }
-.topbar .logo{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;font-size:var(--fs-md);color:var(--text);white-space:nowrap;cursor:pointer}
-.topbar .logo-badge{
-  width:28px;height:28px;border-radius:var(--radius-sm);
-  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
-  display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:800;font-size:13px;flex-shrink:0;
-  box-shadow:0 2px 8px rgba(37,99,235,.3);
+.topbar .brand{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--font-serif);
+  font-size:18px;font-weight:600;
+  letter-spacing:.2px;
 }
-.topbar .logo span{color:var(--text-3);font-weight:400;font-size:var(--fs-sm)}
+.topbar .brand .leaf{font-size:22px}
+.topbar .brand small{
+  font-family:var(--font-sans);
+  font-size:11px;font-weight:400;
+  color:var(--text-3);
+  margin-left:4px;
+}
 .topbar .search-trigger{
-  flex:1;max-width:420px;display:flex;align-items:center;gap:var(--sp-2);
-  background:var(--bg-subtle);border:1px solid var(--border);
-  border-radius:var(--radius);padding:7px var(--sp-3);
-  color:var(--text-3);font-size:var(--fs-sm);cursor:pointer;
-  transition:all var(--transition);
+  display:flex;align-items:center;gap:8px;
+  flex:1;max-width:420px;
+  padding:7px 12px;
+  background:var(--bg-subtle);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  color:var(--text-3);
+  font-size:13px;
+  transition:all .15s ease;
 }
-.topbar .search-trigger:hover{border-color:var(--primary);background:var(--surface);box-shadow:var(--shadow-sm)}
-.topbar .search-trigger svg{width:16px;height:16px;flex-shrink:0}
-.topbar .search-trigger .kbd{
-  margin-left:auto;font-family:var(--font-mono);font-size:11px;
-  padding:2px 6px;border-radius:var(--radius-sm);
-  background:var(--surface);border:1px solid var(--border);color:var(--text-3);
+.topbar .search-trigger:hover{border-color:var(--primary)}
+.topbar .search-trigger kbd{
+  margin-left:auto;
+  padding:2px 6px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--text-2);
 }
 .topbar .spacer{flex:1}
-.topbar .icon-btn{
-  width:34px;height:34px;border-radius:var(--radius);
-  border:1px solid var(--border);background:var(--surface);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;color:var(--text-2);transition:all var(--transition);flex-shrink:0;
+.topbar .actions{display:flex;align-items:center;gap:4px}
+.topbar .actions button{
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:var(--r);
+  color:var(--text-2);
+  font-size:15px;
+  transition:all .15s ease;
 }
-.topbar .icon-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--surface-hover)}
-.topbar .icon-btn svg{width:16px;height:16px}
-.topbar .hamburger{display:none}
+.topbar .actions button:hover{background:var(--bg-subtle);color:var(--text)}
+.topbar .actions .btn-text{padding:0 12px;width:auto;height:34px;font-size:13px;font-weight:500}
 
-/* ═════ LAYOUT ═════ */
-.layout{display:flex;flex:1;overflow:hidden}
+.view-switcher{
+  display:flex;gap:2px;
+  padding:3px;
+  background:var(--bg-subtle);
+  border-radius:var(--r);
+  margin-left:8px;
+}
+.view-switcher button{
+  padding:5px 12px;
+  border-radius:7px;
+  font-size:12px;font-weight:500;
+  color:var(--text-3);
+}
+.view-switcher button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm)}
+.view-switcher button:not(.active):hover{color:var(--text)}
 
-/* ═════ SIDEBAR ═════ */
+/* Sidebar */
+.layout{display:grid;grid-template-columns:var(--sidebar-w) 1fr;overflow:hidden;height:100%}
 .sidebar{
-  width:var(--sidebar-w);flex-shrink:0;
-  background:var(--surface);
   border-right:1px solid var(--border);
-  overflow-y:auto;overflow-x:hidden;
-  padding:var(--sp-4) var(--sp-3);
-  transition:transform var(--transition-slow);
+  background:var(--surface);
+  overflow-y:auto;
+  padding:16px 12px;
 }
-.sidebar .cat-label{
-  font-size:11px;font-weight:700;color:var(--text-3);
-  text-transform:uppercase;letter-spacing:.08em;
-  padding:var(--sp-4) var(--sp-3) var(--sp-1);
-  display:flex;align-items:center;gap:6px;cursor:pointer;
-  transition:color var(--transition);
+.sidebar h4{
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--text-3);
+  padding:14px 12px 8px;
 }
-.sidebar .cat-label:hover{color:var(--primary)}
-.sidebar .cat-label:first-child{padding-top:var(--sp-1)}
-.sidebar .nav-item{
-  display:flex;align-items:center;gap:var(--sp-2);
-  padding:6px var(--sp-3);border-radius:var(--radius-sm);
-  font-size:var(--fs-sm);color:var(--text-2);
-  cursor:pointer;transition:all var(--transition);
-  border-left:2px solid transparent;margin:1px 0;line-height:1.4;
+.sidebar h4:first-child{padding-top:4px}
+.nav-group{margin-bottom:8px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 12px;
+  border-radius:var(--r-sm);
+  font-size:13px;
+  color:var(--text-2);
+  cursor:pointer;
+  position:relative;
+  transition:all .12s ease;
 }
-.sidebar .nav-item:hover{background:var(--bg-subtle);color:var(--text)}
-.sidebar .nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;border-left-color:var(--primary)}
-.sidebar .nav-item .ic{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.7}
-.sidebar .nav-item.active .ic{opacity:1}
-.sidebar .nav-item .ic svg{width:16px;height:16px}
-.sidebar .nav-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sidebar .nav-item .badge-new{
-  font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-full);
-  background:var(--green-500);color:#fff;letter-spacing:.03em;
+.nav-item:hover{background:var(--bg-subtle);color:var(--text)}
+.nav-item.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.nav-item .count{
+  margin-left:auto;
+  font-size:11px;color:var(--text-3);
+  font-variant-numeric:tabular-nums;
+}
+.nav-item.muted{opacity:.55;font-size:12px}
+.nav-item .badge{
+  width:6px;height:6px;border-radius:50%;background:var(--forest-400);flex:none;
+}
+.nav-item .badge.seedling{background:#a0c8a8}
+.nav-item .badge.budding{background:#7fb484}
+.nav-item .badge.evergreen{background:#2f7a4f}
+.nav-item .badge.untended{background:var(--ink-100)}
+
+/* Main */
+main{
+  overflow-y:auto;
+  background:var(--bg);
+  padding:32px 40px;
 }
 
-/* ═════ MAIN ═════ */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;min-width:0}
-.main .loading{
-  display:none;position:absolute;top:0;left:0;right:0;
-  height:3px;background:var(--primary);z-index:10;
-  animation:loadingBar .8s ease infinite;
+/* Hero (welcome) */
+.hero{
+  max-width:720px;
+  margin:0 auto 40px;
+  padding-bottom:32px;
+  border-bottom:1px dashed var(--border-strong);
 }
-@keyframes loadingBar{0%{width:0;left:0}50%{width:60%;left:20%}100%{width:0;left:100%}}
-.main.loading .loading{display:block}
-.main iframe{width:100%;height:100%;border:none;background:var(--bg)}
+.hero h1{
+  font-family:var(--font-serif);
+  font-size:36px;
+  font-weight:600;
+  letter-spacing:-.5px;
+  margin-bottom:12px;
+  line-height:1.2;
+}
+.hero h1 .accent{color:var(--primary)}
+.hero p{
+  font-size:15px;color:var(--text-2);
+  line-height:1.7;
+}
+.hero .stats{
+  display:flex;gap:24px;
+  margin-top:20px;
+  font-size:12px;color:var(--text-3);
+}
+.hero .stats strong{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;font-size:14px;margin-right:4px}
 
-/* ═════ WELCOME PAGE ═════ */
-.welcome{flex:1;overflow-y:auto}
-.content-wrap{max-width:var(--content-max);margin:0 auto;padding:var(--sp-8) var(--sp-8) var(--sp-12)}
+/* Section header */
+.section-h{
+  max-width:1280px;margin:0 auto;
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-h h2{
+  font-family:var(--font-serif);
+  font-size:22px;font-weight:600;
+  letter-spacing:-.2px;
+}
+.section-h .sub{font-size:12px;color:var(--text-3)}
 
-/* ═════ HERO ═════ */
-.hero{margin-bottom:var(--sp-10)}
-.hero .hero-eyebrow{
-  font-family:var(--font-mono);font-size:12px;color:var(--primary);
-  font-weight:600;letter-spacing:.03em;margin-bottom:var(--sp-2);
-  display:flex;align-items:center;gap:6px;
+/* Card grid */
+.card-grid{
+  max-width:1280px;margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
 }
-.hero .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green-500);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.hero h1{font-size:var(--fs-3xl);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:var(--sp-3)}
-.hero h1 .grad{
-  background:linear-gradient(135deg,var(--blue-600),var(--purple-600));
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-}
-[data-theme="dark"] .hero h1 .grad{background:linear-gradient(135deg,var(--blue-400),var(--purple-400));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.hero .hero-desc{color:var(--text-2);font-size:var(--fs-md);line-height:1.7;max-width:620px}
-.hero .hero-stats{display:flex;gap:var(--sp-6);margin-top:var(--sp-5)}
-.hero .stat{display:flex;align-items:baseline;gap:6px}
-.hero .stat .num{font-size:var(--fs-xl);font-weight:700;font-family:var(--font-mono);color:var(--text)}
-.hero .stat .lbl{font-size:var(--fs-sm);color:var(--text-3)}
-.hero .stat .sep{color:var(--gray-300);margin:0 var(--sp-1)}
-
-/* ═════ SECTION ═════ */
-.cat-section{margin-bottom:var(--sp-10);scroll-margin-top:calc(var(--topbar-h) + var(--sp-4))}
-.cat-header{
-  display:flex;align-items:center;gap:var(--sp-3);
-  margin-bottom:var(--sp-4);padding-bottom:var(--sp-3);
-  border-bottom:1px solid var(--border);
-}
-.cat-header .cat-icon-box{
-  width:32px;height:32px;border-radius:var(--radius);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.cat-header .cat-icon-box svg{width:18px;height:18px}
-.cat-header .cat-title{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.01em}
-.cat-header .cat-count{
-  font-size:var(--fs-xs);color:var(--text-3);font-family:var(--font-mono);
-  padding:2px 8px;background:var(--bg-subtle);border-radius:var(--radius-full);
-}
-
-/* ═════ CARD GRID ═════ */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp-4)}
-.tut-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-md);padding:var(--sp-4);
-  display:flex;flex-direction:column;gap:var(--sp-2);
-  cursor:pointer;transition:all var(--transition);
-  position:relative;overflow:hidden;
-}
-.tut-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--card-accent,var(--blue-500));
-  opacity:0;transition:opacity var(--transition);
-}
-.tut-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.tut-card:hover::before{opacity:1}
-.tut-card .card-top{display:flex;align-items:flex-start;gap:var(--sp-3)}
-.tut-card .card-icon{
-  width:36px;height:36px;border-radius:var(--radius-sm);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.tut-card .card-icon svg{width:18px;height:18px}
-.tut-card h4{font-size:var(--fs-sm);font-weight:600;line-height:1.4;flex:1}
-.tut-card .card-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tut-card .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:var(--sp-1)}
-.tut-card .card-meta{
-  display:flex;align-items:center;gap:var(--sp-3);
-  margin-top:auto;padding-top:var(--sp-2);
-  border-top:1px solid var(--border-subtle);
-  font-size:11px;color:var(--text-3);font-family:var(--font-mono);
-}
-.tut-card .card-meta span{display:flex;align-items:center;gap:3px}
-.tut-card .card-meta svg{width:12px;height:12px;opacity:.6}
-
-/* Tag colors */
-.tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:1px 7px;border-radius:var(--radius-full);line-height:1.6;white-space:nowrap}
-.t-blue{background:var(--blue-50);color:var(--blue-700)}
-.t-purple{background:var(--purple-50);color:var(--purple-700)}
-.t-green{background:#ecfdf5;color:var(--green-600)}
-.t-amber{background:#fffbeb;color:var(--amber-600)}
-.t-red{background:#fef2f2;color:var(--red-600)}
-.t-gray{background:var(--gray-100);color:var(--gray-600)}
-.t-teal{background:#f0fdfa;color:var(--teal-500)}
-.t-indigo{background:#eef2ff;color:var(--indigo-500)}
-.t-cyan{background:#ecfeff;color:var(--cyan-500)}
-.t-rose{background:#fff1f2;color:var(--rose-500)}
-.t-orange{background:#fff7ed;color:var(--orange-500)}
-[data-theme="dark"] .t-blue{background:rgba(59,130,246,.15);color:var(--blue-300)}
-[data-theme="dark"] .t-purple{background:rgba(168,85,247,.15);color:var(--purple-400)}
-[data-theme="dark"] .t-green{background:rgba(16,185,129,.15);color:var(--green-500)}
-[data-theme="dark"] .t-amber{background:rgba(245,158,11,.15);color:var(--amber-500)}
-[data-theme="dark"] .t-red{background:rgba(239,68,68,.15);color:var(--red-500)}
-[data-theme="dark"] .t-gray{background:var(--gray-800);color:var(--gray-400)}
-[data-theme="dark"] .t-teal{background:rgba(20,184,166,.15);color:var(--teal-500)}
-[data-theme="dark"] .t-indigo{background:rgba(99,102,241,.15);color:var(--indigo-500)}
-[data-theme="dark"] .t-cyan{background:rgba(6,182,212,.15);color:var(--cyan-500)}
-[data-theme="dark"] .t-rose{background:rgba(244,63,94,.15);color:var(--rose-500)}
-[data-theme="dark"] .t-orange{background:rgba(249,115,22,.15);color:var(--orange-500)}
-
-/* Icon backgrounds */
-.ic-bg-blue{background:var(--blue-50);color:var(--blue-600)}
-.ic-bg-purple{background:var(--purple-50);color:var(--purple-600)}
-.ic-bg-green{background:#ecfdf5;color:var(--green-600)}
-.ic-bg-amber{background:#fffbeb;color:var(--amber-600)}
-.ic-bg-red{background:#fef2f2;color:var(--red-600)}
-.ic-bg-teal{background:#f0fdfa;color:var(--teal-500)}
-.ic-bg-indigo{background:#eef2ff;color:var(--indigo-500)}
-.ic-bg-cyan{background:#ecfeff;color:var(--cyan-500)}
-.ic-bg-orange{background:#fff7ed;color:var(--orange-500)}
-.ic-bg-gray{background:var(--gray-100);color:var(--gray-600)}
-[data-theme="dark"] .ic-bg-blue{background:rgba(59,130,246,.12);color:var(--blue-400)}
-[data-theme="dark"] .ic-bg-purple{background:rgba(168,85,247,.12);color:var(--purple-400)}
-[data-theme="dark"] .ic-bg-green{background:rgba(16,185,129,.12);color:var(--green-500)}
-[data-theme="dark"] .ic-bg-amber{background:rgba(245,158,11,.12);color:var(--amber-500)}
-[data-theme="dark"] .ic-bg-red{background:rgba(239,68,68,.12);color:var(--red-500)}
-[data-theme="dark"] .ic-bg-teal{background:rgba(20,184,166,.12);color:var(--teal-500)}
-[data-theme="dark"] .ic-bg-indigo{background:rgba(99,102,241,.12);color:var(--indigo-500)}
-[data-theme="dark"] .ic-bg-cyan{background:rgba(6,182,212,.12);color:var(--cyan-500)}
-[data-theme="dark"] .ic-bg-orange{background:rgba(249,115,22,.12);color:var(--orange-500)}
-[data-theme="dark"] .ic-bg-gray{background:var(--gray-800);color:var(--gray-400)}
-
-/* ═════ COMMAND PALETTE ═════ */
-.cmd-overlay{
-  position:fixed;inset:0;z-index:200;
-  background:rgba(0,0,0,.4);backdrop-filter:blur(4px);
-  display:none;align-items:flex-start;justify-content:center;
-  padding-top:15vh;
-}
-.cmd-overlay.show{display:flex;animation:fadeIn .15s ease}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.cmd-panel{
-  width:90%;max-width:560px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  padding:18px;
+  cursor:pointer;
+  position:relative;
+  display:flex;flex-direction:column;
+  gap:10px;
+  transition:all .18s ease;
   overflow:hidden;
 }
-.cmd-input-wrap{
-  display:flex;align-items:center;gap:var(--sp-2);
-  padding:var(--sp-3) var(--sp-4);
-  border-bottom:1px solid var(--border);
+.card:hover{
+  border-color:var(--primary);
+  box-shadow:var(--shadow-md);
+  transform:translateY(-2px);
 }
-.cmd-input-wrap svg{width:18px;height:18px;color:var(--text-3);flex-shrink:0}
+.card.untended{opacity:.55}
+.card.untended:hover{opacity:.85}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .cat{
+  font-size:10px;font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  color:var(--primary);
+  padding:3px 8px;
+  background:var(--primary-soft);
+  border-radius:99px;
+}
+.card .mat-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--forest-400);
+  flex:none;
+  box-shadow:0 0 0 3px var(--bg);
+}
+.card .mat-dot.m0{background:var(--ink-100)}
+.card .mat-dot.m1,#all-m1{background:#c8dfcc}
+.card .mat-dot.m2{background:#a0c8a8}
+.card .mat-dot.m3{background:#6fac7c}
+.card .mat-dot.m4{background:#3f8d54}
+.card .mat-dot.m5{background:#265d3e}
+.card h3{
+  font-size:15px;font-weight:600;
+  line-height:1.4;
+  letter-spacing:-.1px;
+}
+.card p{
+  font-size:13px;color:var(--text-2);
+  line-height:1.6;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap}
+.card .tag{
+  font-size:10.5px;font-weight:500;
+  padding:2px 8px;
+  background:var(--bg-subtle);
+  color:var(--text-2);
+  border-radius:99px;
+}
+.card .meta{
+  margin-top:auto;
+  padding-top:12px;
+  border-top:1px dashed var(--border);
+  display:flex;justify-content:space-between;
+  font-size:11px;
+  color:var(--text-3);
+  font-variant-numeric:tabular-nums;
+  font-family:var(--font-mono);
+}
+.card .meta .ref{color:var(--primary);font-weight:600}
+
+/* Timeline */
+.timeline{
+  max-width:800px;margin:0 auto;
+  position:relative;
+  padding-left:32px;
+}
+.timeline::before{
+  content:'';position:absolute;left:11px;top:8px;bottom:8px;width:2px;
+  background:var(--border-strong);
+}
+.timeline-item{
+  position:relative;padding-bottom:32px;
+  cursor:pointer;
+}
+.timeline-item::before{
+  content:'';position:absolute;left:-25px;top:6px;width:14px;height:14px;
+  border-radius:50%;
+  background:var(--surface);
+  border:3px solid var(--primary);
+}
+.timeline-item.m0::before{border-color:var(--ink-300)}
+.timeline-item .date{
+  font-family:var(--font-mono);
+  font-size:11px;color:var(--text-3);
+  margin-bottom:4px;
+  letter-spacing:.5px;
+}
+.timeline-item h3{
+  font-family:var(--font-serif);
+  font-size:18px;font-weight:600;
+  margin-bottom:4px;
+}
+.timeline-item .desc{font-size:13px;color:var(--text-2);margin-bottom:8px;line-height:1.6}
+.timeline-item .tags{display:flex;gap:6px;flex-wrap:wrap}
+.timeline-item .tag{font-size:10.5px;color:var(--text-3);font-family:var(--font-mono)}
+
+/* Graph */
+.graph-wrap{
+  max-width:1280px;margin:0 auto;
+  height:calc(100vh - var(--topbar-h) - 64px - 64px);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  position:relative;
+  overflow:hidden;
+}
+.graph-wrap svg{width:100%;height:100%;display:block}
+.graph-legend{
+  position:absolute;top:12px;left:12px;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:8px 12px;
+  font-size:11px;color:var(--text-2);
+  z-index:2;
+}
+[data-theme="dark"] .graph-legend{background:rgba(28,42,34,.85)}
+.graph-legend .row{display:flex;align-items:center;gap:6px;padding:2px 0}
+.graph-legend .d{width:10px;height:10px;border-radius:50%}
+.graph-hint{
+  position:absolute;bottom:12px;left:12px;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:6px 10px;
+  font-size:11px;color:var(--text-3);
+  font-family:var(--font-mono);
+  z-index:2;
+}
+[data-theme="dark"] .graph-hint{background:rgba(28,42,34,.85)}
+
+/* Detail */
+.detail{
+  max-width:920px;margin:0 auto;
+}
+.detail-bar{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:24px;
+  font-size:12px;color:var(--text-3);
+}
+.detail-bar .back{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  border-radius:var(--r);
+  background:var(--surface);
+  border:1px solid var(--border);
+  font-weight:500;color:var(--text-2);
+}
+.detail-bar .back:hover{border-color:var(--primary);color:var(--primary)}
+.detail-header{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  padding:32px;
+  margin-bottom:24px;
+  position:relative;
+  overflow:hidden;
+}
+.detail-header::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:var(--primary);
+}
+.detail-header .crumb{font-size:11px;color:var(--text-3);font-family:var(--font-mono);letter-spacing:.5px;margin-bottom:8px}
+.detail-header h1{
+  font-family:var(--font-serif);
+  font-size:32px;font-weight:600;
+  letter-spacing:-.5px;
+  margin-bottom:12px;
+  line-height:1.25;
+}
+.detail-header .desc{
+  font-size:15px;color:var(--text-2);line-height:1.7;
+  margin-bottom:16px;
+}
+.detail-header .meta-row{
+  display:flex;flex-wrap:wrap;gap:12px;
+  font-size:12px;color:var(--text-3);
+}
+.detail-header .meta-row .chip{
+  padding:4px 10px;
+  background:var(--bg-subtle);
+  border-radius:99px;
+}
+.detail-header .meta-row .chip strong{color:var(--text);font-weight:600}
+
+.detail-section{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  padding:24px;
+  margin-bottom:16px;
+}
+.detail-section h3{
+  font-size:13px;font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--text-3);
+  margin-bottom:14px;
+}
+.related-list{display:flex;flex-direction:column;gap:8px}
+.related-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;
+  background:var(--bg-subtle);
+  border-radius:var(--r);
+  cursor:pointer;
+  transition:all .12s ease;
+}
+.related-item:hover{background:var(--primary-soft);color:var(--primary)}
+.related-item .mat-dot{width:8px;height:8px;border-radius:50%;background:var(--forest-400);flex:none}
+.related-item.m0 .mat-dot{background:var(--ink-100)}
+.related-item.m1 .mat-dot{background:#c8dfcc}
+.related-item.m2 .mat-dot{background:#a0c8a8}
+.related-item.m3 .mat-dot{background:#6fac7c}
+.related-item.m4 .mat-dot{background:#3f8d54}
+.related-item.m5 .mat-dot{background:#265d3e}
+.related-item .title{font-size:13px;font-weight:500;flex:1}
+.related-item .arrow{color:var(--text-3);font-size:14px}
+.related-item .arrow:hover{color:var(--primary)}
+.related-arrow{text-align:center;font-size:11px;color:var(--text-3);padding:2px 0;font-family:var(--font-mono)}
+
+.notes-area{
+  width:100%;min-height:120px;
+  padding:12px 14px;
+  background:var(--bg-subtle);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  font-size:13px;line-height:1.7;
+  resize:vertical;
+  font-family:var(--font-serif);
+  color:var(--text);
+}
+.notes-area:focus{border-color:var(--primary);background:var(--surface)}
+.notes-area::placeholder{color:var(--text-3);font-style:italic}
+.notes-meta{font-size:11px;color:var(--text-3);margin-top:6px;font-family:var(--font-mono);display:flex;justify-content:space-between}
+
+.action-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  padding:9px 16px;
+  border-radius:var(--r);
+  font-size:13px;font-weight:500;
+  background:var(--primary);
+  color:#fff;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .12s ease;
+}
+.btn:hover{background:var(--primary-hover)}
+.btn.secondary{background:var(--bg-subtle);color:var(--text-2);border:1px solid var(--border)}
+.btn.secondary:hover{background:var(--surface);border-color:var(--primary);color:var(--primary)}
+.btn.ghost{background:transparent;color:var(--text-2);padding:9px 12px}
+.btn.ghost:hover{color:var(--primary)}
+
+/* Command palette */
+.cmd-overlay{
+  position:fixed;inset:0;
+  background:rgba(15,26,20,.4);
+  backdrop-filter:blur(2px);
+  z-index:100;
+  display:none;
+  align-items:flex-start;justify-content:center;
+  padding-top:12vh;
+}
+.cmd-overlay.open{display:flex}
+.cmd-panel{
+  width:min(640px,90vw);
+  background:var(--surface);
+  border:1px solid var(--border-strong);
+  border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  max-height:60vh;
+}
 .cmd-input{
-  flex:1;border:none;outline:none;background:none;
-  font-size:var(--fs-md);color:var(--text);font-family:var(--font-sans);
+  padding:16px 20px;
+  font-size:15px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
 }
-.cmd-input::placeholder{color:var(--text-3)}
-.cmd-esc{
-  font-family:var(--font-mono);font-size:11px;
-  padding:2px 6px;border-radius:var(--radius-sm);
-  border:1px solid var(--border);color:var(--text-3);
+.cmd-input input{
+  flex:1;font-size:15px;
+  background:transparent;
 }
-.cmd-results{max-height:400px;overflow-y:auto;padding:var(--sp-2)}
-.cmd-group-label{
-  font-size:11px;font-weight:700;color:var(--text-3);
-  text-transform:uppercase;letter-spacing:.08em;
-  padding:var(--sp-2) var(--sp-3) var(--sp-1);
+.cmd-input input::placeholder{color:var(--text-3)}
+.cmd-results{
+  flex:1;overflow-y:auto;
+  padding:8px;
 }
 .cmd-item{
-  display:flex;align-items:center;gap:var(--sp-3);
-  padding:var(--sp-2) var(--sp-3);border-radius:var(--radius);
-  cursor:pointer;transition:background var(--transition);
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;
+  border-radius:var(--r-sm);
+  cursor:pointer;
+  font-size:13px;
 }
-.cmd-item.selected{background:var(--primary-light)}
-.cmd-item .ci-icon{
-  width:28px;height:28px;border-radius:var(--radius-sm);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.cmd-item .ci-icon svg{width:14px;height:14px}
-.cmd-item .ci-info{flex:1;min-width:0}
-.cmd-item .ci-title{font-size:var(--fs-sm);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cmd-item .ci-cat{font-size:11px;color:var(--text-3);font-family:var(--font-mono)}
-.cmd-item .ci-enter{font-size:11px;color:var(--text-3);opacity:0;transition:opacity var(--transition)}
-.cmd-item.selected .ci-enter{opacity:1}
-.cmd-empty{padding:var(--sp-8);text-align:center;color:var(--text-3);font-size:var(--fs-sm)}
-.cmd-footer{
-  display:flex;align-items:center;gap:var(--sp-4);
-  padding:var(--sp-2) var(--sp-4);border-top:1px solid var(--border);
-  font-size:11px;color:var(--text-3);background:var(--bg-subtle);
-}
-.cmd-footer span{display:flex;align-items:center;gap:4px}
-.cmd-footer kbd{
-  font-family:var(--font-mono);font-size:10px;
-  padding:1px 5px;border-radius:4px;
-  background:var(--surface);border:1px solid var(--border);
-}
+.cmd-item.active,.cmd-item:hover{background:var(--primary-soft);color:var(--primary)}
+.cmd-item .mat-dot{width:8px;height:8px;border-radius:50%;background:var(--forest-400);flex:none}
+.cmd-item .title{flex:1}
+.cmd-item .cat{font-size:10.5px;color:var(--text-3);font-family:var(--font-mono)}
+.cmd-empty{padding:40px 20px;text-align:center;color:var(--text-3);font-size:13px}
 
-/* ═════ MOBILE OVERLAY ═════ */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
-.overlay.show{display:block}
+/* Tag filter pills */
+.filter-pills{
+  max-width:1280px;margin:0 auto 16px;
+  display:flex;gap:6px;flex-wrap:wrap;
+  align-items:center;
+}
+.filter-pills .pill{
+  padding:5px 12px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:99px;
+  font-size:12px;
+  cursor:pointer;
+  transition:all .12s ease;
+}
+.filter-pills .pill:hover{border-color:var(--primary)}
+.filter-pills .pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.filter-pills .clear{font-size:11px;color:var(--text-3);padding:5px 8px;background:none;cursor:pointer}
+.filter-pills .clear:hover{color:var(--primary)}
 
-/* ═════ TOAST ═════ */
-.toast-container{
-  position:fixed;bottom:24px;right:24px;z-index:300;
-  display:flex;flex-direction:column;gap:8px;
+/* Tag view (when nav hits tag) */
+.tag-view{max-width:1280px;margin:0 auto}
+.tag-view h2{font-family:var(--font-serif);font-size:28px;margin-bottom:8px}
+.tag-view .tag-sub{color:var(--text-3);font-size:13px;margin-bottom:24px}
+
+/* Recent / Favourites listing similar to card-grid */
+
+/* Empty */
+.empty{
+  text-align:center;
+  padding:60px 20px;
+  color:var(--text-3);
+}
+.empty .icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty h3{font-size:18px;color:var(--text-2);margin-bottom:6px}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  padding:10px 18px;
+  background:var(--ink-900);color:#fff;
+  border-radius:var(--r);
+  font-size:13px;
+  box-shadow:var(--shadow-md);
+  opacity:0;
+  transition:all .25s ease;
+  z-index:200;
   pointer-events:none;
 }
-.toast{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
-  padding:12px 16px;max-width:380px;
-  display:flex;align-items:flex-start;gap:10px;
-  pointer-events:auto;
-  animation:toastIn .25s cubic-bezier(.4,0,.2,1);
-}
-.toast.toast-out{animation:toastOut .2s cubic-bezier(.4,0,.2,1) forwards}
-@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes toastOut{to{transform:translateX(100%);opacity:0}}
-.toast .toast-icon{
-  width:32px;height:32px;border-radius:var(--radius-sm);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.toast .toast-icon svg{width:16px;height:16px}
-.toast .toast-body{flex:1;min-width:0}
-.toast .toast-title{font-size:var(--fs-sm);font-weight:600;margin-bottom:2px}
-.toast .toast-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.5}
-.toast .toast-close{
-  flex-shrink:0;width:20px;height:20px;border-radius:var(--radius-sm);
-  border:none;background:none;cursor:pointer;color:var(--text-3);
-  display:flex;align-items:center;justify-content:center;
-  transition:color var(--transition);
-}
-.toast .toast-close:hover{color:var(--text)}
-.toast .toast-close svg{width:14px;height:14px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ═════ RESPONSIVE ═════ */
-@media(max-width:1024px){
-  .content-wrap{padding:var(--sp-6) var(--sp-5) var(--sp-12)}
-  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
-}
-@media(max-width:768px){
-  .topbar{padding:0 var(--sp-3);gap:var(--sp-2)}
-  .topbar .logo span{display:none}
-  .topbar .search-trigger{max-width:none}
-  .topbar .search-trigger .kbd{display:none}
-  .topbar .hamburger{display:flex;width:34px;height:34px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);align-items:center;justify-content:center;cursor:pointer;color:var(--text-2)}
-  .topbar .hamburger svg{width:18px;height:18px}
-  .sidebar{
-    position:fixed;top:var(--topbar-h);left:0;bottom:0;z-index:95;
-    transform:translateX(-100%);box-shadow:var(--shadow-lg);
-  }
-  .sidebar.open{transform:translateX(0)}
-  .content-wrap{padding:var(--sp-4) var(--sp-3) var(--sp-10)}
-  .cards-grid{grid-template-columns:1fr}
-  .hero h1{font-size:var(--fs-2xl)}
-  .hero .hero-stats{flex-wrap:wrap;gap:var(--sp-3)}
+/* Mobile responsive */
+@media(max-width:900px){
+  :root{--sidebar-w:0px}
+  body{font-size:13px}
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  main{padding:20px 16px}
+  .card-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .topbar{padding:0 12px;gap:8px}
+  .topbar .actions .btn-text{display:none}
+  .hero h1{font-size:28px}
+  .detail-header{padding:20px}
+  .detail-header h1{font-size:24px}
 }
 
-/* ═════ REDUCED MOTION ═════ */
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{
-    animation-duration:.01ms!important;
-    animation-iteration-count:1!important;
-    transition-duration:.01ms!important;
-    scroll-behavior:auto!important;
-  }
+/* Animation */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .3s ease}
+
+/* Markdown-ish rendered note */
+.note-rendered p{margin-bottom:8px}
+.note-rendered code{
+  font-family:var(--font-mono);font-size:12px;
+  background:var(--bg-subtle);padding:2px 6px;border-radius:4px;
 }
+
+/* Scrollbar in graph svg handles */
+.graph-handle{cursor:grab}
+.graph-handle:active{cursor:grabbing}
 </style>
 </head>
 <body>
 
-<!-- ═══════════ TOPBAR ═══════════ -->
+<!-- ═══════════════════════════════════════════════════
+     Topbar
+     ═══════════════════════════════════════════════════ -->
 <header class="topbar">
-  <button class="hamburger" id="hamburger" aria-label="菜单">
-    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
-  </button>
-  <a class="logo" data-nav="home" title="Frontend Learning Hub">
-    <span class="logo-badge">F</span>
-    Frontend Learning Hub <span>· 教程合集</span>
-  </a>
-  <div class="search-trigger" id="searchTrigger">
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="m11 11 3 3"/></svg>
-    <span>搜索教程…</span>
-    <span class="kbd">⌘K</span>
+  <div class="brand">
+    <span class="leaf">🍄</span>
+    <span>Mycelium</span>
+    <small>· 菌丝 · 个人知识花园</small>
   </div>
-  <div class="spacer"></div>
-  <button class="icon-btn" id="themeToggle" title="切换主题 (⇧⌘L)" aria-label="切换主题">
-    <svg id="iconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
-    <svg id="iconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><circle cx="8" cy="8" r="3"/><path d="M8 1v2m0 10v2m5.7-12.7-1.4 1.4m-8.6 8.6-1.4 1.4M15 8h-2M3 8H1m12.7 5.7-1.4-1.4M3.7 3.7 2.3 2.3"/></svg>
+  <button class="search-trigger" id="open-cmd">
+    <span>🔍</span>
+    <span>在花园里搜索笔记、标签、主题…</span>
+    <kbd>⌘ K</kbd>
   </button>
-  <a class="icon-btn" href="https://github.com/lsasw/frontend-learning-hub" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
-    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.82 1.23.82.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-  </a>
+  <div class="spacer"></div>
+  <div class="view-switcher" id="view-switcher" hidden>
+    <button data-view="cards" class="active">📇 卡片</button>
+    <button data-view="graph">🌐 图谱</button>
+    <button data-view="timeline">⏳ 时间</button>
+  </div>
+  <div class="actions">
+    <button id="btn-random" title="🎲 随机漫步（探索模式）">🎲</button>
+    <button id="btn-theme" title="切换主题">🌗</button>
+    <a class="btn-text" style="display:inline-flex;align-items:center;padding:0 12px;height:34px;border-radius:10px;font-size:13px;color:var(--text-2)" href="https://github.com/lsasw/mycelium" target="_blank" rel="noopener">GitHub ⇗</a>
+  </div>
 </header>
 
-<!-- ═══════════ LAYOUT ═══════════ -->
+<!-- ═══════════════════════════════════════════════════
+     Layout
+     ═══════════════════════════════════════════════════ -->
 <div class="layout">
-  <nav class="sidebar" id="sidebar"></nav>
-  <div class="overlay" id="overlay"></div>
-  <main class="main" id="mainContent">
-    <div class="loading" id="loadingBar"></div>
-    <div class="welcome" id="welcomePage">
-      <div class="content-wrap" id="contentWrap"></div>
+  <aside class="sidebar" id="sidebar">
+    <h4>🏡 花园</h4>
+    <div class="nav-group">
+      <div class="nav-item active" data-view="garden-home">🌳 花园全景</div>
+      <div class="nav-item" data-view="all">📚 全部笔记 <span class="count" id="count-all"></span></div>
+      <div class="nav-item" data-view="tended">✨ 已打理 <span class="count" id="count-tended"></span></div>
+      <div class="nav-item" data-view="seedlings">🌱 种子期 <span class="count" id="count-seed"></span></div>
     </div>
-    <iframe id="contentFrame" name="contentFrame" style="display:none" title="内容区域"></iframe>
-  </main>
+    <h4>🗂 分类</h4>
+    <div class="nav-group" id="cat-nav"></div>
+    <h4>📌 我的</h4>
+    <div class="nav-group">
+      <div class="nav-item" data-view="favs">⭐ 收藏 <span class="count" id="count-fav"></span></div>
+      <div class="nav-item" data-view="recent">🕘 最近浏览 <span class="count" id="count-recent"></span></div>
+      <div class="nav-item" data-view="my-notes">📝 我的笔记 <span class="count" id="count-notes"></span></div>
+    </div>
+  </aside>
+
+  <main id="main"></main>
 </div>
 
-<!-- ═══════════ TOAST CONTAINER ═══════════ -->
-<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
-
-<!-- ═══════════ COMMAND PALETTE ═══════════ -->
-<div class="cmd-overlay" id="cmdOverlay">
+<!-- Command Palette -->
+<div class="cmd-overlay" id="cmd-overlay">
   <div class="cmd-panel">
-    <div class="cmd-input-wrap">
-      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="m13 13 3 3"/></svg>
-      <input class="cmd-input" id="cmdInput" placeholder="搜索教程标题、分类、标签…" autocomplete="off" spellcheck="false" aria-label="搜索教程" role="combobox" aria-expanded="true" aria-controls="cmdResults">
-      <span class="cmd-esc">ESC</span>
+    <div class="cmd-input">
+      <span>🔍</span>
+      <input id="cmd-input" placeholder="搜标题、描述、标签…或输入 tag: r ag、cat: AI…" autocomplete="off" spellcheck="false">
     </div>
-    <div class="cmd-results" id="cmdResults"></div>
-    <div class="cmd-footer">
-      <span><kbd>↑↓</kbd> 导航</span>
-      <span><kbd>↵</kbd> 打开</span>
-      <span><kbd>ESC</kbd> 关闭</span>
-      <span style="margin-left:auto;color:var(--text-3)">Command Palette</span>
-    </div>
+    <div class="cmd-results" id="cmd-results"></div>
   </div>
 </div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Embedded manifest (avoids file:// fetch restrictions) -->
+<script type="application/json" id="manifest-data">
+{
+  "version": "2.0",
+  "type": "garden",
+  "name": "Mycelium · 菌丝",
+  "tagline": "地下互联的常青笔记网络",
+  "generated": "2026-09-05",
+  "notes": [
+    {
+      "id": "transformer",
+      "title": "Transformer 架构解析",
+      "cat": "AI · 基础",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-08-15",
+      "updated": "2026-08-22",
+      "url": "ai-agent/Transformer-架构解析.html",
+      "desc": "从注意力机制到 Multi-Head 的全链路图解，所有 LLM 的共同祖先。",
+      "tags": [
+        "Transformer",
+        "Attention",
+        "LLM"
+      ],
+      "related": [
+        "rag-fundamental",
+        "langchain-deep"
+      ],
+      "tended": "2026-08-22"
+    },
+    {
+      "id": "rag-fundamental",
+      "title": "RAG 检索增强生成 · 学习指南",
+      "cat": "AI · RAG",
+      "level": "入门",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-07-10",
+      "updated": "2026-08-12",
+      "url": "ai-agent/RAG-检索增强生成-学习指南.html",
+      "desc": "RAG 原理与架构图解，嵌入模型、向量库、检索增强全链路。",
+      "tags": [
+        "RAG",
+        "Embedding",
+        "Vector DB"
+      ],
+      "related": [
+        "transformer",
+        "rag-advanced",
+        "langchain-deep"
+      ],
+      "tended": "2026-08-12"
+    },
+    {
+      "id": "rag-advanced",
+      "title": "RAG 检索增强生成 · 进阶全攻略",
+      "cat": "AI · RAG",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-07-18",
+      "updated": "2026-08-20",
+      "url": "ai-agent/RAG-检索增强生成-进阶全攻略.html",
+      "desc": "RAG 变体架构、混合检索、重排序、评估体系全攻略。",
+      "tags": [
+        "RAG",
+        "Hybrid Search",
+        "Rerank"
+      ],
+      "related": [
+        "rag-fundamental",
+        "langchain-deep",
+        "weknora"
+      ],
+      "tended": "2026-08-20"
+    },
+    {
+      "id": "langchain-deep",
+      "title": "LangChain 深入学习教程",
+      "cat": "AI · 框架",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-07-15",
+      "updated": "2026-08-18",
+      "url": "ai-agent/LangChain-深入学习教程.html",
+      "desc": "LangChain 六大模块、Agent、Memory、Tools、Retrieval 核心实现。",
+      "tags": [
+        "LangChain",
+        "Agent",
+        "LLM"
+      ],
+      "related": [
+        "rag-advanced",
+        "langgraph-state",
+        "dify-n8n"
+      ],
+      "tended": "2026-08-18"
+    },
+    {
+      "id": "langgraph-state",
+      "title": "LangGraph 状态图编排教程",
+      "cat": "AI · 框架",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-08-01",
+      "updated": "2026-08-28",
+      "url": "ai-agent/LangGraph-状态图编排教程.html",
+      "desc": "用图结构编排 Agent，状态机+循环+分支，比 Chain 更灵活。",
+      "tags": [
+        "LangGraph",
+        "StateGraph",
+        "Agent"
+      ],
+      "related": [
+        "langchain-deep",
+        "agent-sandbox",
+        "metagpt-crewai"
+      ],
+      "tended": "2026-08-28"
+    },
+    {
+      "id": "agent-sandbox",
+      "title": "AI Agent 执行沙盒机制全解析",
+      "cat": "AI · Agent",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-08-10",
+      "updated": "2026-08-30",
+      "url": "ai-agent/AI-Agent-执行沙盒机制全解析.html",
+      "desc": "Agent 沙盒的三层模型：进程隔离、权限控制、资源约束。",
+      "tags": [
+        "Agent",
+        "Sandbox",
+        "Security"
+      ],
+      "related": [
+        "agent-decision",
+        "langgraph-state"
+      ],
+      "tended": "2026-08-30"
+    },
+    {
+      "id": "dify-n8n",
+      "title": "Dify × n8n 实战教程",
+      "cat": "AI · 工作流",
+      "level": "入门",
+      "status": "已完结",
+      "maturity": 3,
+      "evergreen": true,
+      "created": "2026-07-22",
+      "updated": "2026-08-05",
+      "url": "ai-agent/Dify-n8n-实战教程.html",
+      "desc": "可视化编排 LLM 工作流，Dify 偏应用，n8n 偏自动化连接。",
+      "tags": [
+        "Dify",
+        "n8n",
+        "Workflow"
+      ],
+      "related": [
+        "langchain-deep",
+        "rag-fundamental"
+      ],
+      "tended": "2026-08-05"
+    },
+    {
+      "id": "java-jvm",
+      "title": "Java JVM 虚拟机教程",
+      "cat": "Java · 进阶",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 5,
+      "evergreen": true,
+      "created": "2026-07-09",
+      "updated": "2026-08-10",
+      "url": "java/Java-JVM-虚拟机教程.html",
+      "desc": "JVM 内存模型、GC 算法、类加载机制、调优实战。",
+      "tags": [
+        "JVM",
+        "GC",
+        "调优"
+      ],
+      "related": [
+        "java-juc",
+        "java-jmm-dcl",
+        "high-concurrency"
+      ],
+      "tended": "2026-08-10"
+    },
+    {
+      "id": "java-juc",
+      "title": "Java JUC 并发工具包教程",
+      "cat": "Java · 进阶",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 5,
+      "evergreen": true,
+      "created": "2026-07-09",
+      "updated": "2026-08-08",
+      "url": "java/Java-JUC-并发工具包教程.html",
+      "desc": "AQS、ReentrantLock、ConcurrentHashMap、线程池全解。",
+      "tags": [
+        "JUC",
+        "Concurrent",
+        "ThreadPool"
+      ],
+      "related": [
+        "java-jvm",
+        "java-jmm-dcl",
+        "high-concurrency"
+      ],
+      "tended": "2026-08-08"
+    },
+    {
+      "id": "redis",
+      "title": "Redis 交互式学习指南",
+      "cat": "基础设施",
+      "level": "入门",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-07-09",
+      "updated": "2026-08-15",
+      "url": "infra/Redis-交互式学习指南.html",
+      "desc": "数据类型、持久化、集群、缓存策略、分布式锁。",
+      "tags": [
+        "Redis",
+        "Cache",
+        "Cluster"
+      ],
+      "related": [
+        "distributed-system",
+        "java-juc",
+        "high-concurrency"
+      ],
+      "tended": "2026-08-15"
+    },
+    {
+      "id": "distributed-system",
+      "title": "分布式系统交互式学习平台",
+      "cat": "架构",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-08-01",
+      "updated": "2026-08-25",
+      "url": "infra/分布式系统-交互式学习平台.html",
+      "desc": "CAP / BASE / 一致性协议 / 分布式事务全景。",
+      "tags": [
+        "Distributed",
+        "CAP",
+        "Consensus"
+      ],
+      "related": [
+        "redis",
+        "mq-overview",
+        "high-concurrency"
+      ],
+      "tended": "2026-08-25"
+    },
+    {
+      "id": "high-concurrency",
+      "title": "高并发系统设计实施步骤全指南",
+      "cat": "架构",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-08-05",
+      "updated": "2026-08-28",
+      "url": "architecture/高并发系统设计-实施步骤全指南.html",
+      "desc": "高并发拆解：流量削峰、缓存、消息队列、限流、熔断、降级。",
+      "tags": [
+        "High Concurrency",
+        "Architecture",
+        "Scalability"
+      ],
+      "related": [
+        "distributed-system",
+        "redis",
+        "mq-overview"
+      ],
+      "tended": "2026-08-28"
+    },
+    {
+      "id": "mq-overview",
+      "title": "消息队列系统综合演示平台",
+      "cat": "基础设施",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 4,
+      "evergreen": true,
+      "created": "2026-07-09",
+      "updated": "2026-08-12",
+      "url": "infra/消息队列系统-综合演示平台.html",
+      "desc": "Kafka / RabbitMQ / RocketMQ / Pulsar 四象限对比。",
+      "tags": [
+        "MQ",
+        "Kafka",
+        "RabbitMQ"
+      ],
+      "related": [
+        "distributed-system",
+        "high-concurrency"
+      ],
+      "tended": "2026-08-12"
+    },
+    {
+      "id": "metagpt-crewai",
+      "title": "MetaGPT vs CrewAI 分析报告",
+      "cat": "AI · Agent",
+      "level": "进阶",
+      "status": "已完结",
+      "maturity": 3,
+      "evergreen": true,
+      "created": "2026-07-08",
+      "updated": "2026-08-10",
+      "url": "ai-agent/MetaGPT-CrewAI-分析报告.html",
+      "desc": "两种多智能体框架的范式对比：角色扮演 vs 任务协作。",
+      "tags": [
+        "MetaGPT",
+        "CrewAI",
+        "Multi-Agent"
+      ],
+      "related": [
+        "langgraph-state",
+        "agent-sandbox"
+      ],
+      "tended": "2026-08-10"
+    },
+    {
+      "id": "weknora",
+      "title": "WeKnora 腾讯开源知识平台架构解析",
+      "cat": "AI · RAG",
+      "level": "进阶",
+      "status": "持续打理",
+      "maturity": 3,
+      "evergreen": true,
+      "created": "2026-09-02",
+      "updated": "2026-09-04",
+      "url": "ai-agent/WeKnora-腾讯开源知识平台-架构深度解析.html",
+      "desc": "飞书知识库一期 RAG 选型参考，深入解读代码风格与架构。",
+      "tags": [
+        "WeKnora",
+        "RAG",
+        "Knowledge Base"
+      ],
+      "related": [
+        "rag-advanced",
+        "rag-fundamental"
+      ],
+      "tended": "2026-09-04"
+    },
+    {
+      "id": "_placeholder_ai_agent_concepts",
+      "title": "AI Agent 开发概念全指南",
+      "cat": "AI · Agent",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-12",
+      "updated": "2026-08-12",
+      "url": "ai-agent/AI-Agent-开发概念全指南.html",
+      "desc": "Agent 与传统软件的核心区别：感知-决策-行动循环。",
+      "tags": [
+        "Agent"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_agent_decision",
+      "title": "AI Agent 设计决策全景指南",
+      "cat": "AI · Agent",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-15",
+      "updated": "2026-08-15",
+      "url": "ai-agent/AI-Agent-设计决策全景指南.html",
+      "desc": "Agent 设计中的关键决策点：模型选择、工具调用、记忆机制。",
+      "tags": [
+        "Agent",
+        "Decision"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_deeptutor",
+      "title": "DeepTutor 架构分析",
+      "cat": "AI · 案例",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-08",
+      "updated": "2026-08-08",
+      "url": "ai-agent/DeepTutor-architecture-analysis.html",
+      "desc": "AI 辅导类应用的架构参考。",
+      "tags": [
+        "DeepTutor",
+        "Architecture"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_springai",
+      "title": "Java AI 框架 SpringAI LangChain4j 学习指南",
+      "cat": "Java · AI",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "url": "ai-agent/Java-AI框架-SpringAI-LangChain4j-学习指南.html",
+      "desc": "Spring AI 双 BOM 与 LangChain4j 选型对比。",
+      "tags": [
+        "SpringAI",
+        "LangChain4j"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_langchain_python",
+      "title": "LangChain LangGraph Python 三合一教学",
+      "cat": "AI · 框架",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-07-08",
+      "updated": "2026-07-08",
+      "url": "ai-agent/LangChain-LangGraph-Python-教程.html",
+      "desc": "Python 视角下的 LangChain 入门。",
+      "tags": [
+        "LangChain",
+        "Python"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_llamaindex",
+      "title": "LlamaIndex 数据框架教程",
+      "cat": "AI · 框架",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-01",
+      "updated": "2026-08-01",
+      "url": "ai-agent/LlamaIndex-数据框架教程.html",
+      "desc": "RAG 专用框架，与 LangChain 形成互补。",
+      "tags": [
+        "LlamaIndex",
+        "RAG"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_tradingagents",
+      "title": "TradingAgents 多智能体金融交易框架解析",
+      "cat": "AI · 案例",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "ai-agent/TradingAgents-多智能体金融交易框架解析.html",
+      "desc": "金融场景下的多智能体协作实战。",
+      "tags": [
+        "TradingAgents",
+        "Finance"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_finetune",
+      "title": "大模型微调技术解析",
+      "cat": "AI · 进阶",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-28",
+      "updated": "2026-08-28",
+      "url": "ai-agent/大模型微调技术解析.html",
+      "desc": "LoRA、QLoRA、Full Fine-tune 全景对比。",
+      "tags": [
+        "FineTune",
+        "LoRA"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_agent_protocol",
+      "title": "智能体通信协议全指南",
+      "cat": "AI · Agent",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-12",
+      "updated": "2026-08-12",
+      "url": "ai-agent/智能体通信协议全指南.html",
+      "desc": "MCP、A2A、ANP 等智能体协议对比。",
+      "tags": [
+        "Protocol",
+        "Agent"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_agent_compare",
+      "title": "智能体原理讲解 OpenClaw Hermes ClaudeCode Codex 对比",
+      "cat": "AI · Agent",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-30",
+      "updated": "2026-08-30",
+      "url": "ai-agent/智能体原理讲解-OpenClaw-Hermes-ClaudeCode-Codex对比.html",
+      "desc": "四款主流智能体的设计哲学对比。",
+      "tags": [
+        "Agent",
+        "Compare"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_cs_agent",
+      "title": "智能客服 Agent RAG 智能体构建全流程",
+      "cat": "AI · 案例",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "url": "ai-agent/智能客服Agent-RAG智能体构建全流程.html",
+      "desc": "RAG 在客服场景的端到端落地。",
+      "tags": [
+        "CS Agent",
+        "RAG"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_ml_dl",
+      "title": "机器学习与深度学习理论基础全指南",
+      "cat": "AI · 基础",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-05",
+      "updated": "2026-08-05",
+      "url": "ai-agent/机器学习与深度学习-理论基础全指南.html",
+      "desc": "ML/DL 概念地图：监督、无监督、强化、神经网络。",
+      "tags": [
+        "ML",
+        "DL"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_ai_eco",
+      "title": "AI 前端工程生态",
+      "cat": "AI · 工具",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-09-01",
+      "updated": "2026-09-01",
+      "url": "ai-tools/AI前端工程生态.html",
+      "desc": "AI 在前端工程中的应用版图。",
+      "tags": [
+        "Frontend",
+        "AI"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_token_save",
+      "title": "AI 编码 Token 节省工具",
+      "cat": "AI · 工具",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-28",
+      "updated": "2026-08-28",
+      "url": "ai-tools/AI编码Token节省工具.html",
+      "desc": "编程场景下的 Token 优化实践。",
+      "tags": [
+        "Token",
+        "AI Tools"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_langchain_rag_langfuse",
+      "title": "LangChain RAG Langfuse 埋点实战",
+      "cat": "AI · 工具",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-09-03",
+      "updated": "2026-09-03",
+      "url": "ai-tools/LangChain-RAG-Langfuse埋点实战.html",
+      "desc": "LangChain 应用的可观测性方案。",
+      "tags": [
+        "Langfuse",
+        "Observability"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_langfuse",
+      "title": "Langfuse LLM 可观测性使用指南",
+      "cat": "AI · 工具",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-09-03",
+      "updated": "2026-09-03",
+      "url": "ai-tools/Langfuse-LLM可观测性使用指南.html",
+      "desc": "开源 LLM 可观测性平台完整用法。",
+      "tags": [
+        "Langfuse",
+        "Observability"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_docker_k8s",
+      "title": "Docker Kubernetes 容器化与编排指南",
+      "cat": "架构",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-10",
+      "updated": "2026-08-10",
+      "url": "architecture/Docker-Kubernetes-容器化与编排指南.html",
+      "desc": "容器化、镜像、Pod、Service、Deployment。",
+      "tags": [
+        "Docker",
+        "K8s"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_service_split",
+      "title": "分布式服务化拆分路线",
+      "cat": "架构",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-15",
+      "updated": "2026-08-15",
+      "url": "architecture/分布式服务化拆分路线.html",
+      "desc": "单体到微服务的拆分方法论。",
+      "tags": [
+        "Microservice",
+        "Architecture"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_backend_stack",
+      "title": "后端技术栈知识体系面试分析与故障排查",
+      "cat": "架构",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "architecture/后端技术栈知识体系-面试分析与故障排查.html",
+      "desc": "后端面试题库与故障排查思路。",
+      "tags": [
+        "Backend",
+        "Interview"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_architect",
+      "title": "系统架构师知识体系全指南",
+      "cat": "架构",
+      "level": "专家",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "url": "architecture/系统架构师-知识体系全指南.html",
+      "desc": "架构师需要掌握的全栈知识图谱。",
+      "tags": [
+        "Architect"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_design_pattern",
+      "title": "软件设计模式与设计原则全指南",
+      "cat": "架构",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-12",
+      "updated": "2026-08-12",
+      "url": "architecture/软件设计模式与设计原则-全指南.html",
+      "desc": "GoF 23 + SOLID + GRASP 全解。",
+      "tags": [
+        "Design Pattern",
+        "SOLID"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_spark_flink",
+      "title": "Spark Flink 大数据处理教程",
+      "cat": "大数据",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "url": "big-data/Spark-Flink-大数据处理教程.html",
+      "desc": "Spark 批处理 vs Flink 流处理对比。",
+      "tags": [
+        "Spark",
+        "Flink"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_design_system",
+      "title": "Design System 设计系统首页",
+      "cat": "设计",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-07-25",
+      "updated": "2026-07-25",
+      "url": "design-system/index.html",
+      "desc": "DevPortal 2.0 设计系统规范。",
+      "tags": [
+        "Design System"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_homepage_redesign",
+      "title": "首页高保真交互稿",
+      "cat": "设计",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-07-25",
+      "updated": "2026-07-25",
+      "url": "design-system/homepage-redesign.html",
+      "desc": "DevPortal 2.0 高保真原型。",
+      "tags": [
+        "Prototype"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_finance_terms",
+      "title": "股票与基金黑话术语全指南",
+      "cat": "金融",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-30",
+      "updated": "2026-08-30",
+      "url": "finance/股票与基金黑话术语全指南.html",
+      "desc": "投资术语词典。",
+      "tags": [
+        "Finance",
+        "Terms"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_vue",
+      "title": "Vue 从入门到实战可交互教程",
+      "cat": "前端",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-05",
+      "updated": "2026-08-05",
+      "url": "frontend/Vue-从入门到实战-可交互教程.html",
+      "desc": "Vue 3 响应式、组件、组合式 API 实战。",
+      "tags": [
+        "Vue"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_frontend_workflow",
+      "title": "前端开发完整工作流 Vue 与 React 实战",
+      "cat": "前端",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-15",
+      "updated": "2026-08-15",
+      "url": "frontend/前端开发完整工作流-Vue与React实战.html",
+      "desc": "前端工程从脚手架到上线的全流程。",
+      "tags": [
+        "Vue",
+        "React"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_mysql",
+      "title": "MySQL 底层原理全指南",
+      "cat": "数据库",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-08",
+      "updated": "2026-08-08",
+      "url": "infra/MySQL-底层原理全指南.html",
+      "desc": "索引、事务、锁、MVCC、主从复制。",
+      "tags": [
+        "MySQL"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_mq_basic",
+      "title": "消息队列核心概念入门",
+      "cat": "基础设施",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "infra/消息队列-核心概念入门.html",
+      "desc": "MQ 概念、模式、场景。",
+      "tags": [
+        "MQ"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_mq_idempotent",
+      "title": "消息队列防重复消费详解",
+      "cat": "基础设施",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-22",
+      "updated": "2026-08-22",
+      "url": "infra/消息队列-防重复消费详解.html",
+      "desc": "幂等性、消息去重、exactly-once。",
+      "tags": [
+        "MQ",
+        "Idempotent"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_jmm_dcl",
+      "title": "JMM 三大特性与 DCL 双重检查锁推导分析",
+      "cat": "Java · 进阶",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "url": "java/JMM-三大特性与DCL双重检查锁推导分析.html",
+      "desc": "Java 内存模型与单例模式推导。",
+      "tags": [
+        "JMM",
+        "DCL"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_jvm_obj",
+      "title": "JVM 对象创建过程手绘原理图",
+      "cat": "Java · 进阶",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-22",
+      "updated": "2026-08-22",
+      "url": "java/JVM-对象创建过程-手绘原理图.html",
+      "desc": "Java 对象从字节码到堆内存的完整链路。",
+      "tags": [
+        "JVM"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_java_python_async",
+      "title": "Java vs Python 异步编程对比",
+      "cat": "Java · 对比",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-18",
+      "updated": "2026-08-18",
+      "url": "java/Java-vs-Python-异步编程对比.html",
+      "desc": "CompletableFuture vs asyncio 对比。",
+      "tags": [
+        "Java",
+        "Python",
+        "Async"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_redisson",
+      "title": "Java 分布式锁 Redisson 深度解析",
+      "cat": "Java · 进阶",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "java/Java-分布式锁-Redisson深度解析.html",
+      "desc": "Redisson 锁实现原理与最佳实践。",
+      "tags": [
+        "Redisson",
+        "Lock"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_java_core",
+      "title": "Java 核心问题深度分析",
+      "cat": "Java · 基础",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "url": "java/Java-核心问题深度分析.html",
+      "desc": "Java 核心知识点深度剖析。",
+      "tags": [
+        "Java"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_java_set",
+      "title": "Java 集合 JUC Python 关键字综合教程",
+      "cat": "Java · 综合",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-28",
+      "updated": "2026-08-28",
+      "url": "java/Java集合-JUC-Python关键字-综合教程.html",
+      "desc": "三语言对照：集合、并发、关键字。",
+      "tags": [
+        "Java",
+        "Collection"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_spring",
+      "title": "Spring 全家桶核心组件详解",
+      "cat": "Java · 框架",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-30",
+      "updated": "2026-08-30",
+      "url": "java/Spring-全家桶-核心组件详解.html",
+      "desc": "Spring Boot / Cloud / Security 全解。",
+      "tags": [
+        "Spring"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_numpy",
+      "title": "NumPy 科学计算全指南",
+      "cat": "Python · 数据",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-22",
+      "updated": "2026-08-22",
+      "url": "python/NumPy-科学计算全指南.html",
+      "desc": "ndarray、广播、向量运算全解。",
+      "tags": [
+        "NumPy"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_pandas",
+      "title": "Pandas 数据处理全指南",
+      "cat": "Python · 数据",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-25",
+      "updated": "2026-08-25",
+      "url": "python/Pandas-数据处理全指南.html",
+      "desc": "DataFrame、数据清洗、分组聚合。",
+      "tags": [
+        "Pandas"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_python_backend",
+      "title": "Python 后端技术栈全景图",
+      "cat": "Python · 后端",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-28",
+      "updated": "2026-08-28",
+      "url": "python/Python-后端技术栈全景图.html",
+      "desc": "Python 后端生态：Django / Flask / FastAPI。",
+      "tags": [
+        "Python",
+        "Backend"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_python3",
+      "title": "Python3 语法讲解与语法糖",
+      "cat": "Python · 基础",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "python/Python3-语法讲解与语法糖.html",
+      "desc": "Python 语法糖与易错点。",
+      "tags": [
+        "Python"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_content_strategy",
+      "title": "内容创作策略",
+      "cat": "生活",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "content-creation-strategy.html",
+      "desc": "创作者的内容方法论与渠道选择。",
+      "tags": [
+        "Content",
+        "Creator"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_electronics",
+      "title": "电子元器件指南",
+      "cat": "硬件",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-20",
+      "updated": "2026-08-20",
+      "url": "electronics-components-guide.html",
+      "desc": "常用电子元器件选型与应用。",
+      "tags": [
+        "Electronics"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_embedded",
+      "title": "嵌入式开发指南",
+      "cat": "硬件",
+      "level": "进阶",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-22",
+      "updated": "2026-08-22",
+      "url": "embedded-development.html",
+      "desc": "嵌入式系统开发全流程。",
+      "tags": [
+        "Embedded"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_embedded_learning",
+      "title": "嵌入式学习路径",
+      "cat": "硬件",
+      "level": "入门",
+      "status": "未打理",
+      "maturity": 0,
+      "evergreen": false,
+      "created": "2026-08-24",
+      "updated": "2026-08-24",
+      "url": "embedded-learning-guide.html",
+      "desc": "嵌入式从入门到精通的学习路线。",
+      "tags": [
+        "Embedded",
+        "Learning Path"
+      ],
+      "related": [],
+      "tended": null
+    },
+    {
+      "id": "_placeholder_brave_courage",
+      "title": "被讨厌的勇气 · 阿德勒心理学五夜对谈全解",
+      "cat": "心理学",
+      "level": "入门",
+      "status": "持续打磨",
+      "maturity": 3,
+      "evergreen": true,
+      "created": "2026-08-25",
+      "updated": "2026-09-01",
+      "url": "被讨厌的勇气-阿德勒心理学五夜对谈全解.html",
+      "desc": "阿德勒心理学核心思想，课题分离 / 共同体感觉 / 横向关系。",
+      "tags": [
+        "Psychology",
+        "Adler"
+      ],
+      "related": [],
+      "tended": "2026-09-01"
+    },
+    {
+      "id": "_placeholder_happy_courage",
+      "title": "幸福的勇气 · 阿德勒心理学实践篇全解",
+      "cat": "心理学",
+      "level": "进阶",
+      "status": "持续打磨",
+      "maturity": 3,
+      "evergreen": true,
+      "created": "2026-08-26",
+      "updated": "2026-09-02",
+      "url": "幸福的勇气-阿德勒心理学实践篇全解.html",
+      "desc": "阿德勒心理学的实践落地。",
+      "tags": [
+        "Psychology",
+        "Adler"
+      ],
+      "related": [],
+      "tended": "2026-09-02"
+    }
+  ]
+}
+</script>
+
+<!-- D3.js for the graph view (CDN, gracefully degrades) -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" crossorigin="anonymous"></script>
 
 <script>
 /* ═══════════════════════════════════════════════════
-   SVG Icon Library (16px, stroke-1.5, Lucide-style)
+   Garden runtime
    ═══════════════════════════════════════════════════ */
-const I = {
-  brain:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M6 5H4a2 2 0 0 0 0 4h2M10 5h2a2 2 0 0 1 0 4h-2M6 9H4a2 2 0 0 0 0 4h2M10 9h2a2 2 0 0 1 0 4h-2"/></svg>',
-  bot:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="10" height="8" rx="2"/><path d="M8 2v3"/><circle cx="6" cy="9" r=".5" fill="currentColor"/><circle cx="10" cy="9" r=".5" fill="currentColor"/><path d="M2 9H0M16 9h-2"/></svg>',
-  chain:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5 9.5 6.5"/><path d="M5 4 4 5a3 3 0 0 0 0 4l1 1M11 12l1-1a3 3 0 0 0 0-4l-1-1"/></svg>',
-  bolt:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1 3 9h4l-1 6 6-8H8l1-6z"/></svg>',
-  puzzle:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2v2a1 1 0 0 1-2 0H3v3h2a1 1 0 0 1 0 2H3v3h1a1 1 0 0 1 2 0 1 1 0 0 1 2 0h1V8h-1a1 1 0 0 1 0-2h1V3h-1a1 1 0 0 1-2 0V2z"/></svg>',
-  shield:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 2 3v5c0 3.5 2.5 6 6 7 3.5-1 6-3.5 6-7V3l-6-2z"/></svg>',
-  layers:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 1 7 4-7 4-7-4 7-4z"/><path d="m1 9 7 4 7-4M1 12l7 4 7-4"/></svg>',
-  graph:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><path d="M5.5 5 7 11M10.5 5 9 11M6 4h4"/></svg>',
-  code:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5 3-4 5 4 5M11 3l4 5-4 5"/></svg>',
-  terminal:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="12" rx="1"/><path d="m4 6 2 2-2 2M8 10h4"/></svg>',
-  wrench:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2 9 7l-2 6-5 1 1-5 6-2 5-5z"/></svg>',
-  server:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="5" rx="1"/><rect x="1" y="9" width="14" height="5" rx="1"/><circle cx="4" cy="4.5" r=".5" fill="currentColor"/><circle cx="4" cy="11.5" r=".5" fill="currentColor"/></svg>',
-  database:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="3" rx="6" ry="2"/><path d="M2 3v5c0 1 2.5 2 6 2s6-1 6-2V3M2 8v5c0 1 2.5 2 6 2s6-1 6-2V8"/></svg>',
-  message:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6l-3 3v-3H4a2 2 0 0 1-2-2V4z"/></svg>',
-  grid:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>',
-  box:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1 1 4.5v7L8 15l7-3.5v-7L8 1z"/><path d="M1 4.5 8 8l7-3.5M8 8v7"/></svg>',
-  cpu:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 1v2M10 1v2M6 13v2M10 13v2M1 6h2M1 10h2M13 6h2M13 10h2"/></svg>',
-  rocket:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1c3 2 4 5 4 8l-2 2H6L4 9c0-3 1-6 4-8z"/><circle cx="8" cy="6" r="1.5"/><path d="M6 11l-2 3M10 11l2 3"/></svg>',
-  flask:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1h4v4l3 8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1l3-8V1z"/><path d="M6 1h4"/></svg>',
-  book:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 0 1 1-1h4a2 2 0 0 1 2 2v10a1 1 0 0 0-1-1H3a1 1 0 0 1-1-1V3z"/><path d="M14 3a1 1 0 0 0-1-1H9a2 2 0 0 0-2 2v10a1 1 0 0 1 1-1h5a1 1 0 0 0 1-1V3z"/></svg>',
-  git:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="4" cy="12" r="2"/><path d="M4 6v4M4 10h6M9 5l3 3"/></svg>',
-  container:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 5 8 2l7 3v6l-7 3-7-3V5z"/><path d="M1 5l7 3 7-3M8 8v6"/></svg>',
-  lock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>',
-  java:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1c1 1 1 2 0 3M9 1c1 1 1 2 0 3M5 6h6v8H5z"/><path d="M7 9v2"/></svg>',
-  python:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h6a2 2 0 0 1 2 2v3H6a2 2 0 0 0-2 2v3H2a1 1 0 0 1-1-1V4a2 2 0 0 1 2-2z"/><circle cx="8" cy="4" r=".5" fill="currentColor"/></svg>',
-  spark:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v4M8 11v4M1 8h4M11 8h4M3.5 3.5l2.5 2.5M10 10l2.5 2.5M3.5 12.5 6 10M10 6l2.5-2.5"/></svg>',
-  compass:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="m10 6-2 5-2-5 4 0z"/></svg>',
-  plug:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 1v4M10 1v4M4 5h8v2a4 4 0 0 1-8 0V5zM8 11v4"/></svg>',
-  chip:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 1v2M10 1v2M6 13v2M10 13v2M1 6h2M1 10h2M13 6h2M13 10h2"/></svg>',
-  clock:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1"/></svg>',
-  eye:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6s2-3.5 5-3.5S11 6 11 6s-2 3.5-5 3.5S1 6 1 6z"/><circle cx="6" cy="6" r="1.5"/></svg>',
-  calendar:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="9" height="8" rx="1"/><path d="M1.5 5h9M4 1.5v2M8 1.5v2"/></svg>',
-  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>',
-  trending:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12l4-5 3 2 5-6"/><path d="M11 3h3v3"/></svg>',
-  coins:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="10.5" r="3.5"/><path d="M9 10.5V6a3 3 0 0 1 3-3 3 3 0 0 1 3 3v.5"/></svg>',
-};
+(function(){
+'use strict';
 
-/* ═══════════════════════════════════════════════════
-   Tutorial Data — 全部 48 个教程
-   ═══════════════════════════════════════════════════ */
-const categories = [
-  {
-    id:'ai-agent',label:'AI 智能体 & 工作流',icon:'brain',iconBg:'ic-bg-purple',accent:'var(--purple-500)',
-    tutorials:[
-      {nav:'metagpt-crewai',t:'MetaGPT vs CrewAI 分析报告',d:'深度对比两大 AI 多智能体框架：架构设计、角色分工、工作流引擎、适用场景全覆盖',href:'ai-agent/MetaGPT-CrewAI-分析报告.html',icon:'graph',tags:[{l:'AI 智能体',c:'t-purple'},{l:'Python',c:'t-gray'}],time:'20',views:'1.2K',date:'06.15',isNew:false},
-      {nav:'langchain',t:'LangChain & LangGraph 实战',d:'三合一教程：LangChain 链式调用 + LangGraph 状态图编排 + Python 最佳实践',href:'ai-agent/LangChain-LangGraph-Python-教程.html',icon:'chain',tags:[{l:'LangChain',c:'t-purple'},{l:'Python',c:'t-gray'}],time:'25',views:'2.1K',date:'06.20',isNew:false},
-      {nav:'dify-n8n',t:'Dify × n8n 双平台实战',d:'AI 工作流自动化：Dify 应用构建 + n8n 可视化编排，双平台联动最佳实践',href:'ai-agent/Dify-n8n-实战教程.html',icon:'bolt',tags:[{l:'工作流',c:'t-purple'},{l:'低代码',c:'t-cyan'}],time:'18',views:'1.5K',date:'06.22',isNew:false},
-      {nav:'rag-guide',t:'RAG 检索增强生成全指南',d:'RAG 原理与架构图解 · 嵌入模型 · Chunk 分割 · 混合检索 · 重排序机制 · 8 大优化策略对比',href:'ai-agent/RAG-检索增强生成-学习指南.html',icon:'puzzle',tags:[{l:'RAG',c:'t-purple'},{l:'向量检索',c:'t-indigo'}],time:'22',views:'1.8K',date:'06.25',isNew:false},
-      {nav:'rag-advanced',t:'RAG 进阶全攻略 · 避坑指南',d:'全链路深度解析：基础概念 → Multi-hop/Agentic/Graph/Self-RAG/CRAG 架构演进 → 7 大实战避坑攻略',href:'ai-agent/RAG-检索增强生成-进阶全攻略.html',icon:'puzzle',tags:[{l:'RAG进阶',c:'t-purple'},{l:'变体架构',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'35',views:'890',date:'07.10',isNew:true},
-      {nav:'langchain-deep',t:'LangChain 深入学习教程',d:'六大核心组件详解 · LCEL 现代写法 · RAG 全流程实战 · Agent 开发 · 10 个高频踩坑点',href:'ai-agent/LangChain-深入学习教程.html',icon:'chain',tags:[{l:'LangChain',c:'t-purple'},{l:'Python',c:'t-gray'},{l:'NEW',c:'t-green'}],time:'28',views:'1.1K',date:'07.08',isNew:true},
-      {nav:'langgraph',t:'LangGraph 状态图编排教程',d:'StateGraph 核心概念 · 条件分支与循环 · Human-in-the-Loop · 多 Agent 协作 · 8 大踩坑点',href:'ai-agent/LangGraph-状态图编排教程.html',icon:'graph',tags:[{l:'LangGraph',c:'t-purple'},{l:'Agent',c:'t-gray'},{l:'NEW',c:'t-green'}],time:'25',views:'760',date:'07.09',isNew:true},
-      {nav:'llamaindex',t:'LlamaIndex 数据框架教程',d:'数据接入 160+ 源 · 7 种索引策略 · Query/Chat Engine · 高级管线优化 · 10 大踩坑点',href:'ai-agent/LlamaIndex-数据框架教程.html',icon:'book',tags:[{l:'LlamaIndex',c:'t-purple'},{l:'RAG',c:'t-gray'},{l:'NEW',c:'t-green'}],time:'22',views:'540',date:'07.09',isNew:true},
-      {nav:'transformer',t:'Transformer 架构深度解析',d:'Self-Attention 数学推导 · Multi-Head · Positional Encoding · Encoder-Decoder · BERT/GPT 演进全景',href:'ai-agent/Transformer-架构解析.html',icon:'bot',tags:[{l:'Transformer',c:'t-purple'},{l:'注意力机制',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'30',views:'1.5K',date:'07.05',isNew:true},
-      {nav:'llm-ft',t:'LLM 微调技术深度解析',d:'全量微调 · LoRA/QLoRA · Adapter · Instruction Tuning · RLHF/DPO · 互动决策流程图',href:'ai-agent/大模型微调技术解析.html',icon:'flask',tags:[{l:'LLM',c:'t-purple'},{l:'微调',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'28',views:'980',date:'07.06',isNew:true},
-      {nav:'ml-dl-theory',t:'ML & DL 理论基础全指南',d:'三大学习范式 · 监督/无监督/强化学习 · 神经网络与反向传播 · CNN/RNN/LSTM/Transformer · 损失函数与优化器',href:'ai-agent/机器学习与深度学习-理论基础全指南.html',icon:'brain',tags:[{l:'机器学习',c:'t-purple'},{l:'深度学习',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'35',views:'1.3K',date:'07.04',isNew:true},
-      {nav:'agent-dev-guide',t:'AI Agent 开发概念全指南',d:'Agent 核心架构 · 多 Agent 协作模式 · 兜底降级 · 重试策略 · A2A 协议 · Skills 技能体系 · 三层记忆 · 工具调用',href:'ai-agent/AI-Agent-开发概念全指南.html',icon:'bot',tags:[{l:'Agent',c:'t-purple'},{l:'Multi-Agent',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'25',views:'670',date:'07.07',isNew:true},
-      {nav:'agent-design-guide',t:'AI Agent 设计决策全景指南',d:'从零设计功能全面的 Agent：CLI vs 桌面 vs Web 形态对比 · 框架 vs 裸写决策 · 语言选型 · 完整构建清单',href:'ai-agent/AI-Agent-设计决策全景指南.html',icon:'compass',tags:[{l:'架构决策',c:'t-purple'},{l:'从零构建',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'22',views:'540',date:'07.08',isNew:true},
-      {nav:'agent-compare',t:'智能体原理讲解',d:'OpenClaw · Hermes · Claude Code · Codex CLI — 核心架构设计 · 工作原理 · 关键特性 · 差异对比 · 选型指南',href:'ai-agent/智能体原理讲解-OpenClaw-Hermes-ClaudeCode-Codex对比.html',icon:'graph',tags:[{l:'架构对比',c:'t-purple'},{l:'Agent',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'430',date:'07.09',isNew:true},
-      {nav:'agent-sandbox',t:'Agent 执行沙盒机制全解析',d:'沙盒隔离边界 · 六大技术手段 · 14 类操作矩阵 · 5 级风险体系 · 安全桥接层 · 4 大实战案例',href:'ai-agent/AI-Agent-执行沙盒机制全解析.html',icon:'shield',tags:[{l:'沙盒安全',c:'t-red'},{l:'隔离机制',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'28',views:'670',date:'07.12',isNew:true},
-      {nav:'java-ai-frameworks',t:'Java AI 框架学习指南',d:'Spring AI · Spring AI Alibaba (Graph Agent) · LangChain4j · LangGraph4j — 学习讲解 · 常见问题 · 面试题解析',href:'ai-agent/Java-AI框架-SpringAI-LangChain4j-学习指南.html',icon:'code',tags:[{l:'Spring AI',c:'t-purple'},{l:'LangChain4j',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'25',views:'890',date:'07.11',isNew:true},
-      {nav:'cs-rag-agent',t:'智能客服 RAG 全流程',d:'需求调研 - 技术栈选型 - 数据清洗 - 召回优化（混合检索+重排序）- 效果评测（RAGAS）— 生产级 RAG 智能客服构建全链路',href:'ai-agent/智能客服Agent-RAG智能体构建全流程.html',icon:'message',tags:[{l:'RAG',c:'t-purple'},{l:'智能客服',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'22',views:'450',date:'07.13',isNew:true},
-      {nav:'deeptutor-arch',t:'DeepTutor 架构深度分析',d:'HKUDS 开源项目完整拆解：Agent 循环机制 · 两层插件模型 · 多引擎 RAG · 三层记忆系统 · Python 全异步架构',href:'ai-agent/DeepTutor-architecture-analysis.html',icon:'layers',tags:[{l:'架构分析',c:'t-purple'},{l:'Agent',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'320',date:'07.14',isNew:true},
-      {nav:'tradingagents',t:'TradingAgents 多智能体金融交易框架',d:'Tauric Research 开源项目拆解：分析师团队 → 研究员辩论 → 交易员决策 → 风控审批 · LangGraph 编排 · 15+ LLM 提供商 · 全球市场覆盖',href:'ai-agent/TradingAgents-多智能体金融交易框架解析.html',icon:'bot',tags:[{l:'Multi-Agent',c:'t-purple'},{l:'金融交易',c:'t-amber'},{l:'LangGraph',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'280',date:'07.28',isNew:true},
-      {nav:'agent-protocols',t:'智能体通信协议全指南',d:'WebSocket 全双工 · SSE 单向推送 · Spring SseEmitter 生命周期 · HTTP 请求-响应 · MQTT/CoAP IoT 协议 · 协议对比表 · 选型决策流程图',href:'ai-agent/智能体通信协议全指南.html',icon:'bolt',tags:[{l:'通信协议',c:'t-purple'},{l:'WebSocket',c:'t-indigo'},{l:'SSE',c:'t-green'},{l:'NEW',c:'t-green'}],time:'22',views:'200',date:'07.29',isNew:true},
-      {nav:'weknora',t:'WeKnora 腾讯开源知识平台',d:'腾讯开源 RAG+Agent+Wiki 知识引擎拆解：五层架构图解 · anydoc Rust 解析 · 混合检索 · ReAct 推理 · 数据源连接器 · 企业级安全',href:'ai-agent/WeKnora-腾讯开源知识平台-架构深度解析.html',icon:'layers',tags:[{l:'架构分析',c:'t-purple'},{l:'RAG',c:'t-indigo'},{l:'知识平台',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'20',views:'180',date:'08.21',isNew:true},
-    ]
-  },
-  {
-    id:'ai-tools',label:'AI 开发工具',icon:'wrench',iconBg:'ic-bg-blue',accent:'var(--blue-500)',
-    tutorials:[
-      {nav:'ai-token-tools',t:'AI 编程 Token 拯救计划',d:'精选 AI 编程效率工具集：Token 优化、上下文压缩、Prompt 缓存 —— 让每一分 Token 花在刀刃上',href:'ai-tools/AI编码Token节省工具.html',icon:'bolt',tags:[{l:'AI 工具',c:'t-blue'},{l:'效率',c:'t-green'}],time:'15',views:'3.2K',date:'05.28',isNew:false},
-      {nav:'ai-fe-eco',t:'AI 前端工程化生态全景图',d:'Vercel AI SDK · Cursor · Copilot · v0 · Bolt 等下一代 AI 前端工具链全景式梳理与架构对比',href:'ai-tools/AI前端工程生态.html',icon:'layers',tags:[{l:'AI 工程',c:'t-blue'},{l:'前端',c:'t-cyan'}],time:'18',views:'1.8K',date:'06.02',isNew:false},
-    ]
-  },
-  {
-    id:'python',label:'Python 后端',icon:'python',iconBg:'ic-bg-teal',accent:'var(--teal-500)',
-    tutorials:[
-      {nav:'python-backend-stack',t:'Python 后端技术栈全景图',d:'Web 框架 · ORM · 异步服务器 · API 工具 · 缓存 · 任务队列 · 认证权限 —— 7 大分类主流 vs 替代方案全对比',href:'python/Python-后端技术栈全景图.html',icon:'grid',tags:[{l:'Python',c:'t-teal'},{l:'后端',c:'t-gray'},{l:'选型',c:'t-amber'}],time:'20',views:'2.5K',date:'05.15',isNew:false},
-      {nav:'python-syntax',t:'Python3 语法与语法糖',d:'基础语法 + 推导式/海象运算符/f-string/解包/enumerate/with —— Pyodide 浏览器内实时运行 Python 代码',href:'python/Python3-语法讲解与语法糖.html',icon:'python',tags:[{l:'Python',c:'t-teal'},{l:'语法糖',c:'t-green'},{l:'NEW',c:'t-green'}],time:'25',views:'1.1K',date:'07.03',isNew:true},
-      {nav:'pandas-guide',t:'Pandas 数据处理全指南',d:'Series/DataFrame 创建与操作 · 数据筛选与条件过滤 · 分组聚合 · 缺失值检测/填充/删除 —— 真实业务场景代码演示',href:'python/Pandas-数据处理全指南.html',icon:'server',tags:[{l:'Pandas',c:'t-teal'},{l:'数据分析',c:'t-cyan'},{l:'NEW',c:'t-green'}],time:'22',views:'780',date:'07.06',isNew:true},
-      {nav:'numpy-guide',t:'NumPy 科学计算全指南',d:'数组创建 · 切片/布尔/花式索引 · 广播机制 · 通用函数 · 线性代数 —— 含金融与 ML 场景实战',href:'python/NumPy-科学计算全指南.html',icon:'cpu',tags:[{l:'NumPy',c:'t-teal'},{l:'科学计算',c:'t-indigo'},{l:'NEW',c:'t-green'}],time:'20',views:'650',date:'07.07',isNew:true},
-    ]
-  },
-  {
-    id:'java',label:'Java 进阶',icon:'java',iconBg:'ic-bg-amber',accent:'var(--amber-500)',
-    tutorials:[
-      {nav:'java-juc',t:'JUC 并发工具包',d:'Lock / Atomic / 线程池 / 并发集合 / AQS 源码剖析 —— 从 API 到底层原理',href:'java/Java-JUC-并发工具包教程.html',icon:'lock',tags:[{l:'Java',c:'t-amber'},{l:'并发',c:'t-orange'}],time:'30',views:'3.1K',date:'04.10',isNew:false},
-      {nav:'java-jvm',t:'JVM 虚拟机',d:'类加载 → 内存模型 → GC 算法 → JIT 编译 → 性能调优，完整知识体系',href:'java/Java-JVM-虚拟机教程.html',icon:'box',tags:[{l:'Java',c:'t-amber'},{l:'JVM',c:'t-orange'}],time:'28',views:'2.8K',date:'04.15',isNew:false},
-      {nav:'spring-family',t:'Spring 全家桶核心组件',d:'Framework Ioc/AOP/MVC · Boot 自动配置 · Cloud 微服务治理，三层联动全景讲解',href:'java/Spring-全家桶-核心组件详解.html',icon:'spark',tags:[{l:'Spring',c:'t-amber'},{l:'微服务',c:'t-orange'},{l:'Boot',c:'t-green'}],time:'25',views:'2.4K',date:'04.20',isNew:false},
-      {nav:'java-python-async',t:'Java vs Python 异步对比',d:'多线程 vs 协程 · CompletableFuture vs asyncio · 代码实战对比 · 场景推荐矩阵',href:'java/Java-vs-Python-异步编程对比.html',icon:'bolt',tags:[{l:'Java',c:'t-amber'},{l:'Python',c:'t-teal'},{l:'异步',c:'t-orange'}],time:'20',views:'1.6K',date:'04.25',isNew:false},
-      {nav:'java-core-analysis',t:'Java 核心问题深度分析',d:'ThreadLocal 脏数据复现 · HashMap 1.7/1.8 扩容动画 · synchronized 锁升级 · JVM OOM 模拟',href:'java/Java-核心问题深度分析.html',icon:'flask',tags:[{l:'Java',c:'t-amber'},{l:'进阶',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'25',views:'1.2K',date:'07.01',isNew:true},
-      {nav:'java-distributed-lock',t:'Java 分布式锁 · Redisson 深度解析',d:'看门狗续期机制 · 可重入锁 Hash 存储 · 公平锁排队 · RedLock · ZK/MySQL 方案对比',href:'java/Java-分布式锁-Redisson深度解析.html',icon:'lock',tags:[{l:'分布式',c:'t-amber'},{l:'Redisson',c:'t-red'},{l:'NEW',c:'t-green'}],time:'25',views:'1.3K',date:'07.02',isNew:true},
-      {nav:'java-collection-juc-pykw',t:'Java 集合 & JUC & Python 关键字',d:'Java 集合框架(List/Set/Map 底层原理) · JUC 并发工具(CHM/COW/CountDownLatch等) · Python 35 个关键字逐一讲解',href:'java/Java集合-JUC-Python关键字-综合教程.html',icon:'book',tags:[{l:'Java',c:'t-amber'},{l:'JUC',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'30',views:'1.0K',date:'07.05',isNew:true},
-      {nav:'jmm-dcl',t:'JMM 三大特性与 DCL 推导',d:'可见性/原子性/有序性定义 · DCL 单例逐步推导 · 指令重排导致半初始化对象 · volatile 内存屏障解决方案',href:'java/JMM-三大特性与DCL双重检查锁推导分析.html',icon:'cpu',tags:[{l:'JMM',c:'t-amber'},{l:'并发',c:'t-orange'},{l:'NEW',c:'t-green'}],time:'22',views:'890',date:'07.09',isNew:true},
-    ]
-  },
-  {
-    id:'big-data',label:'大数据处理',icon:'database',iconBg:'ic-bg-orange',accent:'var(--orange-500)',
-    tutorials:[
-      {nav:'spark-flink',t:'Spark & Flink 大数据全指南',d:'Spark RDD/DataFrame/Spark SQL/Streaming · Flink DataStream/Table API/窗口/状态管理 · 深度对比与选型',href:'big-data/Spark-Flink-大数据处理教程.html',icon:'bolt',tags:[{l:'Spark',c:'t-orange'},{l:'Flink',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'35',views:'1.7K',date:'07.03',isNew:true},
-    ]
-  },
-  {
-    id:'infra',label:'基础设施',icon:'server',iconBg:'ic-bg-red',accent:'var(--red-500)',
-    tutorials:[
-      {nav:'distributed',t:'分布式系统交互式学习',d:'CAP 定理可视化 · Gossip/Raft 模拟 · Quorum 读写 · 负载均衡策略 —— 动手学分布式',href:'infra/分布式系统-交互式学习平台.html',icon:'git',tags:[{l:'分布式',c:'t-red'},{l:'共识',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'25',views:'1.6K',date:'06.28',isNew:true},
-      {nav:'redis',t:'Redis 交互式学习指南',d:'数据结构 / 持久化 / 缓存策略 / 分布式锁 / 集群方案，从入门到精通',href:'infra/Redis-交互式学习指南.html',icon:'database',tags:[{l:'NoSQL',c:'t-red'},{l:'Redis',c:'t-rose'}],time:'30',views:'4.2K',date:'03.20',isNew:false},
-      {nav:'message-queue',t:'消息队列综合演示平台',d:'Kafka / RabbitMQ / RocketMQ / Pulsar 四合一：架构对比 + 实时仪表盘 + 场景模拟',href:'infra/消息队列系统-综合演示平台.html',icon:'message',tags:[{l:'MQ',c:'t-red'},{l:'消息队列',c:'t-rose'}],time:'28',views:'2.3K',date:'04.01',isNew:false},
-      {nav:'mq-concepts',t:'消息队列核心概念入门',d:'从零开始理解 MQ：Producer / Consumer / Broker / ACK / DLQ，含交互式模拟器',href:'infra/消息队列-核心概念入门.html',icon:'book',tags:[{l:'MQ',c:'t-red'},{l:'入门',c:'t-rose'}],time:'15',views:'980',date:'04.05',isNew:false},
-      {nav:'mq-dedup',t:'MQ 防重复消费详解',d:'3 实例场景下两层防护：MQ 层负载隔离 + 业务层幂等兜底，Kafka/RocketMQ/RabbitMQ 全覆盖',href:'infra/消息队列-防重复消费详解.html',icon:'shield',tags:[{l:'幂等',c:'t-red'},{l:'生产实战',c:'t-amber'}],time:'15',views:'1.1K',date:'06.25',isNew:false},
-      {nav:'mysql-internals',t:'MySQL 底层原理全指南',d:'B+Tree索引 · MVCC事务锁 · InnoDB三大日志 · 分库分表 · 数据库选型 · 15个生产FAQ · 7大模块完整知识体系',href:'infra/MySQL-底层原理全指南.html',icon:'database',tags:[{l:'MySQL',c:'t-red'},{l:'InnoDB',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'75',views:'0',date:'07.26',isNew:true},
-    ]
-  },
-  {
-    id:'architecture',label:'系统架构',icon:'box',iconBg:'ic-bg-indigo',accent:'var(--indigo-500)',
-    tutorials:[
-      {nav:'architect-knowledge',t:'系统架构师知识体系',d:'设计原则 (SOLID/CAP) + 8 大架构模式 + 质量属性 + 技术选型矩阵 + ADR 决策流程，含可视化图表',href:'architecture/系统架构师-知识体系全指南.html',icon:'compass',tags:[{l:'架构',c:'t-indigo'},{l:'系统设计',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'35',views:'2.9K',date:'06.18',isNew:true},
-      {nav:'docker-k8s',t:'Docker & Kubernetes',d:'Docker 三大核心概念 + 命令速查 + Dockerfile 多阶段构建 + K8s 集群架构 + Pod/Service/Deployment',href:'architecture/Docker-Kubernetes-容器化与编排指南.html',icon:'container',tags:[{l:'Docker',c:'t-indigo'},{l:'K8s',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'3.5K',date:'06.22',isNew:true},
-      {nav:'backend-knowledge-system',t:'后端面试知识体系',d:'Java核心开发 + 分布式架构 + AI应用开发 三大领域体系化梳理、技能树进阶、高频面试解析、线上故障排查',href:'architecture/后端技术栈知识体系-面试分析与故障排查.html',icon:'grid',tags:[{l:'知识体系',c:'t-indigo'},{l:'面试',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'32',views:'2.0K',date:'06.30',isNew:true},
-      {nav:'distributed-service-evolution',t:'分布式服务化拆分路线',d:'单体 → 烟囱式 → SOA → 微服务 → 服务网格五阶段全景演进 · Spring Cloud vs Dubbo 对比 · 技术选型矩阵',href:'architecture/分布式服务化拆分路线.html',icon:'git',tags:[{l:'分布式',c:'t-indigo'},{l:'架构演进',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'28',views:'1.4K',date:'07.01',isNew:true},
-      {nav:'high-concurrency-design',t:'高并发系统设计全指南',d:'QPS 预估 → 架构选型 → 分层设计 → 限流降级熔断 → MQ削峰 → 分布式锁 → 最终一致性 → 全链路监控',href:'architecture/高并发系统设计-实施步骤全指南.html',icon:'bolt',tags:[{l:'高并发',c:'t-indigo'},{l:'系统设计',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'32',views:'1.9K',date:'07.01',isNew:true},
-      {nav:'design-patterns',t:'软件设计模式与设计原则',d:'SOLID 五大原则 + DRY/KISS/YAGNI + GoF 22 种设计模式，每个模式含定义、适用场景与代码示例',href:'architecture/软件设计模式与设计原则-全指南.html',icon:'grid',tags:[{l:'设计原则',c:'t-indigo'},{l:'设计模式',c:'t-purple'},{l:'NEW',c:'t-green'}],time:'28',views:'1.4K',date:'07.04',isNew:true},
-    ]
-  },
-  {
-    id:'frontend',label:'前端开发',icon:'code',iconBg:'ic-bg-cyan',accent:'var(--cyan-500)',
-    tutorials:[
-      {nav:'frontend-workflow',t:'前端开发完整工作流 · Vue/React 实战',d:'需求分析→项目搭建→组件开发→状态管理→构建部署全流程；Vue 3 / React 18 核心知识体系；20+ 易踩坑点全覆盖',href:'frontend/前端开发完整工作流-Vue与React实战.html',icon:'rocket',tags:[{l:'Vue 3',c:'t-cyan'},{l:'React 18',c:'t-blue'},{l:'NEW',c:'t-green'}],time:'30',views:'2.2K',date:'07.05',isNew:true},
-      {nav:'vue-tutorial',t:'Vue.js 从入门到实战 · 可交互教程',d:'零基础系统学 Vue 3：响应式数据/核心指令/组件化/Vue Router/Pinia/实战Todo，每个知识点配可运行演示，无需配置开发环境',href:'frontend/Vue-从入门到实战-可交互教程.html',icon:'book',tags:[{l:'Vue 3',c:'t-cyan'},{l:'可交互',c:'t-purple'},{l:'NEW',c:'t-green'}],time:'60',views:'0',date:'07.29',isNew:true},
-    ]
-  },
-  {
-    id:'embedded',label:'嵌入式开发',icon:'plug',iconBg:'ic-bg-green',accent:'var(--green-500)',
-    tutorials:[
-      {nav:'embedded-dev',t:'嵌入式开发宣讲',d:'嵌入式概述 · 6 大应用领域 · 5 层技术栈架构 · 8 步开发流程 · 行业前景与薪资分析',href:'embedded-development.html',icon:'plug',tags:[{l:'嵌入式',c:'t-green'},{l:'IoT',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'18',views:'680',date:'07.10',isNew:true},
-      {nav:'embedded-learning',t:'嵌入式工程学习指南',d:'5 阶段学习路径 · 硬件平台对比（STM32/ESP32/树莓派/Arduino）· 软件工具链 · 开源框架',href:'embedded-learning-guide.html',icon:'book',tags:[{l:'STM32',c:'t-green'},{l:'ESP32',c:'t-teal'},{l:'NEW',c:'t-green'}],time:'22',views:'450',date:'07.11',isNew:true},
-      {nav:'electronics-guide',t:'电子元件速查手册',d:'11 种核心元件 · SVG 电路符号 · 参数标签 · 典型应用场景 · 分类对比总览表',href:'electronics-components-guide.html',icon:'chip',tags:[{l:'电子元件',c:'t-green'},{l:'硬件',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'15',views:'380',date:'07.13',isNew:true},
-    ]
-  },
-  {
-    id:'finance',label:'金融投资',icon:'trending',iconBg:'ic-bg-amber',accent:'var(--amber-500)',
-    tutorials:[
-      {nav:'finance-jargon',t:'股票与基金黑话术语全指南',d:'90+ 术语 · 7 大场景 · 关系流程图 — 牛市/割肉/打新/抄底、申购/赎回/夏普比率/最大回撤，金融入门必读黑话词典',href:'finance/股票与基金黑话术语全指南.html',icon:'coins',tags:[{l:'股票',c:'t-red'},{l:'基金',c:'t-amber'},{l:'NEW',c:'t-green'}],time:'20',views:'0',date:'07.29',isNew:true},
-    ]
-  },
-];
-
-/* ═══════════════════════════════════════════════════
-   Helpers
-   ═══════════════════════════════════════════════════ */
-function escapeHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// ─── Data loading (from inline <script type=application/json>) ───
+const manifestEl=document.getElementById('manifest-data');
+let MANIFEST;
+try{
+  MANIFEST=JSON.parse(manifestEl.textContent);
+}catch(e){
+  console.error('manifest parse fail',e);
+  document.getElementById('main').innerHTML='<div class="empty"><div class="icon">⚠️</div><h3>manifest 解析失败</h3><p>'+e.message+'</p></div>';
+  return;
 }
+const NOTES=MANIFEST.notes;
+const BY_ID=new Map(NOTES.map(n=>[n.id,n]));
 
-/* ═══════════════════════════════════════════════════
-   Render Sidebar
-   ═══════════════════════════════════════════════════ */
-function renderSidebar(){
-  const el = document.getElementById('sidebar');
-  let html = '<div class="cat-label" onclick="goHome()" style="cursor:pointer">首页总览</div>';
-  html += '<a class="nav-item active" data-nav="home" style="cursor:pointer" onclick="goHome()"><span class="ic">'+I.grid+'</span><span class="nm">回到首页</span></a>';
-  for(const cat of categories){
-    html += '<div class="cat-label" onclick="scrollToSection(\''+cat.id+'\')">'+escapeHtml(cat.label)+'</div>';
-    for(const t of cat.tutorials){
-      html += '<a class="nav-item" data-nav="'+t.nav+'" data-title="'+escapeHtml(t.t)+'" href="'+t.href+'" style="cursor:pointer">'
-        + '<span class="ic">'+(I[t.icon]||I.book)+'</span>'
-        + '<span class="nm">'+escapeHtml(t.t.length>22?t.t.slice(0,20)+'\u2026':t.t)+'</span>'
-        + (t.isNew?'<span class="badge-new">NEW</span>':'')
-        + '</a>';
-    }
-  }
-  el.innerHTML = html;
-}
-
-/* ═══════════════════════════════════════════════════
-   Render Content (Welcome Page)
-   ═══════════════════════════════════════════════════ */
-function renderContent(){
-  const el = document.getElementById('contentWrap');
-  const totalTuts = categories.reduce((s,c)=>s+c.tutorials.length,0);
-  const totalCats = categories.length;
-
-  let html = '<section class="hero">'
-    + '<div class="hero-eyebrow"><span class="dot"></span> 持续更新 · 最近更新于 2026.07.29</div>'
-    + '<h1>交互式技术教程合集<br><span class="grad">打开即用，边学边练</span></h1>'
-    + '<p class="hero-desc">覆盖 AI 智能体、Python、Java、大数据、基础设施、系统架构、前端、嵌入式与金融投资 '+totalCats+' 大领域的 '+totalTuts+' 个精心制作的单文件 HTML 教程。每个教程均为独立文件，支持交互式学习与代码实时运行。</p>'
-    + '<div class="hero-stats">'
-    + '<div class="stat"><span class="num">'+totalTuts+'</span><span class="lbl">教程</span><span class="sep">/</span></div>'
-    + '<div class="stat"><span class="num">'+totalCats+'</span><span class="lbl">分类</span><span class="sep">/</span></div>'
-    + '<div class="stat"><span class="num">~132K</span><span class="lbl">行代码</span></div>'
-    + '</div></section>';
-
-  for(const cat of categories){
-    html += '<section class="cat-section" id="cat-'+cat.id+'">'
-      + '<div class="cat-header">'
-      + '<div class="cat-icon-box '+cat.iconBg+'">'+(I[cat.icon]||I.book)+'</div>'
-      + '<span class="cat-title">'+escapeHtml(cat.label)+'</span>'
-      + '<span class="cat-count">'+cat.tutorials.length+'</span>'
-      + '</div><div class="cards-grid">';
-    for(const t of cat.tutorials){
-      html += '<a class="tut-card" data-nav="'+t.nav+'" data-title="'+escapeHtml(t.t)+'" href="'+t.href+'" style="--card-accent:'+cat.accent+'">'
-        + '<div class="card-top">'
-        + '<div class="card-icon '+cat.iconBg+'">'+(I[t.icon]||I.book)+'</div>'
-        + '<h4>'+escapeHtml(t.t)+'</h4>'
-        + '</div>'
-        + '<p class="card-desc">'+escapeHtml(t.d)+'</p>'
-        + '<div class="card-tags">';
-      for(const tag of t.tags){
-        html += '<span class="tag '+tag.c+'">'+escapeHtml(tag.l)+'</span>';
-      }
-      html += '</div>'
-        + '<div class="card-meta">'
-        + '<span>'+I.clock+escapeHtml(t.time)+'min</span>'
-        + '<span>'+I.eye+escapeHtml(t.views)+'</span>'
-        + '<span>'+I.calendar+escapeHtml(t.date)+'</span>'
-        + '</div></a>';
-    }
-    html += '</div></section>';
-  }
-
-  el.innerHTML = html;
-}
-
-/* ═══════════════════════════════════════════════════
-   Navigation (iframe routing)
-   ═══════════════════════════════════════════════════ */
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const hamburger = document.getElementById('hamburger');
-const contentFrame = document.getElementById('contentFrame');
-const welcomePage = document.getElementById('welcomePage');
-const mainContent = document.getElementById('mainContent');
-let currentPage = null;
-
-function navigateTo(navId, title, href){
-  if(currentPage === navId) return;
-  currentPage = navId;
-
-  document.querySelectorAll('[data-nav]').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('[data-nav="'+navId+'"]').forEach(el=>el.classList.add('active'));
-
-  document.title = (navId==='home'?'Frontend Learning Hub':title + ' · Frontend Learning Hub');
-
+// ─── State (localStorage-backed) ───
+const STORE_KEY='garden.state.v2';
+const THEME_KEY='garden.theme';
+const VIEW_KEY='garden.view';
+let state=loadState();
+function loadState(){
   try{
-    if(navId==='home') history.replaceState(null,'',window.location.pathname);
-    else history.replaceState(null,'','#'+navId);
-  }catch(e){}
+    return Object.assign({
+      favourites:new Set(),
+      recent:[],
+      notes:{},
+      streak:0,
+      lastVisit:null
+    },JSON.parse(localStorage.getItem(STORE_KEY)||'{}'));
+  }catch{return {favourites:[],recent:[],notes:{},streak:0,lastVisit:null}}
+}
+function saveState(){
+  const s={
+    favourites:[...state.favourites],
+    recent:state.recent,
+    notes:state.notes,
+    streak:state.streak,
+    lastVisit:state.lastVisit
+  };
+  localStorage.setItem(STORE_KEY,JSON.stringify(s));
+}
+if(typeof state.favourites==='array')state.favourites=new Set(state.favourites);
+state.recent=state.recent||[];
 
-  if(mainContent) mainContent.classList.add('loading');
-
-  if(navId==='home'){
-    if(welcomePage) welcomePage.style.display = '';
-    if(contentFrame){contentFrame.style.display='none';contentFrame.src='about:blank';}
-    if(mainContent) mainContent.classList.remove('loading');
-  }else{
-    if(welcomePage) welcomePage.style.display = 'none';
-    if(contentFrame){
-      contentFrame.style.display = '';
-      void contentFrame.offsetHeight;
-      contentFrame.src = href;
-    }
-  }
+// visit streak
+const today=new Date().toISOString().slice(0,10);
+if(state.lastVisit!==today){
+  const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  state.streak=(state.lastVisit===yesterday)?(state.streak+1):1;
+  state.lastVisit=today;
+  saveState();
 }
 
-function goHome(){
-  navigateTo('home','Frontend Learning Hub','');
-  document.getElementById('contentWrap').scrollTo({top:0,behavior:'smooth'});
-  closeSidebar();
+// Theme
+let theme=localStorage.getItem(THEME_KEY)||'light';
+document.documentElement.dataset.theme=theme;
+
+// Current view
+let currentView=localStorage.getItem(VIEW_KEY)||'garden-home';
+let currentCat=null;
+let currentNote=null;
+let detailStack=[]; // for "back" navigation
+let activeTags=new Set(); // tag filter (multi-select on cards view)
+
+// ─── Reverse-link index (cached) ───
+const REVERSE=new Map();
+NOTES.forEach(n=>(n.related||[]).forEach(r=>{
+  if(!REVERSE.has(r))REVERSE.set(r,new Set());
+  REVERSE.get(r).add(n.id);
+}));
+function refsOf(id){return (BY_ID.get(id)?.related||[]).map(r=>BY_ID.get(r)).filter(Boolean)}
+function backRefsOf(id){return [...(REVERSE.get(id)||[])].map(r=>BY_ID.get(r)).filter(Boolean)}
+
+// ─── Maturity helpers ───
+function maturityBucket(m){
+  if(m===0)return'untended';
+  if(m<=1)return'seedling';
+  if(m<=2)return'seedling';
+  if(m<=3)return'budding';
+  return'evergreen';
+}
+function maturityLabel(m){
+  if(m===0)return'未打理';
+  if(m<=1)return'🌱 种子';
+  if(m<=2)return'🌱 种子';
+  if(m<=3)return'🌿 抽芽';
+  if(m<=4)return'🌳 常青';
+  return'🌳 常青';
 }
 
-function scrollToSection(id){
-  if(currentPage !== 'home'){
-    navigateTo('home','','');
-    setTimeout(()=>{
-      document.getElementById('cat-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
-    },50);
-  }else{
-    document.getElementById('cat-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
-  }
-  closeSidebar();
-}
+// ─── Sidebar render ───
+function renderSidebar(){
+  const cats=new Map();
+  NOTES.forEach(n=>{
+    const k=n.cat||'未分类';
+    cats.set(k,(cats.get(k)||0)+1);
+  });
+  const catNav=document.getElementById('cat-nav');
+  catNav.innerHTML=[...cats.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+    const sample=NOTES.find(n=>n.cat===k);
+    const m=sample?sample.maturity:0;
+    return `<div class="nav-item${currentCat===k?' active':''}" data-cat="${escapeAttr(k)}">
+      <span class="badge ${maturityBucket(m)}"></span>${escapeHtml(k)}
+      <span class="count">${v}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('count-all').textContent=NOTES.length;
+  document.getElementById('count-tended').textContent=NOTES.filter(n=>n.maturity>0).length;
+  document.getElementById('count-seed').textContent=NOTES.filter(n=>n.maturity>0&&n.maturity<=2).length;
+  document.getElementById('count-fav').textContent=state.favourites.size;
+  document.getElementById('count-recent').textContent=state.recent.length;
+  document.getElementById('count-notes').textContent=Object.keys(state.notes).filter(k=>state.notes[k]?.trim()).length;
 
-// Click handler for all data-nav elements
-document.addEventListener('click',(e)=>{
-  const navEl = e.target.closest('[data-nav]');
-  if(!navEl) return;
-  const navId = navEl.dataset.nav;
-  const title = navEl.dataset.title || navEl.textContent.trim();
-  const href = navEl.getAttribute('href');
-  if(navId==='home'){e.preventDefault();goHome();return;}
-  if(!href) return;
-  e.preventDefault();
-  navigateTo(navId, title, href);
-  if(window.innerWidth <= 768) closeSidebar();
-});
-
-// Iframe load
-contentFrame.addEventListener('load',()=>{
-  if(mainContent) mainContent.classList.remove('loading');
-  try{contentFrame.contentWindow?.scrollTo(0,0);}catch(e){}
-});
-
-// Hash routing
-function handleHash(){
-  const hash = window.location.hash.replace('#','');
-  if(hash){
-    const navItem = document.querySelector('[data-nav="'+hash+'"]');
-    if(navItem){
-      navigateTo(navItem.dataset.nav, navItem.dataset.title||navItem.textContent.trim(), navItem.getAttribute('href'));
-      return;
-    }
-  }
-  navigateTo('home','Frontend Learning Hub','');
-}
-
-/* ═══════════════════════════════════════════════════
-   Mobile Sidebar
-   ═══════════════════════════════════════════════════ */
-function openSidebar(){sidebar.classList.add('open');overlay.classList.add('show')}
-function closeSidebar(){sidebar.classList.remove('open');overlay.classList.remove('show')}
-
-hamburger.addEventListener('click',()=>{
-  if(sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
-});
-overlay.addEventListener('click',closeSidebar);
-
-/* ═══════════════════════════════════════════════════
-   Theme Toggle
-   ═══════════════════════════════════════════════════ */
-function toggleTheme(){
-  const html = document.documentElement;
-  const cur = html.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  document.getElementById('iconMoon').style.display = next==='dark'?'none':'block';
-  document.getElementById('iconSun').style.display = next==='dark'?'block':'none';
-  try{localStorage.setItem('flh-theme',next)}catch(e){}
-  showToast({title:next==='dark'?'暗色模式已开启':'亮色模式已开启',desc:'主题偏好已保存',icon:I.spark,iconBg:'ic-bg-blue'});
-}
-document.getElementById('themeToggle').addEventListener('click',toggleTheme);
-
-/* ═══════════════════════════════════════════════════
-   Command Palette
-   ═══════════════════════════════════════════════════ */
-let cmdItems = [];
-let cmdSelected = 0;
-
-function buildCmdIndex(){
-  cmdItems = [];
-  for(const cat of categories){
-    for(const t of cat.tutorials){
-      cmdItems.push({
-        nav:t.nav,title:t.t,desc:t.d,cat:cat.label,href:t.href,
-        icon:t.icon,iconBg:cat.iconBg,
-        tags:t.tags.map(x=>x.l).join(' '),
-        searchText:(t.t+' '+t.d+' '+cat.label+' '+t.tags.map(x=>x.l).join(' ')).toLowerCase()
-      });
-    }
-  }
-}
-
-function openCmd(){
-  document.getElementById('cmdOverlay').classList.add('show');
-  const input = document.getElementById('cmdInput');
-  input.value = '';
-  input.focus();
-  renderCmdResults('');
-}
-function closeCmd(){document.getElementById('cmdOverlay').classList.remove('show')}
-
-function renderCmdResults(query){
-  const el = document.getElementById('cmdResults');
-  let results = cmdItems;
-  if(query.trim()){
-    const q = query.toLowerCase().trim();
-    results = cmdItems.filter(item => item.searchText.includes(q));
-  }
-  cmdSelected = 0;
-  if(results.length === 0){
-    el.innerHTML = '<div class="cmd-empty">未找到匹配的教程<br>试试搜索 "RAG"、"Java"、"分布式"…</div>';
-    el._results = [];
-    return;
-  }
-  const groups = {};
-  const groupOrder = [];
-  for(const r of results){
-    if(!groups[r.cat]){groups[r.cat]=[];groupOrder.push(r.cat)}
-    groups[r.cat].push(r);
-  }
-  const flatResults = [];
-  let html = '';
-  for(const cat of groupOrder){
-    const items = groups[cat];
-    html += '<div class="cmd-group-label">'+escapeHtml(cat)+'</div>';
-    for(const item of items){
-      const idx = flatResults.length;
-      html += '<div class="cmd-item '+((idx===0)?'selected':'')+'" data-idx="'+idx+'">'
-        + '<div class="ci-icon '+item.iconBg+'">'+(I[item.icon]||I.book)+'</div>'
-        + '<div class="ci-info"><div class="ci-title">'+escapeHtml(item.title)+'</div>'
-        + '<div class="ci-cat">'+escapeHtml(item.cat)+'</div></div>'
-        + '<span class="ci-enter">↵</span></div>';
-      flatResults.push(item);
-    }
-  }
-  el.innerHTML = html;
-  el._results = flatResults;
-  // Bind click events
-  el.querySelectorAll('.cmd-item').forEach(item=>{
-    item.addEventListener('click',()=>cmdSelect(parseInt(item.dataset.idx)));
+  document.querySelectorAll('#sidebar .nav-item').forEach(el=>{
+    el.onclick=()=>{
+      if(el.dataset.view){
+        currentView=el.dataset.view;currentCat=null;activeTags.clear();
+        localStorage.setItem(VIEW_KEY,currentView);
+      }else if(el.dataset.cat){
+        currentView='cat';currentCat=el.dataset.cat;activeTags.clear();
+      }
+      render();
+    };
   });
 }
 
-function cmdSelect(idx){
-  const el = document.getElementById('cmdResults');
-  const results = el._results || [];
-  if(results[idx]){
-    closeCmd();
-    navigateTo(results[idx].nav, results[idx].title, results[idx].href);
-  }
-}
-
-function cmdMove(dir){
-  const items = document.querySelectorAll('.cmd-item');
-  if(items.length === 0) return;
-  items[cmdSelected]?.classList.remove('selected');
-  cmdSelected = (cmdSelected + dir + items.length) % items.length;
-  items[cmdSelected]?.classList.add('selected');
-  items[cmdSelected]?.scrollIntoView({block:'nearest'});
-}
-
-// Search trigger
-document.getElementById('searchTrigger').addEventListener('click',openCmd);
-
-// Cmd input
-document.getElementById('cmdInput').addEventListener('input',(e)=>{
-  renderCmdResults(e.target.value);
-});
-
-// Click outside to close
-document.getElementById('cmdOverlay').addEventListener('click',(e)=>{
-  if(e.target === e.currentTarget) closeCmd();
-});
-
-/* ═══════════════════════════════════════════════════
-   Toast Notification
-   ═══════════════════════════════════════════════════ */
-function showToast({title,desc,icon,iconBg,duration=4000}){
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.setAttribute('role','alert');
-  toast.innerHTML = '<div class="toast-icon '+(iconBg||'ic-bg-blue')+'">'+(icon||I.book)+'</div>'
-    + '<div class="toast-body"><div class="toast-title">'+escapeHtml(title)+'</div>'
-    + '<div class="toast-desc">'+escapeHtml(desc)+'</div></div>'
-    + '<button class="toast-close" aria-label="关闭通知"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>';
-  const closeBtn = toast.querySelector('.toast-close');
-  let timer;
-  const dismiss = ()=>{
-    clearTimeout(timer);
-    toast.classList.add('toast-out');
-    setTimeout(()=>toast.remove(),200);
+// ─── View switching (topbar) ───
+document.querySelectorAll('.view-switcher button').forEach(b=>{
+  b.onclick=()=>{
+    if(currentNote){return}
+    currentView=currentView+':'+b.dataset.view;
+    localStorage.setItem(VIEW_KEY,currentView);
+    render();
   };
-  closeBtn.addEventListener('click',dismiss);
-  container.appendChild(toast);
-  timer = setTimeout(dismiss,duration);
-}
-
-/* ═══════════════════════════════════════════════════
-   Keyboard Shortcuts
-   ═══════════════════════════════════════════════════ */
-document.addEventListener('keydown',(e)=>{
-  // Cmd/Ctrl + K
-  if((e.metaKey || e.ctrlKey) && e.key === 'k'){
-    e.preventDefault();
-    if(document.getElementById('cmdOverlay').classList.contains('show')) closeCmd();
-    else openCmd();
-    return;
-  }
-  // Shift + Cmd/Ctrl + L
-  if((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')){
-    e.preventDefault();
-    toggleTheme();
-    return;
-  }
-  // Escape
-  if(e.key === 'Escape'){
-    closeCmd();
-    closeSidebar();
-    return;
-  }
-  // Command palette navigation
-  const cmdOpen = document.getElementById('cmdOverlay').classList.contains('show');
-  if(cmdOpen){
-    if(e.key === 'ArrowDown'){e.preventDefault();cmdMove(1)}
-    else if(e.key === 'ArrowUp'){e.preventDefault();cmdMove(-1)}
-    else if(e.key === 'Enter'){e.preventDefault();cmdSelect(cmdSelected)}
-    else if(e.key === 'Tab'){e.preventDefault();cmdMove(e.shiftKey?-1:1)}
-  }
 });
 
-/* ═══════════════════════════════════════════════════
-   Scroll Spy
-   ═══════════════════════════════════════════════════ */
-function setActiveNav(catId){
-  document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
-  if(catId === 'home'){
-    document.querySelector('.sidebar .nav-item[data-nav="home"]')?.classList.add('active');
+function toggleViewSwitcher(visible,kind){
+  const wrap=document.getElementById('view-switcher');
+  wrap.hidden=!visible;
+  if(kind){
+    [...wrap.querySelectorAll('button')].forEach(b=>{
+      b.classList.toggle('active',b.dataset.view===kind);
+    });
   }
 }
 
-/* ═══════════════════════════════════════════════════
-   Init
-   ═══════════════════════════════════════════════════ */
-(function init(){
-  // Theme
-  try{
-    const saved = localStorage.getItem('flh-theme');
-    if(saved === 'dark'){
-      document.documentElement.setAttribute('data-theme','dark');
-      document.getElementById('iconMoon').style.display = 'none';
-      document.getElementById('iconSun').style.display = 'block';
-    }
-  }catch(e){}
+// ─── Util ───
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escapeAttr(s){return escapeHtml(s)}
+function uniqSet(s){return[...new Set(s)]}
+function pluralize(n,w){return n+' '+w+(n>1?(w.endsWith('s')?'':'s'):'')}
+function relTime(date){
+  if(!date)return'从未打理';
+  const d=new Date(date),now=Date.now();
+  const diff=Math.floor((now-d.getTime())/86400000);
+  if(diff<0)return '刚刚';
+  if(diff===0)return '今天';
+  if(diff===1)return '昨天';
+  if(diff<7)return diff+' 天前';
+  if(diff<30)return Math.floor(diff/7)+' 周前';
+  if(diff<365)return Math.floor(diff/30)+' 月前';
+  return Math.floor(diff/365)+' 年前';
+}
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+}
 
-  // Build & render
-  buildCmdIndex();
+// ─── Card render ───
+function cardHTML(n,opts={}){
+  const backCount=backRefsOf(n.id).length;
+  const isFav=state.favourites.has(n.id);
+  const untended=n.maturity===0;
+  return `
+    <div class="card ${untended?'untended':''}" data-id="${escapeAttr(n.id)}">
+      <div class="top">
+        <span class="cat">${escapeHtml(n.cat||'未分类')}</span>
+        <span class="mat-dot m${n.maturity}" title="成熟度 ${n.maturity}/5 · ${maturityLabel(n.maturity)}"></span>
+      </div>
+      <h3>${escapeHtml(n.title)}</h3>
+      <p>${escapeHtml(n.desc)}</p>
+      <div class="tags">${(n.tags||[]).slice(0,3).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+      <div class="meta">
+        <span>${relTime(n.tended||n.updated)}</span>
+        <span>${backCount>0?`<span class="ref">${'🔁 '+backCount}</span>`:''}${isFav?' ⭐':''}</span>
+      </div>
+    </div>`;
+}
+
+function filteredNotes(){
+  return NOTES.filter(n=>{
+    if(currentCat)return n.cat===currentCat;
+    return true;
+  }).filter(n=>{
+    if(activeTags.size===0)return true;
+    const tags=n.tags||[];
+    return[...activeTags].every(t=>tags.includes(t));
+  });
+}
+
+// ─── Views ───
+function viewGardenHome(){
+  const evergreen=NOTES.filter(n=>n.maturity>=4).sort((a,b)=>(b.tended||b.updated).localeCompare(a.tended||a.updated)).slice(0,6);
+  const seedlings=NOTES.filter(n=>n.maturity>0&&n.maturity<=3).slice(0,6);
+  const recent=NOTES.filter(n=>n.maturity>0).sort((a,b)=>(b.tended||b.updated).localeCompare(a.tended||a.updated)).slice(0,8);
+  const tucked=NOTES.filter(n=>n.maturity===0).slice(0,4);
+
+  return `
+    <div class="hero fade-in">
+      <h1><span class="accent">${state.streak}</span> 天，你持续来花园了</h1>
+      <p>这里放着 ${NOTES.length} 张笔记卡片，其中 ${NOTES.filter(n=>n.maturity>0).length} 张已打理、${NOTES.filter(n=>n.maturity===0).length} 张等待开荒。每张笔记都在持续长大。</p>
+      <div class="stats">
+        <div><strong>${state.favourites.size}</strong> 收藏</div>
+        <div><strong>${state.recent.length}</strong> 最近浏览</div>
+        <div><strong>${Object.values(state.notes).filter(v=>v&&v.trim()).length}</strong> 我的笔记</div>
+        <div><strong>${uniqSet(NOTES.flatMap(n=>n.tags||[])).length}</strong> 标签</div>
+      </div>
+    </div>
+
+    <div class="section-h">
+      <h2>🌳 常青精选</h2>
+      <span class="sub">maturity 4-5 · 已完结</span>
+    </div>
+    <div class="card-grid">${evergreen.map(cardHTML).join('')||'<div class="empty">还没有常青笔记 ✨</div>'}</div>
+
+    <div class="section-h" style="margin-top:48px">
+      <h2>🌱 正在长</h2>
+      <span class="sub">maturity 1-3 · 持续打磨</span>
+    </div>
+    <div class="card-grid">${seedlings.map(cardHTML).join('')||'<div class="empty">还没有种子期笔记 🌱</div>'}</div>
+
+    <div class="section-h" style="margin-top:48px">
+      <h2>🕘 近期打理</h2>
+      <span class="sub">最近更新的笔记</span>
+    </div>
+    <div class="card-grid">${recent.map(cardHTML).join('')}</div>
+
+    ${tucked.length?`
+    <div class="section-h" style="margin-top:48px">
+      <h2>🪴 待开荒</h2>
+      <span class="sub">已经写完，待补充关系与笔记</span>
+    </div>
+    <div class="card-grid">${tucked.map(cardHTML).join('')}</div>
+    `:''}
+  `;
+}
+
+function viewCards(){
+  const list=filteredNotes();
+  const evergreen=list.filter(n=>n.maturity>=4);
+  const budding=list.filter(n=>n.maturity>0&&n.maturity<4);
+  const untended=list.filter(n=>n.maturity===0);
+  return `
+    <div class="section-h">
+      <h2>${currentCat?'📂 '+currentCat:'📚 全部笔记'}</h2>
+      <span class="sub">${list.length} 张 · 已打理 ${list.length-untended.length} · 待开荒 ${untended.length}</span>
+    </div>
+    ${tagFilterPillsHTML()}
+    ${evergreen.length?`<h3 style="font-family:var(--font-serif);font-size:18px;margin:24px 0 12px;color:var(--text-2)">🌳 常青 <span style="font-size:12px;color:var(--text-3);font-family:var(--font-mono)">${evergreen.length}</span></h3><div class="card-grid">${evergreen.map(cardHTML).join('')}</div>`:''}
+    ${budding.length?`<h3 style="font-family:var(--font-serif);font-size:18px;margin:32px 0 12px;color:var(--text-2)">🌿 抽芽 <span style="font-size:12px;color:var(--text-3);font-family:var(--font-mono)">${budding.length}</span></h3><div class="card-grid">${budding.map(cardHTML).join('')}</div>`:''}
+    ${untended.length?`<h3 style="font-family:var(--font-serif);font-size:18px;margin:32px 0 12px;color:var(--text-2)">🪴 待开荒 <span style="font-size:12px;color:var(--text-3);font-family:var(--font-mono)">${untended.length}</span></h3><div class="card-grid">${untended.map(cardHTML).join('')}</div>`:''}
+    ${list.length===0?'<div class="empty"><div class="icon">🪴</div><h3>这片园子是空的</h3></div>':''}
+  `;
+}
+
+function tagFilterPillsHTML(){
+  const tagSet=new Set();
+  filteredNotes().forEach(n=>(n.tags||[]).forEach(t=>tagSet.add(t)));
+  if(tagSet.size===0)return'';
+  const tags=[...tagSet].sort();
+  return `<div class="filter-pills">${activeTags.size>0?`<button class="clear" id="clear-tags">清除筛选 ×</button>`:''}${tags.map(t=>`<button class="pill ${activeTags.has(t)?'active':''}" data-tag="${escapeAttr(t)}">${escapeHtml(t)}</button>`).join('')}</div>`;
+}
+
+function viewTimeline(){
+  const list=filteredNotes().slice().sort((a,b)=>(b.updated||b.created||'').localeCompare(a.updated||a.created||''));
+  if(!list.length)return'<div class="empty"><div class="icon">⏳</div><h3>时间线为空</h3></div>';
+  // group by month
+  const groups={};
+  list.forEach(n=>{
+    const k=(n.updated||n.created||'').slice(0,7)||'未知';
+    (groups[k]=groups[k]||[]).push(n);
+  });
+  return `
+    <div class="section-h">
+      <h2>⏳ 时间线</h2>
+      <span class="sub">按更新时间倒序</span>
+    </div>
+    <div class="timeline">
+      ${Object.entries(groups).map(([month,items])=>{
+        const label=month==='未知'?'未知':(function(){
+          const [y,m]=month.split('-');
+          return `${y} 年 ${parseInt(m)} 月`;
+        })();
+        return `<h3 style="font-family:var(--font-serif);font-size:18px;margin:32px 0 12px;color:var(--text-2);text-align:center">${label}</h3>`+
+          items.map(n=>{
+            const dateStr=(n.updated||n.created||'').slice(0,10);
+            return `<div class="timeline-item m${n.maturity}" data-id="${escapeAttr(n.id)}">
+              <div class="date">${dateStr}</div>
+              <h3>${escapeHtml(n.title)}</h3>
+              <div class="desc">${escapeHtml(n.desc)}</div>
+              <div class="tags">${(n.tags||[]).slice(0,5).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+            </div>`;
+          }).join('');
+      }).join('')}
+    </div>
+  `;
+}
+
+function viewGraph(){
+  const list=filteredNotes().filter(n=>n.maturity>0||(n.related||[]).length>0);
+  if(!list.length)return'<div class="empty"><div class="icon">🌐</div><h3>图谱为空</h3><p>先在花园里打理几张笔记，建立关联，图谱才会显现。</p></div>';
+  if(typeof d3==='undefined')return'<div class="empty"><div class="icon">🌐</div><h3>图谱引擎未加载</h3><p>需要联网加载 D3.js。当前 CDN 不可达，请检查网络。</p></div>';
+
+  const links=[];
+  list.forEach(n=>(n.related||[]).forEach(r=>{
+    if(BY_ID.has(r))links.push({source:n.id,target:r});
+  }));
+
+  return `
+    <div class="section-h">
+      <h2>🌐 知识图谱</h2>
+      <span class="sub">${list.length} 节点 · ${links.length} 关联</span>
+    </div>
+    <div class="graph-wrap" id="graph-wrap">
+      <div class="graph-legend">
+        <div class="row"><span class="d" style="background:#265d3e"></span>常青 4-5</div>
+        <div class="row"><span class="d" style="background:#6fac7c"></span>抽芽 3</div>
+        <div class="row"><span class="d" style="background:#c8dfcc"></span>种子 1-2</div>
+        <div class="row"><span class="d" style="background:#9aa49d"></span>待开荒 0</div>
+      </div>
+      <svg id="graph-svg"></svg>
+      <div class="graph-hint">滚轮缩放 · 拖拽节点 · 点击卡片进入 · 双击节点聚焦</div>
+    </div>
+  `;
+}
+
+function viewFavs(){
+  const list=NOTES.filter(n=>state.favourites.has(n.id));
+  if(!list.length)return'<div class="empty"><div class="icon">⭐</div><h3>还没有收藏</h3><p>点卡片右上角的星标，或者进详情页就能收藏。</p></div>';
+  return `<div class="section-h"><h2>⭐ 收藏</h2><span class="sub">${list.length} 张</span></div><div class="card-grid">${list.map(cardHTML).join('')}</div>`;
+}
+
+function viewRecent(){
+  const list=state.recent.map(id=>BY_ID.get(id)).filter(Boolean);
+  if(!list.length)return'<div class="empty"><div class="icon">🕘</div><h3>最近浏览是空的</h3><p>点开任意笔记，就会在此出现。</p></div>';
+  return `<div class="section-h"><h2>🕘 最近浏览</h2><span class="sub">${list.length} 张</span></div><div class="card-grid">${list.map(cardHTML).join('')}</div>`;
+}
+
+function viewMyNotes(){
+  const entries=Object.entries(state.notes).filter(([,v])=>v&&v.trim()).map(([id,v])=>({note:BY_ID.get(id),text:v})).filter(x=>x.note);
+  if(!entries.length)return'<div class="empty"><div class="icon">📝</div><h3>还没有私人笔记</h3><p>进入任意一篇笔记，在底部「🌱 我的笔记」写下想法即可。仅保存在你本地。</p></div>';
+  return `
+    <div class="section-h"><h2>📝 我的笔记</h2><span class="sub">${entries.length} 条私人留言</span></div>
+    <div style="max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:12px">
+      ${entries.map(({note,text})=>`
+        <div class="detail-section" data-id="${escapeAttr(note.id)}" style="cursor:pointer;padding:18px">
+          <div style="font-family:var(--font-serif);font-size:18px;font-weight:600;margin-bottom:6px">${escapeHtml(note.title)}</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${escapeHtml(text)}</div>
+          <div style="font-size:11px;color:var(--text-3);font-family:var(--font-mono)">${escapeHtml(note.cat)} · ${relTime(note.tended||note.updated)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function viewTended(){
+  const list=NOTES.filter(n=>n.maturity>0);
+  return `<div class="section-h"><h2>✨ 已打理</h2><span class="sub">${list.length} 张</span></div><div class="card-grid">${list.map(cardHTML).join('')}</div>`;
+}
+
+function viewSeedlings(){
+  const list=NOTES.filter(n=>n.maturity>0&&n.maturity<=2);
+  return `<div class="section-h"><h2>🌱 种子期</h2><span class="sub">${list.length} 张 · 正在长</span></div><div class="card-grid">${list.map(cardHTML).join('')}</div>`;
+}
+
+function viewAll(){
+  return viewCards();
+}
+
+function viewCat(){
+  return viewCards();
+}
+
+// ─── Detail view ───
+function openNote(id){
+  const n=BY_ID.get(id);
+  if(!n)return;
+  detailStack.push(currentView+(currentCat?':'+currentCat:''));
+  currentNote=n;
+  // record recent
+  state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,12);
+  saveState();
+  render();
+  mainEl.scrollTop=0;
+}
+
+function viewDetail(){
+  const n=currentNote;
+  if(!n)return viewGardenHome();
+  const forward=refsOf(n.id);
+  const back=backRefsOf(n.id);
+  const isFav=state.favourites.has(n.id);
+  const noteText=state.notes[n.id]||'';
+
+  return `
+    <div class="detail fade-in">
+      <div class="detail-bar">
+        <button class="back" id="back-btn">← 返回花园</button>
+        <span style="margin:0 8px;color:var(--text-3)">·</span>
+        <span>${escapeHtml(n.cat||'未分类')}</span>
+      </div>
+
+      <div class="detail-header">
+        <div class="crumb">maturity ${n.maturity}/5 · ${maturityLabel(n.maturity)}</div>
+        <h1>${escapeHtml(n.title)}</h1>
+        <p class="desc">${escapeHtml(n.desc)}</p>
+        <div class="meta-row">
+          ${n.level?`<span class="chip">难度 <strong>${escapeHtml(n.level)}</strong></span>`:''}
+          ${n.status?`<span class="chip">状态 <strong>${escapeHtml(n.status)}</strong></span>`:''}
+          ${n.created?`<span class="chip">创建 ${escapeHtml(n.created)}</span>`:''}
+          ${n.updated?`<span class="chip">更新 ${escapeHtml(n.updated)}</span>`:''}
+          ${n.tended?`<span class="chip">上次打理 <strong>${relTime(n.tended)}</strong></span>`:''}
+          ${(n.tags||[]).map(t=>`<span class="chip" style="cursor:pointer" data-tag="${escapeAttr(t)}">${escapeHtml(t)}</span>`).join('')}
+        </div>
+        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn" href="${escapeAttr(n.url)}" target="_blank" rel="noopener">📖 打开原文</a>
+          <button class="btn secondary" id="fav-btn">${isFav?'⭐ 已收藏':'☆ 收藏'}</button>
+          <button class="btn secondary" id="stumble-btn">🎲 随机一篇</button>
+        </div>
+      </div>
+
+      ${forward.length?`
+      <div class="detail-section">
+        <h3>🔗 相关笔记 · ${forward.length}</h3>
+        <div class="related-list">
+          ${forward.map(r=>relatedItemHTML(r,'→')).join('')}
+        </div>
+      </div>`:''}
+
+      ${back.length?`
+      <div class="detail-section">
+        <h3>🔁 反向链接 · ${back.length}</h3>
+        <div class="related-list">
+          ${back.map(r=>relatedItemHTML(r,'←')).join('')}
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:var(--text-3);line-height:1.6">被 ${back.length} 篇笔记引用过 · 这意味着这些笔记都认为「${escapeHtml(n.title)}」是不可或缺的概念</p>
+      </div>`:''}
+
+      <div class="detail-section">
+        <h3>🌱 我的笔记 · 仅你可见</h3>
+        <textarea class="notes-area" id="note-input" placeholder="私人留言 · 思考、对照、todo、举例…&#10;保存在 localStorage，不会同步到服务器。">${escapeHtml(noteText)}</textarea>
+        <div class="notes-meta">
+          <span id="note-status">${noteText?'已保存':'暂无笔记'}</span>
+          <span>${noteText.length} 字</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function relatedItemHTML(n,direction){
+  return `<div class="related-item m${n.maturity}" data-id="${escapeAttr(n.id)}">
+    <span class="mat-dot"></span>
+    <span class="title">${escapeHtml(n.title)}</span>
+    <span style="font-size:11px;color:var(--text-3);font-family:var(--font-mono)">${escapeHtml(n.cat||'')}</span>
+    <span class="arrow">${direction==='←'?'←':'→'}</span>
+  </div>`;
+}
+
+// ─── Render orchestrator ───
+const mainEl=document.getElementById('main');
+function render(){
   renderSidebar();
-  renderContent();
-
-  // Scroll spy
-  const spy = new IntersectionObserver((entries)=>{
-    for(const entry of entries){
-      if(entry.isIntersecting){
-        const catId = entry.target.id.replace('cat-','');
-        setActiveNav(catId);
-      }
+  if(currentNote){
+    mainEl.innerHTML=viewDetail();
+    bindDetail();
+    toggleViewSwitcher(false);
+  }else{
+    let html='';
+    let baseView=currentView;
+    let mode='cards';
+    if(baseView.includes(':')){
+      [baseView,mode]=baseView.split(':');
     }
-  },{rootMargin:'-30% 0px -60% 0px',threshold:0});
-  document.querySelectorAll('.cat-section').forEach(s=>spy.observe(s));
-
-  const heroEl = document.querySelector('.hero');
-  if(heroEl){
-    const heroSpy = new IntersectionObserver((entries)=>{
-      for(const entry of entries){
-        if(entry.isIntersecting) setActiveNav('home');
-      }
-    },{rootMargin:'0px 0px -70% 0px',threshold:0});
-    heroSpy.observe(heroEl);
+    if(baseView==='garden-home'||baseView==='home'){
+      html=viewGardenHome();mode='cards';
+    }else if(baseView==='cat'){
+      html=viewCat();mode='cards';
+    }else if(baseView==='all'){
+      html=viewAll();mode='cards';
+    }else if(baseView==='tended'){
+      html=viewTended();mode='cards';
+    }else if(baseView==='seedlings'){
+      html=viewSeedlings();mode='cards';
+    }else if(baseView==='favs'){
+      html=viewFavs();mode='cards';
+    }else if(baseView==='recent'){
+      html=viewRecent();mode='cards';
+    }else if(baseView==='my-notes'){
+      html=viewMyNotes();mode='cards';
+    }else{
+      html=viewGardenHome();baseView='garden-home';mode='cards';
+    }
+    if(mode==='graph')html=viewGraph();
+    else if(mode==='timeline')html=viewTimeline();
+    mainEl.innerHTML=html;
+    toggleViewSwitcher(true,mode);
+    bindList();
+    if(mode==='graph')renderGraph();
   }
+  // active sidebar
+  document.querySelectorAll('#sidebar .nav-item').forEach(el=>{
+    el.classList.remove('active');
+    if(currentNote)return;
+    if(el.dataset.view===currentView)el.classList.add('active');
+    if(el.dataset.cat===currentCat&&currentView==='cat')el.classList.add('active');
+  });
+}
 
-  // Start
-  handleHash();
-  window.addEventListener('hashchange',handleHash);
+// ─── Bindings ───
+function bindList(){
+  document.querySelectorAll('.card').forEach(el=>{
+    el.onclick=()=>openNote(el.dataset.id);
+  });
+  document.querySelectorAll('.timeline-item').forEach(el=>{
+    el.onclick=()=>openNote(el.dataset.id);
+  });
+  document.querySelectorAll('.filter-pills .pill').forEach(el=>{
+    el.onclick=()=>{
+      const t=el.dataset.tag;
+      if(activeTags.has(t))activeTags.delete(t);else activeTags.add(t);
+      render();
+    };
+  });
+  const clear=document.getElementById('clear-tags');
+  if(clear)clear.onclick=()=>{activeTags.clear();render()};
+  document.querySelectorAll('#main .related-item,#main [data-id]').forEach(el=>{
+    if(el.classList.contains('related-item')||el.classList.contains('detail-section')){
+      el.onclick=(e)=>{
+        if(e.target.closest('a'))return;
+        const id=el.dataset.id;
+        if(id)openNote(id);
+      };
+    }
+  });
+  document.querySelectorAll('.crumb,[data-tag]').forEach(el=>{
+    if(el.dataset.tag){
+      el.onclick=()=>{
+        activeTags=new Set([el.dataset.tag]);
+        currentView='all';
+        localStorage.setItem(VIEW_KEY,currentView);
+        render();
+      };
+    }
+  });
+}
+
+function bindDetail(){
+  document.getElementById('back-btn').onclick=()=>{
+    currentNote=null;
+    if(detailStack.length){
+      const prev=detailStack.pop();
+      if(prev.includes(':')){
+        [currentView,currentCat]=prev.split(':');
+        if(currentCat===undefined||currentCat==='undefined')currentCat=null;
+      }else{
+        currentView=prev;currentCat=null;
+      }
+    }else{
+      currentView='garden-home';
+    }
+    render();
+  };
+  const fav=document.getElementById('fav-btn');
+  if(fav)fav.onclick=()=>{
+    const id=currentNote.id;
+    if(state.favourites.has(id)){
+      state.favourites.delete(id);toast('已取消收藏');
+    }else{
+      state.favourites.add(id);toast('已收藏 ⭐');
+    }
+    saveState();render();
+  };
+  const stb=document.getElementById('stumble-btn');
+  if(stb)stb.onclick=()=>stumble();
+  const inp=document.getElementById('note-input');
+  if(inp){
+    let timer;
+    inp.oninput=()=>{
+      clearTimeout(timer);
+      document.getElementById('note-status').textContent='保存中…';
+      timer=setTimeout(()=>{
+        const v=inp.value;
+        if(v.trim())state.notes[currentNote.id]=v;
+        else delete state.notes[currentNote.id];
+        saveState();
+        document.getElementById('note-status').textContent=v.trim()?'已保存':'暂无笔记';
+        document.querySelector('.notes-meta span:last-child').textContent=v.length+' 字';
+        toast('已保存 ✓');
+      },400);
+    };
+  }
+  document.querySelectorAll('.related-item').forEach(el=>{
+    el.onclick=()=>openNote(el.dataset.id);
+  });
+}
+
+// ─── Graph render (D3) ───
+function renderGraph(){
+  const wrap=document.getElementById('graph-wrap');
+  if(!wrap)return;
+  const svg=d3.select('#graph-svg');
+  const W=wrap.clientWidth,H=wrap.clientHeight;
+  svg.attr('viewBox',`0 0 ${W} ${H}`);
+
+  const list=filteredNotes().filter(n=>n.maturity>0||(n.related||[]).length>0);
+  const nodes=list.map(n=>({
+    id:n.id,
+    title:n.title,
+    cat:n.cat||'',
+    m:n.maturity
+  }));
+  const links=[];
+  list.forEach(n=>(n.related||[]).forEach(r=>{
+    if(BY_ID.has(r))links.push({source:n.id,target:r});
+  }));
+
+  const colorScale=(m)=>{
+    const c={0:'#9aa49d',1:'#c8dfcc',2:'#a0c8a8',3:'#6fac7c',4:'#3f8d54',5:'#265d3e'};
+    return c[m]||c[0];
+  };
+  const radiusScale=(m)=>4+Math.max(2,m*2.5);
+
+  svg.selectAll('*').remove();
+  // arrow marker
+  const defs=svg.append('defs');
+  defs.append('marker')
+    .attr('id','arrow').attr('viewBox','0 -5 10 10')
+    .attr('refX',18).attr('refY',0)
+    .attr('markerWidth',6).attr('markerHeight',6)
+    .attr('orient','auto')
+    .append('path')
+    .attr('d','M0,-5L10,0L0,5').attr('fill','#9aa49d').attr('opacity',.6);
+
+  const g=svg.append('g');
+  const linkG=g.append('g').attr('stroke','#9aa49d').attr('stroke-opacity',.4).attr('stroke-width',1).selectAll('line').data(links).enter().append('line').attr('marker-end','url(#arrow)');
+  const nodeG=g.append('g').selectAll('g').data(nodes).enter().append('g').attr('class','graph-handle');
+  nodeG.append('circle').attr('r',d=>radiusScale(d.m)).attr('fill',d=>colorScale(d.m)).attr('stroke','#fff').attr('stroke-width',2).style('cursor','pointer');
+  nodeG.append('text').text(d=>d.title).attr('font-size',11).attr('fill','currentColor').attr('dx',d=>radiusScale(d.m)+4).attr('dy',4).style('pointer-events','none').style('user-select','none');
+
+  nodeG.on('click',(e,d)=>openNote(d.id)).on('mouseover',function(e,d){
+    d3.select(this).select('circle').attr('stroke','#d97706').attr('stroke-width',3);
+    linkG.attr('stroke-opacity',l=>l.source.id===d.id||l.target.id===d.id?.8:.05);
+  }).on('mouseout',function(){
+    d3.select(this).select('circle').attr('stroke','#fff').attr('stroke-width',2);
+    linkG.attr('stroke-opacity',.4);
+  });
+
+  const sim=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(d=>d.id).distance(90))
+    .force('charge',d3.forceManyBody().strength(-180))
+    .force('center',d3.forceCenter(W/2,H/2))
+    .force('collide',d3.forceCollide().radius(d=>radiusScale(d.m)+6))
+    .on('tick',()=>{
+      linkG.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      nodeG.attr('transform',d=>`translate(${d.x},${d.y})`);
+    });
+  svg.call(d3.zoom().scaleExtent([.3,3]).on('zoom',(e)=>g.attr('transform',e.transform)));
+}
+
+// ─── Stumble (random walk) ───
+function stumble(){
+  const cared=NOTES.filter(n=>n.maturity>0);
+  const pick=cared[Math.floor(Math.random()*cared.length)];
+  if(pick)openNote(pick.id);
+}
+
+// ─── Command palette ───
+const cmdOverlay=document.getElementById('cmd-overlay');
+const cmdInput=document.getElementById('cmd-input');
+const cmdResults=document.getElementById('cmd-results');
+let cmdActive=0;
+let cmdFiltered=[];
+
+function openCmd(){
+  cmdOverlay.classList.add('open');
+  cmdInput.value='';
+  cmdInput.focus();
+  runCmdSearch('');
+}
+function closeCmd(){cmdOverlay.classList.remove('open')}
+document.getElementById('open-cmd').onclick=openCmd;
+cmdOverlay.onclick=(e)=>{if(e.target===cmdOverlay)closeCmd()};
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){
+    e.preventDefault();openCmd();return;
+  }
+  if(e.key==='Escape'&&cmdOverlay.classList.contains('open')){closeCmd();return}
+  if(cmdOverlay.classList.contains('open')){
+    if(e.key==='ArrowDown'){e.preventDefault();cmdActive=Math.min(cmdActive+1,cmdFiltered.length-1);renderCmd()}
+    else if(e.key==='ArrowUp'){e.preventDefault();cmdActive=Math.max(cmdActive-1,0);renderCmd()}
+    else if(e.key==='Enter'){
+      e.preventDefault();
+      const it=cmdFiltered[cmdActive];
+      if(it){closeCmd();openNote(it.id)}
+    }
+  }
+});
+cmdInput.oninput=()=>runCmdSearch(cmdInput.value);
+
+function runCmdSearch(q){
+  const tagMatch=q.match(/^tag:(.+)$/i);
+  const catMatch=q.match(/^cat:(.+)$/i);
+  if(tagMatch){
+    const t=tagMatch[1].trim().toLowerCase();
+    cmdFiltered=NOTES.filter(n=>(n.tags||[]).some(x=>x.toLowerCase().includes(t)));
+  }else if(catMatch){
+    const c=catMatch[1].trim().toLowerCase();
+    cmdFiltered=NOTES.filter(n=>(n.cat||'').toLowerCase().includes(c));
+  }else{
+    q=q.trim().toLowerCase();
+    if(!q){cmdFiltered=NOTES.slice().sort((a,b)=>(b.tended||b.updated).localeCompare(a.tended||a.updated)).slice(0,8)}
+    else{
+      cmdFiltered=NOTES.filter(n=>{
+        const hay=(n.title+' '+n.desc+' '+(n.tags||[]).join(' ')).toLowerCase();
+        return hay.includes(q);
+      }).slice(0,40);
+    }
+  }
+  cmdActive=0;
+  renderCmd();
+}
+
+function renderCmd(){
+  if(!cmdFiltered.length){
+    cmdResults.innerHTML='<div class="cmd-empty">没有匹配的笔记 · 输入 tag: 或 cat: 试试</div>';
+    return;
+  }
+  cmdResults.innerHTML=cmdFiltered.map((n,i)=>`
+    <div class="cmd-item ${i===cmdActive?'active':''}" data-id="${escapeAttr(n.id)}">
+      <span class="mat-dot" style="background:${({0:'#9aa49d',1:'#c8dfcc',2:'#a0c8a8',3:'#6fac7c',4:'#3f8d54',5:'#265d3e'})[n.maturity]||'#9aa49d'}"></span>
+      <span class="title">${escapeHtml(n.title)}</span>
+      <span class="cat">${escapeHtml(n.cat||'')}</span>
+    </div>
+  `).join('');
+  cmdResults.querySelectorAll('.cmd-item').forEach(el=>{
+    el.onclick=()=>{closeCmd();openNote(el.dataset.id)};
+    el.onmouseover=()=>{cmdActive=[...el.parentElement.children].indexOf(el);renderCmd()};
+  });
+}
+
+// ─── Theme button ───
+document.getElementById('btn-theme').onclick=()=>{
+  theme=theme==='light'?'dark':'light';
+  document.documentElement.dataset.theme=theme;
+  localStorage.setItem(THEME_KEY,theme);
+  toast(theme==='dark'?'🌙 暗色模式':'☀️ 浅色模式');
+};
+
+// ─── Random button ───
+document.getElementById('btn-random').onclick=stumble;
+
+// ─── Boot ───
+// migrate old 'graph' or 'timeline' as suffix-less views
+if(currentView.endsWith(':graph')||currentView.endsWith(':timeline')){
+  const [v,m]=currentView.split(':');
+  currentView=v;
+  localStorage.setItem(VIEW_KEY,currentView);
+}
+render();
 })();
 </script>
-
 </body>
 </html>

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Langfuse · LLM 可观测性平台使用指南（从零到上手）</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   DevPortal 2.0 Design Tokens（内联，无外部依赖）
+   ═══════════════════════════════════════════════════ */
+:root{
+  --gray-50:#fafafa;--gray-100:#f4f4f5;--gray-200:#e4e4e7;--gray-300:#d4d4d8;
+  --gray-400:#a1a1aa;--gray-500:#71717a;--gray-600:#52525b;--gray-700:#3f3f46;
+  --gray-800:#27272a;--gray-900:#18181b;--gray-950:#09090b;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;--blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;
+  --indigo-50:#eef2ff;--indigo-100:#e0e7ff;--indigo-500:#6366f1;--indigo-600:#4f46e5;--indigo-700:#4338ca;
+  --purple-500:#a855f7;--purple-600:#9333ea;
+  --emerald-500:#10b981;--emerald-600:#059669;
+  --amber-500:#f59e0b;--amber-600:#d97706;
+  --red-500:#ef4444;
+
+  --bg:var(--gray-50);--surface:#ffffff;--surface-hover:var(--gray-50);
+  --border:var(--gray-200);--border-subtle:var(--gray-100);
+  --text:var(--gray-900);--text-2:var(--gray-600);--text-3:var(--gray-400);
+  --primary:var(--indigo-600);--primary-hover:var(--indigo-700);--primary-light:var(--indigo-50);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  --topbar-h:56px;--sidebar-w:256px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:var(--font-sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;}
+a{color:var(--primary);text-decoration:none;}
+a:hover{color:var(--primary-hover);}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--gray-100);padding:1px 5px;border-radius:4px;color:var(--indigo-700);}
+strong{color:var(--gray-900);}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+
+/* 顶部栏 */
+.topbar{position:sticky;top:0;z-index:30;height:var(--topbar-h);background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;}
+.topbar .logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.35);flex-shrink:0;}
+.topbar .title{font-weight:700;font-size:15px;line-height:1.2;}
+.topbar .subtitle{font-size:11px;color:var(--gray-400);font-weight:400;}
+.topbar .spacer{flex:1;}
+.badge-open{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--emerald-600);background:#ecfdf5;border:1px solid #a7f3d0;border-radius:999px;padding:4px 10px;}
+.badge-open .dot{width:6px;height:6px;border-radius:50%;background:var(--emerald-500);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.topbar .doclink{font-size:12px;font-weight:600;color:var(--indigo-600);border:1px solid var(--indigo-100);border-radius:8px;padding:5px 12px;white-space:nowrap;}
+.topbar .doclink:hover{background:var(--indigo-50);}
+
+/* 布局 */
+.layout{display:flex;min-height:calc(100vh - var(--topbar-h));}
+.sidebar{position:sticky;top:var(--topbar-h);width:var(--sidebar-w);height:calc(100vh - var(--topbar-h));flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px 12px;}
+.sidebar .cat{font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;padding:0 10px 8px;}
+.toc{display:flex;flex-direction:column;gap:1px;}
+.toc a{font-size:13px;color:var(--gray-600);padding:6px 10px;border-radius:6px;border-left:2px solid transparent;transition:.12s;}
+.toc a:hover{color:var(--gray-900);background:var(--surface-hover);}
+.toc a.active{background:var(--primary-light);color:var(--primary);border-left-color:var(--primary);font-weight:600;}
+
+.main{flex:1;min-width:0;max-width:880px;margin:0 auto;padding:32px 24px 96px;}
+
+/* Hero */
+.hero{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:32px 36px;margin-bottom:32px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(99,102,241,.10) 1px,transparent 1px);background-size:22px 22px;pointer-events:none;}
+.hero>*{position:relative;}
+.hero .kicker{display:inline-flex;gap:8px;align-items:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--indigo-600);background:var(--indigo-50);border:1px solid var(--indigo-100);border-radius:999px;padding:4px 12px;margin-bottom:16px;}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin:0 0 14px;color:var(--gray-900);}
+.hero p{font-size:15px;color:var(--text-2);max-width:640px;margin:0 0 20px;}
+.hero .chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--gray-600);background:var(--gray-100);border-radius:8px;padding:6px 12px;}
+
+/* 章节 */
+section{margin-bottom:44px;scroll-margin-top:72px;}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.sec-head .bar{width:4px;height:20px;border-radius:2px;background:var(--indigo-500);}
+.sec-head h2{font-size:20px;font-weight:700;margin:0;color:var(--gray-900);}
+.sec-head .tag{font-size:11px;color:var(--gray-400);font-family:var(--font-mono);}
+.sec-body{font-size:15px;color:var(--text-2);}
+
+/* 卡片 */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow-sm);}
+.card h3{font-size:14px;font-weight:700;margin:0 0 8px;color:var(--gray-900);}
+.card p{font-size:13px;color:var(--text-2);margin:0;}
+.card .icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.icon.indigo{background:var(--indigo-50);color:var(--indigo-600);}
+.icon.emerald{background:#ecfdf5;color:var(--emerald-600);}
+.icon.amber{background:#fffbeb;color:var(--amber-600);}
+.icon.blue{background:var(--blue-50);color:var(--blue-600);}
+.concept-num{display:inline-flex;width:22px;height:22px;border-radius:6px;background:var(--indigo-50);color:var(--indigo-600);align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-right:8px;}
+
+/* 表格 */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface);}
+table.doc{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.doc th{background:var(--gray-50);text-align:left;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--border);padding:10px 14px;white-space:nowrap;}
+table.doc td{padding:10px 14px;color:var(--text-2);vertical-align:top;border-bottom:1px solid var(--border-subtle);}
+table.doc tr:last-child td{border-bottom:none;}
+
+/* 代码块 */
+pre.codeblock{position:relative;background:var(--gray-900);border:1px solid #1e293b;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.75;color:#e2e8f0;margin:0;}
+pre.codeblock code{font-family:inherit;font-size:inherit;background:none;padding:0;color:inherit;border-radius:0;}
+.tok-kw{color:#c4b5fd;} .tok-str{color:#86efac;} .tok-cm{color:#64748b;font-style:italic;}
+.tok-fn{color:#93c5fd;} .tok-num{color:#fcd34d;}
+.copy-btn{position:absolute;top:10px;right:10px;padding:4px 12px;font-size:11px;font-family:var(--font-sans);border-radius:6px;background:#1e293b;color:#94a3b8;border:1px solid #334155;cursor:pointer;transition:.15s;}
+.copy-btn:hover{background:#334155;color:#e2e8f0;}
+
+/* Callout */
+.callout{border-radius:12px;padding:14px 16px;border:1px solid;font-size:14px;line-height:1.7;display:flex;gap:10px;}
+.callout .ci{flex-shrink:0;margin-top:2px;}
+.callout.info{background:var(--gray-100);border-color:var(--gray-200);color:var(--text-2);}
+.callout.warn{background:#fffbeb;border-color:#fde68a;color:#92400e;}
+.callout.indigo{background:var(--indigo-50);border-color:var(--indigo-100);color:#3730a3;}
+
+/* 步骤 */
+.steps{display:flex;flex-direction:column;gap:14px;}
+.step{display:flex;gap:14px;align-items:flex-start;}
+.step-num{display:inline-flex;width:26px;height:26px;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step .st-body{flex:1;}
+.step .st-title{font-size:14px;font-weight:600;color:var(--gray-900);margin-bottom:8px;}
+
+/* FAQ */
+details.faq{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:10px;}
+details.faq summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--gray-900);list-style:none;display:flex;align-items:center;justify-content:space-between;}
+details.faq summary::-webkit-details-marker{display:none;}
+details.faq summary .chev{transition:transform .2s;color:var(--gray-400);flex-shrink:0;}
+details.faq[open] summary .chev{transform:rotate(180deg);}
+details.faq p{font-size:13.5px;color:var(--text-2);margin:10px 0 0;}
+
+/* 流程图（纯 CSS） */
+.diagram{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;overflow-x:auto;box-shadow:var(--shadow-sm);}
+.diagram .caption{font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;}
+/* 层级树 */
+.tree{display:flex;flex-direction:column;gap:0;}
+.tnode{display:inline-flex;flex-direction:column;gap:3px;background:var(--indigo-50);border:1px solid var(--indigo-100);border-radius:10px;padding:10px 14px;font-size:13px;min-width:180px;}
+.tnode b{color:var(--gray-900);font-size:13.5px;}
+.tnode span{color:var(--text-2);font-size:12px;font-family:var(--font-mono);}
+.trow{display:flex;align-items:center;gap:0;padding:0 0 8px;}
+.tbranch{margin-left:28px;padding-left:20px;border-left:2px solid var(--gray-300);display:flex;flex-direction:column;gap:8px;position:relative;}
+.tbranch::before{content:'';position:absolute;left:-2px;top:0;width:18px;height:2px;background:var(--gray-300);}
+.node-gen{background:#f0fdf4;border-color:#bbf7d0;}
+.node-score{background:#fffbeb;border-color:#fde68a;border-style:dashed;}
+
+/* 横向流程 */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:nowrap;min-width:720px;}
+.fbox{flex:1;background:var(--gray-50);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;text-align:center;}
+.fbox b{display:block;color:var(--gray-900);font-size:13px;margin-bottom:2px;}
+.fbox span{color:var(--text-2);}
+.farrow{display:flex;align-items:center;justify-content:center;color:var(--gray-400);padding:0 6px;font-size:16px;flex-shrink:0;}
+.fbox.accent{background:var(--indigo-50);border-color:var(--indigo-100);}
+.fbox.db{background:var(--blue-50);border-color:var(--blue-100);}
+.fbox.store{background:#fffbeb;border-color:#fde68a;}
+
+/* 列表 */
+ul.clean{list-style:none;padding:0;margin:0;}
+ul.clean li{position:relative;padding-left:18px;margin-bottom:8px;font-size:14.5px;color:var(--text-2);}
+ul.clean li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--indigo-500);}
+ul.dash{list-style:none;padding:0;margin:0;}
+ul.dash li{position:relative;padding-left:16px;margin-bottom:6px;font-size:13px;color:var(--text-2);}
+ul.dash li::before{content:'•';position:absolute;left:0;color:var(--indigo-500);}
+
+footer{border-top:1px solid var(--border);margin-top:24px;padding-top:20px;text-align:center;font-size:12px;color:var(--gray-400);}
+
+/* 移动端 */
+.menu-btn{display:none;}
+@media(max-width:860px){
+  .menu-btn{display:inline-flex;width:32px;height:32px;border:1px solid var(--border);border-radius:8px;background:var(--surface);align-items:center;justify-content:center;color:var(--gray-600);cursor:pointer;}
+  .sidebar{position:fixed;top:var(--topbar-h);left:0;transform:translateX(-100%);transition:transform .2s;z-index:25;box-shadow:var(--shadow-md);}
+  .sidebar.open{transform:translateX(0);}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:24;display:none;}
+  .overlay.show{display:block;}
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部栏 -->
+<header class="topbar">
+  <button class="menu-btn" onclick="toggleSidebar()" aria-label="菜单">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
+  <div class="title">Langfuse 使用指南
+    <div class="subtitle">LLM Observability · Tracing · Eval · Prompt Mgmt</div>
+  </div>
+  <div class="spacer"></div>
+  <span class="badge-open"><span class="dot"></span>开源 · MIT License</span>
+  <a class="doclink" href="https://langfuse.com/docs" target="_blank">官方文档 ↗</a>
+</header>
+
+<div class="layout">
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="cat">目录导航</div>
+    <nav class="toc" id="toc">
+      <a href="#what">什么是 Langfuse</a>
+      <a href="#why">为什么需要可观测性</a>
+      <a href="#concepts">核心概念</a>
+      <a href="#architecture">整体架构</a>
+      <a href="#quickstart">快速上手</a>
+      <a href="#selfhost">Docker 自托管</a>
+      <a href="#install">安装与配置</a>
+      <a href="#first-trace">第一个 Trace</a>
+      <a href="#instrument">三种埋点方式</a>
+      <a href="#integrations">框架集成</a>
+      <a href="#prompt">Prompt 管理</a>
+      <a href="#datasets">数据集与实验</a>
+      <a href="#evals">评估 · LLM-as-Judge</a>
+      <a href="#ui">UI 使用指南</a>
+      <a href="#best">最佳实践</a>
+      <a href="#faq">常见问题</a>
+      <a href="#resources">参考资源</a>
+    </nav>
+  </aside>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- 主内容 -->
+  <main class="main">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="kicker">Hands-on Tutorial · SDK v3</div>
+      <h1>Langfuse：LLM 应用可观测性平台<br>从零到上手的完整指南</h1>
+      <p>Langfuse 是目前最广泛采用的开源 LLM 工程平台（MIT 协议），为 LLM / Agent / RAG 应用提供 <strong>追踪（Tracing）、评估（Evaluation）、Prompt 管理（Prompt Management）</strong> 三大核心能力。本指南带你从概念、部署到写代码埋点，一步步跑通完整闭环。</p>
+      <div class="chips">
+        <span class="chip">追踪耗时 / Token / 成本</span>
+        <span class="chip">Prompt 版本管理</span>
+        <span class="chip">数据集回归测试</span>
+        <span class="chip">LLM-as-Judge 自动评估</span>
+      </div>
+    </section>
+
+    <!-- 什么是 -->
+    <section id="what">
+      <div class="sec-head"><span class="bar"></span><h2>什么是 Langfuse？</h2></div>
+      <div class="sec-body">
+        <p>当你在构建一个 LLM 应用（聊天机器人、RAG 检索问答、多智能体系统等）时，通常会遇到这些问题：</p>
+        <ul class="clean">
+          <li>「这个回答为什么是错的？」—— 无法回放一次完整的调用链路。</li>
+          <li>「哪个环节最慢？花了多少 Token？成本是多少？」—— 缺乏按步骤的耗时与成本统计。</li>
+          <li>「改了一版 Prompt，效果到底变好还是变坏？」—— 没有回归测试。</li>
+          <li>「Prompt 散落在代码里，谁在维护？」—— 没有集中管理和版本控制。</li>
+        </ul>
+        <p><strong>Langfuse 就是为解决这些问题而生的。</strong>它像一个「黑匣子记录仪 + 实验平台 + 内容管理系统」三合一：每一次用户交互都变成一条可以回放、分析、评分的 <em>Trace</em>。</p>
+      </div>
+      <div class="grid3" style="margin-top:20px;">
+        <div class="card">
+          <div class="icon indigo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></div>
+          <h3>Tracing / 追踪</h3>
+          <p>记录每一次端到端调用，按 Span / Generation 展开，看清时间花在哪、错误出在哪、Token 与成本如何分布。</p>
+        </div>
+        <div class="card">
+          <div class="icon emerald"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.5L4.5 21h15L14 9.5V2"/><path d="M8 2h8"/></svg></div>
+          <h3>Evals / 评估</h3>
+          <p>在数据集上运行实验，用 LLM-as-Judge 或自定义打分函数，量化模型 / Prompt 变更带来的质量变化。</p>
+        </div>
+        <div class="card">
+          <div class="icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <h3>Prompt 管理</h3>
+          <p>像管理代码一样管理 Prompt：版本化、Label（prod/dev）、灰度发布、可回滚、与 Trace 关联度量。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 为什么 -->
+    <section id="why">
+      <div class="sec-head"><span class="bar"></span><h2>为什么 LLM 需要专门的可观测性</h2></div>
+      <div class="tbl-wrap">
+        <table class="doc">
+          <thead><tr><th style="width:50%">传统后端 API</th><th style="width:50%">LLM 应用</th></tr></thead>
+          <tbody>
+            <tr><td>输出是确定性的，同样的输入同样输出</td><td>输出<strong>非确定性</strong>，同 Prompt 不同时间不同答案</td></tr>
+            <tr><td>单次调用、单一服务</td><td><strong>多步骤工作流</strong>：检索 → 工具 → 路由 → 护栏 → 生成</td></tr>
+            <tr><td>日志量小、结构简单</td><td>每一步都携带<strong>冗长而丰富的 I/O</strong>（Prompt、上下文、Token）</td></tr>
+            <tr><td>质量是客观布尔值（200 / 500）</td><td>质量是<strong>主观的</strong>：「回答很糟」难以用一个布尔表达</td></tr>
+            <tr><td>成本由基础设施决定</td><td>成本<strong>不透明</strong>，依赖 Token、模型、用户分群</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:16px;font-size:14px;color:var(--text-2);">没有可观测性，你就是在「盲飞」。Langfuse 把开发从「猜测 + 祈祷」变成「观察 + 测量 + 迭代」。</p>
+    </section>
+
+    <!-- 核心概念 -->
+    <section id="concepts">
+      <div class="sec-head"><span class="bar"></span><h2>核心概念</h2><span class="tag">7 个概念</span></div>
+      <p class="sec-body" style="margin-bottom:18px;">掌握下面 7 个概念，你就掌握了 Langfuse 的全部用法。</p>
+
+      <div class="diagram">
+        <div class="caption">Trace / Observation 层级关系</div>
+        <div class="trow">
+          <div class="tnode"><b>Trace</b><span>一次端到端交互（如一次用户提问）</span></div>
+        </div>
+        <div class="tbranch">
+          <div class="tnode"><b>Span</b><span>检索文档 · 50ms</span></div>
+          <div class="tnode"><b>Span</b><span>工具调用 · 120ms</span></div>
+          <div class="tnode node-gen"><b>Generation</b><span>LLM 调用 · 1.8s · 1234 tokens</span></div>
+          <div class="tbranch">
+            <div class="tnode node-gen"><b>Generation（嵌套）</b><span>子 LLM 调用</span></div>
+          </div>
+        </div>
+        <div class="trow" style="padding-top:12px;">
+          <div class="tnode node-score"><b>Score</b><span>打分：helpfulness / correctness…</span></div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:16px;">
+        <div class="card"><h3><span class="concept-num">1</span>Project / 项目</h3><p>代表一个应用或产品。项目内通常划分 <code>dev</code>、<code>staging</code>、<code>prod</code> 等环境，每个环境用<strong>不同的 API Key</strong>，避免测试数据污染生产。</p></div>
+        <div class="card"><h3><span class="concept-num">2</span>Trace / 轨迹</h3><p>一次<strong>端到端交互</strong>，通常对应用户一次请求。UI 中以时间线 / 树状图呈现，可以下钻查看每一步实际发生了什么。</p></div>
+        <div class="card"><h3><span class="concept-num">3</span>Span / 步骤</h3><p>Trace 内的一个步骤：数据库查询、检索操作、工具调用、API 请求，或你自己埋点的自定义逻辑。用于定位「时间花在哪」。</p></div>
+        <div class="card"><h3><span class="concept-num">4</span>Generation / 生成</h3><p>特指一次 <strong>LLM 调用</strong>，是 Span 的特殊类型，额外记录 <code>model</code>、<code>input/output</code>、<code>usage</code>（Token + 成本）。</p></div>
+        <div class="card"><h3><span class="concept-num">5</span>Score / 分数</h3><p>附加在 Trace 或 Generation 上的标签或指标：<code>helpfulness: 0-1</code>、<code>correctness</code>、<code>passes_policy: bool</code> 等。来源：人工标注、评估模型、程序化检查。</p></div>
+        <div class="card"><h3><span class="concept-num">6</span>Dataset / 数据集</h3><p>一组测试用例，通常从真实 Trace 中提炼。每行含 <code>input</code>、<code>expected_output</code>、metadata。用于对新 Prompt / 模型做<strong>回归测试</strong>。</p></div>
+      </div>
+      <div class="card" style="margin-top:16px;"><h3><span class="concept-num">7</span>Prompt / 提示词</h3><p>一个 Prompt CMS：集中存储、带版本、带 Label（如 <code>production</code>、<code>latest</code>）、可回滚。代码通过 <code>langfuse.get_prompt("name")</code> 拉取，而非硬编码文本。每次 Prompt 变更都能和线上 Trace / 评估关联，量化效果。</p></div>
+    </section>
+
+    <!-- 架构 -->
+    <section id="architecture">
+      <div class="sec-head"><span class="bar"></span><h2>整体架构</h2></div>
+      <p class="sec-body" style="margin-bottom:18px;">理解架构有助于你在自托管时正确配置。核心是「应用异步上报 → 队列缓冲 → ClickHouse 存储 → UI 查询」。</p>
+      <div class="diagram">
+        <div class="caption">数据流</div>
+        <div class="flow">
+          <div class="fbox accent"><b>你的应用</b><span>SDK / OTel</span></div>
+          <div class="farrow">→</div>
+          <div class="fbox"><b>Langfuse Server</b><span>ingestion API</span></div>
+          <div class="farrow">→</div>
+          <div class="fbox"><b>Redis</b><span>异步队列</span></div>
+          <div class="farrow">→</div>
+          <div class="fbox db"><b>ClickHouse</b><span>OLAP 分析库</span></div>
+          <div class="farrow">→</div>
+          <div class="fbox accent"><b>Web UI</b><span>查询与可视化</span></div>
+        </div>
+        <div class="flow" style="margin-top:10px;">
+          <div class="fbox store"><b>PostgreSQL</b><span>账号 / Prompt 元数据</span></div>
+          <div class="farrow">↔</div>
+          <div class="fbox"><b>Langfuse Server</b><span>写读元数据</span></div>
+          <div class="farrow">→</div>
+          <div class="fbox store"><b>S3 / Blob</b><span>图片 / 视频大 payload</span></div>
+          <div class="farrow">→</div>
+          <div class="fbox accent"><b>Web UI</b><span>拉取大对象</span></div>
+        </div>
+      </div>
+      <ul class="clean" style="margin-top:18px;">
+        <li><strong>ClickHouse</strong>：列式 OLAP 数据库，支撑百万级 Trace 的毫秒级查询。</li>
+        <li><strong>Redis</strong>：异步摄入队列，保证「追踪不阻塞业务」。</li>
+        <li><strong>S3 / Blob</strong>：存放图片、视频等大 payload。</li>
+        <li><strong>PostgreSQL</strong>：账号、组织、Prompt 版本等元数据。</li>
+      </ul>
+    </section>
+
+    <!-- 快速上手 -->
+    <section id="quickstart">
+      <div class="sec-head"><span class="bar"></span><h2>快速上手：Cloud vs 自托管</h2></div>
+      <div class="grid2">
+        <div class="card" style="border-color:var(--indigo-100);">
+          <h3>Langfuse Cloud（推荐入门）</h3>
+          <ul class="dash">
+            <li>最快上手，免费额度 <strong>50k 观测/月</strong>，无需信用卡</li>
+            <li>无需管理基础设施、升级、扩容</li>
+            <li>数据发送到第三方 SaaS，需评估数据敏感性</li>
+          </ul>
+          <a href="https://cloud.langfuse.com" target="_blank" style="font-size:13px;font-weight:600;display:inline-block;margin-top:12px;">立即注册 →</a>
+        </div>
+        <div class="card">
+          <h3>自托管（数据合规 / 内网）</h3>
+          <ul class="dash">
+            <li>严格的数据驻留 / 合规要求（GDPR、金融、政务）</li>
+            <li>已在 K8s / ECS 环境，希望全部落在自己 VPC 内</li>
+            <li>想用<strong>全部核心功能且完全免费</strong></li>
+          </ul>
+          <a href="#selfhost" style="font-size:13px;font-weight:600;display:inline-block;margin-top:12px;">查看部署步骤 ↓</a>
+        </div>
+      </div>
+      <div class="callout warn" style="margin-top:16px;">
+        <svg class="ci" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div><strong>API Key 两种类型：</strong>注册并创建项目后，你会得到一对密钥——<code>public key</code>（<code style="font-family:var(--font-mono);font-size:12px;">pk-lf-...</code>，可安全用于前端 / SDK）与 <code>secret key</code>（<code style="font-family:var(--font-mono);font-size:12px;">sk-lf-...</code>，<strong>仅限服务端</strong>）。私钥绝不能进客户端代码或提交进仓库。</div>
+      </div>
+    </section>
+
+    <!-- Docker 自托管 -->
+    <section id="selfhost">
+      <div class="sec-head"><span class="bar"></span><h2>Docker 自托管（本地体验）</h2></div>
+      <p class="sec-body" style="margin-bottom:16px;">前提：安装 <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a>（Windows / Mac 自带 docker compose）并已安装 git。</p>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <div class="st-body">
+            <div class="st-title">克隆仓库并启动</div>
+            <pre class="codeblock"><code><span class="tok-cm"># 克隆官方仓库（含 docker-compose.yml）</span>
+git clone https://github.com/langfuse/langfuse.git
+cd langfuse
+
+<span class="tok-cm"># 启动数据库与 Langfuse 服务（首次会拉取镜像，需几分钟）</span>
+docker compose up -d</code></pre>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <div class="st-body">
+            <div class="st-title">访问 UI 并创建账号</div>
+            <pre class="codeblock"><code><span class="tok-cm"># 浏览器打开</span>
+http://localhost:3000
+
+<span class="tok-cm"># 首次访问点击 Sign up 创建账号，随后创建 Organization 和 Project</span></code></pre>
+            <p style="font-size:13px;color:var(--text-2);margin-top:8px;">创建完 Project 后，页面会给出 <code>public key</code> 与 <code>secret key</code>，记下来，后续 SDK 上报要用。</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <div class="st-body">
+            <div class="st-title">SDK 指向本地地址</div>
+            <pre class="codeblock"><code><span class="tok-cm"># 环境变量里把 BASE URL 指向本地实例</span>
+<span class="tok-kw">export</span> LANGFUSE_BASE_URL=<span class="tok-str">"http://localhost:3000"</span></code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="callout info" style="margin-top:16px;">
+        <svg class="ci" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div><strong>注意：</strong>默认 docker compose 用于本地测试，数据库不持久、密钥不保密，<strong>不适合生产</strong>。生产环境请参考官方<a href="https://langfuse.com/self-hosting" target="_blank">部署指南</a>（K8s / Helm / Terraform），并务必修改 docker-compose 中所有 <code># CHANGEME</code> 标记的密码。升级：<code style="font-family:var(--font-mono);font-size:12px;">docker compose up --pull always</code>。</div>
+      </div>
+    </section>
+
+    <!-- 安装与配置 -->
+    <section id="install">
+      <div class="sec-head"><span class="bar"></span><h2>安装与配置（Python SDK）</h2></div>
+      <p class="sec-body" style="margin-bottom:14px;">Langfuse 支持 Python、JS/TS 以及 OpenTelemetry 原生集成。本指南以 Python SDK v3（基于 OpenTelemetry）为主。</p>
+      <pre class="codeblock"><code>pip install langfuse</code></pre>
+      <h3 style="font-size:15px;margin:20px 0 8px;">配置（推荐用环境变量）</h3>
+      <pre class="codeblock"><code><span class="tok-cm"># .env 文件</span>
+LANGFUSE_PUBLIC_KEY=<span class="tok-str">"pk-lf-..."</span>
+LANGFUSE_SECRET_KEY=<span class="tok-str">"sk-lf-..."</span>
+<span class="tok-cm"># 默认 https://cloud.langfuse.com；自托管改成你的地址；US 区用 https://us.cloud.langfuse.com</span>
+LANGFUSE_BASE_URL=<span class="tok-str">"https://cloud.langfuse.com"</span></code></pre>
+      <div class="callout indigo" style="margin-top:14px;">
+        <svg class="ci" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+        <div><strong>获取客户端：</strong>SDK v3 用 <code style="font-family:var(--font-mono);font-size:12px;">get_client()</code> 自动读取上述环境变量。若仍用经典 API（v2），则是 <code style="font-family:var(--font-mono);font-size:12px;">Langfuse(public_key=..., secret_key=..., host=...)</code>，环境变量名为 <code style="font-family:var(--font-mono);font-size:12px;">LANGFUSE_HOST</code>。二者别混用。</div>
+      </div>
+    </section>
+
+    <!-- 第一个 Trace -->
+    <section id="first-trace">
+      <div class="sec-head"><span class="bar"></span><h2>第一个 Trace（10 分钟上手）</h2></div>
+      <p class="sec-body" style="margin-bottom:14px;">用上下文管理器记录一次 LLM 调用，运行后立即在 UI 看到结果。</p>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse <span class="tok-kw">import</span> get_client
+
+langfuse = get_client()  <span class="tok-cm"># 读取 LANGFUSE_* 环境变量</span>
+
+<span class="tok-cm"># 外层 Span：一次处理请求</span>
+<span class="tok-kw">with</span> langfuse.start_as_current_observation(
+    as_type=<span class="tok-str">"span"</span>, name=<span class="tok-str">"process-request"</span>
+) <span class="tok-kw">as</span> span:
+    span.update(input=<span class="tok-str">"用户的原始输入"</span>)
+
+    <span class="tok-cm"># 嵌套 Generation：一次 LLM 调用</span>
+    <span class="tok-kw">with</span> langfuse.start_as_current_observation(
+        as_type=<span class="tok-str">"generation"</span>,
+        name=<span class="tok-str">"llm-response"</span>,
+        model=<span class="tok-str">"gpt-4o"</span>,
+    ) <span class="tok-kw">as</span> gen:
+        <span class="tok-cm"># 你的真实 LLM 调用逻辑写在这里</span>
+        answer = <span class="tok-str">"你好，这是模型回复"</span>
+        gen.update(output=answer)
+
+<span class="tok-cm"># 短生命周期应用（脚本、Serverless）需手动 flush 上报</span>
+langfuse.flush()
+
+<span class="tok-kw">print</span>(<span class="tok-str">"done"</span>)</code></pre>
+      <p style="margin-top:14px;font-size:14px;color:var(--text-2);">运行后打开 Langfuse UI，会看到一条名为 <code>process-request</code> 的 Trace，点进去能看到嵌套的 <code>llm-response</code> Generation，包含 input、output、model、耗时等信息。</p>
+    </section>
+
+    <!-- 三种埋点方式 -->
+    <section id="instrument">
+      <div class="sec-head"><span class="bar"></span><h2>三种埋点方式</h2></div>
+
+      <h3 style="font-size:15px;margin:0 0 8px;">① 装饰器 <code>@observe</code>（最省事）</h3>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse <span class="tok-kw">import</span> observe
+
+@observe()
+<span class="tok-kw">def</span> <span class="tok-fn">answer_question</span>(question: str) -> str:
+    <span class="tok-cm"># 函数体自动成为一个 Span，入参/返回值自动记录</span>
+    ...
+    <span class="tok-kw">return</span> answer
+
+answer_question(<span class="tok-str">"Langfuse 和 LangSmith 有什么区别？"</span>)</code></pre>
+      <p style="font-size:13px;color:var(--text-2);margin-top:8px;">嵌套调用多个被 <code>@observe</code> 装饰的函数，会自动形成父子层级。</p>
+
+      <h3 style="font-size:15px;margin:20px 0 8px;">② 上下文管理器（推荐，控制力强）</h3>
+      <pre class="codeblock"><code><span class="tok-kw">with</span> langfuse.start_as_current_observation(
+    as_type=<span class="tok-str">"span"</span>, name=<span class="tok-str">"retrieval"</span>
+) <span class="tok-kw">as</span> span:
+    docs = retrieve(question)
+    span.update(output=[d.metadata <span class="tok-kw">for</span> d <span class="tok-kw">in</span> docs])</code></pre>
+
+      <h3 style="font-size:15px;margin:20px 0 8px;">③ 手动创建（需手动 end）</h3>
+      <pre class="codeblock"><code>gen = langfuse.start_observation(
+    name=<span class="tok-str">"llm-call"</span>, as_type=<span class="tok-str">"generation"</span>, model=<span class="tok-str">"gpt-4o"</span>
+)
+<span class="tok-cm"># ... 你的逻辑 ...</span>
+gen.update(output=answer, usage={...})
+gen.end()  <span class="tok-cm"># 手动结束时务必调用</span></code></pre>
+
+      <h3 style="font-size:15px;margin:20px 0 8px;">附加 Trace 属性：用户 / 会话 / 标签</h3>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse <span class="tok-kw">import</span> get_client, propagate_attributes
+
+langfuse = get_client()
+
+<span class="tok-cm"># 在该上下文内，所有 Span 自动带上 user_id / session_id / tags</span>
+<span class="tok-kw">with</span> propagate_attributes(user_id=<span class="tok-str">"u_123"</span>, session_id=<span class="tok-str">"s_456"</span>, tags=[<span class="tok-str">"prod"</span>]):
+    <span class="tok-kw">with</span> langfuse.start_as_current_observation(as_type=<span class="tok-str">"span"</span>, name=<span class="tok-str">"step"</span>):
+        ...</code></pre>
+    </section>
+
+    <!-- 框架集成 -->
+    <section id="integrations">
+      <div class="sec-head"><span class="bar"></span><h2>框架集成（零侵入 / 低侵入）</h2></div>
+      <p class="sec-body" style="margin-bottom:14px;">Langfuse 提供 100+ 集成，覆盖 OpenAI、LangChain、LangGraph、LlamaIndex、Vercel AI SDK 等。这里给出两个最常用的例子。</p>
+
+      <h3 style="font-size:15px;margin:0 0 8px;">OpenAI SDK</h3>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse.openai <span class="tok-kw">import</span> openai  <span class="tok-cm"># 替换为标准 client，自动追踪</span>
+
+completion = openai.chat.completions.create(
+    model=<span class="tok-str">"gpt-4o"</span>,
+    messages=[{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: <span class="tok-str">"你好"</span>}],
+    langfuse_prompt=<span class="tok-str">"my-prompt"</span>,  <span class="tok-cm"># 可选：关联 Prompt</span>
+)</code></pre>
+
+      <h3 style="font-size:15px;margin:20px 0 8px;">LangChain（CallbackHandler）</h3>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse.langchain <span class="tok-kw">import</span> CallbackHandler
+
+langfuse_handler = CallbackHandler()  <span class="tok-cm"># 读取环境变量</span>
+
+<span class="tok-cm"># 在 invoke 时传入 callbacks 即可</span>
+chain.invoke(
+    {<span class="tok-str">"question"</span>: <span class="tok-str">"..."</span>},
+    config={<span class="tok-str">"callbacks"</span>: [langfuse_handler]},
+)</code></pre>
+      <p style="font-size:13px;color:var(--text-2);margin-top:10px;">LangChain / LangGraph 的每个 chain / node / tool 调用会自动展开成嵌套的 Span 与 Generation，无需手动埋点。</p>
+    </section>
+
+    <!-- Prompt 管理 -->
+    <section id="prompt">
+      <div class="sec-head"><span class="bar"></span><h2>Prompt 管理</h2></div>
+      <p class="sec-body" style="margin-bottom:14px;">把 Prompt 从代码里抽出来，放进 Langfuse 做版本化。核心 API：<code>create_prompt</code>、<code>get_prompt</code>、<code>compile</code>。</p>
+
+      <h3 style="font-size:15px;margin:0 0 8px;">创建 Prompt（在 UI 或代码中）</h3>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse <span class="tok-kw">import</span> Langfuse
+
+langfuse = Langfuse()
+
+langfuse.create_prompt(
+    name=<span class="tok-str">"movie-critic"</span>,
+    prompt=<span class="tok-str">"你是一名影评人。请评价电影：{{movie}}"</span>,
+    labels=[<span class="tok-str">"production"</span>],  <span class="tok-cm"># 直接挂到生产 label</span>
+)</code></pre>
+
+      <h3 style="font-size:15px;margin:20px 0 8px;">拉取并使用（带缓存）</h3>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse <span class="tok-kw">import</span> get_client
+
+langfuse = get_client()
+
+<span class="tok-cm"># 拉取 production 版本，缓存 300 秒（减少网络往返、提升性能）</span>
+prompt = langfuse.get_prompt(<span class="tok-str">"movie-critic"</span>, cache_ttl_seconds=<span class="tok-num">300</span>)
+
+<span class="tok-cm"># 用变量渲染最终 Prompt；variable 是 {{movie}} 的占位值</span>
+final_prompt = prompt.compile(movie=<span class="tok-str">"Dune 2"</span>)
+
+<span class="tok-cm"># 把 Prompt 版本与本次 Generation 关联，用于后续度量</span>
+<span class="tok-kw">with</span> langfuse.start_as_current_observation(
+    as_type=<span class="tok-str">"generation"</span>, name=<span class="tok-str">"review"</span>, model=<span class="tok-str">"gpt-4o"</span>, prompt=prompt
+) <span class="tok-kw">as</span> gen:
+    answer = call_llm(final_prompt)
+    gen.update(output=answer)</code></pre>
+
+      <div class="callout info" style="margin-top:14px;">
+        <svg class="ci" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 12 22l-8.59-8.59A2 2 0 0 1 2.83 11L11 2.83a2 2 0 0 1 2.83 0L20.59 9a2 2 0 0 1 0 2.83z"/><circle cx="7.5" cy="7.5" r=".5"/></svg>
+        <div><strong>Label 机制：</strong>每个 Prompt 有多个版本，每个版本可打 Label（如 <code>production</code> / <code>latest</code> / <code>dev-v2</code>）。上线 = 把新版本挂到 <code>production</code> label，回滚 = 把 label 指回旧版本，全程不改代码。UI 中 Prompt 详情页有「Metrics」页签，可以看到每个版本关联的 Trace 数量与评分。</div>
+      </div>
+    </section>
+
+    <!-- 数据集与实验 -->
+    <section id="datasets">
+      <div class="sec-head"><span class="bar"></span><h2>数据集与实验（回归测试）</h2></div>
+      <p class="sec-body" style="margin-bottom:14px;">Dataset 是「测试用例集合」，通常从线上真实 Trace 里挑选。实验 = 用新 Prompt / 新模型在 Dataset 上跑一遍并打分，判断是改进还是回退。</p>
+      <pre class="codeblock"><code><span class="tok-kw">from</span> langfuse <span class="tok-kw">import</span> Langfuse
+
+langfuse = Langfuse()
+
+<span class="tok-cm"># 1. 拉取数据集</span>
+dataset = langfuse.get_dataset(<span class="tok-str">"qa-test-set"</span>)
+
+<span class="tok-cm"># 2. 遍历每条测试用例</span>
+<span class="tok-kw">for</span> item <span class="tok-kw">in</span> dataset.items:
+    question = item.input[<span class="tok-str">"question"</span>]
+    expected = item.expected_output  <span class="tok-cm"># 参考答案</span>
+
+    <span class="tok-cm"># 用当前（新）Prompt 跑一遍</span>
+    output = run_pipeline(question)
+
+    <span class="tok-cm"># 3. 打分并写回</span>
+    langfuse.score(
+        trace_id=<span class="tok-str">"..."</span>,
+        name=<span class="tok-str">"correctness"</span>,
+        value=<span class="tok-num">0.92</span>,
+        comment=<span class="tok-str">"..."</span>,
+    )</code></pre>
+      <p style="font-size:13px;color:var(--text-2);margin-top:10px;">更推荐使用 <code>langfuse.run_experiment()</code>（需配合 LLM-as-Judge evaluator），它会把「实验运行」作为一个整体关联到数据集上，UI 中可对比多次实验的平均分，并支持接入 CI 做自动化回归。</p>
+    </section>
+
+    <!-- 评估 -->
+    <section id="evals">
+      <div class="sec-head"><span class="bar"></span><h2>评估 · LLM-as-Judge</h2></div>
+      <p class="sec-body" style="margin-bottom:16px;">评分（Score）可以来自三种来源，Langfuse 统一在 UI 中展示、筛选、聚合。</p>
+      <div class="grid3">
+        <div class="card"><h3>① 人工标注</h3><p>在 UI 标注界面或内部工具里打分。</p></div>
+        <div class="card"><h3>② LLM-as-Judge</h3><p>用一个模型给另一个模型的输出打分。</p></div>
+        <div class="card"><h3>③ 程序化检查</h3><p>正则、单元测试、业务规则（如是否命中敏感词）。</p></div>
+      </div>
+
+      <h3 style="font-size:15px;margin:20px 0 8px;">LLM-as-Judge 示例（离线评估管线）</h3>
+      <pre class="codeblock"><code><span class="tok-cm"># 概念性示例：用 gpt-4o 作为裁判，给每个回答打相关性分</span>
+<span class="tok-kw">def</span> <span class="tok-fn">judge</span>(question, answer, reference):
+    judge_prompt = <span class="tok-str">"""</span>
+<span class="tok-str">    问题：{question}</span>
+<span class="tok-str">    参考答案：{reference}</span>
+<span class="tok-str">    模型回答：{answer}</span>
+<span class="tok-str">    请从 0 到 1 打分，评估回答的相关性与正确性。只输出数字。</span>
+<span class="tok-str">    """</span>
+    score = call_llm(judge_prompt)
+    <span class="tok-kw">return</span> float(score)
+
+<span class="tok-cm"># 对每条用例打分并写回 Langfuse，形成可对比的质量曲线</span></code></pre>
+
+      <div class="callout info" style="margin-top:14px;">
+        <svg class="ci" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <div>Langfuse 还提供开箱即用的 <strong>LLM-as-Judge Evaluator 模板</strong>（如 <code>relevance</code>、<code>helpfulness</code>、<code>hallucination</code>、<code>toxicity</code>），可直接在 UI 或 SDK 中配置，避免自己写裁判 Prompt。</div>
+      </div>
+    </section>
+
+    <!-- UI 使用指南 -->
+    <section id="ui">
+      <div class="sec-head"><span class="bar"></span><h2>UI 使用指南</h2></div>
+      <div class="grid2">
+        <div class="card"><h3>Traces 页</h3><ul class="dash">
+          <li>列表视图：按时间 / 环境 / 用户 / 名称 / 评分筛选</li>
+          <li>点击进入时间线视图，看每个 Span 的耗时占比</li>
+          <li>点开 Generation 查看完整 input/output、token 用量、成本</li>
+          <li>支持按 <code>user_id</code>、<code>session_id</code> 聚合查看用户会话</li>
+        </ul></div>
+        <div class="card"><h3>Dashboard 页</h3><ul class="dash">
+          <li>观测总量、平均耗时、Token 总消耗、总成本</li>
+          <li>按模型 / 端点 / 用户 / Prompt 版本切片</li>
+          <li>追踪成本趋势，识别异常高峰</li>
+        </ul></div>
+        <div class="card"><h3>Datasets 页</h3><ul class="dash">
+          <li>从真实 Trace「添加到数据集」一键建用例</li>
+          <li>手动新增 / 编辑 / 批量导入</li>
+          <li>查看每次实验运行的平均分与得分分布</li>
+        </ul></div>
+        <div class="card"><h3>Prompts 页</h3><ul class="dash">
+          <li>版本列表、diff 对比、Label 管理</li>
+          <li>「Metrics」页签看每个版本关联的 Trace 与评分</li>
+          <li>直接在 UI 上编辑并发布新版本（不改代码）</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <!-- 最佳实践 -->
+    <section id="best">
+      <div class="sec-head"><span class="bar"></span><h2>最佳实践</h2></div>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><div class="st-body"><div class="st-title">按「架构」设计 Trace，而非单次调用</div><p style="font-size:13.5px;color:var(--text-2);margin:0;">把 RAG 拆成 retrieval / rerank / generate 多个 Span；把多智能体拆成 orchestrator + 各 specialist，问题才能定位到具体环节。</p></div></div>
+        <div class="step"><span class="step-num">2</span><div class="st-body"><div class="st-title">环境隔离用不同 API Key</div><p style="font-size:13.5px;color:var(--text-2);margin:0;">dev / staging / prod 各自独立 Project 或环境，避免测试 Trace 污染生产指标。</p></div></div>
+        <div class="step"><span class="step-num">3</span><div class="st-body"><div class="st-title">做好数据脱敏（Data Masking）</div><p style="font-size:13.5px;color:var(--text-2);margin:0;">Prompt 里常含用户隐私，上报前用正则 / 掩码策略过滤 PII（邮箱、手机号、身份证）。</p></div></div>
+        <div class="step"><span class="step-num">4</span><div class="st-body"><div class="st-title">Prompt 一律走版本管理，别硬编码</div><p style="font-size:13.5px;color:var(--text-2);margin:0;">配合 <code>get_prompt</code> 缓存 + Label 灰度，让 Prompt 变更可观测、可回滚。</p></div></div>
+        <div class="step"><span class="step-num">5</span><div class="st-body"><div class="st-title">把评估接进 CI，形成回归门禁</div><p style="font-size:13.5px;color:var(--text-2);margin:0;">每次 Prompt / 模型变更自动跑数据集，分数下降即阻断合入（可结合官方 experiment-action）。</p></div></div>
+      </div>
+    </section>
+
+    <!-- 常见问题 -->
+    <section id="faq">
+      <div class="sec-head"><span class="bar"></span><h2>常见问题（FAQ）</h2></div>
+      <details class="faq">
+        <summary>Langfuse 和 LangSmith 有什么区别？<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <p>两者功能高度重叠（追踪/评估/Prompt 管理）。核心区别：<strong>Langfuse 完全开源（MIT）可自托管，无数据锁定</strong>，社区更大、集成更开放（OTel 原生）；LangSmith 是 LangChain 官方产品，与 LangChain 生态深度绑定，但核心不开源、主要为 SaaS。看重数据自主与开源选 Langfuse。</p>
+      </details>
+      <details class="faq">
+        <summary>Python SDK v2 和 v3 我该用哪个？<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <p>新项目用 <strong>v3</strong>（基于 OpenTelemetry，<code>get_client()</code> + <code>@observe</code>）。旧代码里常见的 <code>langfuse.trace()</code> / <code>trace.generation()</code> 是 v2 经典 API，仍可用但注意版本差异（v2 用 <code>LANGFUSE_HOST</code>，v3 用 <code>LANGFUSE_BASE_URL</code>）。</p>
+      </details>
+      <details class="faq">
+        <summary>为什么运行后 UI 里看不到 Trace？<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <p>最常见三个原因：① 脚本 / Serverless 里忘了 <code>langfuse.flush()</code>；② 环境变量名或 BASE_URL 不对（自托管要指向 <code>http://localhost:3000</code>）；③ Key 属于另一个 Project。先检查这三处。</p>
+      </details>
+      <details class="faq">
+        <summary>上报会不会拖慢我的应用？<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <p>不会。SDK 默认<strong>异步批量上报</strong>，追踪不阻塞业务逻辑。长驻进程（Web 服务）由后台线程定时发送；短生命周期脚本需显式 <code>flush()</code> 确保退出前发送完毕。</p>
+      </details>
+      <details class="faq">
+        <summary>免费额度是多少？自托管收费吗？<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <p>Cloud 免费版 <strong>50k 观测/月</strong>（含追踪/评估/Prompt 管理核心功能）。自托管版 MIT 协议，<strong>全部核心功能免费</strong>，仅需自担服务器成本。企业级功能（SSO、审计日志等）才需付费。</p>
+      </details>
+    </section>
+
+    <!-- 参考资源 -->
+    <section id="resources">
+      <div class="sec-head"><span class="bar"></span><h2>参考资源</h2></div>
+      <div class="grid2">
+        <a class="card" href="https://langfuse.com/docs" target="_blank" style="display:block;color:inherit;"><h3>官方文档 ↗</h3><p>最权威的 Tracing / Eval / Prompt / Self-hosting 指南</p></a>
+        <a class="card" href="https://github.com/langfuse/langfuse" target="_blank" style="display:block;color:inherit;"><h3>GitHub 仓库 ↗</h3><p>源码、docker-compose、issues 讨论</p></a>
+        <a class="card" href="https://python.reference.langfuse.com/" target="_blank" style="display:block;color:inherit;"><h3>Python SDK 参考 ↗</h3><p>get_client / observe / 上下文管理器完整 API</p></a>
+        <a class="card" href="https://langfuse.com/self-hosting" target="_blank" style="display:block;color:inherit;"><h3>自托管部署指南 ↗</h3><p>Docker / K8s / Terraform 生产级部署</p></a>
+      </div>
+    </section>
+
+    <footer>Langfuse 使用指南 · 基于 SDK v3 · 内容持续更新 · 部分命令请以官方文档为准</footer>
+  </main>
+</div>
+
+<script>
+  // 移动端侧边栏
+  function toggleSidebar(){
+    var sb = document.getElementById('sidebar');
+    var ov = document.getElementById('overlay');
+    sb.classList.toggle('open');
+    ov.classList.toggle('show');
+  }
+
+  // 代码块复制按钮
+  document.querySelectorAll('pre.codeblock').forEach(function(pre){
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '复制';
+    btn.addEventListener('click', function(){
+      var code = pre.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = '已复制 ✓';
+        setTimeout(function(){ btn.textContent = '复制'; }, 1500);
+      });
+    });
+    pre.appendChild(btn);
+  });
+
+  // 侧边栏滚动高亮
+  var navLinks = document.querySelectorAll('.toc a');
+  var sections = [];
+  navLinks.forEach(function(l){
+    var id = l.getAttribute('href').slice(1);
+    var s = document.getElementById(id);
+    if(s) sections.push({id:id, el:s});
+  });
+
+  function onScroll(){
+    var pos = window.scrollY + 80;
+    var current = sections.length ? sections[0].id : null;
+    sections.forEach(function(s){ if(s.el.offsetTop <= pos) current = s.id; });
+    navLinks.forEach(function(l){
+      l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // 点击导航后移动端收起侧边栏
+  navLinks.forEach(function(l){
+    l.addEventListener('click', function(){
+      if(window.innerWidth <= 860) toggleSidebar();
+    });
+  });
+</script>
+</body>
+</html>
